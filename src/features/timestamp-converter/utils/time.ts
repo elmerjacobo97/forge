@@ -1,7 +1,8 @@
+const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" })
+
 export function formatRelative(date: Date): string {
   const diff = date.getTime() - Date.now()
   const abs = Math.abs(diff)
-  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" })
 
   if (abs < 60_000) return rtf.format(Math.round(diff / 1000), "second")
   if (abs < 3_600_000) return rtf.format(Math.round(diff / 60_000), "minute")

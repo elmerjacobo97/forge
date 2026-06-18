@@ -108,5 +108,3 @@ export const tools: ToolDef[] = [
 export function getTool(id: string): ToolDef | undefined {
   return tools.find((t) => t.id === id)
 }
-
-export const categories = [...new Set(tools.map((t) => t.category))]

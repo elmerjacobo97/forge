@@ -111,6 +111,7 @@ export function ColorConverter() {
                 type="color"
                 value={safeHex}
                 onChange={(e) => setHex(e.target.value)}
+                aria-label="Color picker"
                 className="size-32 cursor-pointer rounded-lg border-0 bg-transparent p-0"
               />
             </div>

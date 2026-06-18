@@ -27,7 +27,7 @@ export function TimestampConverter() {
   const [unit, setUnit] = useState<Unit>("s")
   const [tsInput, setTsInput] = useState("")
   const [dateInput, setDateInput] = useState("")
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(() => Date.now())
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const { copy } = useCopy()
 

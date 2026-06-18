@@ -44,7 +44,7 @@ export function RegexTester() {
   const { regex, error } = useMemo(() => {
     if (!pattern) return { regex: null, error: null }
     try {
-      const flagStr = FLAGS.filter((f) => flags[f.key]).map((f) => f.key).join("")
+      const flagStr = FLAGS.reduce((acc, f) => (flags[f.key] ? acc + f.key : acc), "")
       return { regex: new RegExp(pattern, flagStr), error: null }
     } catch (e) {
       return { regex: null, error: (e as Error).message }
@@ -222,7 +222,7 @@ export function RegexTester() {
               ) : (
                 matches.map((m, i) => (
                   <li
-                    key={i}
+                    key={m.index}
                     className="group flex flex-col gap-1 border-b border-border/40 px-3 py-2 last:border-0"
                   >
                     <div className="flex items-center gap-2">

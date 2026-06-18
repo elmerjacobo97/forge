@@ -1,2 +1,7 @@
 allowBuilds:
   esbuild: true
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - "@rollup/rollup-*"
+  - "@tailwindcss/oxide-*"
+trustPolicy: no-downgrade
