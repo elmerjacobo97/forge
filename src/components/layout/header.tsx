@@ -1,4 +1,4 @@
-import { Keyboard, Moon, Sun } from "lucide-react"
+import { Moon, Search, Sun } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -8,9 +8,10 @@ import type { ToolDef } from "@/lib/tools"
 
 interface HeaderProps {
   tool: ToolDef
+  onOpenPalette: () => void
 }
 
-export function Header({ tool }: HeaderProps) {
+export function Header({ tool, onOpenPalette }: HeaderProps) {
   const { theme, setTheme } = useTheme()
   const isDark = theme === "dark" || theme === "system"
 
@@ -31,11 +32,17 @@ export function Header({ tool }: HeaderProps) {
       <div className="flex shrink-0 items-center gap-1">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button size="icon-sm" variant="ghost" className="text-muted-foreground">
-              <Keyboard className="size-4" />
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              onClick={onOpenPalette}
+              className="text-muted-foreground"
+              aria-label="Open command palette"
+            >
+              <Search className="size-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Keyboard shortcuts</TooltipContent>
+          <TooltipContent>Command palette</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>

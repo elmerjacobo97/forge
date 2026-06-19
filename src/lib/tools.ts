@@ -1,6 +1,6 @@
 import type { ComponentType } from "react"
 import type { LucideIcon } from "lucide-react"
-import { Braces, Fingerprint, Binary, Clock, Palette, KeyRound, Regex, Hash, FileCheck, QrCode, Type } from "lucide-react"
+import { Braces, Fingerprint, Binary, Clock, Palette, KeyRound, Regex, Hash, FileCheck, QrCode, Type, Link } from "lucide-react"
 
 import { JsonFormatter } from "@/features/json-formatter/json-formatter"
 import { UuidGenerator } from "@/features/uuid-generator/uuid-generator"
@@ -13,6 +13,7 @@ import { HashGenerator } from "@/features/hash-generator/hash-generator"
 import { FileValidator } from "@/features/file-validator/file-validator"
 import { QrGenerator } from "@/features/qr-generator/qr-generator"
 import { TextManipulator } from "@/features/text-manipulator/text-manipulator"
+import { UrlEncoder } from "@/features/url-encoder/url-encoder"
 
 export interface ToolDef {
   id: string
@@ -111,6 +112,14 @@ export const tools: ToolDef[] = [
     icon: Type,
     category: "Text",
     component: TextManipulator,
+  },
+  {
+    id: "url-encoder",
+    name: "URL Encoder",
+    description: "Encode and decode URL components with percent-encoding",
+    icon: Link,
+    category: "Encoders",
+    component: UrlEncoder,
   },
 ]
 
