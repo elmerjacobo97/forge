@@ -4,18 +4,18 @@ import { Check, Copy, Eraser, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Toggle } from "@/components/ui/toggle"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useCopy } from "@/lib/hooks/use-copy"
+import {
+  Menubar,
+  MenubarCheckboxItem,
+  MenubarContent,
+  MenubarMenu,
+  MenubarRadioGroup,
+  MenubarRadioItem,
+  MenubarTrigger,
+} from "@/components/ui/menubar"
 import {
   clampCount,
   generateLorem,
@@ -60,27 +60,61 @@ export function LoremIpsum() {
     if (Number.isFinite(n)) setCount(clampCount(unit, n))
   }
 
-  function handleUnitChange(value: Unit) {
-    setUnit(value)
-    setCount((c) => clampCount(value, c))
+  function handleUnitChange(value: string) {
+    const next = value as Unit
+    setUnit(next)
+    setCount((c) => clampCount(next, c))
+  }
+
+  function resetAll() {
+    setUnit("paragraphs")
+    setCount(3)
+    setFormat("plain")
+    setStartWithLorem(true)
   }
 
   return (
     <div className="flex h-full flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
-        <ToggleGroup
-          type="single"
-          value={unit}
-          onValueChange={(v) => v && handleUnitChange(v as Unit)}
-          variant="outline"
-          size="sm"
-        >
-          {UNITS.map((u) => (
-            <ToggleGroupItem key={u.id} value={u.id}>
-              {u.label}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        <Menubar>
+          <MenubarMenu>
+            <MenubarTrigger>Unit</MenubarTrigger>
+            <MenubarContent>
+              <MenubarRadioGroup value={unit} onValueChange={handleUnitChange}>
+                {UNITS.map((u) => (
+                  <MenubarRadioItem key={u.id} value={u.id}>
+                    {u.label}
+                  </MenubarRadioItem>
+                ))}
+              </MenubarRadioGroup>
+            </MenubarContent>
+          </MenubarMenu>
+
+          <MenubarMenu>
+            <MenubarTrigger>Format</MenubarTrigger>
+            <MenubarContent>
+              <MenubarRadioGroup value={format} onValueChange={(v) => setFormat(v as OutputFormat)}>
+                {FORMATS.map((f) => (
+                  <MenubarRadioItem key={f.id} value={f.id}>
+                    {f.label}
+                  </MenubarRadioItem>
+                ))}
+              </MenubarRadioGroup>
+            </MenubarContent>
+          </MenubarMenu>
+
+          <MenubarMenu>
+            <MenubarTrigger>Options</MenubarTrigger>
+            <MenubarContent>
+              <MenubarCheckboxItem
+                checked={startWithLorem}
+                onCheckedChange={(v) => setStartWithLorem(v === true)}
+              >
+                Start with "Lorem ipsum…"
+              </MenubarCheckboxItem>
+            </MenubarContent>
+          </MenubarMenu>
+        </Menubar>
 
         <div className="flex items-center gap-1.5">
           <Label className="text-xs font-medium text-muted-foreground">Count</Label>
@@ -95,46 +129,18 @@ export function LoremIpsum() {
           />
         </div>
 
-        <Select value={format} onValueChange={(v) => setFormat(v as OutputFormat)}>
-          <SelectTrigger className="h-8 w-32" aria-label="Output format">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {FORMATS.map((f) => (
-              <SelectItem key={f.id} value={f.id}>
-                {f.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Toggle
-          size="sm"
-          variant="outline"
-          pressed={startWithLorem}
-          onPressedChange={setStartWithLorem}
-          aria-label="Start with Lorem ipsum"
-        >
-          Lorem ipsum…
-        </Toggle>
-
         <div className="ml-auto flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => copy(output)} disabled={!output}>
+            {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+            {copied ? "Copied" : "Copy"}
+          </Button>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="sm" variant="outline" onClick={() => copy(output)} disabled={!output}>
-                {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-                {copied ? "Copied" : "Copy"}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Copy output</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon-sm" variant="ghost" onClick={() => setCount(unit === "words" ? 50 : unit === "sentences" ? 5 : 3)}>
+              <Button size="icon-sm" variant="ghost" onClick={resetAll}>
                 <Eraser className="size-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Reset count</TooltipContent>
+            <TooltipContent>Reset defaults</TooltipContent>
           </Tooltip>
           <Button size="sm" onClick={regenerate}>
             <RefreshCw className="size-3.5" />
