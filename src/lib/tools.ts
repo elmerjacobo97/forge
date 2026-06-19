@@ -1,6 +1,6 @@
 import type { ComponentType } from "react"
 import type { LucideIcon } from "lucide-react"
-import { Braces, Fingerprint, Binary, Clock, Palette, KeyRound, Regex, Hash, FileCheck, QrCode, Type, Link, ArrowRightLeft } from "lucide-react"
+import { Braces, Fingerprint, Binary, Clock, Palette, KeyRound, Regex, Hash, FileCheck, QrCode, Type, Link, ArrowRightLeft, GitCompare } from "lucide-react"
 
 import { JsonFormatter } from "@/features/json-formatter/json-formatter"
 import { UuidGenerator } from "@/features/uuid-generator/uuid-generator"
@@ -15,6 +15,7 @@ import { QrGenerator } from "@/features/qr-generator/qr-generator"
 import { TextManipulator } from "@/features/text-manipulator/text-manipulator"
 import { UrlEncoder } from "@/features/url-encoder/url-encoder"
 import { FormatConverter } from "@/features/format-converter/format-converter"
+import { DiffTool } from "@/features/diff-tool/diff-tool"
 
 export interface ToolDef {
   id: string
@@ -129,6 +130,14 @@ export const tools: ToolDef[] = [
     icon: ArrowRightLeft,
     category: "Converters",
     component: FormatConverter,
+  },
+  {
+    id: "diff-tool",
+    name: "Diff Tool",
+    description: "Compare two texts and highlight line-by-line differences",
+    icon: GitCompare,
+    category: "Text",
+    component: DiffTool,
   },
 ]
 
