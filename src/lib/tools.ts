@@ -1,6 +1,6 @@
 import type { ComponentType } from "react"
 import type { LucideIcon } from "lucide-react"
-import { Braces, Fingerprint, Binary, Clock, Palette, KeyRound, Regex, Hash, FileCheck, QrCode, Type, Link, ArrowRightLeft, GitCompare } from "lucide-react"
+import { Braces, Fingerprint, Binary, Clock, Palette, KeyRound, Regex, Hash, FileCheck, QrCode, Type, Link, ArrowRightLeft, GitCompare, TextQuote } from "lucide-react"
 
 import { JsonFormatter } from "@/features/json-formatter/json-formatter"
 import { UuidGenerator } from "@/features/uuid-generator/uuid-generator"
@@ -16,6 +16,7 @@ import { TextManipulator } from "@/features/text-manipulator/text-manipulator"
 import { UrlEncoder } from "@/features/url-encoder/url-encoder"
 import { FormatConverter } from "@/features/format-converter/format-converter"
 import { DiffTool } from "@/features/diff-tool/diff-tool"
+import { LoremIpsum } from "@/features/lorem-ipsum/lorem-ipsum"
 
 export interface ToolDef {
   id: string
@@ -138,6 +139,14 @@ export const tools: ToolDef[] = [
     icon: GitCompare,
     category: "Text",
     component: DiffTool,
+  },
+  {
+    id: "lorem-ipsum",
+    name: "Lorem Ipsum",
+    description: "Generate placeholder text in plain, HTML, Markdown, or JSON",
+    icon: TextQuote,
+    category: "Text",
+    component: LoremIpsum,
   },
 ]
 
