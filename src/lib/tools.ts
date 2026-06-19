@@ -1,6 +1,6 @@
 import type { ComponentType } from "react"
 import type { LucideIcon } from "lucide-react"
-import { Braces, Fingerprint, Binary, Clock, Palette, KeyRound, Regex, Hash, FileCheck, QrCode, Type, Link, ArrowRightLeft, GitCompare, TextQuote } from "lucide-react"
+import { Braces, Fingerprint, Binary, Clock, Palette, KeyRound, Regex, Hash, FileCheck, QrCode, Type, Link, ArrowRightLeft, GitCompare, TextQuote, FileCode } from "lucide-react"
 
 import { JsonFormatter } from "@/features/json-formatter/json-formatter"
 import { UuidGenerator } from "@/features/uuid-generator/uuid-generator"
@@ -17,6 +17,7 @@ import { UrlEncoder } from "@/features/url-encoder/url-encoder"
 import { FormatConverter } from "@/features/format-converter/format-converter"
 import { DiffTool } from "@/features/diff-tool/diff-tool"
 import { LoremIpsum } from "@/features/lorem-ipsum/lorem-ipsum"
+import { JsonToTypescript } from "@/features/json-to-typescript/json-to-typescript"
 
 export interface ToolDef {
   id: string
@@ -147,6 +148,14 @@ export const tools: ToolDef[] = [
     icon: TextQuote,
     category: "Text",
     component: LoremIpsum,
+  },
+  {
+    id: "json-to-typescript",
+    name: "JSON to TypeScript",
+    description: "Infer TypeScript interfaces or types from JSON",
+    icon: FileCode,
+    category: "Converters",
+    component: JsonToTypescript,
   },
 ]
 
