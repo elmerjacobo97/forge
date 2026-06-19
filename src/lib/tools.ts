@@ -1,6 +1,6 @@
 import type { ComponentType } from "react"
 import type { LucideIcon } from "lucide-react"
-import { Braces, Fingerprint, Binary, Clock, Palette, KeyRound, Regex, Hash, QrCode, Type } from "lucide-react"
+import { Braces, Fingerprint, Binary, Clock, Palette, KeyRound, Regex, Hash, FileCheck, QrCode, Type } from "lucide-react"
 
 import { JsonFormatter } from "@/features/json-formatter/json-formatter"
 import { UuidGenerator } from "@/features/uuid-generator/uuid-generator"
@@ -10,6 +10,7 @@ import { ColorConverter } from "@/features/color-converter/color-converter"
 import { JwtDecoder } from "@/features/jwt-decoder/jwt-decoder"
 import { RegexTester } from "@/features/regex-tester/regex-tester"
 import { HashGenerator } from "@/features/hash-generator/hash-generator"
+import { FileValidator } from "@/features/file-validator/file-validator"
 import { QrGenerator } from "@/features/qr-generator/qr-generator"
 import { TextManipulator } from "@/features/text-manipulator/text-manipulator"
 
@@ -86,6 +87,14 @@ export const tools: ToolDef[] = [
     icon: Hash,
     category: "Generators",
     component: HashGenerator,
+  },
+  {
+    id: "file-validator",
+    name: "File Validator",
+    description: "Calculate file hashes and verify integrity",
+    icon: FileCheck,
+    category: "Validators",
+    component: FileValidator,
   },
   {
     id: "qr-generator",

@@ -1,28 +1,10 @@
 export function md5(str: string): string {
-  function toUtf8(s: string): number[] {
-    const bytes: number[] = []
-    for (let i = 0; i < s.length; i++) {
-      const c = s.charCodeAt(i)
-      if (c < 0x80) bytes.push(c)
-      else if (c < 0x800) bytes.push(0xc0 | (c >> 6), 0x80 | (c & 0x3f))
-      else if (c < 0xd800 || c >= 0xe000)
-        bytes.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f))
-      else {
-        i++
-        const c2 = s.charCodeAt(i)
-        const cp = 0x10000 + (((c & 0x3ff) << 10) | (c2 & 0x3ff))
-        bytes.push(
-          0xf0 | (cp >> 18),
-          0x80 | ((cp >> 12) & 0x3f),
-          0x80 | ((cp >> 6) & 0x3f),
-          0x80 | (cp & 0x3f)
-        )
-      }
-    }
-    return bytes
-  }
+  return md5Buffer(new TextEncoder().encode(str).buffer)
+}
 
-  const bytes = toUtf8(str)
+export function md5Buffer(data: ArrayBuffer): string {
+  const view = new Uint8Array(data)
+  const bytes: number[] = Array.from(view)
   const len = bytes.length
 
   bytes.push(0x80)

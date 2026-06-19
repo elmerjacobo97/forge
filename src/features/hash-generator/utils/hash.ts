@@ -1,4 +1,4 @@
-import { md5 } from "./md5"
+import { md5, md5Buffer } from "./md5"
 
 export type Algo = "md5" | "sha-1" | "sha-256" | "sha-384" | "sha-512"
 
@@ -14,5 +14,15 @@ export async function digest(algo: Algo, text: string): Promise<string> {
   if (algo === "md5") return md5(text)
   const data = new TextEncoder().encode(text)
   const buf = await crypto.subtle.digest(algo, data)
+  return bufferToHex(buf)
+}
+
+export async function digestBuffer(algo: Algo, data: ArrayBuffer): Promise<string> {
+  if (algo === "md5") return md5Buffer(data)
+  const buf = await crypto.subtle.digest(algo, data)
+  return bufferToHex(buf)
+}
+
+function bufferToHex(buf: ArrayBuffer): string {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("")
 }
