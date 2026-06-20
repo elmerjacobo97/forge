@@ -1,31 +1,99 @@
-import { lazy, type ComponentType } from "react"
-import type { LucideIcon } from "lucide-react"
-import { Braces, Fingerprint, Binary, Clock, Palette, KeyRound, Regex, Hash, FileCheck, QrCode, Type, Link, ArrowRightLeft, GitCompare, TextQuote, FileCode } from "lucide-react"
+import { lazy, type ComponentType } from "react";
+import type { LucideIcon } from "lucide-react";
+import {
+  Braces,
+  Fingerprint,
+  Binary,
+  Clock,
+  Palette,
+  KeyRound,
+  Regex,
+  Hash,
+  FileCheck,
+  QrCode,
+  Type,
+  Link,
+  ArrowRightLeft,
+  GitCompare,
+  TextQuote,
+  FileCode,
+  Code2,
+} from "lucide-react";
 
-const jsonFormatter = () => import("@/features/json-formatter/json-formatter").then(m => ({ default: m.JsonFormatter }))
-const uuidGenerator = () => import("@/features/uuid-generator/uuid-generator").then(m => ({ default: m.UuidGenerator }))
-const base64Tool = () => import("@/features/base64/base64").then(m => ({ default: m.Base64Tool }))
-const timestampConverter = () => import("@/features/timestamp-converter/timestamp-converter").then(m => ({ default: m.TimestampConverter }))
-const colorConverter = () => import("@/features/color-converter/color-converter").then(m => ({ default: m.ColorConverter }))
-const jwtDecoder = () => import("@/features/jwt-decoder/jwt-decoder").then(m => ({ default: m.JwtDecoder }))
-const regexTester = () => import("@/features/regex-tester/regex-tester").then(m => ({ default: m.RegexTester }))
-const hashGenerator = () => import("@/features/hash-generator/hash-generator").then(m => ({ default: m.HashGenerator }))
-const fileValidator = () => import("@/features/file-validator/file-validator").then(m => ({ default: m.FileValidator }))
-const qrGenerator = () => import("@/features/qr-generator/qr-generator").then(m => ({ default: m.QrGenerator }))
-const textManipulator = () => import("@/features/text-manipulator/text-manipulator").then(m => ({ default: m.TextManipulator }))
-const urlEncoder = () => import("@/features/url-encoder/url-encoder").then(m => ({ default: m.UrlEncoder }))
-const formatConverter = () => import("@/features/format-converter/format-converter").then(m => ({ default: m.FormatConverter }))
-const diffTool = () => import("@/features/diff-tool/diff-tool").then(m => ({ default: m.DiffTool }))
-const loremIpsum = () => import("@/features/lorem-ipsum/lorem-ipsum").then(m => ({ default: m.LoremIpsum }))
-const jsonToTypescript = () => import("@/features/json-to-typescript/json-to-typescript").then(m => ({ default: m.JsonToTypescript }))
+const jsonFormatter = () =>
+  import("@/features/json-formatter/json-formatter").then((m) => ({
+    default: m.JsonFormatter,
+  }));
+const uuidGenerator = () =>
+  import("@/features/uuid-generator/uuid-generator").then((m) => ({
+    default: m.UuidGenerator,
+  }));
+const base64Tool = () =>
+  import("@/features/base64/base64").then((m) => ({ default: m.Base64Tool }));
+const timestampConverter = () =>
+  import("@/features/timestamp-converter/timestamp-converter").then((m) => ({
+    default: m.TimestampConverter,
+  }));
+const colorConverter = () =>
+  import("@/features/color-converter/color-converter").then((m) => ({
+    default: m.ColorConverter,
+  }));
+const jwtDecoder = () =>
+  import("@/features/jwt-decoder/jwt-decoder").then((m) => ({
+    default: m.JwtDecoder,
+  }));
+const regexTester = () =>
+  import("@/features/regex-tester/regex-tester").then((m) => ({
+    default: m.RegexTester,
+  }));
+const hashGenerator = () =>
+  import("@/features/hash-generator/hash-generator").then((m) => ({
+    default: m.HashGenerator,
+  }));
+const fileValidator = () =>
+  import("@/features/file-validator/file-validator").then((m) => ({
+    default: m.FileValidator,
+  }));
+const qrGenerator = () =>
+  import("@/features/qr-generator/qr-generator").then((m) => ({
+    default: m.QrGenerator,
+  }));
+const textManipulator = () =>
+  import("@/features/text-manipulator/text-manipulator").then((m) => ({
+    default: m.TextManipulator,
+  }));
+const urlEncoder = () =>
+  import("@/features/url-encoder/url-encoder").then((m) => ({
+    default: m.UrlEncoder,
+  }));
+const formatConverter = () =>
+  import("@/features/format-converter/format-converter").then((m) => ({
+    default: m.FormatConverter,
+  }));
+const diffTool = () =>
+  import("@/features/diff-tool/diff-tool").then((m) => ({
+    default: m.DiffTool,
+  }));
+const loremIpsum = () =>
+  import("@/features/lorem-ipsum/lorem-ipsum").then((m) => ({
+    default: m.LoremIpsum,
+  }));
+const jsonToTypescript = () =>
+  import("@/features/json-to-typescript/json-to-typescript").then((m) => ({
+    default: m.JsonToTypescript,
+  }));
+const htmlEntities = () =>
+  import("@/features/html-entities/html-entities").then((m) => ({
+    default: m.HtmlEntities,
+  }));
 
 export interface ToolDef {
-  id: string
-  name: string
-  description: string
-  icon: LucideIcon
-  category: string
-  component: ComponentType
+  id: string;
+  name: string;
+  description: string;
+  icon: LucideIcon;
+  category: string;
+  component: ComponentType;
 }
 
 export const tools: ToolDef[] = [
@@ -104,7 +172,8 @@ export const tools: ToolDef[] = [
   {
     id: "qr-generator",
     name: "QR Generator",
-    description: "Generate QR codes with customizable size, colors, and error correction",
+    description:
+      "Generate QR codes with customizable size, colors, and error correction",
     icon: QrCode,
     category: "Generators",
     component: lazy(qrGenerator),
@@ -157,8 +226,16 @@ export const tools: ToolDef[] = [
     category: "Converters",
     component: lazy(jsonToTypescript),
   },
-]
+  {
+    id: "html-entities",
+    name: "HTML Entities",
+    description: "Encode and decode HTML entities (named, decimal, hex)",
+    icon: Code2,
+    category: "Encoders",
+    component: lazy(htmlEntities),
+  },
+];
 
 export function getTool(id: string): ToolDef | undefined {
-  return tools.find((t) => t.id === id)
+  return tools.find((t) => t.id === id);
 }
