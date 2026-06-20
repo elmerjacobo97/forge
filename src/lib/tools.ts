@@ -1,23 +1,23 @@
-import type { ComponentType } from "react"
+import { lazy, type ComponentType } from "react"
 import type { LucideIcon } from "lucide-react"
 import { Braces, Fingerprint, Binary, Clock, Palette, KeyRound, Regex, Hash, FileCheck, QrCode, Type, Link, ArrowRightLeft, GitCompare, TextQuote, FileCode } from "lucide-react"
 
-import { JsonFormatter } from "@/features/json-formatter/json-formatter"
-import { UuidGenerator } from "@/features/uuid-generator/uuid-generator"
-import { Base64Tool } from "@/features/base64/base64"
-import { TimestampConverter } from "@/features/timestamp-converter/timestamp-converter"
-import { ColorConverter } from "@/features/color-converter/color-converter"
-import { JwtDecoder } from "@/features/jwt-decoder/jwt-decoder"
-import { RegexTester } from "@/features/regex-tester/regex-tester"
-import { HashGenerator } from "@/features/hash-generator/hash-generator"
-import { FileValidator } from "@/features/file-validator/file-validator"
-import { QrGenerator } from "@/features/qr-generator/qr-generator"
-import { TextManipulator } from "@/features/text-manipulator/text-manipulator"
-import { UrlEncoder } from "@/features/url-encoder/url-encoder"
-import { FormatConverter } from "@/features/format-converter/format-converter"
-import { DiffTool } from "@/features/diff-tool/diff-tool"
-import { LoremIpsum } from "@/features/lorem-ipsum/lorem-ipsum"
-import { JsonToTypescript } from "@/features/json-to-typescript/json-to-typescript"
+const jsonFormatter = () => import("@/features/json-formatter/json-formatter").then(m => ({ default: m.JsonFormatter }))
+const uuidGenerator = () => import("@/features/uuid-generator/uuid-generator").then(m => ({ default: m.UuidGenerator }))
+const base64Tool = () => import("@/features/base64/base64").then(m => ({ default: m.Base64Tool }))
+const timestampConverter = () => import("@/features/timestamp-converter/timestamp-converter").then(m => ({ default: m.TimestampConverter }))
+const colorConverter = () => import("@/features/color-converter/color-converter").then(m => ({ default: m.ColorConverter }))
+const jwtDecoder = () => import("@/features/jwt-decoder/jwt-decoder").then(m => ({ default: m.JwtDecoder }))
+const regexTester = () => import("@/features/regex-tester/regex-tester").then(m => ({ default: m.RegexTester }))
+const hashGenerator = () => import("@/features/hash-generator/hash-generator").then(m => ({ default: m.HashGenerator }))
+const fileValidator = () => import("@/features/file-validator/file-validator").then(m => ({ default: m.FileValidator }))
+const qrGenerator = () => import("@/features/qr-generator/qr-generator").then(m => ({ default: m.QrGenerator }))
+const textManipulator = () => import("@/features/text-manipulator/text-manipulator").then(m => ({ default: m.TextManipulator }))
+const urlEncoder = () => import("@/features/url-encoder/url-encoder").then(m => ({ default: m.UrlEncoder }))
+const formatConverter = () => import("@/features/format-converter/format-converter").then(m => ({ default: m.FormatConverter }))
+const diffTool = () => import("@/features/diff-tool/diff-tool").then(m => ({ default: m.DiffTool }))
+const loremIpsum = () => import("@/features/lorem-ipsum/lorem-ipsum").then(m => ({ default: m.LoremIpsum }))
+const jsonToTypescript = () => import("@/features/json-to-typescript/json-to-typescript").then(m => ({ default: m.JsonToTypescript }))
 
 export interface ToolDef {
   id: string
@@ -35,7 +35,7 @@ export const tools: ToolDef[] = [
     description: "Format, validate, and minify JSON",
     icon: Braces,
     category: "Data",
-    component: JsonFormatter,
+    component: lazy(jsonFormatter),
   },
   {
     id: "uuid-generator",
@@ -43,7 +43,7 @@ export const tools: ToolDef[] = [
     description: "Generate v4 and v7 UUIDs",
     icon: Fingerprint,
     category: "Generators",
-    component: UuidGenerator,
+    component: lazy(uuidGenerator),
   },
   {
     id: "base64",
@@ -51,7 +51,7 @@ export const tools: ToolDef[] = [
     description: "Encode and decode Base64 with UTF-8 support",
     icon: Binary,
     category: "Encoders",
-    component: Base64Tool,
+    component: lazy(base64Tool),
   },
   {
     id: "timestamp-converter",
@@ -59,7 +59,7 @@ export const tools: ToolDef[] = [
     description: "Convert between Unix timestamps and human-readable dates",
     icon: Clock,
     category: "Converters",
-    component: TimestampConverter,
+    component: lazy(timestampConverter),
   },
   {
     id: "color-converter",
@@ -67,7 +67,7 @@ export const tools: ToolDef[] = [
     description: "Convert between HEX, RGB, HSL, and OKLCH",
     icon: Palette,
     category: "Converters",
-    component: ColorConverter,
+    component: lazy(colorConverter),
   },
   {
     id: "jwt-decoder",
@@ -75,7 +75,7 @@ export const tools: ToolDef[] = [
     description: "Decode and inspect JWT header and payload",
     icon: KeyRound,
     category: "Decoders",
-    component: JwtDecoder,
+    component: lazy(jwtDecoder),
   },
   {
     id: "regex-tester",
@@ -83,7 +83,7 @@ export const tools: ToolDef[] = [
     description: "Test regex patterns with live highlighting and match details",
     icon: Regex,
     category: "Testers",
-    component: RegexTester,
+    component: lazy(regexTester),
   },
   {
     id: "hash-generator",
@@ -91,7 +91,7 @@ export const tools: ToolDef[] = [
     description: "Generate MD5, SHA-1, SHA-256, SHA-384, and SHA-512 hashes",
     icon: Hash,
     category: "Generators",
-    component: HashGenerator,
+    component: lazy(hashGenerator),
   },
   {
     id: "file-validator",
@@ -99,7 +99,7 @@ export const tools: ToolDef[] = [
     description: "Calculate file hashes and verify integrity",
     icon: FileCheck,
     category: "Validators",
-    component: FileValidator,
+    component: lazy(fileValidator),
   },
   {
     id: "qr-generator",
@@ -107,7 +107,7 @@ export const tools: ToolDef[] = [
     description: "Generate QR codes with customizable size, colors, and error correction",
     icon: QrCode,
     category: "Generators",
-    component: QrGenerator,
+    component: lazy(qrGenerator),
   },
   {
     id: "text-manipulator",
@@ -115,7 +115,7 @@ export const tools: ToolDef[] = [
     description: "Transform text: case convert, sort, dedupe, and more",
     icon: Type,
     category: "Text",
-    component: TextManipulator,
+    component: lazy(textManipulator),
   },
   {
     id: "url-encoder",
@@ -123,7 +123,7 @@ export const tools: ToolDef[] = [
     description: "Encode and decode URL components with percent-encoding",
     icon: Link,
     category: "Encoders",
-    component: UrlEncoder,
+    component: lazy(urlEncoder),
   },
   {
     id: "format-converter",
@@ -131,7 +131,7 @@ export const tools: ToolDef[] = [
     description: "Convert between JSON, YAML, TOML, and more",
     icon: ArrowRightLeft,
     category: "Converters",
-    component: FormatConverter,
+    component: lazy(formatConverter),
   },
   {
     id: "diff-tool",
@@ -139,7 +139,7 @@ export const tools: ToolDef[] = [
     description: "Compare two texts and highlight line-by-line differences",
     icon: GitCompare,
     category: "Text",
-    component: DiffTool,
+    component: lazy(diffTool),
   },
   {
     id: "lorem-ipsum",
@@ -147,7 +147,7 @@ export const tools: ToolDef[] = [
     description: "Generate placeholder text in plain, HTML, Markdown, or JSON",
     icon: TextQuote,
     category: "Text",
-    component: LoremIpsum,
+    component: lazy(loremIpsum),
   },
   {
     id: "json-to-typescript",
@@ -155,7 +155,7 @@ export const tools: ToolDef[] = [
     description: "Infer TypeScript interfaces or types from JSON",
     icon: FileCode,
     category: "Converters",
-    component: JsonToTypescript,
+    component: lazy(jsonToTypescript),
   },
 ]
 
