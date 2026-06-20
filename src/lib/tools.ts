@@ -18,6 +18,7 @@ import {
   TextQuote,
   FileCode,
   Code2,
+  Globe,
 } from "lucide-react";
 
 const jsonFormatter = () =>
@@ -85,6 +86,11 @@ const jsonToTypescript = () =>
 const htmlEntities = () =>
   import("@/features/html-entities/html-entities").then((m) => ({
     default: m.HtmlEntities,
+  }));
+
+const httpTester = () =>
+  import("@/features/http-tester/http-tester").then((m) => ({
+    default: m.HttpTester,
   }));
 
 export interface ToolDef {
@@ -233,6 +239,14 @@ export const tools: ToolDef[] = [
     icon: Code2,
     category: "Encoders",
     component: lazy(htmlEntities),
+  },
+  {
+    id: "http-tester",
+    name: "HTTP Tester",
+    description: "Send HTTP requests and inspect responses (no CORS)",
+    icon: Globe,
+    category: "Network",
+    component: lazy(httpTester),
   },
 ];
 
