@@ -19,6 +19,7 @@ import {
   FileCode,
   Code2,
   Globe,
+  Bookmark,
 } from "lucide-react";
 
 const jsonFormatter = () =>
@@ -91,6 +92,11 @@ const htmlEntities = () =>
 const httpTester = () =>
   import("@/features/http-tester/http-tester").then((m) => ({
     default: m.HttpTester,
+  }));
+
+const bookmarks = () =>
+  import("@/features/bookmarks/bookmarks").then((m) => ({
+    default: m.Bookmarks,
   }));
 
 export interface ToolDef {
@@ -247,6 +253,14 @@ export const tools: ToolDef[] = [
     icon: Globe,
     category: "Network",
     component: lazy(httpTester),
+  },
+  {
+    id: "bookmarks",
+    name: "Bookmarks",
+    description: "Save and organize documentation, repos, and articles",
+    icon: Bookmark,
+    category: "Resources",
+    component: lazy(bookmarks),
   },
 ];
 
