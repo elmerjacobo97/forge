@@ -61,6 +61,10 @@ export function Sidebar({ activeId, onSelect }: SidebarProps) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search tools…"
             className="h-8 pl-8 text-xs"
+            type="search"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="none"
           />
         </div>
       </div>
