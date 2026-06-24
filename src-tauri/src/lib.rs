@@ -7,6 +7,7 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![
             commands::hash_file::hash_file,
+            commands::read_file::read_file_bytes,
             #[cfg(target_os = "macos")]
             commands::color::pick_color,
         ])

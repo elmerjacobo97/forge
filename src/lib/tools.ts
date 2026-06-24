@@ -20,6 +20,7 @@ import {
   Code2,
   Globe,
   Bookmark,
+  Image as ImageIcon,
 } from "lucide-react";
 
 const jsonFormatter = () =>
@@ -97,6 +98,11 @@ const httpTester = () =>
 const bookmarks = () =>
   import("@/features/bookmarks/bookmarks").then((m) => ({
     default: m.Bookmarks,
+  }));
+
+const imageTools = () =>
+  import("@/features/image-tools/image-tools").then((m) => ({
+    default: m.ImageTools,
   }));
 
 export interface ToolDef {
@@ -261,6 +267,14 @@ export const tools: ToolDef[] = [
     icon: Bookmark,
     category: "Resources",
     component: lazy(bookmarks),
+  },
+  {
+    id: "image-tools",
+    name: "Image Tools",
+    description: "Compress and convert PNG, JPG, and WebP images offline",
+    icon: ImageIcon,
+    category: "Media",
+    component: lazy(imageTools),
   },
 ];
 
