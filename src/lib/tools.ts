@@ -21,6 +21,7 @@ import {
   Globe,
   Bookmark,
   Image as ImageIcon,
+  Columns3,
 } from "lucide-react";
 
 const jsonFormatter = () =>
@@ -103,6 +104,11 @@ const bookmarks = () =>
 const imageTools = () =>
   import("@/features/image-tools/image-tools").then((m) => ({
     default: m.ImageTools,
+  }));
+
+const devBoard = () =>
+  import("@/features/dev-board/dev-board").then((m) => ({
+    default: m.DevBoard,
   }));
 
 export interface ToolDef {
@@ -275,6 +281,14 @@ export const tools: ToolDef[] = [
     icon: ImageIcon,
     category: "Media",
     component: lazy(imageTools),
+  },
+  {
+    id: "dev-board",
+    name: "Dev Board",
+    description: "Kanban board with auto time tracking for dev tasks",
+    icon: Columns3,
+    category: "Productivity",
+    component: lazy(devBoard),
   },
 ];
 

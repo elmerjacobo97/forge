@@ -25,7 +25,7 @@ Forge — Tauri v2 desktop app bundling local-first developer utilities (JSON, U
 - Two source trees: `src/` (frontend TS) and `src-tauri/` (Rust).
 - Frontend entry: `src/main.tsx` -> `src/App.tsx` -> `@/components/layout/app-shell` (the real shell; `App.tsx` only delegates). Shell + sidebar in `src/components/layout/`.
 - Path alias `@/*` -> `src/*` (set in both `tsconfig.json` and `vite.config.ts`).
-- Each utility lives in its own folder `src/features/<name>/<name>.tsx` (currently 20). New feature = new folder + registration in the sidebar (`src/components/layout/sidebar.tsx`). Most utilities are purely client-side; only those needing the OS go through Tauri.
+- Each utility lives in its own folder `src/features/<name>/<name>.tsx` (currently 21). New feature = new folder + registration in the sidebar (`src/components/layout/sidebar.tsx`). Most utilities are purely client-side; only those needing the OS go through Tauri.
 - Rust entry: `src-tauri/src/main.rs` -> `forge_lib::run()` in `src-tauri/src/lib.rs`. The `_lib` suffix is intentional (avoids Windows crate-name collision) — keep it.
 - Tauri commands live in `src-tauri/src/commands/` (module `commands`, declared in `lib.rs` via `mod commands;`), not inline in `lib.rs`. `lib.rs` only wires plugins + the `generate_handler!` list. Current commands: `hash_file::hash_file` and `read_file::read_file_bytes` (all platforms), `color::pick_color` (**macOS-only** — guarded by `#[cfg(target_os = "macos")]`).
 - Adding a Tauri command: define `#[tauri::command] fn` in `src-tauri/src/commands/<name>.rs`, export it from `commands/mod.rs`, register it in `tauri::generate_handler![...]` in `lib.rs`, call from TS via `invoke("name", { args })` from `@tauri-apps/api/core`.
