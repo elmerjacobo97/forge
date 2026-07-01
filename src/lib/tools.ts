@@ -1,27 +1,28 @@
 import { lazy, type ComponentType } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
-  Braces,
-  Fingerprint,
-  Binary,
-  Clock,
-  Palette,
-  KeyRound,
-  Regex,
-  Hash,
-  FileCheck,
-  QrCode,
-  Type,
-  Link,
   ArrowRightLeft,
-  GitCompare,
-  TextQuote,
-  FileCode,
-  Code2,
-  Globe,
+  Binary,
   Bookmark,
-  Image as ImageIcon,
+  Braces,
+  Clock,
+  Code2,
   Columns3,
+  Dices,
+  FileCheck,
+  FileCode,
+  Fingerprint,
+  GitCompare,
+  Globe,
+  Hash,
+  Image as ImageIcon,
+  KeyRound,
+  Link,
+  Palette,
+  QrCode,
+  Regex,
+  TextQuote,
+  Type,
 } from "lucide-react";
 
 const jsonFormatter = () =>
@@ -109,6 +110,11 @@ const imageTools = () =>
 const devBoard = () =>
   import("@/features/dev-board/dev-board").then((m) => ({
     default: m.DevBoard,
+  }));
+
+const mockDataGenerator = () =>
+  import("@/features/mock-data-generator/mock-data-generator").then((m) => ({
+    default: m.MockDataGenerator,
   }));
 
 export interface ToolDef {
@@ -311,6 +317,15 @@ export const tools: ToolDef[] = [
     icon: Columns3,
     category: "Productivity",
     component: lazy(devBoard),
+  },
+  {
+    id: "mock-data-generator",
+    path: "/mock-data-generator",
+    name: "Mock Data Generator",
+    description: "Generate fake JSON test data from a custom or preset schema",
+    icon: Dices,
+    category: "Generators",
+    component: lazy(mockDataGenerator),
   },
 ];
 

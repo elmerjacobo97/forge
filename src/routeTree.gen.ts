@@ -18,6 +18,7 @@ import { Route as AuthenticatedTimestampConverterRouteImport } from './routes/_a
 import { Route as AuthenticatedTextManipulatorRouteImport } from './routes/_authenticated/text-manipulator'
 import { Route as AuthenticatedRegexTesterRouteImport } from './routes/_authenticated/regex-tester'
 import { Route as AuthenticatedQrGeneratorRouteImport } from './routes/_authenticated/qr-generator'
+import { Route as AuthenticatedMockDataGeneratorRouteImport } from './routes/_authenticated/mock-data-generator'
 import { Route as AuthenticatedLoremIpsumRouteImport } from './routes/_authenticated/lorem-ipsum'
 import { Route as AuthenticatedJwtDecoderRouteImport } from './routes/_authenticated/jwt-decoder'
 import { Route as AuthenticatedJsonToTypescriptRouteImport } from './routes/_authenticated/json-to-typescript'
@@ -81,6 +82,12 @@ const AuthenticatedQrGeneratorRoute =
   AuthenticatedQrGeneratorRouteImport.update({
     id: '/qr-generator',
     path: '/qr-generator',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMockDataGeneratorRoute =
+  AuthenticatedMockDataGeneratorRouteImport.update({
+    id: '/mock-data-generator',
+    path: '/mock-data-generator',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedLoremIpsumRoute = AuthenticatedLoremIpsumRouteImport.update({
@@ -184,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/json-to-typescript': typeof AuthenticatedJsonToTypescriptRoute
   '/jwt-decoder': typeof AuthenticatedJwtDecoderRoute
   '/lorem-ipsum': typeof AuthenticatedLoremIpsumRoute
+  '/mock-data-generator': typeof AuthenticatedMockDataGeneratorRoute
   '/qr-generator': typeof AuthenticatedQrGeneratorRoute
   '/regex-tester': typeof AuthenticatedRegexTesterRoute
   '/text-manipulator': typeof AuthenticatedTextManipulatorRoute
@@ -209,6 +217,7 @@ export interface FileRoutesByTo {
   '/json-to-typescript': typeof AuthenticatedJsonToTypescriptRoute
   '/jwt-decoder': typeof AuthenticatedJwtDecoderRoute
   '/lorem-ipsum': typeof AuthenticatedLoremIpsumRoute
+  '/mock-data-generator': typeof AuthenticatedMockDataGeneratorRoute
   '/qr-generator': typeof AuthenticatedQrGeneratorRoute
   '/regex-tester': typeof AuthenticatedRegexTesterRoute
   '/text-manipulator': typeof AuthenticatedTextManipulatorRoute
@@ -236,6 +245,7 @@ export interface FileRoutesById {
   '/_authenticated/json-to-typescript': typeof AuthenticatedJsonToTypescriptRoute
   '/_authenticated/jwt-decoder': typeof AuthenticatedJwtDecoderRoute
   '/_authenticated/lorem-ipsum': typeof AuthenticatedLoremIpsumRoute
+  '/_authenticated/mock-data-generator': typeof AuthenticatedMockDataGeneratorRoute
   '/_authenticated/qr-generator': typeof AuthenticatedQrGeneratorRoute
   '/_authenticated/regex-tester': typeof AuthenticatedRegexTesterRoute
   '/_authenticated/text-manipulator': typeof AuthenticatedTextManipulatorRoute
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/json-to-typescript'
     | '/jwt-decoder'
     | '/lorem-ipsum'
+    | '/mock-data-generator'
     | '/qr-generator'
     | '/regex-tester'
     | '/text-manipulator'
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/json-to-typescript'
     | '/jwt-decoder'
     | '/lorem-ipsum'
+    | '/mock-data-generator'
     | '/qr-generator'
     | '/regex-tester'
     | '/text-manipulator'
@@ -314,6 +326,7 @@ export interface FileRouteTypes {
     | '/_authenticated/json-to-typescript'
     | '/_authenticated/jwt-decoder'
     | '/_authenticated/lorem-ipsum'
+    | '/_authenticated/mock-data-generator'
     | '/_authenticated/qr-generator'
     | '/_authenticated/regex-tester'
     | '/_authenticated/text-manipulator'
@@ -391,6 +404,13 @@ declare module '@tanstack/react-router' {
       path: '/qr-generator'
       fullPath: '/qr-generator'
       preLoaderRoute: typeof AuthenticatedQrGeneratorRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/mock-data-generator': {
+      id: '/_authenticated/mock-data-generator'
+      path: '/mock-data-generator'
+      fullPath: '/mock-data-generator'
+      preLoaderRoute: typeof AuthenticatedMockDataGeneratorRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/lorem-ipsum': {
@@ -517,6 +537,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedJsonToTypescriptRoute: typeof AuthenticatedJsonToTypescriptRoute
   AuthenticatedJwtDecoderRoute: typeof AuthenticatedJwtDecoderRoute
   AuthenticatedLoremIpsumRoute: typeof AuthenticatedLoremIpsumRoute
+  AuthenticatedMockDataGeneratorRoute: typeof AuthenticatedMockDataGeneratorRoute
   AuthenticatedQrGeneratorRoute: typeof AuthenticatedQrGeneratorRoute
   AuthenticatedRegexTesterRoute: typeof AuthenticatedRegexTesterRoute
   AuthenticatedTextManipulatorRoute: typeof AuthenticatedTextManipulatorRoute
@@ -541,6 +562,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedJsonToTypescriptRoute: AuthenticatedJsonToTypescriptRoute,
   AuthenticatedJwtDecoderRoute: AuthenticatedJwtDecoderRoute,
   AuthenticatedLoremIpsumRoute: AuthenticatedLoremIpsumRoute,
+  AuthenticatedMockDataGeneratorRoute: AuthenticatedMockDataGeneratorRoute,
   AuthenticatedQrGeneratorRoute: AuthenticatedQrGeneratorRoute,
   AuthenticatedRegexTesterRoute: AuthenticatedRegexTesterRoute,
   AuthenticatedTextManipulatorRoute: AuthenticatedTextManipulatorRoute,
