@@ -7,9 +7,11 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { router } from "./router";
 import { queryClient } from "@/lib/query-client";
 import { initDeepLink } from "@/lib/deep-link";
+import { initTrayMenu } from "@/lib/tray-menu";
 import "./index.css";
 
 initDeepLink(router);
+initTrayMenu(router);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
