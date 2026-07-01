@@ -2,7 +2,7 @@ import { Suspense, useEffect, useState } from "react";
 import {
   Outlet,
   createRootRouteWithContext,
-  useRouter,
+  useRouterState,
 } from "@tanstack/react-router";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -30,12 +30,11 @@ export interface RouterContext {
 }
 
 function RootLayout() {
-  const router = useRouter();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   // derive active tool from current path
-  const pathname = router.state.location.pathname;
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const tool = getToolByPath(pathname) ?? tools[0];
 
   useEffect(() => {
