@@ -52,3 +52,4 @@ export interface Ticket {
 }
 
 export const STORAGE_KEY = "forge_devboard:v1";
+export const STALE_THRESHOLD_MS = 25 * 60 * 1000;

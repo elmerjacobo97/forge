@@ -1,3 +1,5 @@
+import { useNavigate } from "@tanstack/react-router"
+
 import {
   Command,
   CommandDialog,
@@ -13,12 +15,13 @@ import { tools } from "@/lib/tools"
 interface CommandPaletteProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSelectTool: (id: string) => void
 }
 
-export function CommandPalette({ open, onOpenChange, onSelectTool }: CommandPaletteProps) {
-  function selectTool(id: string) {
-    onSelectTool(id)
+export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
+  const navigate = useNavigate()
+
+  function selectTool(path: string) {
+    void navigate({ to: path })
     onOpenChange(false)
   }
 
@@ -39,7 +42,7 @@ export function CommandPalette({ open, onOpenChange, onSelectTool }: CommandPale
               <CommandItem
                 key={tool.id}
                 value={`${tool.id} ${tool.name} ${tool.category}`}
-                onSelect={() => selectTool(tool.id)}
+                onSelect={() => selectTool(tool.path)}
               >
                 <tool.icon className="size-4 shrink-0" />
                 <span className="flex-1 truncate">{tool.name}</span>

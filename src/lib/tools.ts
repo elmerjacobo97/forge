@@ -113,6 +113,7 @@ const devBoard = () =>
 
 export interface ToolDef {
   id: string;
+  path: string;
   name: string;
   description: string;
   icon: LucideIcon;
@@ -123,6 +124,7 @@ export interface ToolDef {
 export const tools: ToolDef[] = [
   {
     id: "json-formatter",
+    path: "/json-formatter",
     name: "JSON Formatter",
     description: "Format, validate, and minify JSON",
     icon: Braces,
@@ -131,6 +133,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "uuid-generator",
+    path: "/uuid-generator",
     name: "UUID Generator",
     description: "Generate v4 and v7 UUIDs",
     icon: Fingerprint,
@@ -139,6 +142,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "base64",
+    path: "/base64",
     name: "Base64",
     description: "Encode and decode Base64 with UTF-8 support",
     icon: Binary,
@@ -147,6 +151,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "timestamp-converter",
+    path: "/timestamp-converter",
     name: "Timestamp Converter",
     description: "Convert between Unix timestamps and human-readable dates",
     icon: Clock,
@@ -155,6 +160,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "color-converter",
+    path: "/color-converter",
     name: "Color Converter",
     description: "Convert between HEX, RGB, HSL, and OKLCH",
     icon: Palette,
@@ -163,6 +169,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "jwt-decoder",
+    path: "/jwt-decoder",
     name: "JWT Decoder",
     description: "Decode and inspect JWT header and payload",
     icon: KeyRound,
@@ -171,6 +178,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "regex-tester",
+    path: "/regex-tester",
     name: "Regex Tester",
     description: "Test regex patterns with live highlighting and match details",
     icon: Regex,
@@ -179,6 +187,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "hash-generator",
+    path: "/hash-generator",
     name: "Hash Generator",
     description: "Generate MD5, SHA-1, SHA-256, SHA-384, and SHA-512 hashes",
     icon: Hash,
@@ -187,6 +196,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "file-validator",
+    path: "/file-validator",
     name: "File Validator",
     description: "Calculate file hashes and verify integrity",
     icon: FileCheck,
@@ -195,6 +205,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "qr-generator",
+    path: "/qr-generator",
     name: "QR Generator",
     description:
       "Generate QR codes with customizable size, colors, and error correction",
@@ -204,6 +215,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "text-manipulator",
+    path: "/text-manipulator",
     name: "Text Manipulator",
     description: "Transform text: case convert, sort, dedupe, and more",
     icon: Type,
@@ -212,6 +224,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "url-encoder",
+    path: "/url-encoder",
     name: "URL Encoder",
     description: "Encode and decode URL components with percent-encoding",
     icon: Link,
@@ -220,6 +233,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "format-converter",
+    path: "/format-converter",
     name: "Format Converter",
     description: "Convert between JSON, YAML, TOML, and more",
     icon: ArrowRightLeft,
@@ -228,6 +242,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "diff-tool",
+    path: "/diff-tool",
     name: "Diff Tool",
     description: "Compare two texts and highlight line-by-line differences",
     icon: GitCompare,
@@ -236,6 +251,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "lorem-ipsum",
+    path: "/lorem-ipsum",
     name: "Lorem Ipsum",
     description: "Generate placeholder text in plain, HTML, Markdown, or JSON",
     icon: TextQuote,
@@ -244,6 +260,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "json-to-typescript",
+    path: "/json-to-typescript",
     name: "JSON to TypeScript",
     description: "Infer TypeScript interfaces or types from JSON",
     icon: FileCode,
@@ -252,6 +269,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "html-entities",
+    path: "/html-entities",
     name: "HTML Entities",
     description: "Encode and decode HTML entities (named, decimal, hex)",
     icon: Code2,
@@ -260,6 +278,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "http-tester",
+    path: "/http-tester",
     name: "HTTP Tester",
     description: "Send HTTP requests and inspect responses (no CORS)",
     icon: Globe,
@@ -268,6 +287,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "bookmarks",
+    path: "/bookmarks",
     name: "Bookmarks",
     description: "Save and organize documentation, repos, and articles",
     icon: Bookmark,
@@ -276,6 +296,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "image-tools",
+    path: "/image-tools",
     name: "Image Tools",
     description: "Compress and convert PNG, JPG, and WebP images offline",
     icon: ImageIcon,
@@ -284,6 +305,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: "dev-board",
+    path: "/dev-board",
     name: "Dev Board",
     description: "Kanban board with auto time tracking for dev tasks",
     icon: Columns3,
@@ -294,4 +316,8 @@ export const tools: ToolDef[] = [
 
 export function getTool(id: string): ToolDef | undefined {
   return tools.find((t) => t.id === id);
+}
+
+export function getToolByPath(path: string): ToolDef | undefined {
+  return tools.find((t) => t.path === path);
 }

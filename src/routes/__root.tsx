@@ -1,11 +1,19 @@
-import { Suspense, useEffect, useState, useTransition } from "react";
+import { Suspense, useEffect, useState } from "react";
+import {
+  Outlet,
+  createRootRouteWithContext,
+  useRouter,
+} from "@tanstack/react-router";
 
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { CommandPalette } from "@/components/command-palette";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { getTool, tools } from "@/lib/tools";
+import { tools, getToolByPath } from "@/lib/tools";
+import type { AuthState } from "@/lib/auth";
+import type { QueryClient } from "@tanstack/react-query";
 
 function ToolSkeleton() {
   return (
@@ -16,19 +24,19 @@ function ToolSkeleton() {
   );
 }
 
-export function AppShell() {
-  const [activeId, setActiveId] = useState(tools[0].id);
+export interface RouterContext {
+  auth: AuthState;
+  queryClient: QueryClient;
+}
+
+function RootLayout() {
+  const router = useRouter();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const tool = getTool(activeId) ?? tools[0];
-  const ToolComponent = tool.component;
 
-  function selectTool(id: string) {
-    startTransition(() => {
-      setActiveId(id);
-    });
-  }
+  // derive active tool from current path
+  const pathname = router.state.location.pathname;
+  const tool = getToolByPath(pathname) ?? tools[0];
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -44,7 +52,6 @@ export function AppShell() {
         }
       }
     }
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
@@ -52,17 +59,13 @@ export function AppShell() {
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
-        <Sidebar activeId={tool.id} onSelect={selectTool} />
+        <Sidebar activePath={pathname} />
 
         <main className="flex min-w-0 flex-1 flex-col">
           <Header tool={tool} onOpenPalette={() => setPaletteOpen(true)} />
-          <div
-            className={`min-h-0 flex-1 p-4 md:p-5 transition-opacity ${
-              isPending ? "opacity-60" : "opacity-100"
-            }`}
-          >
+          <div className="min-h-0 flex-1 p-4 md:p-5">
             <Suspense fallback={<ToolSkeleton />}>
-              <ToolComponent />
+              <Outlet />
             </Suspense>
           </div>
         </main>
@@ -71,9 +74,13 @@ export function AppShell() {
       <CommandPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
-        onSelectTool={selectTool}
       />
       <KeyboardShortcuts open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <Toaster position="bottom-right" closeButton />
     </TooltipProvider>
   );
 }
+
+export const Route = createRootRouteWithContext<RouterContext>()({
+  component: RootLayout,
+});

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Hammer, Menu, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -11,11 +12,10 @@ import { tools, type ToolDef } from "@/lib/tools";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 
 interface SidebarProps {
-  activeId: string;
-  onSelect: (id: string) => void;
+  activePath: string;
 }
 
-export function Sidebar({ activeId, onSelect }: SidebarProps) {
+export function Sidebar({ activePath }: SidebarProps) {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 200);
 
@@ -88,8 +88,7 @@ export function Sidebar({ activeId, onSelect }: SidebarProps) {
                 <SidebarItem
                   key={tool.id}
                   tool={tool}
-                  active={tool.id === activeId}
-                  onClick={() => onSelect(tool.id)}
+                  active={tool.path === activePath}
                 />
               ))}
             </div>
@@ -132,17 +131,14 @@ export function Sidebar({ activeId, onSelect }: SidebarProps) {
 function SidebarItem({
   tool,
   active,
-  onClick,
 }: {
   tool: ToolDef;
   active: boolean;
-  onClick: () => void;
 }) {
   const Icon = tool.icon;
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Link
+      to={tool.path}
       className={cn(
         "group flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm transition-all",
         active
@@ -161,6 +157,6 @@ function SidebarItem({
         <Icon className="size-3.5" />
       </span>
       <span className="truncate">{tool.name}</span>
-    </button>
+    </Link>
   );
 }

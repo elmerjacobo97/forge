@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { type ColumnId, type Ticket, COLUMNS } from "./types";
 import { type TicketFormValues } from "./schema";
 import { useBoard } from "./hooks/use-board";
+import { useStaleAlert } from "./hooks/use-stale-alert";
 import { ColumnView } from "./components/column-view";
 import { TicketCard } from "./components/ticket-card";
 import { TicketForm } from "./components/ticket-form";
@@ -42,6 +43,8 @@ export function DevBoard() {
     togglePause,
     setPriority,
   } = useBoard();
+
+  useStaleAlert(tickets);
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);

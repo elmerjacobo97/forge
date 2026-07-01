@@ -6,6 +6,9 @@
   "permissions": [
     "core:default",
     "opener:default",
+    "deep-link:default",
+    "notification:default",
+    "store:default",
     {
       "identifier": "http:default",
       "allow": [
