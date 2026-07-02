@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Controller, useForm } from "react-hook-form"
+import { useForm } from "@tanstack/react-form"
 import { toast } from "sonner"
 import * as z from "zod"
 import {
@@ -112,13 +111,13 @@ function saveLinks(links: DevLink[]): void {
 
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
-  url: z.url("Must be a valid URL."),
+  url: z.string().url("Must be a valid URL."),
   category: z.enum(["docs", "git", "tool", "article", "other"]),
   description: z
     .string()
     .min(5, "Description must be at least 5 characters.")
     .max(200, "Description must be at most 200 characters."),
-  tagsString: z.string().optional(),
+  tagsString: z.string(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -139,15 +138,19 @@ export function Bookmarks() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const debouncedSearch = useDebounce(search, 200)
 
-  const form = useForm<FormValues>({
-    // @ts-expect-error — Zod v4 + @hookform/resolvers type mismatch on TS 5.x; runtime is fine
-    resolver: zodResolver(formSchema),
+  const form = useForm({
     defaultValues: {
       title: "",
       url: "",
-      category: "docs",
+      category: "docs" as "docs" | "git" | "tool" | "article" | "other",
       description: "",
       tagsString: "",
+    },
+    validators: {
+      onSubmit: formSchema,
+    },
+    onSubmit: async ({ value }) => {
+      addBookmark(value);
     },
   })
 
@@ -320,59 +323,78 @@ export function Bookmarks() {
             </DialogDescription>
           </DialogHeader>
 
-          <form id="form-add-bookmark" onSubmit={form.handleSubmit(addBookmark)}>
+          <form
+            id="form-add-bookmark"
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit();
+            }}
+          >
             <FieldGroup>
-              <Controller
+              <form.Field
                 name="title"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="form-add-bookmark-title">
-                      Title
-                    </FieldLabel>
-                    <Input
-                      {...field}
-                      id="form-add-bookmark-title"
-                      placeholder="e.g. Tailwind v4 Release Notes"
-                      autoComplete="off"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
+                children={(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !!field.state.meta.errors.length;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>Title</FieldLabel>
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="e.g. Tailwind v4 Release Notes"
+                        autoComplete="off"
+                        aria-invalid={isInvalid}
+                      />
+                      {isInvalid && (
+                        <FieldError errors={(field.state.meta.errors as any[]).map(err => ({ message: err?.toString() }))} />
+                      )}
+                    </Field>
+                  );
+                }}
               />
 
-              <Controller
+              <form.Field
                 name="url"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="form-add-bookmark-url">URL</FieldLabel>
-                    <Input
-                      {...field}
-                      id="form-add-bookmark-url"
-                      placeholder="https://…"
-                      type="url"
-                      autoComplete="off"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
+                children={(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !!field.state.meta.errors.length;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>URL</FieldLabel>
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="https://…"
+                        type="url"
+                        autoComplete="off"
+                        aria-invalid={isInvalid}
+                      />
+                      {isInvalid && (
+                        <FieldError errors={(field.state.meta.errors as any[]).map(err => ({ message: err?.toString() }))} />
+                      )}
+                    </Field>
+                  );
+                }}
               />
 
               <div className="grid grid-cols-2 gap-4">
-                <Controller
+                <form.Field
                   name="category"
-                  control={form.control}
-                  render={({ field }) => (
+                  children={(field) => (
                     <Field>
                       <FieldLabel>Category</FieldLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={(val) => field.handleChange(val as FormValues["category"])}
+                        value={field.state.value}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
@@ -388,17 +410,17 @@ export function Bookmarks() {
                   )}
                 />
 
-                <Controller
+                <form.Field
                   name="tagsString"
-                  control={form.control}
-                  render={({ field }) => (
+                  children={(field) => (
                     <Field>
-                      <FieldLabel htmlFor="form-add-bookmark-tags">
-                        Tags
-                      </FieldLabel>
+                      <FieldLabel htmlFor={field.name}>Tags</FieldLabel>
                       <Input
-                        {...field}
-                        id="form-add-bookmark-tags"
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
                         placeholder="css, react, web"
                       />
                     </Field>
@@ -406,34 +428,38 @@ export function Bookmarks() {
                 />
               </div>
 
-              <Controller
+              <form.Field
                 name="description"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="form-add-bookmark-desc">
-                      Description
-                    </FieldLabel>
-                    <InputGroup>
-                      <InputGroupTextarea
-                        {...field}
-                        id="form-add-bookmark-desc"
-                        placeholder="What is this link about?"
-                        rows={2}
-                        className="resize-none"
-                        aria-invalid={fieldState.invalid}
-                      />
-                      <InputGroupAddon align="block-end">
-                        <InputGroupText className="tabular-nums text-xs">
-                          {field.value.length}/200
-                        </InputGroupText>
-                      </InputGroupAddon>
-                    </InputGroup>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
+                children={(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !!field.state.meta.errors.length;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+                      <InputGroup>
+                        <InputGroupTextarea
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          placeholder="What is this link about?"
+                          rows={2}
+                          className="resize-none"
+                          aria-invalid={isInvalid}
+                        />
+                        <InputGroupAddon align="block-end">
+                          <InputGroupText className="tabular-nums text-xs">
+                            {field.state.value.length}/200
+                          </InputGroupText>
+                        </InputGroupAddon>
+                      </InputGroup>
+                        {isInvalid && (
+                          <FieldError errors={(field.state.meta.errors as any[]).map(err => ({ message: err?.toString() }))} />
+                        )}
+                    </Field>
+                  );
+                }}
               />
             </FieldGroup>
           </form>

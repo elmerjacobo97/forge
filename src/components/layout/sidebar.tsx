@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Hammer, Menu, Search } from "lucide-react";
+import { Hammer, Menu, Search, LogOut, User } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
+import { userQueryOptions } from "@/features/auth/hooks/queries";
+import { useLogoutMutation } from "@/features/auth/hooks/mutations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,6 +21,10 @@ interface SidebarProps {
 export function Sidebar({ activePath }: SidebarProps) {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 200);
+
+  const { data: user } = useQuery(userQueryOptions);
+
+  const logoutMutation = useLogoutMutation();
 
   const grouped = useMemo(() => {
     const q = debouncedQuery.trim().toLowerCase();
@@ -100,6 +107,32 @@ export function Sidebar({ activePath }: SidebarProps) {
           )}
         </nav>
       </ScrollArea>
+
+      <div className="mt-auto border-t border-sidebar-border p-3 flex items-center justify-between gap-2 bg-sidebar-accent/10">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent/80 text-sidebar-accent-foreground border border-sidebar-border shadow-sm">
+            <User className="size-4" />
+          </div>
+          <div className="flex flex-col min-w-0 leading-none">
+            <span className="text-xs font-semibold truncate text-sidebar-foreground">
+              {user?.name || "Developer"}
+            </span>
+            <span className="text-[10px] text-muted-foreground truncate select-all">
+              {user?.email || ""}
+            </span>
+          </div>
+        </div>
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          className="text-muted-foreground hover:text-destructive shrink-0 size-7"
+          onClick={() => logoutMutation.mutate()}
+          disabled={logoutMutation.isPending}
+          title="Log out"
+        >
+          <LogOut className="size-3.5" />
+        </Button>
+      </div>
     </div>
   );
 
@@ -128,13 +161,7 @@ export function Sidebar({ activePath }: SidebarProps) {
   );
 }
 
-function SidebarItem({
-  tool,
-  active,
-}: {
-  tool: ToolDef;
-  active: boolean;
-}) {
+function SidebarItem({ tool, active }: { tool: ToolDef; active: boolean }) {
   const Icon = tool.icon;
   return (
     <Link

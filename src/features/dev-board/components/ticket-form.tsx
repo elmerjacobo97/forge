@@ -1,6 +1,5 @@
 import { useEffect } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "@tanstack/react-form";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -41,17 +40,22 @@ export function TicketForm({
   open,
   onOpenChange,
   editTicket,
-  onSubmit,
+  onSubmit: onSubmitTicket,
 }: TicketFormProps) {
   const isEdit = editTicket !== null;
 
-  const form = useForm<TicketFormValues>({
-    // @ts-expect-error — Zod v4 + @hookform/resolvers type mismatch on TS 5.x; runtime is fine
-    resolver: zodResolver(ticketSchema),
+  const form = useForm({
     defaultValues: {
       title: "",
       description: "",
       priority: "med" as Priority,
+    },
+    validators: {
+      onSubmit: ticketSchema,
+    },
+    onSubmit: async ({ value }) => {
+      onSubmitTicket(value);
+      onOpenChange(false);
     },
   });
 
@@ -69,11 +73,6 @@ export function TicketForm({
     }
   }, [open, editTicket, form]);
 
-  function handleSubmit(values: TicketFormValues) {
-    onSubmit(values);
-    onOpenChange(false);
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -86,37 +85,52 @@ export function TicketForm({
           </DialogDescription>
         </DialogHeader>
 
-        <form id="ticket-form" onSubmit={form.handleSubmit(handleSubmit)}>
+        <form
+          id="ticket-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+        >
           <FieldGroup>
-            <Controller
+            <form.Field
               name="title"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="ticket-title">Title</FieldLabel>
-                  <Input
-                    {...field}
-                    id="ticket-title"
-                    placeholder="e.g. Fix OAuth redirect loop"
-                    autoComplete="off"
-                    aria-invalid={fieldState.invalid}
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
+              children={(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched && !!field.state.meta.errors.length;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name}>Title</FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="e.g. Fix OAuth redirect loop"
+                      autoComplete="off"
+                      aria-invalid={isInvalid}
+                    />
+                    {isInvalid && (
+                      <FieldError errors={(field.state.meta.errors as any[]).map(err => ({ message: err?.toString() }))} />
+                    )}
+                  </Field>
+                );
+              }}
             />
 
-            <Controller
+            <form.Field
               name="description"
-              control={form.control}
-              render={({ field }) => (
+              children={(field) => (
                 <Field>
-                  <FieldLabel htmlFor="ticket-desc">Description</FieldLabel>
+                  <FieldLabel htmlFor={field.name}>Description</FieldLabel>
                   <Textarea
-                    {...field}
-                    id="ticket-desc"
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Optional context, reproduction steps, or acceptance criteria…"
                     rows={3}
                     spellCheck={false}
@@ -125,13 +139,15 @@ export function TicketForm({
               )}
             />
 
-            <Controller
+            <form.Field
               name="priority"
-              control={form.control}
-              render={({ field }) => (
+              children={(field) => (
                 <Field>
                   <FieldLabel>Priority</FieldLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={(val) => field.handleChange(val as Priority)}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
