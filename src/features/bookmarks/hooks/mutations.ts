@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUserQuery } from "@/features/auth/hooks/queries";
 import { bookmarksService } from "../services/bookmarks-service";
-import type { DevLink } from "../types";
+import type { Bookmark } from "../types";
 import { toast } from "sonner";
 
 export function useCreateBookmarkMutation() {
@@ -10,7 +10,7 @@ export function useCreateBookmarkMutation() {
   const userId = user?.id;
 
   return useMutation({
-    mutationFn: (bookmark: Omit<DevLink, "id" | "createdAt">) =>
+    mutationFn: (bookmark: Omit<Bookmark, "id" | "createdAt">) =>
       bookmarksService.createBookmark(bookmark, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookmarks", userId] });
@@ -28,8 +28,7 @@ export function useDeleteBookmarkMutation() {
   const userId = user?.id;
 
   return useMutation({
-    mutationFn: (bookmarkId: string) =>
-      bookmarksService.deleteBookmark(bookmarkId, userId),
+    mutationFn: (bookmarkId: string) => bookmarksService.deleteBookmark(bookmarkId, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookmarks", userId] });
       toast.success("Bookmark deleted successfully!");

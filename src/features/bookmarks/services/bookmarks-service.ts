@@ -1,10 +1,10 @@
 import { databases } from "@/lib/appwrite";
 import { Query, ID } from "appwrite";
-import type { DevLink } from "../types";
+import type { Bookmark } from "../types";
 
 const STORAGE_KEY = "forge_bookmarks:v1";
 
-const SEED_LINKS: DevLink[] = [
+const SEED_LINKS: Bookmark[] = [
   {
     id: "seed-link-1",
     title: "Tailwind CSS v4 Docs",
@@ -37,20 +37,20 @@ const SEED_LINKS: DevLink[] = [
   },
 ];
 
-const getLocalLinks = (): DevLink[] => {
+const getLocalLinks = (): Bookmark[] => {
   const data = localStorage.getItem(STORAGE_KEY);
   if (!data) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_LINKS));
     return SEED_LINKS;
   }
   try {
-    return JSON.parse(data) as DevLink[];
+    return JSON.parse(data) as Bookmark[];
   } catch {
     return SEED_LINKS;
   }
 };
 
-const saveLocalLinks = (links: DevLink[]): void => {
+const saveLocalLinks = (links: Bookmark[]): void => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
 };
 
@@ -63,14 +63,13 @@ export const bookmarksService = {
     return isConfigured && !!userId;
   },
 
-  async fetchBookmarks(userId?: string): Promise<DevLink[]> {
+  async fetchBookmarks(userId?: string): Promise<Bookmark[]> {
     if (this.isAppwriteEnabled(userId)) {
       try {
-        const response = await databases.listDocuments(
-          databaseId,
-          collectionId,
-          [Query.equal("userId", userId!), Query.orderDesc("$createdAt")]
-        );
+        const response = await databases.listDocuments(databaseId, collectionId, [
+          Query.equal("userId", userId!),
+          Query.orderDesc("$createdAt"),
+        ]);
         return response.documents.map((doc) => ({
           id: doc.$id,
           title: doc.title,
@@ -81,7 +80,10 @@ export const bookmarksService = {
           createdAt: doc.$createdAt,
         }));
       } catch (error) {
-        console.error("Failed to fetch bookmarks from Appwrite, falling back to local storage:", error);
+        console.error(
+          "Failed to fetch bookmarks from Appwrite, falling back to local storage:",
+          error,
+        );
         return getLocalLinks();
       }
     }
@@ -89,23 +91,18 @@ export const bookmarksService = {
   },
 
   async createBookmark(
-    bookmark: Omit<DevLink, "id" | "createdAt">,
-    userId?: string
-  ): Promise<DevLink> {
+    bookmark: Omit<Bookmark, "id" | "createdAt">,
+    userId?: string,
+  ): Promise<Bookmark> {
     if (this.isAppwriteEnabled(userId)) {
-      const doc = await databases.createDocument(
-        databaseId,
-        collectionId,
-        ID.unique(),
-        {
-          title: bookmark.title,
-          url: bookmark.url,
-          category: bookmark.category,
-          description: bookmark.description,
-          tags: bookmark.tags,
-          userId: userId!,
-        }
-      );
+      const doc = await databases.createDocument(databaseId, collectionId, ID.unique(), {
+        title: bookmark.title,
+        url: bookmark.url,
+        category: bookmark.category,
+        description: bookmark.description,
+        tags: bookmark.tags,
+        userId: userId!,
+      });
       return {
         id: doc.$id,
         title: doc.title,
@@ -117,7 +114,7 @@ export const bookmarksService = {
       };
     } else {
       const localLinks = getLocalLinks();
-      const newBookmark: DevLink = {
+      const newBookmark: Bookmark = {
         id: `local-${crypto.randomUUID()}`,
         ...bookmark,
         createdAt: new Date().toISOString(),
