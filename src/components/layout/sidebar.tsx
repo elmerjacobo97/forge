@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Hammer, Menu, Search, LogOut, User } from "lucide-react";
+import { Hammer, Menu, Search, LogOut, User, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { userQueryOptions } from "@/features/auth/hooks/queries";
@@ -122,16 +122,29 @@ export function Sidebar({ activePath }: SidebarProps) {
             </span>
           </div>
         </div>
-        <Button
-          size="icon-sm"
-          variant="ghost"
-          className="text-muted-foreground hover:text-destructive shrink-0 size-7"
-          onClick={() => logoutMutation.mutate()}
-          disabled={logoutMutation.isPending}
-          title="Log out"
-        >
-          <LogOut className="size-3.5" />
-        </Button>
+        <div className="flex items-center gap-1 shrink-0">
+          <Link to="/settings">
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground size-7"
+              title="Settings"
+              asChild={false}
+            >
+              <Settings className="size-3.5" />
+            </Button>
+          </Link>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            className="text-muted-foreground hover:text-destructive size-7"
+            onClick={() => logoutMutation.mutate()}
+            disabled={logoutMutation.isPending}
+            title="Log out"
+          >
+            <LogOut className="size-3.5" />
+          </Button>
+        </div>
       </div>
     </div>
   );
