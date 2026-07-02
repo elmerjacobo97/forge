@@ -4,7 +4,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 
-// @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
@@ -21,6 +20,33 @@ export default defineConfig(async () => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("appwrite")) {
+              return "vendor-appwrite";
+            }
+            if (id.includes("lucide-react")) {
+              return "vendor-lucide";
+            }
+            // Group core routing/state dependencies together
+            if (
+              id.includes("react/") ||
+              id.includes("react-dom/") ||
+              id.includes("@tanstack/")
+            ) {
+              return "vendor-core";
+            }
+            // Leave other node_modules (like @faker-js/faker) un-chunked here
+            // so they are code-split into their respective page chunks.
+          }
+        },
+      },
     },
   },
 
