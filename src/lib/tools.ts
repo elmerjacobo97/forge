@@ -98,7 +98,7 @@ const httpTester = () =>
   }));
 
 const bookmarks = () =>
-  import("@/features/bookmarks/bookmarks").then((m) => ({
+  import("@/features/bookmarks/components/bookmarks").then((m) => ({
     default: m.Bookmarks,
   }));
 
