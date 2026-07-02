@@ -4,11 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import { AlertTriangle, GitCommitHorizontal } from "lucide-react";
 import { toast } from "sonner";
 
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { RepoSwitcher } from "./components/repo-switcher";
 import { FileList } from "./components/file-list";
 import { DiffViewer } from "./components/diff-viewer";
@@ -16,11 +12,7 @@ import { CommitPanel } from "./components/commit-panel";
 import { useGitStatus } from "./hooks/use-git-status";
 import { useGitDiff } from "./hooks/use-git-diff";
 import { useSavedReposQuery } from "./hooks/queries";
-import {
-  useAddRepoMutation,
-  useRemoveRepoMutation,
-  useTouchRepoMutation,
-} from "./hooks/mutations";
+import { useAddRepoMutation, useRemoveRepoMutation, useTouchRepoMutation } from "./hooks/mutations";
 import type { SavedRepo } from "./types";
 
 interface DragDropPayload {
@@ -47,10 +39,7 @@ export function GitCommit() {
   const removeRepoMutation = useRemoveRepoMutation();
   const touchRepoMutation = useTouchRepoMutation();
 
-  const stagedFiles = useMemo(
-    () => files.filter((f) => f.staged).map((f) => f.path),
-    [files],
-  );
+  const stagedFiles = useMemo(() => files.filter((f) => f.staged).map((f) => f.path), [files]);
 
   // Default to the most recently opened repo once the saved list loads.
   useEffect(() => {
@@ -194,7 +183,6 @@ export function GitCommit() {
     if (repoPath) refresh(repoPath);
   }, [repoPath, refresh, clearDiff]);
 
-
   return (
     <div className="flex h-full flex-col gap-3">
       {/* Repo Switcher */}
@@ -220,14 +208,23 @@ export function GitCommit() {
           <GitCommitHorizontal className="size-12 opacity-20" />
           <div>
             <p className="text-sm font-medium">No repository selected</p>
-            <p className="text-xs">Open a local git repository, or drop a folder here, to get started.</p>
+            <p className="text-xs">
+              Open a local git repository, or drop a folder here, to get started.
+            </p>
           </div>
         </div>
       ) : (
         /* 3-panel resizable layout */
-        <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
+        <ResizablePanelGroup
+          orientation="horizontal"
+          className="min-h-0 flex-1"
+        >
           {/* Panel 1 — File list */}
-          <ResizablePanel defaultSize={20} minSize={15} className="p-2">
+          <ResizablePanel
+            defaultSize={20}
+            minSize={15}
+            className="p-2"
+          >
             <div className="h-full overflow-hidden rounded-xl border border-input/60 bg-muted/20">
               <FileList
                 files={files}
@@ -241,10 +238,17 @@ export function GitCommit() {
             </div>
           </ResizablePanel>
 
-          <ResizableHandle withHandle className="bg-transparent" />
+          <ResizableHandle
+            withHandle
+            className="bg-transparent"
+          />
 
           {/* Panel 2 — Diff viewer */}
-          <ResizablePanel defaultSize={60} minSize={30} className="p-2">
+          <ResizablePanel
+            defaultSize={60}
+            minSize={30}
+            className="p-2"
+          >
             <div className="h-full overflow-hidden rounded-xl border border-input/60 bg-muted/20">
               <DiffViewer
                 diff={diff}
@@ -254,10 +258,17 @@ export function GitCommit() {
             </div>
           </ResizablePanel>
 
-          <ResizableHandle withHandle className="bg-transparent" />
+          <ResizableHandle
+            withHandle
+            className="bg-transparent"
+          />
 
           {/* Panel 3 — Commit panel */}
-          <ResizablePanel defaultSize={20} minSize={15} className="p-2">
+          <ResizablePanel
+            defaultSize={20}
+            minSize={15}
+            className="p-2"
+          >
             <div className="h-full overflow-hidden rounded-xl border border-input/60 bg-muted/20">
               <CommitPanel
                 repoPath={repoPath}
