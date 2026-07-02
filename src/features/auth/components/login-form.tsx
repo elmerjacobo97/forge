@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
 import { Lock, Mail } from "lucide-react";
@@ -33,6 +31,16 @@ const loginSchema = z.object({
   email: z.string().email("Enter a valid email"),
   password: z.string().min(1, "Password is required"),
 });
+
+const formatErrors = (errors: any[]) => {
+  return errors.map((err) => {
+    if (typeof err === "string") return { message: err };
+    if (err && typeof err === "object" && "message" in err) {
+      return { message: String(err.message) };
+    }
+    return { message: err?.toString() || "Invalid value" };
+  });
+};
 
 export function LoginForm() {
   const navigate = useNavigate();
@@ -119,9 +127,7 @@ export function LoginForm() {
                     </InputGroup>
                     {isInvalid && (
                       <FieldError
-                        errors={(field.state.meta.errors as any[]).map(
-                          (err) => ({ message: err?.toString() }),
-                        )}
+                        errors={formatErrors(field.state.meta.errors)}
                       />
                     )}
                   </Field>
@@ -157,9 +163,7 @@ export function LoginForm() {
                     </InputGroup>
                     {isInvalid && (
                       <FieldError
-                        errors={(field.state.meta.errors as any[]).map(
-                          (err) => ({ message: err?.toString() }),
-                        )}
+                        errors={formatErrors(field.state.meta.errors)}
                       />
                     )}
                   </Field>
@@ -169,20 +173,24 @@ export function LoginForm() {
           </FieldGroup>
         </form>
       </CardContent>
-      <CardFooter>
-        <Field orientation="horizontal">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => form.reset()}
-            disabled={isPending}
+      <CardFooter className="flex-col gap-4">
+        <Button
+          type="submit"
+          form="login-form"
+          className="w-full"
+          disabled={isPending}
+        >
+          {isPending ? "Signing in..." : "Sign in"}
+        </Button>
+        <div className="text-center text-xs text-muted-foreground">
+          Don't have an account?{" "}
+          <Link
+            to="/register"
+            className="text-primary hover:underline font-medium"
           >
-            Reset
-          </Button>
-          <Button type="submit" form="login-form" disabled={isPending}>
-            {isPending ? "Signing in..." : "Sign in"}
-          </Button>
-        </Field>
+            Sign up
+          </Link>
+        </div>
       </CardFooter>
     </Card>
   );

@@ -131,6 +131,16 @@ const CATEGORIES = [
   { value: "other", label: "Other" },
 ] as const
 
+const formatErrors = (errors: any[]) => {
+  return errors.map((err) => {
+    if (typeof err === "string") return { message: err };
+    if (err && typeof err === "object" && "message" in err) {
+      return { message: String(err.message) };
+    }
+    return { message: err?.toString() || "Invalid value" };
+  });
+};
+
 export function Bookmarks() {
   const [links, setLinks] = useState<DevLink[]>(getLinks)
   const [search, setSearch] = useState("")
@@ -351,7 +361,7 @@ export function Bookmarks() {
                         aria-invalid={isInvalid}
                       />
                       {isInvalid && (
-                        <FieldError errors={(field.state.meta.errors as any[]).map(err => ({ message: err?.toString() }))} />
+                        <FieldError errors={formatErrors(field.state.meta.errors)} />
                       )}
                     </Field>
                   );
@@ -378,7 +388,7 @@ export function Bookmarks() {
                         aria-invalid={isInvalid}
                       />
                       {isInvalid && (
-                        <FieldError errors={(field.state.meta.errors as any[]).map(err => ({ message: err?.toString() }))} />
+                        <FieldError errors={formatErrors(field.state.meta.errors)} />
                       )}
                     </Field>
                   );
@@ -455,7 +465,7 @@ export function Bookmarks() {
                         </InputGroupAddon>
                       </InputGroup>
                         {isInvalid && (
-                          <FieldError errors={(field.state.meta.errors as any[]).map(err => ({ message: err?.toString() }))} />
+                          <FieldError errors={formatErrors(field.state.meta.errors)} />
                         )}
                     </Field>
                   );

@@ -36,6 +36,16 @@ interface TicketFormProps {
   onSubmit: (values: TicketFormValues) => void;
 }
 
+const formatErrors = (errors: any[]) => {
+  return errors.map((err) => {
+    if (typeof err === "string") return { message: err };
+    if (err && typeof err === "object" && "message" in err) {
+      return { message: String(err.message) };
+    }
+    return { message: err?.toString() || "Invalid value" };
+  });
+};
+
 export function TicketForm({
   open,
   onOpenChange,
@@ -113,7 +123,7 @@ export function TicketForm({
                       aria-invalid={isInvalid}
                     />
                     {isInvalid && (
-                      <FieldError errors={(field.state.meta.errors as any[]).map(err => ({ message: err?.toString() }))} />
+                      <FieldError errors={formatErrors(field.state.meta.errors)} />
                     )}
                   </Field>
                 );
