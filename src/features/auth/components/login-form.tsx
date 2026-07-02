@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { z } from "zod";
+import { Link } from "@tanstack/react-router";
 import { useForm } from "@tanstack/react-form";
 import { Lock, Mail } from "lucide-react";
 
@@ -26,27 +24,9 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@/components/ui/input-group";
-
-const loginSchema = z.object({
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(1, "Password is required"),
-});
-
-const formatErrors = (errors: any[]) => {
-  return errors.map((err) => {
-    if (typeof err === "string") return { message: err };
-    if (err && typeof err === "object" && "message" in err) {
-      return { message: String(err.message) };
-    }
-    return { message: err?.toString() || "Invalid value" };
-  });
-};
+import { loginSchema } from "../schemas/auth-schema";
 
 export function LoginForm() {
-  const navigate = useNavigate();
-  const search = useSearch({ strict: false }) as { redirect?: string };
-  const [loginError, setLoginError] = useState<string | null>(null);
-
   const loginMutation = useLoginMutation();
 
   const form = useForm({
@@ -58,18 +38,7 @@ export function LoginForm() {
       onSubmit: loginSchema,
     },
     onSubmit: async ({ value }) => {
-      loginMutation.mutate(value, {
-        onSuccess: () => {
-          setLoginError(null);
-          const target = search.redirect ?? "/dev-board";
-          navigate({ to: target });
-        },
-        onError: (err: any) => {
-          setLoginError(
-            err?.message || "An error occurred during login. Please try again.",
-          );
-        },
-      });
+      loginMutation.mutate(value);
     },
   });
 
@@ -92,11 +61,6 @@ export function LoginForm() {
             form.handleSubmit();
           }}
         >
-          {loginError && (
-            <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-xs font-medium text-destructive leading-normal border border-destructive/20">
-              {loginError}
-            </div>
-          )}
           <FieldGroup>
             <form.Field
               name="email"
@@ -126,9 +90,7 @@ export function LoginForm() {
                       />
                     </InputGroup>
                     {isInvalid && (
-                      <FieldError
-                        errors={formatErrors(field.state.meta.errors)}
-                      />
+                      <FieldError errors={field.state.meta.errors} />
                     )}
                   </Field>
                 );
@@ -162,9 +124,7 @@ export function LoginForm() {
                       />
                     </InputGroup>
                     {isInvalid && (
-                      <FieldError
-                        errors={formatErrors(field.state.meta.errors)}
-                      />
+                      <FieldError errors={field.state.meta.errors} />
                     )}
                   </Field>
                 );

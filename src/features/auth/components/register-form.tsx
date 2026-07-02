@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
 import { Lock, Mail, User } from "lucide-react";
@@ -26,33 +25,9 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@/components/ui/input-group";
-
-const registerSchema = z
-  .object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Enter a valid email"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(1, "Please confirm your password"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-const formatErrors = (errors: any[]) => {
-  return errors.map((err) => {
-    if (typeof err === "string") return { message: err };
-    if (err && typeof err === "object" && "message" in err) {
-      return { message: String(err.message) };
-    }
-    return { message: err?.toString() || "Invalid value" };
-  });
-};
+import { registerSchema } from "../schemas/auth-schema";
 
 export function RegisterForm() {
-  const navigate = useNavigate();
-  const [registerError, setRegisterError] = useState<string | null>(null);
-
   const registerMutation = useRegisterMutation();
 
   const form = useForm({
@@ -67,21 +42,7 @@ export function RegisterForm() {
     },
     onSubmit: async ({ value }) => {
       const { name, email, password } = value;
-      registerMutation.mutate(
-        { name, email, password },
-        {
-          onSuccess: () => {
-            setRegisterError(null);
-            navigate({ to: "/dev-board" });
-          },
-          onError: (err: any) => {
-            setRegisterError(
-              err?.message ||
-                "An error occurred during registration. Please try again.",
-            );
-          },
-        },
-      );
+      registerMutation.mutate({ name, email, password });
     },
   });
 
@@ -104,11 +65,6 @@ export function RegisterForm() {
             form.handleSubmit();
           }}
         >
-          {registerError && (
-            <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-xs font-medium text-destructive leading-normal border border-destructive/20">
-              {registerError}
-            </div>
-          )}
           <FieldGroup>
             <form.Field
               name="name"
@@ -138,9 +94,7 @@ export function RegisterForm() {
                       />
                     </InputGroup>
                     {isInvalid && (
-                      <FieldError
-                        errors={formatErrors(field.state.meta.errors)}
-                      />
+                      <FieldError errors={field.state.meta.errors} />
                     )}
                   </Field>
                 );
@@ -174,9 +128,7 @@ export function RegisterForm() {
                       />
                     </InputGroup>
                     {isInvalid && (
-                      <FieldError
-                        errors={formatErrors(field.state.meta.errors)}
-                      />
+                      <FieldError errors={field.state.meta.errors} />
                     )}
                   </Field>
                 );
@@ -210,9 +162,7 @@ export function RegisterForm() {
                       />
                     </InputGroup>
                     {isInvalid && (
-                      <FieldError
-                        errors={formatErrors(field.state.meta.errors)}
-                      />
+                      <FieldError errors={field.state.meta.errors} />
                     )}
                   </Field>
                 );
@@ -248,9 +198,7 @@ export function RegisterForm() {
                       />
                     </InputGroup>
                     {isInvalid && (
-                      <FieldError
-                        errors={formatErrors(field.state.meta.errors)}
-                      />
+                      <FieldError errors={field.state.meta.errors} />
                     )}
                   </Field>
                 );
