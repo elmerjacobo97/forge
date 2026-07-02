@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { invoke } from "@tauri-apps/api/core";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { generateCommitMessage } from "../services/groq-service";
+import { generateCommitMessage, DiffEntry } from "../services/groq-service";
 
 interface CommitPanelProps {
   repoPath: string;
@@ -28,8 +28,10 @@ export function CommitPanel({
     }
     setGenerating(true);
     try {
-      // Fetch the diff ONLY for the selected files, excluding verbose lockfiles
-      const diffs = await Promise.all(
+      // Fetch the diff ONLY for the selected files, excluding verbose lockfiles.
+      // Keep each file's diff separate (not flattened into one string) so the
+      // model always sees every changed file, not just whichever fit first.
+      const entries: DiffEntry[] = await Promise.all(
         selectedFiles
           .filter((file) => {
             const lower = file.toLowerCase();
@@ -53,20 +55,18 @@ export function CommitPanel({
                 staged: true,
               }).catch(() => ""),
             ]);
-            return [staged, unstaged].filter(Boolean).join("\n");
+            return { path: file, diff: [staged, unstaged].filter(Boolean).join("\n") };
           })
       );
 
-      const fullDiff = diffs.filter(Boolean).join("\n");
-
-      if (!fullDiff.trim()) {
+      if (!entries.some((e) => e.diff.trim())) {
         toast.error(
           "No diff found. Make sure the selected files have uncommitted changes.",
         );
         return;
       }
 
-      const generated = await generateCommitMessage(fullDiff);
+      const generated = await generateCommitMessage(entries);
       setMessage(generated);
       toast.success("Commit message generated!");
     } catch (e) {
