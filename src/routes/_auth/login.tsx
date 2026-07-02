@@ -7,15 +7,7 @@ const searchSchema = z.object({
   redirect: z.string().optional(),
 });
 
-export const Route = createFileRoute("/login")({
+export const Route = createFileRoute("/_auth/login")({
   validateSearch: searchSchema,
-  component: LoginScreen,
+  component: LoginForm,
 });
-
-function LoginScreen() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <LoginForm />
-    </div>
-  );
-}

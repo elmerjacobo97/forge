@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
 import { Lock, Mail, User } from "lucide-react";
 
