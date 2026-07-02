@@ -9,6 +9,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_store::Builder::default().build())
@@ -16,6 +17,9 @@ pub fn run() {
             commands::hash_file::hash_file,
             commands::read_file::read_file_bytes,
             commands::tray_menu::update_tray_menu,
+            commands::git_status::git_status,
+            commands::git_diff::git_diff,
+            commands::git_commit::git_commit,
             #[cfg(target_os = "macos")]
             commands::color::pick_color,
         ])

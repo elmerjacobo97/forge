@@ -16,6 +16,7 @@ import { Route as AuthenticatedUuidGeneratorRouteImport } from './routes/_authen
 import { Route as AuthenticatedUrlEncoderRouteImport } from './routes/_authenticated/url-encoder'
 import { Route as AuthenticatedTimestampConverterRouteImport } from './routes/_authenticated/timestamp-converter'
 import { Route as AuthenticatedTextManipulatorRouteImport } from './routes/_authenticated/text-manipulator'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedRegexTesterRouteImport } from './routes/_authenticated/regex-tester'
 import { Route as AuthenticatedQrGeneratorRouteImport } from './routes/_authenticated/qr-generator'
 import { Route as AuthenticatedMockDataGeneratorRouteImport } from './routes/_authenticated/mock-data-generator'
@@ -27,6 +28,7 @@ import { Route as AuthenticatedImageToolsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedHttpTesterRouteImport } from './routes/_authenticated/http-tester'
 import { Route as AuthenticatedHtmlEntitiesRouteImport } from './routes/_authenticated/html-entities'
 import { Route as AuthenticatedHashGeneratorRouteImport } from './routes/_authenticated/hash-generator'
+import { Route as AuthenticatedGitCommitRouteImport } from './routes/_authenticated/git-commit'
 import { Route as AuthenticatedFormatConverterRouteImport } from './routes/_authenticated/format-converter'
 import { Route as AuthenticatedFileValidatorRouteImport } from './routes/_authenticated/file-validator'
 import { Route as AuthenticatedDiffToolRouteImport } from './routes/_authenticated/diff-tool'
@@ -73,6 +75,11 @@ const AuthenticatedTextManipulatorRoute =
     path: '/text-manipulator',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRegexTesterRoute =
   AuthenticatedRegexTesterRouteImport.update({
     id: '/regex-tester',
@@ -135,6 +142,11 @@ const AuthenticatedHashGeneratorRoute =
     path: '/hash-generator',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedGitCommitRoute = AuthenticatedGitCommitRouteImport.update({
+  id: '/git-commit',
+  path: '/git-commit',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFormatConverterRoute =
   AuthenticatedFormatConverterRouteImport.update({
     id: '/format-converter',
@@ -195,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/diff-tool': typeof AuthenticatedDiffToolRoute
   '/file-validator': typeof AuthenticatedFileValidatorRoute
   '/format-converter': typeof AuthenticatedFormatConverterRoute
+  '/git-commit': typeof AuthenticatedGitCommitRoute
   '/hash-generator': typeof AuthenticatedHashGeneratorRoute
   '/html-entities': typeof AuthenticatedHtmlEntitiesRoute
   '/http-tester': typeof AuthenticatedHttpTesterRoute
@@ -206,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/mock-data-generator': typeof AuthenticatedMockDataGeneratorRoute
   '/qr-generator': typeof AuthenticatedQrGeneratorRoute
   '/regex-tester': typeof AuthenticatedRegexTesterRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/text-manipulator': typeof AuthenticatedTextManipulatorRoute
   '/timestamp-converter': typeof AuthenticatedTimestampConverterRoute
   '/url-encoder': typeof AuthenticatedUrlEncoderRoute
@@ -222,6 +236,7 @@ export interface FileRoutesByTo {
   '/diff-tool': typeof AuthenticatedDiffToolRoute
   '/file-validator': typeof AuthenticatedFileValidatorRoute
   '/format-converter': typeof AuthenticatedFormatConverterRoute
+  '/git-commit': typeof AuthenticatedGitCommitRoute
   '/hash-generator': typeof AuthenticatedHashGeneratorRoute
   '/html-entities': typeof AuthenticatedHtmlEntitiesRoute
   '/http-tester': typeof AuthenticatedHttpTesterRoute
@@ -233,6 +248,7 @@ export interface FileRoutesByTo {
   '/mock-data-generator': typeof AuthenticatedMockDataGeneratorRoute
   '/qr-generator': typeof AuthenticatedQrGeneratorRoute
   '/regex-tester': typeof AuthenticatedRegexTesterRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/text-manipulator': typeof AuthenticatedTextManipulatorRoute
   '/timestamp-converter': typeof AuthenticatedTimestampConverterRoute
   '/url-encoder': typeof AuthenticatedUrlEncoderRoute
@@ -252,6 +268,7 @@ export interface FileRoutesById {
   '/_authenticated/diff-tool': typeof AuthenticatedDiffToolRoute
   '/_authenticated/file-validator': typeof AuthenticatedFileValidatorRoute
   '/_authenticated/format-converter': typeof AuthenticatedFormatConverterRoute
+  '/_authenticated/git-commit': typeof AuthenticatedGitCommitRoute
   '/_authenticated/hash-generator': typeof AuthenticatedHashGeneratorRoute
   '/_authenticated/html-entities': typeof AuthenticatedHtmlEntitiesRoute
   '/_authenticated/http-tester': typeof AuthenticatedHttpTesterRoute
@@ -263,6 +280,7 @@ export interface FileRoutesById {
   '/_authenticated/mock-data-generator': typeof AuthenticatedMockDataGeneratorRoute
   '/_authenticated/qr-generator': typeof AuthenticatedQrGeneratorRoute
   '/_authenticated/regex-tester': typeof AuthenticatedRegexTesterRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/text-manipulator': typeof AuthenticatedTextManipulatorRoute
   '/_authenticated/timestamp-converter': typeof AuthenticatedTimestampConverterRoute
   '/_authenticated/url-encoder': typeof AuthenticatedUrlEncoderRoute
@@ -281,6 +299,7 @@ export interface FileRouteTypes {
     | '/diff-tool'
     | '/file-validator'
     | '/format-converter'
+    | '/git-commit'
     | '/hash-generator'
     | '/html-entities'
     | '/http-tester'
@@ -292,6 +311,7 @@ export interface FileRouteTypes {
     | '/mock-data-generator'
     | '/qr-generator'
     | '/regex-tester'
+    | '/settings'
     | '/text-manipulator'
     | '/timestamp-converter'
     | '/url-encoder'
@@ -308,6 +328,7 @@ export interface FileRouteTypes {
     | '/diff-tool'
     | '/file-validator'
     | '/format-converter'
+    | '/git-commit'
     | '/hash-generator'
     | '/html-entities'
     | '/http-tester'
@@ -319,6 +340,7 @@ export interface FileRouteTypes {
     | '/mock-data-generator'
     | '/qr-generator'
     | '/regex-tester'
+    | '/settings'
     | '/text-manipulator'
     | '/timestamp-converter'
     | '/url-encoder'
@@ -337,6 +359,7 @@ export interface FileRouteTypes {
     | '/_authenticated/diff-tool'
     | '/_authenticated/file-validator'
     | '/_authenticated/format-converter'
+    | '/_authenticated/git-commit'
     | '/_authenticated/hash-generator'
     | '/_authenticated/html-entities'
     | '/_authenticated/http-tester'
@@ -348,6 +371,7 @@ export interface FileRouteTypes {
     | '/_authenticated/mock-data-generator'
     | '/_authenticated/qr-generator'
     | '/_authenticated/regex-tester'
+    | '/_authenticated/settings'
     | '/_authenticated/text-manipulator'
     | '/_authenticated/timestamp-converter'
     | '/_authenticated/url-encoder'
@@ -409,6 +433,13 @@ declare module '@tanstack/react-router' {
       path: '/text-manipulator'
       fullPath: '/text-manipulator'
       preLoaderRoute: typeof AuthenticatedTextManipulatorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/regex-tester': {
@@ -486,6 +517,13 @@ declare module '@tanstack/react-router' {
       path: '/hash-generator'
       fullPath: '/hash-generator'
       preLoaderRoute: typeof AuthenticatedHashGeneratorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/git-commit': {
+      id: '/_authenticated/git-commit'
+      path: '/git-commit'
+      fullPath: '/git-commit'
+      preLoaderRoute: typeof AuthenticatedGitCommitRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/format-converter': {
@@ -576,6 +614,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDiffToolRoute: typeof AuthenticatedDiffToolRoute
   AuthenticatedFileValidatorRoute: typeof AuthenticatedFileValidatorRoute
   AuthenticatedFormatConverterRoute: typeof AuthenticatedFormatConverterRoute
+  AuthenticatedGitCommitRoute: typeof AuthenticatedGitCommitRoute
   AuthenticatedHashGeneratorRoute: typeof AuthenticatedHashGeneratorRoute
   AuthenticatedHtmlEntitiesRoute: typeof AuthenticatedHtmlEntitiesRoute
   AuthenticatedHttpTesterRoute: typeof AuthenticatedHttpTesterRoute
@@ -587,6 +626,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMockDataGeneratorRoute: typeof AuthenticatedMockDataGeneratorRoute
   AuthenticatedQrGeneratorRoute: typeof AuthenticatedQrGeneratorRoute
   AuthenticatedRegexTesterRoute: typeof AuthenticatedRegexTesterRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTextManipulatorRoute: typeof AuthenticatedTextManipulatorRoute
   AuthenticatedTimestampConverterRoute: typeof AuthenticatedTimestampConverterRoute
   AuthenticatedUrlEncoderRoute: typeof AuthenticatedUrlEncoderRoute
@@ -601,6 +641,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDiffToolRoute: AuthenticatedDiffToolRoute,
   AuthenticatedFileValidatorRoute: AuthenticatedFileValidatorRoute,
   AuthenticatedFormatConverterRoute: AuthenticatedFormatConverterRoute,
+  AuthenticatedGitCommitRoute: AuthenticatedGitCommitRoute,
   AuthenticatedHashGeneratorRoute: AuthenticatedHashGeneratorRoute,
   AuthenticatedHtmlEntitiesRoute: AuthenticatedHtmlEntitiesRoute,
   AuthenticatedHttpTesterRoute: AuthenticatedHttpTesterRoute,
@@ -612,6 +653,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMockDataGeneratorRoute: AuthenticatedMockDataGeneratorRoute,
   AuthenticatedQrGeneratorRoute: AuthenticatedQrGeneratorRoute,
   AuthenticatedRegexTesterRoute: AuthenticatedRegexTesterRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTextManipulatorRoute: AuthenticatedTextManipulatorRoute,
   AuthenticatedTimestampConverterRoute: AuthenticatedTimestampConverterRoute,
   AuthenticatedUrlEncoderRoute: AuthenticatedUrlEncoderRoute,

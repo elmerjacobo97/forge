@@ -15,6 +15,7 @@ import {
   Link,
   ArrowRightLeft,
   GitCompare,
+  GitCommitHorizontal,
   TextQuote,
   FileCode,
   Code2,
@@ -178,6 +179,14 @@ export const tools: ToolDef[] = [
     description: "Send HTTP requests and inspect responses (no CORS)",
     icon: Globe,
     category: "Network",
+  },
+  {
+    id: "git-commit",
+    path: "/git-commit",
+    name: "Git Commits",
+    description: "Stage changes and generate AI commit messages with Groq",
+    icon: GitCommitHorizontal,
+    category: "Git",
   },
   {
     id: "bookmarks",
