@@ -42,17 +42,12 @@ const DIFF_BUDGET = 6000;
 const MIN_PER_FILE_BUDGET = 300;
 
 function buildDiffSection(entries: DiffEntry[]): string {
-  const perFileBudget = Math.max(
-    MIN_PER_FILE_BUDGET,
-    Math.floor(DIFF_BUDGET / entries.length),
-  );
+  const perFileBudget = Math.max(MIN_PER_FILE_BUDGET, Math.floor(DIFF_BUDGET / entries.length));
 
   return entries
     .map(({ path, diff }) => {
       const body =
-        diff.length > perFileBudget
-          ? diff.slice(0, perFileBudget) + "\n[... truncated ...]"
-          : diff;
+        diff.length > perFileBudget ? diff.slice(0, perFileBudget) + "\n[... truncated ...]" : diff;
       return `--- ${path} ---\n${body}`;
     })
     .join("\n\n");
@@ -63,9 +58,7 @@ export async function generateCommitMessage(entries: DiffEntry[]): Promise<strin
   const model = await getGroqModel();
 
   if (!apiKey) {
-    throw new Error(
-      "Groq API key not configured. Go to Settings → AI to add your key.",
-    );
+    throw new Error("Groq API key not configured. Go to Settings → AI to add your key.");
   }
 
   const nonEmpty = entries.filter((e) => e.diff.trim());
