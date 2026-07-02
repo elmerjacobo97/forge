@@ -9,8 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as AuthRouteImport } from './routes/_auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUuidGeneratorRouteImport } from './routes/_authenticated/uuid-generator'
 import { Route as AuthenticatedUrlEncoderRouteImport } from './routes/_authenticated/url-encoder'
@@ -37,11 +37,11 @@ import { Route as AuthenticatedBase64RouteImport } from './routes/_authenticated
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthRoute = AuthRouteImport.update({
+const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
@@ -54,134 +54,134 @@ const AuthenticatedUuidGeneratorRoute =
   AuthenticatedUuidGeneratorRouteImport.update({
     id: '/uuid-generator',
     path: '/uuid-generator',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedUrlEncoderRoute = AuthenticatedUrlEncoderRouteImport.update({
   id: '/url-encoder',
   path: '/url-encoder',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTimestampConverterRoute =
   AuthenticatedTimestampConverterRouteImport.update({
     id: '/timestamp-converter',
     path: '/timestamp-converter',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedTextManipulatorRoute =
   AuthenticatedTextManipulatorRouteImport.update({
     id: '/text-manipulator',
     path: '/text-manipulator',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedRegexTesterRoute =
   AuthenticatedRegexTesterRouteImport.update({
     id: '/regex-tester',
     path: '/regex-tester',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedQrGeneratorRoute =
   AuthenticatedQrGeneratorRouteImport.update({
     id: '/qr-generator',
     path: '/qr-generator',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMockDataGeneratorRoute =
   AuthenticatedMockDataGeneratorRouteImport.update({
     id: '/mock-data-generator',
     path: '/mock-data-generator',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedLoremIpsumRoute = AuthenticatedLoremIpsumRouteImport.update({
   id: '/lorem-ipsum',
   path: '/lorem-ipsum',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedJwtDecoderRoute = AuthenticatedJwtDecoderRouteImport.update({
   id: '/jwt-decoder',
   path: '/jwt-decoder',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedJsonToTypescriptRoute =
   AuthenticatedJsonToTypescriptRouteImport.update({
     id: '/json-to-typescript',
     path: '/json-to-typescript',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedJsonFormatterRoute =
   AuthenticatedJsonFormatterRouteImport.update({
     id: '/json-formatter',
     path: '/json-formatter',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedImageToolsRoute = AuthenticatedImageToolsRouteImport.update({
   id: '/image-tools',
   path: '/image-tools',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHttpTesterRoute = AuthenticatedHttpTesterRouteImport.update({
   id: '/http-tester',
   path: '/http-tester',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHtmlEntitiesRoute =
   AuthenticatedHtmlEntitiesRouteImport.update({
     id: '/html-entities',
     path: '/html-entities',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedHashGeneratorRoute =
   AuthenticatedHashGeneratorRouteImport.update({
     id: '/hash-generator',
     path: '/hash-generator',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedFormatConverterRoute =
   AuthenticatedFormatConverterRouteImport.update({
     id: '/format-converter',
     path: '/format-converter',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedFileValidatorRoute =
   AuthenticatedFileValidatorRouteImport.update({
     id: '/file-validator',
     path: '/file-validator',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedDiffToolRoute = AuthenticatedDiffToolRouteImport.update({
   id: '/diff-tool',
   path: '/diff-tool',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDevBoardRoute = AuthenticatedDevBoardRouteImport.update({
   id: '/dev-board',
   path: '/dev-board',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedColorConverterRoute =
   AuthenticatedColorConverterRouteImport.update({
     id: '/color-converter',
     path: '/color-converter',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedBookmarksRoute = AuthenticatedBookmarksRouteImport.update({
   id: '/bookmarks',
   path: '/bookmarks',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedBase64Route = AuthenticatedBase64RouteImport.update({
   id: '/base64',
   path: '/base64',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/register',
   path: '/register',
-  getParentRoute: () => AuthRoute,
+  getParentRoute: () => AuthRouteRoute,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => AuthRoute,
+  getParentRoute: () => AuthRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -241,8 +241,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_auth': typeof AuthRouteWithChildren
-  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_auth': typeof AuthRouteRouteWithChildren
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_authenticated/base64': typeof AuthenticatedBase64Route
@@ -356,8 +356,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthRoute: typeof AuthRouteWithChildren
-  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AuthRouteRoute: typeof AuthRouteRouteWithChildren
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -366,14 +366,14 @@ declare module '@tanstack/react-router' {
       id: '/_authenticated'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth': {
       id: '/_auth'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof AuthRouteImport
+      preLoaderRoute: typeof AuthRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -388,185 +388,187 @@ declare module '@tanstack/react-router' {
       path: '/uuid-generator'
       fullPath: '/uuid-generator'
       preLoaderRoute: typeof AuthenticatedUuidGeneratorRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/url-encoder': {
       id: '/_authenticated/url-encoder'
       path: '/url-encoder'
       fullPath: '/url-encoder'
       preLoaderRoute: typeof AuthenticatedUrlEncoderRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/timestamp-converter': {
       id: '/_authenticated/timestamp-converter'
       path: '/timestamp-converter'
       fullPath: '/timestamp-converter'
       preLoaderRoute: typeof AuthenticatedTimestampConverterRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/text-manipulator': {
       id: '/_authenticated/text-manipulator'
       path: '/text-manipulator'
       fullPath: '/text-manipulator'
       preLoaderRoute: typeof AuthenticatedTextManipulatorRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/regex-tester': {
       id: '/_authenticated/regex-tester'
       path: '/regex-tester'
       fullPath: '/regex-tester'
       preLoaderRoute: typeof AuthenticatedRegexTesterRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/qr-generator': {
       id: '/_authenticated/qr-generator'
       path: '/qr-generator'
       fullPath: '/qr-generator'
       preLoaderRoute: typeof AuthenticatedQrGeneratorRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/mock-data-generator': {
       id: '/_authenticated/mock-data-generator'
       path: '/mock-data-generator'
       fullPath: '/mock-data-generator'
       preLoaderRoute: typeof AuthenticatedMockDataGeneratorRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/lorem-ipsum': {
       id: '/_authenticated/lorem-ipsum'
       path: '/lorem-ipsum'
       fullPath: '/lorem-ipsum'
       preLoaderRoute: typeof AuthenticatedLoremIpsumRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/jwt-decoder': {
       id: '/_authenticated/jwt-decoder'
       path: '/jwt-decoder'
       fullPath: '/jwt-decoder'
       preLoaderRoute: typeof AuthenticatedJwtDecoderRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/json-to-typescript': {
       id: '/_authenticated/json-to-typescript'
       path: '/json-to-typescript'
       fullPath: '/json-to-typescript'
       preLoaderRoute: typeof AuthenticatedJsonToTypescriptRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/json-formatter': {
       id: '/_authenticated/json-formatter'
       path: '/json-formatter'
       fullPath: '/json-formatter'
       preLoaderRoute: typeof AuthenticatedJsonFormatterRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/image-tools': {
       id: '/_authenticated/image-tools'
       path: '/image-tools'
       fullPath: '/image-tools'
       preLoaderRoute: typeof AuthenticatedImageToolsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/http-tester': {
       id: '/_authenticated/http-tester'
       path: '/http-tester'
       fullPath: '/http-tester'
       preLoaderRoute: typeof AuthenticatedHttpTesterRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/html-entities': {
       id: '/_authenticated/html-entities'
       path: '/html-entities'
       fullPath: '/html-entities'
       preLoaderRoute: typeof AuthenticatedHtmlEntitiesRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/hash-generator': {
       id: '/_authenticated/hash-generator'
       path: '/hash-generator'
       fullPath: '/hash-generator'
       preLoaderRoute: typeof AuthenticatedHashGeneratorRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/format-converter': {
       id: '/_authenticated/format-converter'
       path: '/format-converter'
       fullPath: '/format-converter'
       preLoaderRoute: typeof AuthenticatedFormatConverterRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/file-validator': {
       id: '/_authenticated/file-validator'
       path: '/file-validator'
       fullPath: '/file-validator'
       preLoaderRoute: typeof AuthenticatedFileValidatorRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/diff-tool': {
       id: '/_authenticated/diff-tool'
       path: '/diff-tool'
       fullPath: '/diff-tool'
       preLoaderRoute: typeof AuthenticatedDiffToolRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dev-board': {
       id: '/_authenticated/dev-board'
       path: '/dev-board'
       fullPath: '/dev-board'
       preLoaderRoute: typeof AuthenticatedDevBoardRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/color-converter': {
       id: '/_authenticated/color-converter'
       path: '/color-converter'
       fullPath: '/color-converter'
       preLoaderRoute: typeof AuthenticatedColorConverterRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/bookmarks': {
       id: '/_authenticated/bookmarks'
       path: '/bookmarks'
       fullPath: '/bookmarks'
       preLoaderRoute: typeof AuthenticatedBookmarksRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/base64': {
       id: '/_authenticated/base64'
       path: '/base64'
       fullPath: '/base64'
       preLoaderRoute: typeof AuthenticatedBase64RouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_auth/register': {
       id: '/_auth/register'
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof AuthRegisterRouteImport
-      parentRoute: typeof AuthRoute
+      parentRoute: typeof AuthRouteRoute
     }
     '/_auth/login': {
       id: '/_auth/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof AuthLoginRouteImport
-      parentRoute: typeof AuthRoute
+      parentRoute: typeof AuthRouteRoute
     }
   }
 }
 
-interface AuthRouteChildren {
+interface AuthRouteRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
 }
 
-const AuthRouteChildren: AuthRouteChildren = {
+const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
 }
 
-const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
+  AuthRouteRouteChildren,
+)
 
-interface AuthenticatedRouteChildren {
+interface AuthenticatedRouteRouteChildren {
   AuthenticatedBase64Route: typeof AuthenticatedBase64Route
   AuthenticatedBookmarksRoute: typeof AuthenticatedBookmarksRoute
   AuthenticatedColorConverterRoute: typeof AuthenticatedColorConverterRoute
@@ -591,7 +593,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedUuidGeneratorRoute: typeof AuthenticatedUuidGeneratorRoute
 }
 
-const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBase64Route: AuthenticatedBase64Route,
   AuthenticatedBookmarksRoute: AuthenticatedBookmarksRoute,
   AuthenticatedColorConverterRoute: AuthenticatedColorConverterRoute,
@@ -616,14 +618,13 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedUuidGeneratorRoute: AuthenticatedUuidGeneratorRoute,
 }
 
-const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
-  AuthenticatedRouteChildren,
-)
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthRoute: AuthRouteWithChildren,
-  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthRouteRoute: AuthRouteRouteWithChildren,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -3,6 +3,7 @@ import {
   Outlet,
   createFileRoute,
   redirect,
+  isRedirect,
   useRouterState,
 } from "@tanstack/react-router";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -69,8 +70,17 @@ function AuthenticatedLayout() {
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ context, location }) => {
     try {
-      await context.queryClient.ensureQueryData(userQueryOptions);
+      const user = await context.queryClient.ensureQueryData(userQueryOptions);
+      if (!user) {
+        throw redirect({
+          to: "/login",
+          search: { redirect: location.href },
+        });
+      }
     } catch (err) {
+      if (isRedirect(err)) {
+        throw err;
+      }
       throw redirect({
         to: "/login",
         search: { redirect: location.href },
