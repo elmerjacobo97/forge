@@ -8,7 +8,13 @@ import { router } from "./router";
 import { queryClient } from "@/lib/query-client";
 import { initDeepLink } from "@/lib/deep-link";
 import { initTrayMenu } from "@/lib/tray-menu";
+import { client } from "@/lib/appwrite";
 import "./index.css";
+
+// Ping the Appwrite backend server to verify the setup
+client.ping().catch((err) => {
+  console.error("Appwrite ping failed:", err);
+});
 
 initDeepLink(router);
 initTrayMenu(router);
