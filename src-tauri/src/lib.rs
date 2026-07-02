@@ -20,6 +20,8 @@ pub fn run() {
             commands::git_status::git_status,
             commands::git_diff::git_diff,
             commands::git_commit::git_commit,
+            commands::git_add::git_add,
+            commands::git_unstage::git_unstage,
             #[cfg(target_os = "macos")]
             commands::color::pick_color,
         ])

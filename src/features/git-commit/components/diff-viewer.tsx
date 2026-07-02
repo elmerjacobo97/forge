@@ -54,7 +54,7 @@ export function DiffViewer({ diff, loading, filePath }: DiffViewerProps) {
           {filePath}
         </span>
       </div>
-      <ScrollArea className="flex-1">
+      <ScrollArea className="min-h-0 flex-1">
         <pre className="min-w-0 p-2 text-[11px] leading-5 font-mono">
           {lines.map(({ key, content, type }) => (
             <div

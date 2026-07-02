@@ -35,3 +35,12 @@ export const STATUS_BADGE: Record<FileStatusLabel, { label: string; color: strin
 };
 
 export const REPO_STORE_KEY = "git_last_repo_path";
+
+export interface SavedRepo {
+  id: string;
+  path: string;
+  name: string;
+  lastOpenedAt: number;
+}
+
+export const REPOS_STORE_KEY = "git_saved_repos";

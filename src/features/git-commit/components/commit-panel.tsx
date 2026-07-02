@@ -8,13 +8,13 @@ import { generateCommitMessage, DiffEntry } from "../services/groq-service";
 
 interface CommitPanelProps {
   repoPath: string;
-  selectedFiles: string[];
+  stagedFiles: string[];
   onCommitSuccess: () => void;
 }
 
 export function CommitPanel({
   repoPath,
-  selectedFiles,
+  stagedFiles,
   onCommitSuccess,
 }: CommitPanelProps) {
   const [message, setMessage] = useState("");
@@ -22,8 +22,8 @@ export function CommitPanel({
   const [committing, setCommitting] = useState(false);
 
   async function handleGenerate() {
-    if (selectedFiles.length === 0) {
-      toast.error("Select at least one file first.");
+    if (stagedFiles.length === 0) {
+      toast.error("Stage at least one file first.");
       return;
     }
     setGenerating(true);
@@ -32,7 +32,7 @@ export function CommitPanel({
       // Keep each file's diff separate (not flattened into one string) so the
       // model always sees every changed file, not just whichever fit first.
       const entries: DiffEntry[] = await Promise.all(
-        selectedFiles
+        stagedFiles
           .filter((file) => {
             const lower = file.toLowerCase();
             return (
@@ -81,15 +81,14 @@ export function CommitPanel({
       toast.error("Write a commit message first.");
       return;
     }
-    if (selectedFiles.length === 0) {
-      toast.error("Select at least one file to commit.");
+    if (stagedFiles.length === 0) {
+      toast.error("Stage at least one file to commit.");
       return;
     }
     setCommitting(true);
     try {
       const hash = await invoke<string>("git_commit", {
         repoPath,
-        files: selectedFiles,
         message: message.trim(),
       });
       toast.success(`Committed! ${hash}`);
@@ -102,7 +101,7 @@ export function CommitPanel({
     }
   }
 
-  const canCommit = message.trim().length > 0 && selectedFiles.length > 0 && !committing;
+  const canCommit = message.trim().length > 0 && stagedFiles.length > 0 && !committing;
   const charCount = message.length;
   const isOverLimit = charCount > 72;
 
@@ -111,10 +110,10 @@ export function CommitPanel({
       <div className="flex items-center gap-1.5 border-b border-border pb-2">
         <GitCommitHorizontal className="size-3.5 text-muted-foreground" />
         <span className="text-xs font-medium">Commit</span>
-        {selectedFiles.length > 0 && (
+        {stagedFiles.length > 0 && (
           <span className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground">
             <Link className="size-3" />
-            {selectedFiles.length} file{selectedFiles.length !== 1 ? "s" : ""}
+            {stagedFiles.length} file{stagedFiles.length !== 1 ? "s" : ""}
           </span>
         )}
       </div>
@@ -142,7 +141,7 @@ export function CommitPanel({
           size="sm"
           className="w-full gap-2"
           onClick={handleGenerate}
-          disabled={generating || committing || selectedFiles.length === 0}
+          disabled={generating || committing || stagedFiles.length === 0}
         >
           {generating ? (
             <Loader2 className="size-3.5 animate-spin" />

@@ -19,17 +19,46 @@ function getReasoningParams(model: string): Record<string, unknown> {
   return {};
 }
 
-const SYSTEM_PROMPT = `You are an expert software developer. Your task is to generate a concise, meaningful git commit message from the provided diff.
+const SYSTEM_PROMPT = `You are an expert software developer. Your task is to generate a concise, meaningful git commit message that summarizes ALL the changed files listed, not just the first ones shown.
 
 Rules:
 - Follow the Conventional Commits format: type(scope): short description
 - Types: feat, fix, refactor, chore, docs, style, test, perf
 - The description must be lowercase and under 72 characters total
+- Base the summary on the full "Files changed" list first — the per-file diffs below it may be truncated for length, but the file list is always complete
 - Do NOT include a body or footer, only the one-line subject
 - Do NOT output any thinking, thoughts, reasoning, or <think> tags. Go straight to the final commit message.
 - Reply ONLY with the commit message — no explanation, no code blocks, no quotes`;
 
-export async function generateCommitMessage(diff: string): Promise<string> {
+export interface DiffEntry {
+  path: string;
+  diff: string;
+}
+
+// Total char budget for diff bodies, shared evenly across files so a
+// large diff doesn't starve every file after the first few (~6000 chars
+// ≈ ~1500 tokens).
+const DIFF_BUDGET = 6000;
+const MIN_PER_FILE_BUDGET = 300;
+
+function buildDiffSection(entries: DiffEntry[]): string {
+  const perFileBudget = Math.max(
+    MIN_PER_FILE_BUDGET,
+    Math.floor(DIFF_BUDGET / entries.length),
+  );
+
+  return entries
+    .map(({ path, diff }) => {
+      const body =
+        diff.length > perFileBudget
+          ? diff.slice(0, perFileBudget) + "\n[... truncated ...]"
+          : diff;
+      return `--- ${path} ---\n${body}`;
+    })
+    .join("\n\n");
+}
+
+export async function generateCommitMessage(entries: DiffEntry[]): Promise<string> {
   const apiKey = await getGroqApiKey();
   const model = await getGroqModel();
 
@@ -39,15 +68,15 @@ export async function generateCommitMessage(diff: string): Promise<string> {
     );
   }
 
-  if (!diff.trim()) {
+  const nonEmpty = entries.filter((e) => e.diff.trim());
+  if (nonEmpty.length === 0) {
     throw new Error("No diff content to generate a commit message from.");
   }
 
-  // Truncate very large diffs to stay within token limits (~6000 chars ≈ ~1500 tokens)
-  const truncated =
-    diff.length > 6000
-      ? diff.slice(0, 6000) + "\n\n[... diff truncated for token limit ...]"
-      : diff;
+  const fileList = nonEmpty.map((e) => `- ${e.path}`).join("\n");
+  const diffSection = buildDiffSection(nonEmpty);
+
+  const userContent = `Files changed (${nonEmpty.length}):\n${fileList}\n\nDiffs (may be truncated per-file):\n\`\`\`diff\n${diffSection}\n\`\`\``;
 
   const response = await fetch(GROQ_API_URL, {
     method: "POST",
@@ -59,7 +88,7 @@ export async function generateCommitMessage(diff: string): Promise<string> {
       model: model,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: `Git diff:\n\`\`\`diff\n${truncated}\n\`\`\`` },
+        { role: "user", content: userContent },
       ],
       max_tokens: 2048,
       temperature: 0.3,

@@ -22,5 +22,21 @@ export function useGitStatus() {
     }
   }, []);
 
-  return { files, loading, error, refresh };
+  const stage = useCallback(
+    async (repoPath: string, paths: string[]) => {
+      await invoke("git_add", { repoPath, files: paths });
+      await refresh(repoPath);
+    },
+    [refresh],
+  );
+
+  const unstage = useCallback(
+    async (repoPath: string, paths: string[]) => {
+      await invoke("git_unstage", { repoPath, files: paths });
+      await refresh(repoPath);
+    },
+    [refresh],
+  );
+
+  return { files, loading, error, refresh, stage, unstage };
 }

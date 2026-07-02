@@ -1,45 +1,63 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { load } from "@tauri-apps/plugin-store";
+import { listen } from "@tauri-apps/api/event";
 import { AlertTriangle, GitCommitHorizontal } from "lucide-react";
 import { toast } from "sonner";
 
-import { RepoPicker } from "./components/repo-picker";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { RepoSwitcher } from "./components/repo-switcher";
 import { FileList } from "./components/file-list";
 import { DiffViewer } from "./components/diff-viewer";
 import { CommitPanel } from "./components/commit-panel";
 import { useGitStatus } from "./hooks/use-git-status";
 import { useGitDiff } from "./hooks/use-git-diff";
-import { REPO_STORE_KEY } from "./types";
+import { useSavedReposQuery } from "./hooks/queries";
+import {
+  useAddRepoMutation,
+  useRemoveRepoMutation,
+  useTouchRepoMutation,
+} from "./hooks/mutations";
+import type { SavedRepo } from "./types";
 
-const STORE_FILE = "forge-settings.json";
-
-async function getStore() {
-  return load(STORE_FILE);
+interface DragDropPayload {
+  paths: string[];
 }
 
 export function GitCommit() {
   const [repoPath, setRepoPath] = useState<string>("");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [activeFile, setActiveFile] = useState<string | null>(null);
   const [showStaged, setShowStaged] = useState(false);
-  const storeReady = useRef(false);
 
-  const { files, loading: statusLoading, error: statusError, refresh } = useGitStatus();
+  const {
+    files,
+    loading: statusLoading,
+    error: statusError,
+    refresh,
+    stage,
+    unstage,
+  } = useGitStatus();
   const { diff, loading: diffLoading, fetchDiff, clear: clearDiff } = useGitDiff();
 
-  // Load persisted repo path on mount
+  const { data: repos = [] } = useSavedReposQuery();
+  const addRepoMutation = useAddRepoMutation();
+  const removeRepoMutation = useRemoveRepoMutation();
+  const touchRepoMutation = useTouchRepoMutation();
+
+  const stagedFiles = useMemo(
+    () => files.filter((f) => f.staged).map((f) => f.path),
+    [files],
+  );
+
+  // Default to the most recently opened repo once the saved list loads.
   useEffect(() => {
-    getStore()
-      .then((store) => store.get<string>(REPO_STORE_KEY))
-      .then((saved) => {
-        if (saved) {
-          setRepoPath(saved);
-          storeReady.current = true;
-        }
-      })
-      .catch(() => {});
-  }, []);
+    if (!repoPath && repos.length > 0) {
+      setRepoPath(repos[0].path);
+    }
+  }, [repos, repoPath]);
 
   // Auto-refresh when repo path changes
   useEffect(() => {
@@ -47,7 +65,7 @@ export function GitCommit() {
     else setActiveFile(null);
   }, [repoPath, refresh]);
 
-  // Refresh diff when active file or staged mode changes
+  // Refresh diff when the active file or its staged state changes
   useEffect(() => {
     if (activeFile && repoPath) {
       fetchDiff(repoPath, activeFile, showStaged);
@@ -56,49 +74,122 @@ export function GitCommit() {
     }
   }, [activeFile, showStaged, repoPath, fetchDiff, clearDiff]);
 
+  const handleSwitchRepo = useCallback(
+    (repo: SavedRepo) => {
+      setRepoPath(repo.path);
+      setActiveFile(null);
+      setShowStaged(false);
+      clearDiff();
+      touchRepoMutation.mutate(repo.id);
+    },
+    [clearDiff, touchRepoMutation],
+  );
+
   const handlePickRepo = useCallback(async () => {
     try {
       const dir = await open({ directory: true, multiple: false });
       if (typeof dir === "string" && dir) {
-        setRepoPath(dir);
-        setSelected(new Set());
-        setActiveFile(null);
-        clearDiff();
-        const store = await getStore();
-        await store.set(REPO_STORE_KEY, dir);
-        await store.save();
+        const repo = await addRepoMutation.mutateAsync(dir);
+        handleSwitchRepo(repo);
       }
     } catch {
       toast.error("Failed to open directory picker.");
     }
-  }, [clearDiff]);
+  }, [addRepoMutation, handleSwitchRepo]);
 
-  const handleToggle = useCallback((path: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(path)) next.delete(path);
-      else next.add(path);
-      return next;
-    });
+  const handleRemoveRepo = useCallback(
+    (id: string) => {
+      const wasActive = repos.find((r) => r.id === id)?.path === repoPath;
+      removeRepoMutation.mutate(id, {
+        onSuccess: (remaining) => {
+          if (!wasActive) return;
+          if (remaining[0]) {
+            handleSwitchRepo(remaining[0]);
+          } else {
+            setRepoPath("");
+            setActiveFile(null);
+            setShowStaged(false);
+            clearDiff();
+          }
+        },
+      });
+    },
+    [repos, repoPath, removeRepoMutation, handleSwitchRepo, clearDiff],
+  );
+
+  // Native drag-drop (Tauri runtime) — drop a folder anywhere to add & switch to it.
+  useEffect(() => {
+    let mounted = true;
+    let unlisten: (() => void) | null = null;
+
+    async function setup() {
+      try {
+        unlisten = await listen<DragDropPayload>("tauri://drag-drop", async (event) => {
+          if (!mounted) return;
+          const path = event.payload.paths[0];
+          if (!path) return;
+          try {
+            const repo = await addRepoMutation.mutateAsync(path);
+            handleSwitchRepo(repo);
+          } catch {
+            toast.error("Failed to add dropped folder as a repository.");
+          }
+        });
+      } catch {
+        // Web-only dev mode: native drag-drop unavailable.
+      }
+    }
+
+    setup();
+
+    return () => {
+      mounted = false;
+      if (unlisten) unlisten();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleToggleAll = useCallback(() => {
-    const allSelected = files.every((f) => selected.has(f.path));
-    if (allSelected) setSelected(new Set());
-    else setSelected(new Set(files.map((f) => f.path)));
-  }, [files, selected]);
+  // Prevent browser from navigating on drop.
+  useEffect(() => {
+    const preventDefault = (e: Event) => e.preventDefault();
+    document.addEventListener("dragenter", preventDefault);
+    document.addEventListener("dragover", preventDefault);
+    document.addEventListener("drop", preventDefault);
+    return () => {
+      document.removeEventListener("dragenter", preventDefault);
+      document.removeEventListener("dragover", preventDefault);
+      document.removeEventListener("drop", preventDefault);
+    };
+  }, []);
 
   const handleSelectFile = useCallback(
     (path: string) => {
       setActiveFile(path);
-      setShowStaged(selected.has(path));
+      // Staged files show the staged (index vs HEAD) diff; everything else
+      // shows the working-tree diff — driven by the file's real git status.
+      const file = files.find((f) => f.path === path);
+      setShowStaged(!!file && file.staged && !file.unstaged);
     },
-    [selected],
+    [files],
+  );
+
+  const handleStage = useCallback(
+    (paths: string[]) => {
+      if (repoPath) stage(repoPath, paths);
+    },
+    [repoPath, stage],
+  );
+
+  const handleUnstage = useCallback(
+    (paths: string[]) => {
+      if (repoPath) unstage(repoPath, paths);
+    },
+    [repoPath, unstage],
   );
 
   const handleCommitSuccess = useCallback(() => {
-    setSelected(new Set());
     setActiveFile(null);
+    setShowStaged(false);
     clearDiff();
     if (repoPath) refresh(repoPath);
   }, [repoPath, refresh, clearDiff]);
@@ -106,8 +197,14 @@ export function GitCommit() {
 
   return (
     <div className="flex h-full flex-col gap-3">
-      {/* Repo Picker */}
-      <RepoPicker repoPath={repoPath} onPick={handlePickRepo} />
+      {/* Repo Switcher */}
+      <RepoSwitcher
+        repos={repos}
+        activeRepoPath={repoPath}
+        onSwitch={handleSwitchRepo}
+        onAdd={handlePickRepo}
+        onRemove={handleRemoveRepo}
+      />
 
       {/* Error banner */}
       {statusError && (
@@ -123,44 +220,53 @@ export function GitCommit() {
           <GitCommitHorizontal className="size-12 opacity-20" />
           <div>
             <p className="text-sm font-medium">No repository selected</p>
-            <p className="text-xs">Open a local git repository to get started.</p>
+            <p className="text-xs">Open a local git repository, or drop a folder here, to get started.</p>
           </div>
         </div>
       ) : (
-        /* 3-panel layout */
-        <div className="grid min-h-0 flex-1 grid-cols-[220px_1fr_220px] gap-3 overflow-hidden">
+        /* 3-panel resizable layout */
+        <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
           {/* Panel 1 — File list */}
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
-            <FileList
-              files={files}
-              loading={statusLoading}
-              selected={selected}
-              activeFile={activeFile}
-              onToggle={handleToggle}
-              onToggleAll={handleToggleAll}
-              onSelect={handleSelectFile}
-              onRefresh={() => refresh(repoPath)}
-            />
-          </div>
+          <ResizablePanel defaultSize={20} minSize={15} className="p-2">
+            <div className="h-full overflow-hidden rounded-xl border border-input/60 bg-muted/20">
+              <FileList
+                files={files}
+                loading={statusLoading}
+                activeFile={activeFile}
+                onSelect={handleSelectFile}
+                onStage={handleStage}
+                onUnstage={handleUnstage}
+                onRefresh={() => refresh(repoPath)}
+              />
+            </div>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle className="bg-transparent" />
 
           {/* Panel 2 — Diff viewer */}
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
-            <DiffViewer
-              diff={diff}
-              loading={diffLoading}
-              filePath={activeFile}
-            />
-          </div>
+          <ResizablePanel defaultSize={60} minSize={30} className="p-2">
+            <div className="h-full overflow-hidden rounded-xl border border-input/60 bg-muted/20">
+              <DiffViewer
+                diff={diff}
+                loading={diffLoading}
+                filePath={activeFile}
+              />
+            </div>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle className="bg-transparent" />
 
           {/* Panel 3 — Commit panel */}
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
-            <CommitPanel
-              repoPath={repoPath}
-              selectedFiles={[...selected]}
-              onCommitSuccess={handleCommitSuccess}
-            />
-          </div>
-        </div>
+          <ResizablePanel defaultSize={20} minSize={15} className="p-2">
+            <div className="h-full overflow-hidden rounded-xl border border-input/60 bg-muted/20">
+              <CommitPanel
+                repoPath={repoPath}
+                stagedFiles={stagedFiles}
+                onCommitSuccess={handleCommitSuccess}
+              />
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       )}
     </div>
   );

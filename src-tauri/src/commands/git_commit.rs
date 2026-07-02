@@ -1,27 +1,9 @@
 use std::process::Command;
 
 #[tauri::command]
-pub async fn git_commit(
-    repo_path: String,
-    files: Vec<String>,
-    message: String,
-) -> Result<String, String> {
-    // Stage selected files
-    if files.is_empty() {
-        return Err("No files selected to commit.".to_string());
-    }
-
-    let add_status = Command::new("git")
-        .args(["-C", &repo_path, "add", "--"])
-        .args(&files)
-        .status()
-        .map_err(|e| format!("Failed to run git add: {e}"))?;
-
-    if !add_status.success() {
-        return Err("git add failed. Check file paths.".to_string());
-    }
-
-    // Commit with the provided message
+pub async fn git_commit(repo_path: String, message: String) -> Result<String, String> {
+    // Files are staged explicitly via git_add/git_unstage before this runs —
+    // committing here just records whatever is currently in the index.
     let commit_output = Command::new("git")
         .args(["-C", &repo_path, "commit", "-m", &message])
         .output()

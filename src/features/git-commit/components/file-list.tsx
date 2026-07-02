@@ -9,26 +9,32 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface FileListProps {
   files: GitFile[];
   loading: boolean;
-  selected: Set<string>;
   activeFile: string | null;
-  onToggle: (path: string) => void;
-  onToggleAll: () => void;
   onSelect: (path: string) => void;
+  onStage: (paths: string[]) => void;
+  onUnstage: (paths: string[]) => void;
   onRefresh: () => void;
 }
 
 export function FileList({
   files,
   loading,
-  selected,
   activeFile,
-  onToggle,
-  onToggleAll,
   onSelect,
+  onStage,
+  onUnstage,
   onRefresh,
 }: FileListProps) {
-  const allSelected = files.length > 0 && files.every((f) => selected.has(f.path));
-  const someSelected = files.some((f) => selected.has(f.path));
+  const allStaged = files.length > 0 && files.every((f) => f.staged);
+  const someStaged = files.some((f) => f.staged);
+
+  function handleToggleAll() {
+    if (allStaged) {
+      onUnstage(files.map((f) => f.path));
+    } else {
+      onStage(files.filter((f) => !f.staged).map((f) => f.path));
+    }
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -36,15 +42,15 @@ export function FileList({
         <div className="flex items-center gap-2">
           <Checkbox
             id="select-all"
-            checked={allSelected || (someSelected ? "indeterminate" : false)}
-            onCheckedChange={onToggleAll}
+            checked={allStaged || (someStaged ? "indeterminate" : false)}
+            onCheckedChange={handleToggleAll}
             disabled={files.length === 0}
           />
           <label
             htmlFor="select-all"
             className="text-xs font-medium text-muted-foreground cursor-pointer select-none"
           >
-            {selected.size} / {files.length} files
+            {files.length} file{files.length === 1 ? "" : "s"}
           </label>
         </div>
         <Button
@@ -59,7 +65,7 @@ export function FileList({
         </Button>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="min-h-0 flex-1">
         {files.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
             <p className="text-xs text-muted-foreground">
@@ -85,9 +91,11 @@ export function FileList({
                   )}
                 >
                   <Checkbox
-                    checked={selected.has(file.path)}
+                    checked={file.staged}
                     onCheckedChange={(checked) => {
-                      if (checked !== "indeterminate") onToggle(file.path);
+                      if (checked === "indeterminate") return;
+                      if (checked) onStage([file.path]);
+                      else onUnstage([file.path]);
                     }}
                     onClick={(e) => e.stopPropagation()}
                     className="shrink-0"

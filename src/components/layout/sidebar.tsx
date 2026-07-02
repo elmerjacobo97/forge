@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Hammer, Menu, Search, LogOut, User, Settings } from "lucide-react";
+import { Hammer, Menu, Search, LogOut, User, Settings, ChevronsUpDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { userQueryOptions } from "@/features/auth/hooks/queries";
@@ -10,6 +10,13 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { tools, type ToolDef } from "@/lib/tools";
 import { useDebounce } from "@/lib/hooks/use-debounce";
@@ -108,43 +115,42 @@ export function Sidebar({ activePath }: SidebarProps) {
         </nav>
       </ScrollArea>
 
-      <div className="mt-auto border-t border-sidebar-border p-3 flex items-center justify-between gap-2 bg-sidebar-accent/10">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent/80 text-sidebar-accent-foreground border border-sidebar-border shadow-sm">
-            <User className="size-4" />
-          </div>
-          <div className="flex flex-col min-w-0 leading-none">
-            <span className="text-xs font-semibold truncate text-sidebar-foreground">
-              {user?.name || "Developer"}
-            </span>
-            <span className="text-[10px] text-muted-foreground truncate select-all">
-              {user?.email || ""}
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <Link to="/settings">
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              className="text-muted-foreground hover:text-foreground size-7"
-              title="Settings"
-              asChild={false}
+      <div className="mt-auto border-t border-sidebar-border p-3 bg-sidebar-accent/10">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button type="button" className="flex w-full items-center gap-2.5 rounded-lg p-1.5 text-left transition-colors hover:bg-sidebar-accent/50">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent/80 text-sidebar-accent-foreground border border-sidebar-border shadow-sm">
+                <User className="size-4" />
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col leading-none">
+                <span className="text-xs font-semibold truncate text-sidebar-foreground">
+                  {user?.name || "Developer"}
+                </span>
+                <span className="text-[10px] text-muted-foreground truncate">
+                  {user?.email || ""}
+                </span>
+              </div>
+              <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem asChild>
+              <Link to="/settings">
+                <Settings className="size-3.5" />
+                Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => logoutMutation.mutate()}
+              disabled={logoutMutation.isPending}
             >
-              <Settings className="size-3.5" />
-            </Button>
-          </Link>
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            className="text-muted-foreground hover:text-destructive size-7"
-            onClick={() => logoutMutation.mutate()}
-            disabled={logoutMutation.isPending}
-            title="Log out"
-          >
-            <LogOut className="size-3.5" />
-          </Button>
-        </div>
+              <LogOut className="size-3.5" />
+              Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
