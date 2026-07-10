@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import path from "path";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
@@ -48,6 +49,11 @@ export default defineConfig(async () => ({
         },
       },
     },
+  },
+
+  test: {
+    globals: true,
+    environment: "node",
   },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
