@@ -1,9 +1,7 @@
-import {
-  createBrowserHistory,
-  createRouter,
-} from "@tanstack/react-router";
+import { createBrowserHistory, createRouter } from "@tanstack/react-router";
 
 import { queryClient } from "@/lib/query-client";
+import { ToolErrorFallback } from "@/components/tool-error-boundary";
 import { routeTree } from "./routeTree.gen";
 
 // Browser history: Template code
@@ -17,6 +15,7 @@ export const router = createRouter({
   },
   defaultPreload: "intent",
   scrollRestoration: true,
+  defaultErrorComponent: ToolErrorFallback,
 });
 
 declare module "@tanstack/react-router" {

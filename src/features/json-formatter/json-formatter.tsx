@@ -1,40 +1,36 @@
-import { useMemo, useState } from "react"
-import { Check, Copy, Eraser, Minimize2, Sparkles } from "lucide-react"
+import { useMemo, useState } from "react";
+import { Check, Copy, Eraser, Minimize2, Sparkles } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable"
-import { useCopy } from "@/lib/hooks/use-copy"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { useCopy } from "@/lib/hooks/use-copy";
 
-type Indent = 2 | 4 | "tab"
+type Indent = 2 | 4 | "tab";
 
 export function JsonFormatter() {
-  const [input, setInput] = useState("")
-  const [indent, setIndent] = useState<Indent>(2)
-  const [mode, setMode] = useState<"pretty" | "minify">("pretty")
-  const { copied, copy } = useCopy()
+  const [input, setInput] = useState("");
+  const [indent, setIndent] = useState<Indent>(2);
+  const [mode, setMode] = useState<"pretty" | "minify">("pretty");
+  const { copied, copy } = useCopy();
 
   const { output, error, valid } = useMemo(() => {
-    if (!input.trim()) return { output: "", error: null, valid: null }
+    if (!input.trim()) return { output: "", error: null, valid: null };
     try {
-      const parsed = JSON.parse(input)
-      const space = indent === "tab" ? "\t" : indent
+      const parsed = JSON.parse(input);
+      const space = indent === "tab" ? "\t" : indent;
       const result =
-        mode === "minify" ? JSON.stringify(parsed) : JSON.stringify(parsed, null, space)
-      return { output: result, error: null, valid: true }
+        mode === "minify" ? JSON.stringify(parsed) : JSON.stringify(parsed, null, space);
+      return { output: result, error: null, valid: true };
     } catch (e) {
-      return { output: "", error: (e as Error).message, valid: false }
+      return { output: "", error: (e as Error).message, valid: false };
     }
-  }, [input, indent, mode])
+  }, [input, indent, mode]);
 
   return (
     <div className="flex h-full flex-col gap-4">
@@ -64,7 +60,10 @@ export function JsonFormatter() {
             size="sm"
           >
             {([2, 4, "tab"] as Indent[]).map((v) => (
-              <ToggleGroupItem key={v} value={String(v)}>
+              <ToggleGroupItem
+                key={v}
+                value={String(v)}
+              >
                 {v === "tab" ? "Tab" : `${v} sp`}
               </ToggleGroupItem>
             ))}
@@ -110,8 +109,15 @@ export function JsonFormatter() {
         </div>
       </div>
 
-      <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
-        <ResizablePanel defaultSize={50} minSize={25} className="p-2">
+      <ResizablePanelGroup
+        orientation="horizontal"
+        className="min-h-0 flex-1"
+      >
+        <ResizablePanel
+          defaultSize={50}
+          minSize={25}
+          className="p-2"
+        >
           <div className="flex h-full flex-col gap-1.5">
             <Label className="text-xs font-medium text-muted-foreground">Input</Label>
             <Textarea
@@ -124,9 +130,16 @@ export function JsonFormatter() {
           </div>
         </ResizablePanel>
 
-        <ResizableHandle withHandle className="bg-transparent" />
+        <ResizableHandle
+          withHandle
+          className="bg-transparent"
+        />
 
-        <ResizablePanel defaultSize={50} minSize={25} className="p-2">
+        <ResizablePanel
+          defaultSize={50}
+          minSize={25}
+          className="p-2"
+        >
           <div className="flex h-full flex-col gap-1.5">
             <Label className="text-xs font-medium text-muted-foreground">Output</Label>
             {error ? (
@@ -147,5 +160,5 @@ export function JsonFormatter() {
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
-  )
+  );
 }
