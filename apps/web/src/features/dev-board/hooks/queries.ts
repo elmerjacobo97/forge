@@ -16,6 +16,10 @@ export const devBoardKeys = {
   column: (userId: string, column: ColumnId) => [...devBoardKeys.user(userId), column] as const,
 };
 
+export const devBoardMutationKeys = {
+  update: ["dev-board", "update"] as const,
+};
+
 export function useDevBoardTickets(userId: string | undefined, column: ColumnId) {
   return useInfiniteQuery({
     queryKey: devBoardKeys.column(userId ?? "anonymous", column),
@@ -37,7 +41,10 @@ export function useDevBoardRealtime(userId: string | undefined): void {
     void realtime
       .subscribe(
         Channel.tablesdb(databaseId).table(tableId).row(),
-        () => void queryClient.invalidateQueries({ queryKey: devBoardKeys.user(userId) }),
+        () => {
+          if (queryClient.isMutating({ mutationKey: devBoardMutationKeys.update }) > 0) return;
+          void queryClient.invalidateQueries({ queryKey: devBoardKeys.user(userId) });
+        },
         [Query.equal("userId", [userId])],
       )
       .then((subscription) => {
