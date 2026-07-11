@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
+import { useDeleteDevBoardTicket, useUpdateDevBoardTicket } from "../hooks/mutations";
 import {
   type ColumnId,
   type Priority,
@@ -33,30 +34,23 @@ import {
   PRIORITY_COLORS,
   PRIORITY_LABELS,
 } from "../types";
-import { computeElapsed, formatDuration } from "../utils/timer";
+import { computeElapsed, formatDuration, pauseTimer, resumeTimer } from "../utils/timer";
 
 interface TicketCardProps {
   ticket: Ticket;
-  isOverlay?: boolean;
   onEdit: (ticket: Ticket) => void;
-  onDelete: (id: string) => void;
   onMoveToColumn: (id: string, column: ColumnId) => void;
-  onTogglePause: (id: string) => void;
-  onSetPriority: (id: string, priority: Priority) => void;
 }
 
 export function TicketCard({
   ticket,
-  isOverlay = false,
   onEdit,
-  onDelete,
   onMoveToColumn,
-  onTogglePause,
-  onSetPriority,
 }: TicketCardProps) {
+  const updateTicketMutation = useUpdateDevBoardTicket();
+  const deleteTicketMutation = useDeleteDevBoardTicket();
   const sortable = useSortable({
     id: ticket.id,
-    disabled: isOverlay,
   });
 
   const style = {
@@ -91,22 +85,19 @@ export function TicketCard({
       className={cn(
         "group rounded-xl border border-input/50 bg-card p-2.5 shadow-sm transition-shadow",
         sortable.isDragging && "opacity-30",
-        isOverlay && "shadow-lg ring-1 ring-primary/20",
         timerRunning && "border-primary/40 bg-primary/5",
       )}
     >
       <div className="flex items-start gap-1.5">
-        {!isOverlay && (
-          <button
-            type="button"
-            className="mt-0.5 cursor-grab text-muted-foreground/40 opacity-0 group-hover:opacity-100 active:cursor-grabbing"
-            aria-label="Drag"
-            {...sortable.attributes}
-            {...sortable.listeners}
-          >
-            <GripVertical className="size-3.5" />
-          </button>
-        )}
+        <button
+          type="button"
+          className="mt-0.5 cursor-grab text-muted-foreground/40 opacity-0 group-hover:opacity-100 active:cursor-grabbing"
+          aria-label="Drag"
+          {...sortable.attributes}
+          {...sortable.listeners}
+        >
+          <GripVertical className="size-3.5" />
+        </button>
 
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium leading-snug">{ticket.title}</p>
@@ -139,8 +130,7 @@ export function TicketCard({
           )}
         </div>
 
-        {!isOverlay && (
-          <DropdownMenu>
+        <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 size="icon-sm"
@@ -157,7 +147,15 @@ export function TicketCard({
                 Edit
               </DropdownMenuItem>
               {inProgress && (
-                <DropdownMenuItem onClick={() => onTogglePause(ticket.id)}>
+                <DropdownMenuItem
+                  onClick={() =>
+                    updateTicketMutation.mutate(
+                      ticket.isPaused || !ticket.timerStartedAt
+                        ? resumeTimer(ticket)
+                        : pauseTimer(ticket),
+                    )
+                  }
+                >
                   {timerPaused ? (
                     <>
                       <Play className="size-3" />
@@ -194,7 +192,7 @@ export function TicketCard({
                   {(Object.keys(PRIORITY_LABELS) as Priority[]).map((p) => (
                     <DropdownMenuItem
                       key={p}
-                      onClick={() => onSetPriority(ticket.id, p)}
+                        onClick={() => updateTicketMutation.mutate({ ...ticket, priority: p })}
                     >
                       <span
                         className={cn("size-2 rounded-full", PRIORITY_COLORS[p])}
@@ -207,15 +205,14 @@ export function TicketCard({
               </DropdownMenuSub>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => onDelete(ticket.id)}
+                onClick={() => deleteTicketMutation.mutate(ticket.id)}
                 className="text-destructive focus:text-destructive"
               >
                 <Trash2 className="size-3" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        </DropdownMenu>
       </div>
 
       <div className="mt-2 flex items-center gap-1.5">

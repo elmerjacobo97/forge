@@ -11,7 +11,6 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -22,17 +21,15 @@ import { type ColumnId, type Ticket, COLUMNS } from "./types";
 import { type TicketFormValues } from "./schema";
 import {
   useCreateDevBoardTicket,
-  useDeleteDevBoardTicket,
   useUpdateDevBoardTicket,
 } from "./hooks/mutations";
-import { devBoardKeys, useDevBoardRealtime, useDevBoardTickets } from "./hooks/queries";
+import { useDevBoardRealtime, useDevBoardTickets } from "./hooks/queries";
 import { ColumnView } from "./components/column-view";
 import { BoardSkeleton } from "./components/board-skeleton";
-import { TicketCard } from "./components/ticket-card";
+import { TicketDragOverlay } from "./components/ticket-drag-overlay";
 import { TicketForm } from "./components/ticket-form";
 import { checkStaleTickets, loadAlertedTickets, saveAlertedTickets } from "./utils/stale-alert";
 import { createTicket, moveTicket } from "./utils/tickets";
-import { pauseTimer, resumeTimer } from "./utils/timer";
 
 function findTicket(tickets: Ticket[], id: string): Ticket | undefined {
   return tickets.find((t) => t.id === id);
@@ -44,34 +41,34 @@ function isColumnId(value: string): value is ColumnId {
 
 export function DevBoard() {
   const { data: user } = useUserQuery();
-  const userId = user?.id;
-  const queryClient = useQueryClient();
-  const backlog = useDevBoardTickets(userId, "backlog");
-  const todo = useDevBoardTickets(userId, "todo");
-  const inProgress = useDevBoardTickets(userId, "in_progress");
-  const review = useDevBoardTickets(userId, "review");
-  const done = useDevBoardTickets(userId, "done");
+  const backlog = useDevBoardTickets(user?.id, "backlog");
+  const todo = useDevBoardTickets(user?.id, "todo");
+  const inProgress = useDevBoardTickets(user?.id, "in_progress");
+  const review = useDevBoardTickets(user?.id, "review");
+  const done = useDevBoardTickets(user?.id, "done");
   const columns = { backlog, todo, in_progress: inProgress, review, done };
-  const tickets = COLUMNS.flatMap((column) =>
-    columns[column].data?.pages.flatMap((page) => page.tickets) ?? [],
+  const tickets = COLUMNS.flatMap(
+    (column) => columns[column].data?.pages.flatMap((page) => page.tickets) ?? [],
   ).sort((a, b) => b.position - a.position);
   const isLoading = COLUMNS.some((column) => columns[column].isLoading);
   const error = COLUMNS.map((column) => columns[column].error).find(Boolean);
   const createTicketMutation = useCreateDevBoardTicket();
   const updateTicketMutation = useUpdateDevBoardTicket();
-  const deleteTicketMutation = useDeleteDevBoardTicket();
 
-  useDevBoardRealtime(userId);
+  useDevBoardRealtime(user?.id);
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  const [dragTickets, setDragTickets] = useState<Ticket[] | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTicket, setEditTicket] = useState<Ticket | null>(null);
   const alertedRef = useRef<Set<string> | null>(null);
+  const dragTicketsRef = useRef<Ticket[] | null>(null);
+  const pendingDropRef = useRef<Ticket | null>(null);
   if (!alertedRef.current) alertedRef.current = loadAlertedTickets();
 
-  function refresh() {
-    if (userId) void queryClient.invalidateQueries({ queryKey: devBoardKeys.user(userId) });
+  function retryLoadingTickets() {
+    void Promise.all(COLUMNS.map((column) => columns[column].refetch()));
   }
 
   useEffect(() => {
@@ -86,57 +83,109 @@ export function DevBoard() {
     return () => window.clearInterval(interval);
   }, [tickets]);
 
+  useEffect(() => {
+    const pendingDrop = pendingDropRef.current;
+    if (!pendingDrop) return;
+
+    const persistedTicket = findTicket(tickets, pendingDrop.id);
+    if (
+      persistedTicket?.column === pendingDrop.column &&
+      persistedTicket.position === pendingDrop.position
+    ) {
+      pendingDropRef.current = null;
+      dragTicketsRef.current = null;
+      setDragTickets(null);
+    }
+  }, [tickets]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor),
   );
 
-  const activeTicket = activeId ? findTicket(tickets, activeId) : undefined;
+  const visibleTickets = dragTickets ?? tickets;
+  const activeTicket = activeId ? findTicket(visibleTickets, activeId) : undefined;
 
   const overColumn: ColumnId | null = (() => {
     if (!overId) return null;
     if (isColumnId(overId)) return overId;
-    const t = findTicket(tickets, overId);
+    const t = findTicket(visibleTickets, overId);
     return t ? t.column : null;
   })();
 
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id as string);
+    dragTicketsRef.current = tickets;
+    setDragTickets(tickets);
   }
 
   function handleDragOver(event: DragOverEvent) {
-    setOverId(event.over ? (event.over.id as string) : null);
+    const overId = event.over ? (event.over.id as string) : null;
+    setOverId(overId);
+    if (!overId) return;
+
+    const currentTickets = dragTicketsRef.current ?? tickets;
+    const activeTicket = findTicket(currentTickets, event.active.id as string);
+    const targetColumn = isColumnId(overId) ? overId : findTicket(currentTickets, overId)?.column;
+    if (!activeTicket || !targetColumn || activeTicket.column === targetColumn) return;
+
+    const nextTickets = currentTickets.map((ticket) =>
+      ticket.id === activeTicket.id
+        ? moveTicket(
+            activeTicket,
+            targetColumn,
+            currentTickets,
+            isColumnId(overId) ? null : overId,
+            isColumnId(overId),
+          )
+        : ticket,
+    );
+    dragTicketsRef.current = nextTickets;
+    setDragTickets(nextTickets);
   }
 
   function handleDragEnd(event: DragEndEvent) {
     setActiveId(null);
     setOverId(null);
     const { active, over } = event;
-    if (!over) return;
-
-    const activeIdStr = active.id as string;
-    const overIdStr = over.id as string;
-    const activeTicket = findTicket(tickets, activeIdStr);
-    if (!activeTicket) return;
-
-    if (isColumnId(overIdStr)) {
-      // Dropped on empty column space → append to end
-      if (activeTicket.column !== overIdStr) {
-        moveAcrossColumn(activeIdStr, overIdStr, null);
-      }
+    if (!over) {
+      dragTicketsRef.current = null;
+      setDragTickets(null);
       return;
     }
 
-    const overTicket = findTicket(tickets, overIdStr);
-    if (!overTicket) return;
+    const activeIdStr = active.id as string;
+    const overIdStr = over.id as string;
+    const currentTickets = dragTicketsRef.current ?? tickets;
+    const activeTicket = findTicket(currentTickets, activeIdStr);
+    const targetColumn = isColumnId(overIdStr)
+      ? overIdStr
+      : findTicket(currentTickets, overIdStr)?.column;
+    if (!activeTicket || !targetColumn) return;
 
-    if (activeTicket.column === overTicket.column) {
-      // Same column → reorder
-      reorderWithinColumn(activeIdStr, overIdStr);
-    } else {
-      // Cross-column → move to overTicket's column at overTicket's position
-      moveAcrossColumn(activeIdStr, overTicket.column, overIdStr);
-    }
+    const movedTicket =
+      activeIdStr === overIdStr
+        ? activeTicket
+        : moveTicket(
+            activeTicket,
+            targetColumn,
+            currentTickets,
+            isColumnId(overIdStr) ? null : overIdStr,
+            isColumnId(overIdStr),
+          );
+    const nextTickets = currentTickets.map((ticket) =>
+      ticket.id === activeIdStr ? movedTicket : ticket,
+    );
+    dragTicketsRef.current = nextTickets;
+    setDragTickets(nextTickets);
+    pendingDropRef.current = movedTicket;
+    updateTicketMutation.mutate(movedTicket, {
+      onError: () => {
+        pendingDropRef.current = null;
+        dragTicketsRef.current = null;
+        setDragTickets(null);
+      },
+    });
   }
 
   function openNewTicket() {
@@ -157,42 +206,9 @@ export function DevBoard() {
     }
   }
 
-  function handleDelete(id: string) {
-    deleteTicketMutation.mutate(id);
-    if (editTicket?.id === id) setDialogOpen(false);
-  }
-
   function moveToColumn(id: string, target: ColumnId) {
     const ticket = findTicket(tickets, id);
     if (ticket) updateTicketMutation.mutate(moveTicket(ticket, target, tickets, null, true));
-  }
-
-  function reorderWithinColumn(activeId: string, overId: string) {
-    const active = findTicket(tickets, activeId);
-    const over = findTicket(tickets, overId);
-    if (activeId !== overId && active && over && active.column === over.column) {
-      updateTicketMutation.mutate(moveTicket(active, active.column, tickets, overId, false));
-    }
-  }
-
-  function moveAcrossColumn(activeId: string, target: ColumnId, anchorOverId: string | null) {
-    const ticket = findTicket(tickets, activeId);
-    if (ticket) {
-      updateTicketMutation.mutate(moveTicket(ticket, target, tickets, anchorOverId, anchorOverId === null));
-    }
-  }
-
-  function togglePause(id: string) {
-    const ticket = findTicket(tickets, id);
-    if (!ticket || ticket.column !== "in_progress") return;
-    updateTicketMutation.mutate(
-      ticket.isPaused || !ticket.timerStartedAt ? resumeTimer(ticket) : pauseTimer(ticket),
-    );
-  }
-
-  function setPriority(id: string, priority: Ticket["priority"]) {
-    const ticket = findTicket(tickets, id);
-    if (ticket) updateTicketMutation.mutate({ ...ticket, priority });
   }
 
   const ticketCount = Object.values(columns).reduce(
@@ -204,10 +220,14 @@ export function DevBoard() {
     <div className="flex h-full flex-col gap-3">
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
-          {ticketCount} ticket{ticketCount === 1 ? "" : "s"} · drag to move ·
-          timer starts in "In Progress"
+          {ticketCount} ticket{ticketCount === 1 ? "" : "s"} · drag to move · timer starts in "In
+          Progress"
         </p>
-        <Button size="sm" onClick={openNewTicket} className="gap-1.5">
+        <Button
+          size="sm"
+          onClick={openNewTicket}
+          className="gap-1.5"
+        >
           <Plus className="size-3.5" />
           New Ticket
         </Button>
@@ -220,58 +240,51 @@ export function DevBoard() {
           <AlertTitle>Could not load tickets</AlertTitle>
           <AlertDescription className="flex items-center justify-between gap-3">
             <span>{error.message}</span>
-            <Button size="sm" variant="outline" onClick={refresh}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={retryLoadingTickets}
+            >
               Retry
             </Button>
           </AlertDescription>
         </Alert>
       ) : (
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-        onDragCancel={() => {
-          setActiveId(null);
-          setOverId(null);
-        }}
-      >
-        <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-1">
-          {COLUMNS.map((columnId) => (
-            <ColumnView
-              key={columnId}
-              columnId={columnId}
-              tickets={tickets}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+          onDragCancel={() => {
+            setActiveId(null);
+            setOverId(null);
+            dragTicketsRef.current = null;
+            setDragTickets(null);
+          }}
+        >
+          <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-1">
+            {COLUMNS.map((columnId) => (
+              <ColumnView
+                key={columnId}
+                columnId={columnId}
+              tickets={visibleTickets}
               isHighlighted={overColumn === columnId}
               onEdit={openEditTicket}
-              onDelete={handleDelete}
               onMoveToColumn={moveToColumn}
-              onTogglePause={togglePause}
-              onSetPriority={setPriority}
               onAddTicket={openNewTicket}
-              totalTickets={columns[columnId].data?.pages[0]?.total ?? 0}
-              hasNextPage={columns[columnId].hasNextPage}
-              isFetchingNextPage={columns[columnId].isFetchingNextPage}
-              onLoadMore={() => void columns[columnId].fetchNextPage()}
-            />
-          ))}
-        </div>
+                totalTickets={columns[columnId].data?.pages[0]?.total ?? 0}
+                hasNextPage={columns[columnId].hasNextPage}
+                isFetchingNextPage={columns[columnId].isFetchingNextPage}
+                onLoadMore={() => void columns[columnId].fetchNextPage()}
+              />
+            ))}
+          </div>
 
-        <DragOverlay>
-          {activeTicket ? (
-            <TicketCard
-              ticket={activeTicket}
-              isOverlay
-              onEdit={() => {}}
-              onDelete={() => {}}
-              onMoveToColumn={() => {}}
-              onTogglePause={() => {}}
-              onSetPriority={() => {}}
-            />
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+          <DragOverlay dropAnimation={null}>
+            {activeTicket ? <TicketDragOverlay ticket={activeTicket} /> : null}
+          </DragOverlay>
+        </DndContext>
       )}
 
       <TicketForm

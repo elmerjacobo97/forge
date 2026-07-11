@@ -8,12 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-import {
-  type ColumnId,
-  type Priority,
-  type Ticket,
-  COLUMN_LABELS,
-} from "../types";
+import { type ColumnId, type Ticket, COLUMN_LABELS } from "../types";
 import { computeElapsed } from "../utils/timer";
 import { TicketCard } from "./ticket-card";
 
@@ -22,10 +17,7 @@ interface ColumnViewProps {
   tickets: Ticket[];
   isHighlighted: boolean;
   onEdit: (ticket: Ticket) => void;
-  onDelete: (id: string) => void;
   onMoveToColumn: (id: string, column: ColumnId) => void;
-  onTogglePause: (id: string) => void;
-  onSetPriority: (id: string, priority: Priority) => void;
   onAddTicket: () => void;
   totalTickets: number;
   hasNextPage: boolean;
@@ -46,10 +38,7 @@ export function ColumnView({
   tickets,
   isHighlighted,
   onEdit,
-  onDelete,
   onMoveToColumn,
-  onTogglePause,
-  onSetPriority,
   onAddTicket,
   totalTickets,
   hasNextPage,
@@ -98,10 +87,7 @@ export function ColumnView({
                 key={ticket.id}
                 ticket={ticket}
                 onEdit={onEdit}
-                onDelete={onDelete}
                 onMoveToColumn={onMoveToColumn}
-                onTogglePause={onTogglePause}
-                onSetPriority={onSetPriority}
               />
             ))}
           </SortableContext>
