@@ -1,4 +1,4 @@
-import { databases } from "@/lib/appwrite";
+import { tablesDB } from "@/lib/appwrite";
 import { Query, ID } from "appwrite";
 import type { Bookmark } from "../types";
 
@@ -55,8 +55,8 @@ const saveLocalLinks = (links: Bookmark[]): void => {
 };
 
 const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const collectionId = import.meta.env.VITE_APPWRITE_BOOKMARKS_COLLECTION_ID;
-const isConfigured = !!(databaseId && collectionId);
+const tableId = import.meta.env.VITE_APPWRITE_BOOKMARKS_COLLECTION_ID;
+const isConfigured = !!(databaseId && tableId);
 
 export const bookmarksService = {
   isAppwriteEnabled(userId?: string): boolean {
@@ -66,18 +66,19 @@ export const bookmarksService = {
   async fetchBookmarks(userId?: string): Promise<Bookmark[]> {
     if (this.isAppwriteEnabled(userId)) {
       try {
-        const response = await databases.listDocuments(databaseId, collectionId, [
-          Query.equal("userId", userId!),
-          Query.orderDesc("$createdAt"),
-        ]);
-        return response.documents.map((doc) => ({
-          id: doc.$id,
-          title: doc.title,
-          url: doc.url,
-          category: doc.category as any,
-          description: doc.description,
-          tags: doc.tags || [],
-          createdAt: doc.$createdAt,
+        const response = await tablesDB.listRows({
+          databaseId,
+          tableId,
+          queries: [Query.equal("userId", userId!), Query.orderDesc("$createdAt")],
+        });
+        return response.rows.map((row) => ({
+          id: row.$id,
+          title: row.title,
+          url: row.url,
+          category: row.category as any,
+          description: row.description,
+          tags: row.tags || [],
+          createdAt: row.$createdAt,
         }));
       } catch (error) {
         console.error(
@@ -95,22 +96,27 @@ export const bookmarksService = {
     userId?: string,
   ): Promise<Bookmark> {
     if (this.isAppwriteEnabled(userId)) {
-      const doc = await databases.createDocument(databaseId, collectionId, ID.unique(), {
-        title: bookmark.title,
-        url: bookmark.url,
-        category: bookmark.category,
-        description: bookmark.description,
-        tags: bookmark.tags,
-        userId: userId!,
+      const row = await tablesDB.createRow({
+        databaseId,
+        tableId,
+        rowId: ID.unique(),
+        data: {
+          title: bookmark.title,
+          url: bookmark.url,
+          category: bookmark.category,
+          description: bookmark.description,
+          tags: bookmark.tags,
+          userId: userId!,
+        },
       });
       return {
-        id: doc.$id,
-        title: doc.title,
-        url: doc.url,
-        category: doc.category as any,
-        description: doc.description,
-        tags: doc.tags || [],
-        createdAt: doc.$createdAt,
+        id: row.$id,
+        title: row.title,
+        url: row.url,
+        category: row.category as any,
+        description: row.description,
+        tags: row.tags || [],
+        createdAt: row.$createdAt,
       };
     } else {
       const localLinks = getLocalLinks();
@@ -126,7 +132,11 @@ export const bookmarksService = {
 
   async deleteBookmark(bookmarkId: string, userId?: string): Promise<void> {
     if (this.isAppwriteEnabled(userId) && !bookmarkId.startsWith("local-")) {
-      await databases.deleteDocument(databaseId, collectionId, bookmarkId);
+      await tablesDB.deleteRow({
+        databaseId,
+        tableId,
+        rowId: bookmarkId,
+      });
     } else {
       const localLinks = getLocalLinks();
       const updated = localLinks.filter((l) => l.id !== bookmarkId);

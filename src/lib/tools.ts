@@ -21,6 +21,7 @@ import {
   Code2,
   Globe,
   Bookmark,
+  NotebookText,
   ImageIcon,
   Columns3,
   Dices,
@@ -194,6 +195,14 @@ export const tools: ToolDef[] = [
     name: "Bookmarks",
     description: "Save and organize documentation, repos, and articles",
     icon: Bookmark,
+    category: "Resources",
+  },
+  {
+    id: "snippets",
+    path: "/snippets",
+    name: "Snippets",
+    description: "Save notes, prompts, and configs for quick reuse",
+    icon: NotebookText,
     category: "Resources",
   },
   {

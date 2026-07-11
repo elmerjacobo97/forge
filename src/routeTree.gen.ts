@@ -16,6 +16,7 @@ import { Route as AuthenticatedUuidGeneratorRouteImport } from './routes/_authen
 import { Route as AuthenticatedUrlEncoderRouteImport } from './routes/_authenticated/url-encoder'
 import { Route as AuthenticatedTimestampConverterRouteImport } from './routes/_authenticated/timestamp-converter'
 import { Route as AuthenticatedTextManipulatorRouteImport } from './routes/_authenticated/text-manipulator'
+import { Route as AuthenticatedSnippetsRouteImport } from './routes/_authenticated/snippets'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedRegexTesterRouteImport } from './routes/_authenticated/regex-tester'
 import { Route as AuthenticatedQrGeneratorRouteImport } from './routes/_authenticated/qr-generator'
@@ -75,6 +76,11 @@ const AuthenticatedTextManipulatorRoute =
     path: '/text-manipulator',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSnippetsRoute = AuthenticatedSnippetsRouteImport.update({
+  id: '/snippets',
+  path: '/snippets',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -220,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/qr-generator': typeof AuthenticatedQrGeneratorRoute
   '/regex-tester': typeof AuthenticatedRegexTesterRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/snippets': typeof AuthenticatedSnippetsRoute
   '/text-manipulator': typeof AuthenticatedTextManipulatorRoute
   '/timestamp-converter': typeof AuthenticatedTimestampConverterRoute
   '/url-encoder': typeof AuthenticatedUrlEncoderRoute
@@ -249,6 +256,7 @@ export interface FileRoutesByTo {
   '/qr-generator': typeof AuthenticatedQrGeneratorRoute
   '/regex-tester': typeof AuthenticatedRegexTesterRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/snippets': typeof AuthenticatedSnippetsRoute
   '/text-manipulator': typeof AuthenticatedTextManipulatorRoute
   '/timestamp-converter': typeof AuthenticatedTimestampConverterRoute
   '/url-encoder': typeof AuthenticatedUrlEncoderRoute
@@ -281,6 +289,7 @@ export interface FileRoutesById {
   '/_authenticated/qr-generator': typeof AuthenticatedQrGeneratorRoute
   '/_authenticated/regex-tester': typeof AuthenticatedRegexTesterRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/snippets': typeof AuthenticatedSnippetsRoute
   '/_authenticated/text-manipulator': typeof AuthenticatedTextManipulatorRoute
   '/_authenticated/timestamp-converter': typeof AuthenticatedTimestampConverterRoute
   '/_authenticated/url-encoder': typeof AuthenticatedUrlEncoderRoute
@@ -312,6 +321,7 @@ export interface FileRouteTypes {
     | '/qr-generator'
     | '/regex-tester'
     | '/settings'
+    | '/snippets'
     | '/text-manipulator'
     | '/timestamp-converter'
     | '/url-encoder'
@@ -341,6 +351,7 @@ export interface FileRouteTypes {
     | '/qr-generator'
     | '/regex-tester'
     | '/settings'
+    | '/snippets'
     | '/text-manipulator'
     | '/timestamp-converter'
     | '/url-encoder'
@@ -372,6 +383,7 @@ export interface FileRouteTypes {
     | '/_authenticated/qr-generator'
     | '/_authenticated/regex-tester'
     | '/_authenticated/settings'
+    | '/_authenticated/snippets'
     | '/_authenticated/text-manipulator'
     | '/_authenticated/timestamp-converter'
     | '/_authenticated/url-encoder'
@@ -433,6 +445,13 @@ declare module '@tanstack/react-router' {
       path: '/text-manipulator'
       fullPath: '/text-manipulator'
       preLoaderRoute: typeof AuthenticatedTextManipulatorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/snippets': {
+      id: '/_authenticated/snippets'
+      path: '/snippets'
+      fullPath: '/snippets'
+      preLoaderRoute: typeof AuthenticatedSnippetsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
@@ -627,6 +646,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedQrGeneratorRoute: typeof AuthenticatedQrGeneratorRoute
   AuthenticatedRegexTesterRoute: typeof AuthenticatedRegexTesterRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSnippetsRoute: typeof AuthenticatedSnippetsRoute
   AuthenticatedTextManipulatorRoute: typeof AuthenticatedTextManipulatorRoute
   AuthenticatedTimestampConverterRoute: typeof AuthenticatedTimestampConverterRoute
   AuthenticatedUrlEncoderRoute: typeof AuthenticatedUrlEncoderRoute
@@ -654,6 +674,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedQrGeneratorRoute: AuthenticatedQrGeneratorRoute,
   AuthenticatedRegexTesterRoute: AuthenticatedRegexTesterRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSnippetsRoute: AuthenticatedSnippetsRoute,
   AuthenticatedTextManipulatorRoute: AuthenticatedTextManipulatorRoute,
   AuthenticatedTimestampConverterRoute: AuthenticatedTimestampConverterRoute,
   AuthenticatedUrlEncoderRoute: AuthenticatedUrlEncoderRoute,
