@@ -31,25 +31,19 @@ export const PRIORITY_COLORS: Record<Priority, string> = {
   high: "bg-rose-500",
 };
 
-export interface MoveEvent {
-  at: string;
-  from: ColumnId;
-  to: ColumnId;
-}
-
 export interface Ticket {
   id: string;
   title: string;
   description: string;
   column: ColumnId;
-  order: number;
+  position: number;
   priority: Priority;
   createdAt: string;
   timerStartedAt: string | null;
   totalElapsedMs: number;
   isPaused: boolean;
-  history: MoveEvent[];
+  lastMovedAt: string;
 }
 
-export const STORAGE_KEY = "forge_devboard:v1";
 export const STALE_THRESHOLD_MS = 25 * 60 * 1000;
+export const TICKETS_PAGE_SIZE = 25;

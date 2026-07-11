@@ -27,6 +27,10 @@ interface ColumnViewProps {
   onTogglePause: (id: string) => void;
   onSetPriority: (id: string, priority: Priority) => void;
   onAddTicket: () => void;
+  totalTickets: number;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  onLoadMore: () => void;
 }
 
 const COLUMN_ACCENT: Record<ColumnId, string> = {
@@ -47,11 +51,15 @@ export function ColumnView({
   onTogglePause,
   onSetPriority,
   onAddTicket,
+  totalTickets,
+  hasNextPage,
+  isFetchingNextPage,
+  onLoadMore,
 }: ColumnViewProps) {
   const { setNodeRef } = useDroppable({ id: columnId });
 
   const colTickets = useMemo(
-    () => tickets.filter((t) => t.column === columnId).sort((a, b) => a.order - b.order),
+    () => tickets.filter((t) => t.column === columnId).sort((a, b) => b.position - a.position),
     [tickets, columnId],
   );
 
@@ -71,7 +79,7 @@ export function ColumnView({
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold">{COLUMN_LABELS[columnId]}</span>
           <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
-            {colTickets.length}
+            {totalTickets}
           </Badge>
         </div>
         {totalElapsed > 0 && (
@@ -109,6 +117,18 @@ export function ColumnView({
             >
               {isHighlighted ? "Drop here" : "Drop tickets here"}
             </div>
+          )}
+
+          {hasNextPage && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onLoadMore}
+              disabled={isFetchingNextPage}
+              className="h-7 w-full text-[11px] text-muted-foreground"
+            >
+              {isFetchingNextPage ? "Loading tickets..." : "Load more"}
+            </Button>
           )}
 
           {columnId === "backlog" && (
