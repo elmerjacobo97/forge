@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import { toast } from "sonner";
-import type { SourceImage, DragDropPayload } from "@/features/image-tools/utils/format";
+import type { SourceImage } from "@/features/image-tools/utils/format";
 
 export function useImageSource() {
   const [source, setSource] = useState<SourceImage | null>(null);
@@ -46,17 +44,6 @@ export function useImageSource() {
       });
     };
     img.src = url;
-  }
-
-  async function loadNative(path: string) {
-    try {
-      const bytes = await invoke<number[]>("read_file_bytes", { path });
-      const blob = new Blob([new Uint8Array(bytes)], { type: "image/*" });
-      const file = new File([blob], path.split(/[/\\]/).pop() ?? "image");
-      loadFromFile(file);
-    } catch (e) {
-      setError((e as Error).message || String(e));
-    }
   }
 
   const handleFileSelected = useCallback((next: File | null) => {
@@ -116,34 +103,6 @@ export function useImageSource() {
     setSource(null);
     setError(null);
   }, [source]);
-
-  // Native drag-drop (Tauri runtime)
-  useEffect(() => {
-    let mounted = true;
-    let unlisten: (() => void) | null = null;
-
-    async function setup() {
-      try {
-        unlisten = await listen<DragDropPayload>("tauri://drag-drop", (event) => {
-          if (!mounted) return;
-          const path = event.payload.paths[0];
-          if (!path) return;
-          setDragOver(false);
-          void loadNative(path);
-        });
-      } catch {
-        // Web-only dev mode: native drag-drop unavailable.
-      }
-    }
-
-    setup();
-
-    return () => {
-      mounted = false;
-      if (unlisten) unlisten();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Prevent browser from navigating on drop
   useEffect(() => {

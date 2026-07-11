@@ -8,8 +8,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   groqModel: "openai/gpt-oss-120b",
 };
 
-export const SETTINGS_STORE_FILE = "forge-settings.json";
-
 export const SETTINGS_KEYS = {
   groqApiKey: "groq_api_key",
   groqModel: "groq_model",

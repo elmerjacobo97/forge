@@ -1,6 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { invoke } from "@tauri-apps/api/core"
-import { listen } from "@tauri-apps/api/event"
 import { Check, Copy, Eraser, File, Loader2, Upload, X } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -21,14 +19,7 @@ function formatSize(bytes: number): string {
   return `${value.toFixed(i === 0 ? 0 : 1)} ${units[i]}`
 }
 
-type FileSource =
-  | { kind: "browser"; file: File }
-  | { kind: "native"; path: string; size?: number }
-
-interface DragDropPayload {
-  paths: string[]
-  position: { x: number; y: number }
-}
+type FileSource = { file: File }
 
 export function FileValidator() {
   const [source, setSource] = useState<FileSource | null>(null)
@@ -62,14 +53,9 @@ export function FileValidator() {
     async function run() {
       if (!target) return
       try {
-        let result: string
-        if (target.kind === "browser") {
-          const buffer = await target.file.arrayBuffer()
-          if (requestIdRef.current !== id) return
-          result = await digestBuffer(algo, buffer)
-        } else {
-          result = await invoke<string>("hash_file", { algo, path: target.path })
-        }
+        const buffer = await target.file.arrayBuffer()
+        if (requestIdRef.current !== id) return
+        const result = await digestBuffer(algo, buffer)
         if (requestIdRef.current !== id) return
         setHash(result)
       } catch (e) {
@@ -89,34 +75,6 @@ export function FileValidator() {
       requestIdRef.current++
     }
   }, [source, algo])
-
-  useEffect(() => {
-    let mounted = true
-    let unlisten: (() => void) | null = null
-
-    async function setup() {
-      try {
-        unlisten = await listen<DragDropPayload>("tauri://drag-drop", (event) => {
-          if (!mounted) return
-          const path = event.payload.paths[0]
-          if (!path) return
-          setDragOver(false)
-          setSource({ kind: "native", path })
-        })
-      } catch {
-        // Native drag-drop not available (e.g. web-only dev mode)
-      }
-    }
-
-    setup()
-
-    return () => {
-      mounted = false
-      if (unlisten) {
-        unlisten()
-      }
-    }
-  }, [])
 
   useEffect(() => {
     const preventDefault = (e: Event) => e.preventDefault()
@@ -145,7 +103,7 @@ export function FileValidator() {
       setSource(null)
       return
     }
-    setSource({ kind: "browser", file: next })
+    setSource({ file: next })
     setError(null)
   }
 
@@ -202,8 +160,8 @@ export function FileValidator() {
     setLoading(false)
   }, [])
 
-  const displayPath = source?.kind === "browser" ? source.file.name : source?.path
-  const displaySize = source?.kind === "browser" ? source.file.size : source?.size
+  const displayPath = source?.file.name
+  const displaySize = source?.file.size
 
   return (
     <div className="flex h-full flex-col gap-4">

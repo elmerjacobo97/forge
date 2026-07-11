@@ -1,47 +1,38 @@
 # Roadmap de mejoras — Forge
 
-> Complementa `docs/product.md` (visión) y `docs/IDEAS.md` (brainstorm de módulos). Este doc nace de una revisión de código (jul 2026) y se enfoca en: mejoras transversales, mejoras a herramientas existentes, features nuevos, y el requisito de soportar **escritorio + web**.
+> Complementa `docs/product.md` (visión) y `docs/IDEAS.md` (brainstorm de módulos). Forge es web-first: desktop, CLI, MCP y móvil se añaden después sobre APIs y modelos compartidos.
 
 ## 1. Estado actual
 
-23 herramientas en `src/lib/tools.ts`. Dos niveles de madurez:
+Las herramientas viven en `apps/web/src/lib/tools.ts`. Dos niveles de madurez:
 - **Tools simples**: un archivo `.tsx` + `utils/` (json-formatter, base64, uuid-generator, etc.)
-- **Features completos**: `components/hooks/services/schemas/types` (git-commit, bookmarks, dev-board, mock-data-generator, http-tester, auth, settings)
+- **Features completos**: `components/hooks/services/schemas/types` (bookmarks, dev-board, mock-data-generator, http-tester, auth, settings)
 
-### Dependencias de Tauri (bloquean versión web)
+### Restricciones web
 
-| Tool | Comando Rust / plugin | Bloqueo |
+| Tool | Restricción | Comportamiento web |
 |---|---|---|
-| git-commit | `git_status`, `git_diff`, `git_commit`, `git_add`, `git_unstage` + `plugin-dialog` | Total — requiere shell a `git` |
-| file-validator | `hash_file` | Parcial — File System Access API cubriría web |
-| image-tools | `read_file_bytes` | Parcial — drag-drop + File API cubre web |
-| http-tester | `plugin-http` (bypass CORS) | Parcial — en web pega con CORS del navegador |
-| color-converter | `pick_color` (macOS-only eyedropper) | Parcial — `EyeDropper` API cubre Chrome/Edge |
-| dev-board | `plugin-notification` | Parcial — Notification API cubre web |
+| file-validator | Browser File API | Selección y hashing local de archivos |
+| image-tools | Browser File API | Drag and drop y Canvas local |
+| http-tester | CORS del navegador | Explica errores CORS; no los evita |
+| color-converter | Selector de color HTML | Conversión y paletas en navegador |
+| dev-board | Permiso de notificaciones | Usa Notification API si ya fue concedido |
 
 Resto (json-formatter, uuid-generator, base64, timestamp-converter, jwt-decoder, regex-tester, hash-generator, qr-generator, text-manipulator, url-encoder, format-converter, diff-tool, lorem-ipsum, json-to-typescript, html-entities, mock-data-generator) — 100% client-side, web-ready tal cual.
 
-**Persistencia**: todo pasa por `@tauri-apps/plugin-store` (git-commit repos, settings, bookmarks, mock-data presets, dev-board, http-tester history). Sin abstracción — bloqueo duro para web.
+**Persistencia**: bookmarks y snippets usan Appwrite. El resto de utilidades locales usan almacenamiento del navegador hasta que el modelo de workspaces exista.
 
-## 2. Estrategia escritorio + web
+## 2. Estrategia web-first
 
-### Capa de plataforma (`src/lib/platform/`)
-- `isTauri()` — detecta runtime.
-- **Storage adapter**: interfaz única; backend `plugin-store` (desktop) o `localStorage`/IndexedDB (web). Migrar los 6 usos actuales detrás de esta interfaz.
-- **Notificaciones**: `plugin-notification` (desktop) / Notification API (web).
-- **Fetch**: `plugin-http` (desktop) / fetch nativo + aviso de CORS (web).
-- **Eyedropper**: `pick_color` (desktop) / `EyeDropper` API (web, Chrome/Edge).
-
-### Gating por herramienta
-Añadir `platforms: ('desktop' | 'web')[]` a `ToolDef`. Sidebar y command palette filtran según plataforma activa. git-commit queda desktop-only; file-validator/image-tools/color-converter degradan con capacidad reducida en web.
-
-### Build web
-`pnpm build` ya genera `dist/` — falta: hosting, y evitar imports incondicionales de Tauri (deep-link, tray-menu) cuando corre en navegador.
+- Mantener `apps/web` como única aplicación hasta que una segunda app tenga consumidor real.
+- Modelar organizaciones, workspaces, miembros, roles, proyectos, tareas y entradas de tiempo en Appwrite antes de añadir CLI o MCP.
+- Exponer API autenticada con scopes y registro de auditoría antes de automatizar mutaciones por agentes.
+- Añadir `apps/cli` y MCP stdio sobre misma API cuando Dev Board remoto sea estable.
+- Evaluar `apps/desktop` solo para capacidades locales que no existen en navegador.
 
 ## 3. Mejoras transversales
 
 - **Error boundaries** — no existe ninguno hoy; una excepción en cualquier tool tumba toda la app. Agregar `errorComponent` en rutas TanStack Router.
-- **Auto-update** — falta `tauri-plugin-updater`; product.md promete updates frecuentes sin mecanismo real.
 - **Favoritos/recientes** — no existen. Command palette solo busca y navega.
 - **Tests** — cero. Empezar por `utils/` puros (parsers/converters): alto valor, bajo costo, Vitest.
 - **Atajos por herramienta** — hoy solo Cmd+K / Cmd+/ globales.
@@ -78,6 +69,6 @@ No duplican IDEAS.md (clipboard manager, port scanner, .env manager, etc. — ve
 
 ## 6. Prioridad sugerida
 
-- **P0**: abstracción de plataforma + storage adapter (desbloquea web), error boundaries.
-- **P1**: gating por plataforma, favoritos/recientes, mejoras a json-formatter y http-tester.
-- **P2**: auto-updater, tests, herramientas nuevas pequeñas.
+- **P0**: Dev Board remoto con workspaces, entradas de tiempo y permisos Appwrite.
+- **P1**: reportes, favoritos/recientes, mejoras a json-formatter y HTTP Tester.
+- **P2**: API para CLI/MCP, PWA, tests y herramientas nuevas pequeñas.

@@ -6,7 +6,7 @@ Organizadas por dependencia de backend:
 
 ---
 
-## Tauri-native (sin backend, solo OS)
+## Futuro desktop/local (sin backend, solo OS)
 
 ### Clipboard manager
 - Historial local usando `tauri-plugin-clipboard`.
@@ -73,7 +73,7 @@ Organizadas por dependencia de backend:
 
 ### Webhook inspector
 - Tipo webhook.site. Backend genera URL única, recibe requests.
-- Forge muestra en realtime (Tauri WebSocket / SSE).
+- Forge muestra en realtime mediante WebSocket o SSE.
 - Killer feature para devs. Diferenciador.
 
 ### Cron / scheduled jobs viewer

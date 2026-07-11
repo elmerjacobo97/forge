@@ -1,7 +1,23 @@
-# Tauri + React + Typescript
+# Forge
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+Forge is a web-first workspace for developer utilities and team productivity.
 
-## Recommended IDE Setup
+## Development
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+```bash
+pnpm install
+pnpm dev
+```
+
+## Commands
+
+- `pnpm build` typechecks and builds the web app.
+- `pnpm test` runs web tests.
+- `pnpm doctor` runs React Doctor.
+
+## Repository
+
+- `apps/web/`: deployable React, Vite, and Appwrite application.
+- `docs/`: product and planning documentation.
+
+See `apps/web/.env.example` for required Appwrite environment variables.

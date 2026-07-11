@@ -1,10 +1,4 @@
 import { useEffect, useRef } from "react";
-import {
-  isPermissionGranted,
-  requestPermission,
-  sendNotification,
-} from "@tauri-apps/plugin-notification";
-
 import type { Ticket } from "../types";
 import { STALE_THRESHOLD_MS } from "../types";
 import { computeElapsed, formatDuration } from "../utils/timer";
@@ -34,15 +28,8 @@ function lastMoveAt(ticket: Ticket): number {
 }
 
 async function notify(title: string, body: string): Promise<void> {
-  try {
-    let granted = await isPermissionGranted();
-    if (!granted) {
-      const perm = await requestPermission();
-      granted = perm === "granted";
-    }
-    if (granted) sendNotification({ title, body });
-  } catch {
-    // notification plugin unavailable (web-only dev) — silent
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification(title, { body });
   }
 }
 

@@ -1,5 +1,3 @@
-import { fetch } from "@tauri-apps/plugin-http";
-
 import type { HttpRequestConfig, HttpResponseData, KeyValue } from "./history";
 
 function buildUrl(url: string, params: KeyValue[]): string {
@@ -81,10 +79,9 @@ export async function executeRequest(
   const headers = buildHeaders(config.headers);
   const body = buildBody(config);
 
-  const init: Parameters<typeof fetch>[1] = {
+  const init: RequestInit = {
     method: config.method,
     headers,
-    connectTimeout: 30000,
   };
 
   if (body !== null && config.method !== "GET" && config.method !== "HEAD") {

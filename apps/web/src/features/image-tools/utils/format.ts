@@ -8,11 +8,6 @@ export const FORMATS: { id: OutputFormat; label: string; mime: string }[] = [
 
 export const LOSSY: OutputFormat[] = ["jpeg", "webp"]
 
-export interface DragDropPayload {
-  paths: string[]
-  position: { x: number; y: number }
-}
-
 export interface SourceImage {
   name: string
   url: string

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { Check, Copy, Pipette } from "lucide-react"
+import { Check, Copy } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useCopy } from "@/lib/hooks/use-copy"
-import { invoke } from "@tauri-apps/api/core"
 
 import {
   hexToRgb,
@@ -117,28 +116,6 @@ export function ColorConverter() {
             </div>
           </PopoverContent>
         </Popover>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="size-10 shrink-0"
-              onClick={async () => {
-                try {
-                  const hex = await invoke<string>("pick_color")
-                  setHex(hex)
-                } catch {
-                  // cancelled or unsupported
-                }
-              }}
-            >
-              <Pipette className="size-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Pick color from screen</TooltipContent>
-        </Tooltip>
 
         <Input
           id="color-hex"

@@ -27,7 +27,7 @@ export function ImageTools() {
   } = convertHook
 
   // Discard any previous conversion whenever a new source image loads
-  // (file picker, manual drag-drop, or native Tauri drag-drop all funnel here).
+  // File picker and browser drag-drop both use the same conversion flow.
   useEffect(() => {
     resetOutput()
     // eslint-disable-next-line react-hooks/exhaustive-deps

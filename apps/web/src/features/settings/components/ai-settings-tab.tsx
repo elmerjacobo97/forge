@@ -66,18 +66,12 @@ export function AiSettingsTab() {
         <div>
           <h3 className="text-sm font-semibold text-foreground">Groq API Key</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Used by the Git Commits tool to generate AI-powered commit messages.{" "}
+            Stored only for this browser session. AI features use it while the session is open.{" "}
             <a
               href="https://console.groq.com/keys"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-0.5 text-primary underline-offset-2 hover:underline"
-              onClick={(e) => {
-                e.preventDefault();
-                import("@tauri-apps/plugin-opener").then(({ openUrl }) =>
-                  openUrl("https://console.groq.com/keys"),
-                );
-              }}
             >
               Get a free key
               <ExternalLink className="size-3" />
@@ -135,7 +129,7 @@ export function AiSettingsTab() {
           {current && !isDirty && (
             <p className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="size-3" />
-              Key configured
+              Key configured for this session
             </p>
           )}
         </div>
