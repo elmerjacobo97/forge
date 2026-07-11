@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { Check, Copy, Eraser, File, Loader2, Upload, X } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -21,13 +21,60 @@ function formatSize(bytes: number): string {
 
 type FileSource = { file: File }
 
+type HashState = {
+  hash: string
+  loading: boolean
+  error: string | null
+}
+
+type HashAction =
+  | { type: "reset" }
+  | { type: "start" }
+  | { type: "success"; hash: string }
+  | { type: "failure"; error: string }
+  | { type: "set-error"; error: string | null }
+
+const initialHashState: HashState = {
+  hash: "",
+  loading: false,
+  error: null,
+}
+
+function hashReducer(state: HashState, action: HashAction): HashState {
+  switch (action.type) {
+    case "reset":
+      return initialHashState
+    case "start":
+      return { hash: "", loading: true, error: null }
+    case "success":
+      return { hash: action.hash, loading: false, error: null }
+    case "failure":
+      return { hash: "", loading: false, error: action.error }
+    case "set-error":
+      return { ...state, error: action.error }
+  }
+}
+
+function hasErrorMessage(error: unknown): error is { message: unknown } {
+  if (
+    !((typeof error === "object" && error !== null) || typeof error === "function")
+  ) {
+    return false
+  }
+
+  return "message" in error
+}
+
+function getErrorMessage(error: unknown): string {
+  if (hasErrorMessage(error) && error.message) return String(error.message)
+  return String(error)
+}
+
 export function FileValidator() {
   const [source, setSource] = useState<FileSource | null>(null)
   const [algo, setAlgo] = useState<Algo>("sha-256")
-  const [hash, setHash] = useState("")
+  const [{ hash, loading, error }, dispatchHash] = useReducer(hashReducer, initialHashState)
   const [expected, setExpected] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const dragCounterRef = useRef(0)
@@ -39,16 +86,12 @@ export function FileValidator() {
   useEffect(() => {
     const target = source
     if (!target) {
-      setHash("")
-      setError(null)
-      setLoading(false)
+      dispatchHash({ type: "reset" })
       return
     }
 
     const id = ++requestIdRef.current
-    setLoading(true)
-    setError(null)
-    setHash("")
+    dispatchHash({ type: "start" })
 
     async function run() {
       if (!target) return
@@ -57,15 +100,11 @@ export function FileValidator() {
         if (requestIdRef.current !== id) return
         const result = await digestBuffer(algo, buffer)
         if (requestIdRef.current !== id) return
-        setHash(result)
+        dispatchHash({ type: "success", hash: result })
       } catch (e) {
         if (requestIdRef.current !== id) return
-        const message = (e as Error).message || String(e)
-        setError(message.replace(/^Error:\s*/, ""))
-      } finally {
-        if (requestIdRef.current === id) {
-          setLoading(false)
-        }
+        const message = getErrorMessage(e)
+        dispatchHash({ type: "failure", error: message.replace(/^Error:\s*/, "") })
       }
     }
 
@@ -99,12 +138,12 @@ export function FileValidator() {
   function handleFileSelected(next: File | null) {
     if (!next) return
     if (next.size === 0) {
-      setError("Empty file")
+      dispatchHash({ type: "set-error", error: "Empty file" })
       setSource(null)
       return
     }
     setSource({ file: next })
-    setError(null)
+    dispatchHash({ type: "set-error", error: null })
   }
 
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -115,7 +154,7 @@ export function FileValidator() {
     const dropped = e.dataTransfer.files?.[0]
     if (!dropped) return
     if (dropped.type === "" && dropped.size === 0) {
-      setError("Folders are not supported")
+      dispatchHash({ type: "set-error", error: "Folders are not supported" })
       return
     }
     handleFileSelected(dropped)
@@ -154,10 +193,8 @@ export function FileValidator() {
   const clear = useCallback(() => {
     requestIdRef.current++
     setSource(null)
-    setHash("")
     setExpected("")
-    setError(null)
-    setLoading(false)
+    dispatchHash({ type: "reset" })
   }, [])
 
   const displayPath = source?.file.name

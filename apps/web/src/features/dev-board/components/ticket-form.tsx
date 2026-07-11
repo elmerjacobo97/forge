@@ -36,13 +36,13 @@ interface TicketFormProps {
   onSubmit: (values: TicketFormValues) => void;
 }
 
-const formatErrors = (errors: any[]) => {
-  return errors.map((err) => {
-    if (typeof err === "string") return { message: err };
-    if (err && typeof err === "object" && "message" in err) {
-      return { message: String(err.message) };
+const formatErrors = (errors: unknown[]) => {
+  return errors.map((error) => {
+    if (typeof error === "string") return { message: error };
+    if (error && typeof error === "object" && "message" in error) {
+      return { message: String(error.message) };
     }
-    return { message: err?.toString() || "Invalid value" };
+    return { message: error?.toString() || "Invalid value" };
   });
 };
 
@@ -106,7 +106,8 @@ export function TicketForm({
           <FieldGroup>
             <form.Field
               name="title"
-              children={(field) => {
+            >
+              {(field) => {
                 const isInvalid =
                   field.state.meta.isTouched && !!field.state.meta.errors.length;
                 return (
@@ -128,11 +129,12 @@ export function TicketForm({
                   </Field>
                 );
               }}
-            />
+            </form.Field>
 
             <form.Field
               name="description"
-              children={(field) => (
+            >
+              {(field) => (
                 <Field>
                   <FieldLabel htmlFor={field.name}>Description</FieldLabel>
                   <Textarea
@@ -147,11 +149,12 @@ export function TicketForm({
                   />
                 </Field>
               )}
-            />
+            </form.Field>
 
             <form.Field
               name="priority"
-              children={(field) => (
+            >
+              {(field) => (
                 <Field>
                   <FieldLabel>Priority</FieldLabel>
                   <Select
@@ -171,7 +174,7 @@ export function TicketForm({
                   </Select>
                 </Field>
               )}
-            />
+            </form.Field>
           </FieldGroup>
         </form>
 

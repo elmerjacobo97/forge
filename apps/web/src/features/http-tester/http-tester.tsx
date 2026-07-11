@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Check,
   Clock,
@@ -93,12 +93,8 @@ export function HttpTester() {
   const [response, setResponse] = useState<HttpResponseData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [history, setHistory] = useState<HistoryEntry[]>(loadHistory);
   const { copied, copy } = useCopy();
-
-  useEffect(() => {
-    setHistory(loadHistory());
-  }, []);
 
   async function sendRequest() {
     setLoading(true);

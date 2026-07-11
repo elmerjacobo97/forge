@@ -209,6 +209,7 @@ function ColorPicker({
         type="color"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        aria-label={`${label} QR code color`}
         className="size-7 cursor-pointer rounded-md border ring-1 ring-border/50"
       />
       <code className="font-mono text-[10px] text-muted-foreground">{value}</code>

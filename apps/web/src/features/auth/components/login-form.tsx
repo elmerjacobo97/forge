@@ -64,7 +64,8 @@ export function LoginForm() {
           <FieldGroup>
             <form.Field
               name="email"
-              children={(field) => {
+            >
+              {(field) => {
                 const isInvalid =
                   field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
@@ -95,10 +96,11 @@ export function LoginForm() {
                   </Field>
                 );
               }}
-            />
+            </form.Field>
             <form.Field
               name="password"
-              children={(field) => {
+            >
+              {(field) => {
                 const isInvalid =
                   field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
@@ -129,7 +131,7 @@ export function LoginForm() {
                   </Field>
                 );
               }}
-            />
+            </form.Field>
           </FieldGroup>
         </form>
       </CardContent>

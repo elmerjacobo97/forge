@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useReducer, useState } from "react"
 import { Check, Copy, Eraser, RefreshCw } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -36,41 +36,110 @@ const FORMATS: { id: OutputFormat; label: string }[] = [
   { id: "json", label: "JSON" },
 ]
 
+type LoremSettings = {
+  unit: Unit
+  count: number
+  format: OutputFormat
+  startWithLorem: boolean
+}
+
+type LoremSettingsAction =
+  | { type: "setUnit"; unit: Unit; count: number }
+  | { type: "setCount"; count: number }
+  | { type: "setFormat"; format: OutputFormat }
+  | { type: "setStartWithLorem"; startWithLorem: boolean }
+  | { type: "reset" }
+
+const DEFAULT_SETTINGS: LoremSettings = {
+  unit: "paragraphs",
+  count: 3,
+  format: "plain",
+  startWithLorem: true,
+}
+
+function settingsReducer(state: LoremSettings, action: LoremSettingsAction): LoremSettings {
+  switch (action.type) {
+    case "setUnit":
+      return { ...state, unit: action.unit, count: action.count }
+    case "setCount":
+      return { ...state, count: action.count }
+    case "setFormat":
+      return { ...state, format: action.format }
+    case "setStartWithLorem":
+      return { ...state, startWithLorem: action.startWithLorem }
+    case "reset":
+      return DEFAULT_SETTINGS
+  }
+}
+
+function generateOutput(
+  unit: Unit,
+  count: number,
+  startWithLorem: boolean,
+  format: OutputFormat
+) {
+  return generateLorem({
+    unit,
+    count: clampCount(unit, count),
+    startWithLorem,
+    format,
+  })
+}
+
 export function LoremIpsum() {
-  const [unit, setUnit] = useState<Unit>("paragraphs")
-  const [count, setCount] = useState(3)
-  const [format, setFormat] = useState<OutputFormat>("plain")
-  const [startWithLorem, setStartWithLorem] = useState(true)
-  const [seed, setSeed] = useState(0)
+  const [settings, dispatch] = useReducer(settingsReducer, DEFAULT_SETTINGS)
+  const { unit, count, format, startWithLorem } = settings
+  const [output, setOutput] = useState(() =>
+    generateOutput(
+      DEFAULT_SETTINGS.unit,
+      DEFAULT_SETTINGS.count,
+      DEFAULT_SETTINGS.startWithLorem,
+      DEFAULT_SETTINGS.format
+    )
+  )
   const { copied, copy } = useCopy()
 
-  const output = useMemo(
-    () => generateLorem({ unit, count: clampCount(unit, count), startWithLorem, format }),
-    [unit, count, startWithLorem, format, seed]
-  )
-
-  const regenerate = useCallback(() => setSeed((s) => s + 1), [])
-
-  useEffect(() => {
-    regenerate()
-  }, [unit, count, startWithLorem, format])
+  function regenerate() {
+    setOutput(generateOutput(unit, count, startWithLorem, format))
+  }
 
   function handleCountChange(value: string) {
     const n = Number(value)
-    if (Number.isFinite(n)) setCount(clampCount(unit, n))
+    if (!Number.isFinite(n)) return
+
+    const nextCount = clampCount(unit, n)
+    dispatch({ type: "setCount", count: nextCount })
+    setOutput(generateOutput(unit, nextCount, startWithLorem, format))
   }
 
   function handleUnitChange(value: string) {
     const next = value as Unit
-    setUnit(next)
-    setCount((c) => clampCount(next, c))
+    const nextCount = clampCount(next, count)
+    dispatch({ type: "setUnit", unit: next, count: nextCount })
+    setOutput(generateOutput(next, nextCount, startWithLorem, format))
+  }
+
+  function handleFormatChange(value: string) {
+    const next = value as OutputFormat
+    dispatch({ type: "setFormat", format: next })
+    setOutput(generateOutput(unit, count, startWithLorem, next))
+  }
+
+  function handleStartWithLoremChange(value: boolean) {
+    dispatch({ type: "setStartWithLorem", startWithLorem: value })
+    setOutput(generateOutput(unit, count, value, format))
   }
 
   function resetAll() {
-    setUnit("paragraphs")
-    setCount(3)
-    setFormat("plain")
-    setStartWithLorem(true)
+    dispatch({ type: "reset" })
+    setOutput(
+      generateOutput(
+        DEFAULT_SETTINGS.unit,
+        DEFAULT_SETTINGS.count,
+        DEFAULT_SETTINGS.startWithLorem,
+        DEFAULT_SETTINGS.format
+      )
+    )
   }
 
   return (
@@ -93,7 +162,7 @@ export function LoremIpsum() {
           <MenubarMenu>
             <MenubarTrigger>Format</MenubarTrigger>
             <MenubarContent>
-              <MenubarRadioGroup value={format} onValueChange={(v) => setFormat(v as OutputFormat)}>
+              <MenubarRadioGroup value={format} onValueChange={handleFormatChange}>
                 {FORMATS.map((f) => (
                   <MenubarRadioItem key={f.id} value={f.id}>
                     {f.label}
@@ -108,7 +177,7 @@ export function LoremIpsum() {
             <MenubarContent>
               <MenubarCheckboxItem
                 checked={startWithLorem}
-                onCheckedChange={(v) => setStartWithLorem(v === true)}
+                onCheckedChange={(v) => handleStartWithLoremChange(v === true)}
               >
                 Start with "Lorem ipsum…"
               </MenubarCheckboxItem>

@@ -178,7 +178,7 @@ export function UuidGenerator() {
                 const formatted = formatUuid(uuid, uppercase, hyphens)
                 return (
                   <li
-                    key={`${uuid}-${idx}`}
+                    key={uuid}
                     className="group flex items-center gap-3 border-b border-border/40 px-3 py-2 last:border-0"
                   >
                     <span className="w-6 shrink-0 text-right font-mono text-[10px] text-muted-foreground">

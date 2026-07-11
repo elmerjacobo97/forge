@@ -120,9 +120,9 @@ function EntityReference() {
 
       <ScrollArea className="min-h-0 flex-1 rounded-xl border border-input/60">
         <div className="grid grid-cols-1 gap-px bg-border/40 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((entry, i) => (
+          {filtered.map((entry) => (
             <EntityCard
-              key={`${entry.decimal}-${i}`}
+              key={entry.decimal}
               entry={entry}
               copiedVal={copiedVal}
               onCopy={copyVal}

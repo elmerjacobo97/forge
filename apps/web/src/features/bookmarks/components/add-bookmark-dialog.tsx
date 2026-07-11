@@ -104,7 +104,8 @@ export function AddBookmarkDialog({
           <FieldGroup>
             <form.Field
               name="title"
-              children={(field) => {
+            >
+              {(field) => {
                 const isInvalid =
                   field.state.meta.isTouched &&
                   !!field.state.meta.errors.length;
@@ -127,11 +128,12 @@ export function AddBookmarkDialog({
                   </Field>
                 );
               }}
-            />
+            </form.Field>
 
             <form.Field
               name="url"
-              children={(field) => {
+            >
+              {(field) => {
                 const isInvalid =
                   field.state.meta.isTouched &&
                   !!field.state.meta.errors.length;
@@ -155,12 +157,13 @@ export function AddBookmarkDialog({
                   </Field>
                 );
               }}
-            />
+            </form.Field>
 
             <div className="grid grid-cols-2 gap-4">
               <form.Field
                 name="category"
-                children={(field) => (
+              >
+                {(field) => (
                   <Field>
                     <FieldLabel>Category</FieldLabel>
                     <Select
@@ -182,11 +185,12 @@ export function AddBookmarkDialog({
                     </Select>
                   </Field>
                 )}
-              />
+              </form.Field>
 
               <form.Field
                 name="tagsString"
-                children={(field) => (
+              >
+                {(field) => (
                   <Field>
                     <FieldLabel htmlFor={field.name}>Tags</FieldLabel>
                     <Input
@@ -199,12 +203,13 @@ export function AddBookmarkDialog({
                     />
                   </Field>
                 )}
-              />
+              </form.Field>
             </div>
 
             <form.Field
               name="description"
-              children={(field) => {
+            >
+              {(field) => {
                 const isInvalid =
                   field.state.meta.isTouched &&
                   !!field.state.meta.errors.length;
@@ -235,7 +240,7 @@ export function AddBookmarkDialog({
                   </Field>
                 );
               }}
-            />
+            </form.Field>
           </FieldGroup>
         </form>
 

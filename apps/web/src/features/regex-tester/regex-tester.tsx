@@ -33,7 +33,11 @@ interface Match {
   groups: string[]
 }
 
-type Segment = string | { text: string; match: boolean }
+interface Segment {
+  key: string
+  text: string
+  match: boolean
+}
 
 export function RegexTester() {
   const [pattern, setPattern] = useState("")
@@ -61,9 +65,17 @@ export function RegexTester() {
 
     while ((m = globalRegex.exec(test)) !== null) {
       if (m.index > lastIndex) {
-        segments.push(test.slice(lastIndex, m.index))
+        segments.push({
+          key: `text-${lastIndex}-${m.index}`,
+          text: test.slice(lastIndex, m.index),
+          match: false,
+        })
       }
-      segments.push({ text: m[0], match: true })
+      segments.push({
+        key: `match-${m.index}-${m.index + m[0].length}`,
+        text: m[0],
+        match: true,
+      })
       result.push({
         text: m[0],
         index: m.index,
@@ -73,7 +85,11 @@ export function RegexTester() {
       if (m[0].length === 0) globalRegex.lastIndex++
     }
     if (lastIndex < test.length) {
-      segments.push(test.slice(lastIndex))
+      segments.push({
+        key: `text-${lastIndex}-${test.length}`,
+        text: test.slice(lastIndex),
+        match: false,
+      })
     }
     return { matches: result, highlighted: segments }
   }, [regex, test])
@@ -188,13 +204,13 @@ export function RegexTester() {
               {highlighted.length === 0 ? (
                 <span className="text-muted-foreground">Matches will appear highlighted here…</span>
               ) : (
-                highlighted.map((seg, i) =>
-                  typeof seg === "string" ? (
-                    <span key={i}>{seg}</span>
-                  ) : (
-                    <mark key={i} className="rounded-sm bg-primary/25 px-0.5 text-foreground">
+                highlighted.map((seg) =>
+                  seg.match ? (
+                    <mark key={seg.key} className="rounded-sm bg-primary/25 px-0.5 text-foreground">
                       {seg.text}
                     </mark>
+                  ) : (
+                    <span key={seg.key}>{seg.text}</span>
                   )
                 )
               )}
@@ -244,7 +260,7 @@ export function RegexTester() {
                         {m.groups.map((g, gi) =>
                           g ? (
                             <Badge
-                              key={gi}
+                              key={`group-${gi + 1}`}
                               variant="secondary"
                               className="h-4 px-1.5 text-[10px]"
                             >

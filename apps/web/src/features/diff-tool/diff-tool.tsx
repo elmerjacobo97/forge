@@ -155,9 +155,9 @@ export function DiffTool() {
                 <ScrollArea className="h-full">
                   <table className="w-full border-collapse">
                     <tbody>
-                      {lines.map((line, idx) => (
+                      {lines.map((line) => (
                         <tr
-                          key={idx}
+                          key={`${line.type}-${line.oldNumber ?? "none"}-${line.newNumber ?? "none"}`}
                           className={
                             line.type === "added"
                               ? "bg-emerald-500/10"

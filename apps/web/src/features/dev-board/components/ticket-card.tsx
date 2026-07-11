@@ -67,16 +67,18 @@ export function TicketCard({
   const [elapsed, setElapsed] = useState(() => computeElapsed(ticket));
 
   useEffect(() => {
+    setElapsed(computeElapsed(ticket));
+
     if (!ticket.timerStartedAt || ticket.isPaused) {
-      setElapsed(computeElapsed(ticket));
       return;
     }
-    setElapsed(computeElapsed(ticket));
+
     const id = setInterval(() => {
       setElapsed(computeElapsed(ticket));
     }, 1000);
+
     return () => clearInterval(id);
-  }, [ticket.timerStartedAt, ticket.isPaused, ticket.totalElapsedMs]);
+  }, [ticket]);
 
   const inProgress = ticket.column === "in_progress";
   const timerRunning = inProgress && ticket.timerStartedAt !== null && !ticket.isPaused;
@@ -172,14 +174,18 @@ export function TicketCard({
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>Move to</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  {COLUMNS.filter((c) => c !== ticket.column).map((c) => (
-                    <DropdownMenuItem
-                      key={c}
-                      onClick={() => onMoveToColumn(ticket.id, c)}
-                    >
-                      {COLUMN_LABELS[c]}
-                    </DropdownMenuItem>
-                  ))}
+                  {COLUMNS.map((c) => {
+                    if (c === ticket.column) return null;
+
+                    return (
+                      <DropdownMenuItem
+                        key={c}
+                        onClick={() => onMoveToColumn(ticket.id, c)}
+                      >
+                        {COLUMN_LABELS[c]}
+                      </DropdownMenuItem>
+                    );
+                  })}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
               <DropdownMenuSub>

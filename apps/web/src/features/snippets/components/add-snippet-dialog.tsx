@@ -101,7 +101,8 @@ export function AddSnippetDialog({
           <FieldGroup>
             <form.Field
               name="title"
-              children={(field) => {
+            >
+              {(field) => {
                 const isInvalid =
                   field.state.meta.isTouched &&
                   !!field.state.meta.errors.length;
@@ -124,12 +125,13 @@ export function AddSnippetDialog({
                   </Field>
                 );
               }}
-            />
+            </form.Field>
 
             <div className="grid grid-cols-2 gap-4">
               <form.Field
                 name="kind"
-                children={(field) => (
+              >
+                {(field) => (
                   <Field>
                     <FieldLabel>Kind</FieldLabel>
                     <Select
@@ -150,11 +152,12 @@ export function AddSnippetDialog({
                     </Select>
                   </Field>
                 )}
-              />
+              </form.Field>
 
               <form.Field
                 name="language"
-                children={(field) => (
+              >
+                {(field) => (
                   <Field>
                     <FieldLabel htmlFor={field.name}>Language</FieldLabel>
                     <Input
@@ -167,12 +170,13 @@ export function AddSnippetDialog({
                     />
                   </Field>
                 )}
-              />
+              </form.Field>
             </div>
 
             <form.Field
               name="content"
-              children={(field) => {
+            >
+              {(field) => {
                 const isInvalid =
                   field.state.meta.isTouched &&
                   !!field.state.meta.errors.length;
@@ -198,11 +202,12 @@ export function AddSnippetDialog({
                   </Field>
                 );
               }}
-            />
+            </form.Field>
 
             <form.Field
               name="tagsString"
-              children={(field) => (
+            >
+              {(field) => (
                 <Field>
                   <FieldLabel htmlFor={field.name}>Tags</FieldLabel>
                   <Input
@@ -215,7 +220,7 @@ export function AddSnippetDialog({
                   />
                 </Field>
               )}
-            />
+            </form.Field>
           </FieldGroup>
         </form>
 
