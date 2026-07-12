@@ -49,11 +49,14 @@ function AuthenticatedLayout() {
   }, []);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+    <div className="flex min-h-screen w-full bg-background text-foreground">
       <Sidebar activePath={pathname} />
 
       <main className="flex min-w-0 flex-1 flex-col">
-        <Header tool={tool} onOpenPalette={() => setPaletteOpen(true)} />
+        <Header
+          tool={tool}
+          onOpenPalette={() => setPaletteOpen(true)}
+        />
         <div className="min-h-0 flex-1 p-4 md:p-5">
           <Suspense fallback={<ToolSkeleton />}>
             <Outlet />
@@ -61,8 +64,14 @@ function AuthenticatedLayout() {
         </div>
       </main>
 
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
-      <KeyboardShortcuts open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+      />
+      <KeyboardShortcuts
+        open={shortcutsOpen}
+        onOpenChange={setShortcutsOpen}
+      />
     </div>
   );
 }

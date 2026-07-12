@@ -16,7 +16,7 @@ export function Header({ tool, onOpenPalette }: HeaderProps) {
   const isDark = theme === "dark" || theme === "system"
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b px-5 pl-14 md:pl-5">
+    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background/85 px-5 pl-14 backdrop-blur-md md:pl-5">
       <div className="flex min-w-0 items-center gap-3">
         <div className="min-w-0">
           <h1 className="truncate font-heading text-sm font-semibold leading-tight">

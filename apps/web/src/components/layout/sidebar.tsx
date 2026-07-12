@@ -157,7 +157,7 @@ export function Sidebar({ activePath }: SidebarProps) {
 
   return (
     <>
-      <aside className="hidden w-60 shrink-0 border-r border-sidebar-border bg-sidebar md:flex">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 self-start border-r border-sidebar-border bg-sidebar md:flex">
         {content}
       </aside>
 
