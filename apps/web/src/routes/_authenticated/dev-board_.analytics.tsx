@@ -1,3 +1,16 @@
+import { Suspense, useMemo, useState } from "react";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import {
+  Activity,
+  ArrowLeft,
+  Download,
+  Gauge,
+  ListChecks,
+  PauseCircle,
+  Timer,
+  Trophy,
+} from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
@@ -29,9 +42,6 @@ import {
 } from "@/features/dev-board/utils/analytics-range";
 import { analyticsCsv, buildAnalytics, presetRange } from "@/features/dev-board/utils/analytics";
 import { formatDuration } from "@/features/dev-board/utils/timer";
-import { createFileRoute } from "@tanstack/react-router";
-import { Activity, Download, Gauge, ListChecks, PauseCircle, Timer, Trophy } from "lucide-react";
-import { Suspense, useMemo, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/dev-board_/analytics")({
   component: AnalyticsRoute,
@@ -65,7 +75,17 @@ function AnalyticsRoute() {
             Work trends, cycle time, and time invested.
           </p>
         </div>
-        <div>
+        <div className="flex items-center gap-2">
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+          >
+            <Link to="/dev-board">
+              <ArrowLeft className="size-3.5" />
+              Dev Board
+            </Link>
+          </Button>
           <Button
             size="sm"
             onClick={() => summary && downloadCsv(analyticsCsv(summary))}
