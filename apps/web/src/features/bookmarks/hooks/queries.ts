@@ -9,5 +9,6 @@ export function useBookmarksQuery() {
   return useQuery({
     queryKey: ["bookmarks", userId],
     queryFn: () => bookmarksService.fetchBookmarks(userId),
+    enabled: Boolean(userId),
   });
 }

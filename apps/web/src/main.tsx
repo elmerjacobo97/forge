@@ -16,7 +16,10 @@ client.ping().catch((err) => {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <ThemeProvider defaultTheme="dark" storageKey="forge-theme">
+    <ThemeProvider
+      defaultTheme="dark"
+      storageKey="forge-theme"
+    >
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
       </QueryClientProvider>

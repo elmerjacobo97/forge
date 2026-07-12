@@ -9,5 +9,6 @@ export function useSnippetsQuery() {
   return useQuery({
     queryKey: ["snippets", userId],
     queryFn: () => snippetsService.fetchSnippets(userId),
+    enabled: Boolean(userId),
   });
 }
