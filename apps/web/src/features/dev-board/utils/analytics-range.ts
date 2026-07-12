@@ -1,16 +1,5 @@
 import type { AnalyticsRange } from "../types/analytics";
 
-export function toDateInput(value: string): string {
-  return value.slice(0, 10);
-}
-
-export function toRange(from: string, to: string): AnalyticsRange {
-  return {
-    from: new Date(`${from}T00:00:00`).toISOString(),
-    to: new Date(`${to}T23:59:59.999`).toISOString(),
-  };
-}
-
 export function formatRangeLabel(range: AnalyticsRange): string {
   const format = (value: string) =>
     new Date(value).toLocaleDateString(undefined, {

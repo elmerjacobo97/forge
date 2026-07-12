@@ -1,8 +1,11 @@
 import { Suspense, useMemo, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { endOfDay, format, startOfDay, subDays } from "date-fns";
+import type { DateRange } from "react-day-picker";
 import {
   Activity,
   ArrowLeft,
+  CalendarDays,
   Download,
   Gauge,
   ListChecks,
@@ -12,9 +15,9 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
-import { Input } from "@/components/ui/input";
 import {
   Item,
   ItemActions,
@@ -24,6 +27,7 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { Progress } from "@/components/ui/progress";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ToggleGroupItem, ToggleGroup } from "@/components/ui/toggle-group";
 import { useUserQuery } from "@/features/auth/hooks/queries";
 import { AnalyticsPreset } from "@/features/dev-board/types/analytics";
@@ -37,8 +41,6 @@ import { PRIORITY_COLORS } from "@/features/dev-board/types/board";
 import {
   downloadCsv,
   formatRangeLabel,
-  toDateInput,
-  toRange,
 } from "@/features/dev-board/utils/analytics-range";
 import { analyticsCsv, buildAnalytics, presetRange } from "@/features/dev-board/utils/analytics";
 import { formatDuration } from "@/features/dev-board/utils/timer";
@@ -47,23 +49,48 @@ export const Route = createFileRoute("/_authenticated/dev-board_/analytics")({
   component: AnalyticsRoute,
 });
 
+function formatCustomRange(range: DateRange | undefined): string {
+  if (!range?.from) return "Select date range";
+  if (!range.to) return format(range.from, "MMM d, yyyy");
+  return `${format(range.from, "MMM d, yyyy")} - ${format(range.to, "MMM d, yyyy")}`;
+}
+
+function lastFifteenDays(): DateRange {
+  const today = new Date();
+  return { from: subDays(today, 14), to: today };
+}
+
 function AnalyticsRoute() {
   const { data: user } = useUserQuery();
   const [preset, setPreset] = useState<AnalyticsPreset>("30d");
-  const initialRange = presetRange("30d");
-  const [customFrom, setCustomFrom] = useState(() => toDateInput(initialRange.from));
-  const [customTo, setCustomTo] = useState(() => toDateInput(initialRange.to));
+  const [customRange, setCustomRange] = useState<DateRange | undefined>();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const range = useMemo(
-    () => (preset === "custom" ? toRange(customFrom, customTo) : presetRange(preset)),
-    [preset, customFrom, customTo],
+    () => {
+      if (preset !== "custom") return presetRange(preset);
+      const from = customRange?.from;
+      const to = customRange?.to;
+      if (!from || !to) return undefined;
+      return {
+        from: startOfDay(from).toISOString(),
+        to: endOfDay(to).toISOString(),
+      };
+    },
+    [preset, customRange],
   );
   const analyticsQuery = useDevBoardAnalytics(user?.id, range);
-  const summary = analyticsQuery.data ? buildAnalytics(analyticsQuery.data, range) : null;
+  const summary = analyticsQuery.data && range ? buildAnalytics(analyticsQuery.data, range) : null;
   const maxTicketDuration = summary?.topTickets[0]?.durationMs ?? 0;
 
   function selectPreset(value: string) {
     if (!value) return;
-    setPreset(value as AnalyticsPreset);
+    const nextPreset = value as AnalyticsPreset;
+    if (nextPreset === "custom") setCustomRange(lastFifteenDays());
+    setPreset(nextPreset);
+  }
+
+  function selectCustomRange(nextRange: DateRange | undefined) {
+    setCustomRange(nextRange);
   }
 
   return (
@@ -112,23 +139,34 @@ function AnalyticsRoute() {
             <ToggleGroupItem value="custom">Custom</ToggleGroupItem>
           </ToggleGroup>
           {preset === "custom" && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Input
-                type="date"
-                value={customFrom}
-                onChange={(event) => setCustomFrom(event.target.value)}
-                className="h-8 w-36"
-              />
-              <span>to</span>
-              <Input
-                type="date"
-                value={customTo}
-                onChange={(event) => setCustomTo(event.target.value)}
-                className="h-8 w-36"
-              />
-            </div>
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="min-w-56 justify-start text-left font-normal">
+                  <CalendarDays className="size-3.5" />
+                  {formatCustomRange(customRange)}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-auto p-0">
+                <Card className="w-fit p-0">
+                  <CardContent className="p-0">
+                    <Calendar
+                      mode="range"
+                      selected={customRange}
+                      onSelect={selectCustomRange}
+                      defaultMonth={customRange?.from}
+                      numberOfMonths={2}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                    />
+                  </CardContent>
+                </Card>
+              </PopoverContent>
+            </Popover>
           )}
-          <span className="ml-auto text-xs text-muted-foreground">{formatRangeLabel(range)}</span>
+          <span className="ml-auto text-xs text-muted-foreground">
+            {range ? formatRangeLabel(range) : "Select an end date"}
+          </span>
         </CardContent>
       </Card>
 

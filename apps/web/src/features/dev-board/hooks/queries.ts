@@ -32,11 +32,19 @@ export function useDevBoardTickets(userId: string | undefined, column: ColumnId)
   });
 }
 
-export function useDevBoardAnalytics(userId: string | undefined, range: AnalyticsRange) {
+export function useDevBoardAnalytics(userId: string | undefined, range: AnalyticsRange | undefined) {
   return useQuery({
-    queryKey: [...devBoardKeys.user(userId ?? "anonymous"), "analytics", range.from, range.to],
-    queryFn: () => devBoardAnalyticsService.fetchAnalytics(userId!, range),
-    enabled: Boolean(userId),
+    queryKey: [
+      ...devBoardKeys.user(userId ?? "anonymous"),
+      "analytics",
+      range?.from ?? "incomplete",
+      range?.to ?? "incomplete",
+    ],
+    queryFn: () => {
+      if (!range) throw new Error("Select a complete date range.");
+      return devBoardAnalyticsService.fetchAnalytics(userId!, range);
+    },
+    enabled: Boolean(userId && range),
   });
 }
 
