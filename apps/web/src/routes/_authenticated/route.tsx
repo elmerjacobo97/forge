@@ -6,12 +6,13 @@ import {
   isRedirect,
   useRouterState,
 } from "@tanstack/react-router";
-import { Sidebar } from "@/components/layout/sidebar";
+import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Header } from "@/components/layout/header";
 import { CommandPalette } from "@/components/command-palette";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { tools, getToolByPath } from "@/lib/tools";
 import { userQueryOptions } from "@/features/auth/hooks/queries";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 function ToolSkeleton() {
   return (
@@ -49,10 +50,9 @@ function AuthenticatedLayout() {
   }, []);
 
   return (
-    <div className="flex min-h-screen w-full bg-background text-foreground">
-      <Sidebar activePath={pathname} />
-
-      <main className="flex min-w-0 flex-1 flex-col">
+    <SidebarProvider>
+      <AppSidebar activePath={pathname} />
+      <SidebarInset className="min-w-0 bg-background text-foreground">
         <Header
           tool={tool}
           onOpenPalette={() => setPaletteOpen(true)}
@@ -62,7 +62,7 @@ function AuthenticatedLayout() {
             <Outlet />
           </Suspense>
         </div>
-      </main>
+      </SidebarInset>
 
       <CommandPalette
         open={paletteOpen}
@@ -72,7 +72,7 @@ function AuthenticatedLayout() {
         open={shortcutsOpen}
         onOpenChange={setShortcutsOpen}
       />
-    </div>
+    </SidebarProvider>
   );
 }
 

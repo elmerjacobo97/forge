@@ -3,6 +3,7 @@ import { Moon, Search, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useTheme } from "@/components/theme-provider"
 import type { ToolDef } from "@/lib/tools"
 
@@ -16,8 +17,9 @@ export function Header({ tool, onOpenPalette }: HeaderProps) {
   const isDark = theme === "dark" || theme === "system"
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background/85 px-5 pl-14 backdrop-blur-md md:pl-5">
+    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background/85 px-5 backdrop-blur-md">
       <div className="flex min-w-0 items-center gap-3">
+        <SidebarTrigger className="md:hidden" />
         <div className="min-w-0">
           <h1 className="truncate font-heading text-sm font-semibold leading-tight">
             {tool.name}
