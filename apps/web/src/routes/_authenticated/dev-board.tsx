@@ -64,10 +64,9 @@ function DevBoardRoute() {
   const [dragTickets, setDragTickets] = useState<Ticket[] | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTicket, setEditTicket] = useState<Ticket | null>(null);
-  const alertedRef = useRef<Set<string> | null>(null);
+  const [alertedTickets] = useState(loadAlertedTickets);
   const dragTicketsRef = useRef<Ticket[] | null>(null);
   const pendingDropRef = useRef<Ticket | null>(null);
-  if (!alertedRef.current) alertedRef.current = loadAlertedTickets();
 
   function retryLoadingTickets() {
     void Promise.all(COLUMNS.map((column) => columns[column].refetch()));
@@ -75,15 +74,15 @@ function DevBoardRoute() {
 
   useEffect(() => {
     const check = () => {
-      if (checkStaleTickets(tickets, alertedRef.current!)) {
-        saveAlertedTickets(alertedRef.current!);
+      if (checkStaleTickets(tickets, alertedTickets)) {
+        saveAlertedTickets(alertedTickets);
       }
     };
 
     check();
     const interval = window.setInterval(check, 60_000);
     return () => window.clearInterval(interval);
-  }, [tickets]);
+  }, [alertedTickets, tickets]);
 
   useEffect(() => {
     const pendingDrop = pendingDropRef.current;
@@ -124,26 +123,6 @@ function DevBoardRoute() {
   function handleDragOver(event: DragOverEvent) {
     const overId = event.over ? (event.over.id as string) : null;
     setOverId(overId);
-    if (!overId) return;
-
-    const currentTickets = dragTicketsRef.current ?? tickets;
-    const activeTicket = findTicket(currentTickets, event.active.id as string);
-    const targetColumn = isColumnId(overId) ? overId : findTicket(currentTickets, overId)?.column;
-    if (!activeTicket || !targetColumn || activeTicket.column === targetColumn) return;
-
-    const nextTickets = currentTickets.map((ticket) =>
-      ticket.id === activeTicket.id
-        ? moveTicket(
-            activeTicket,
-            targetColumn,
-            currentTickets,
-            isColumnId(overId) ? null : overId,
-            isColumnId(overId),
-          )
-        : ticket,
-    );
-    dragTicketsRef.current = nextTickets;
-    setDragTickets(nextTickets);
   }
 
   function handleDragEnd(event: DragEndEvent) {

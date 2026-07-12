@@ -116,6 +116,14 @@ export function useUpdateDevBoardTicket() {
       restoreCachedTickets(queryClient, previous ?? []);
       toast.error(error.message || "Failed to save ticket.");
     },
+    onSettled: () => {
+      const userId = getUserId(queryClient);
+      if (userId) {
+        void queryClient.invalidateQueries({
+          queryKey: [...devBoardKeys.user(userId), "analytics"],
+        });
+      }
+    },
   });
 }
 
@@ -160,7 +168,11 @@ export function useCreateDevBoardTicket() {
     },
     onSettled: () => {
       const userId = getUserId(queryClient);
-      if (userId) void queryClient.invalidateQueries({ queryKey: devBoardKeys.user(userId) });
+      if (userId) {
+        void queryClient.invalidateQueries({
+          queryKey: [...devBoardKeys.user(userId), "analytics"],
+        });
+      }
     },
   });
 }
@@ -197,7 +209,11 @@ export function useDeleteDevBoardTicket() {
     },
     onSettled: () => {
       const userId = getUserId(queryClient);
-      if (userId) void queryClient.invalidateQueries({ queryKey: devBoardKeys.user(userId) });
+      if (userId) {
+        void queryClient.invalidateQueries({
+          queryKey: [...devBoardKeys.user(userId), "analytics"],
+        });
+      }
     },
   });
 }

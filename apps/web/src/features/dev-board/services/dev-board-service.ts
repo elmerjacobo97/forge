@@ -9,7 +9,7 @@ const tableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_TICKETS_TABLE_ID;
 const eventsTableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_EVENTS_TABLE_ID;
 const timeEntriesTableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_TIME_ENTRIES_TABLE_ID;
 
-interface TicketRow {
+export interface TicketRow {
   $id: string;
   $createdAt: string;
   title: string;
@@ -65,7 +65,7 @@ function eventData(ticket: Ticket, userId: string, eventType: string, fromColumn
   };
 }
 
-function toTicket(row: TicketRow): Ticket {
+export function toTicket(row: TicketRow): Ticket {
   return {
     id: row.$id,
     title: row.title,
