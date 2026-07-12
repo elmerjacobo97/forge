@@ -1,5 +1,5 @@
-import type { Ticket } from "../types";
-import { STALE_THRESHOLD_MS } from "../types";
+import type { Ticket } from "../types/board";
+import { STALE_THRESHOLD_MS } from "../types/board";
 import { computeElapsed, formatDuration } from "./timer";
 
 const alertedKey = "forge_devboard:alerted";

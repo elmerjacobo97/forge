@@ -26,8 +26,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { type Priority, type Ticket, PRIORITIES, PRIORITY_LABELS } from "../types";
-import { type TicketFormValues, ticketSchema } from "../schema";
+import { type Priority, type Ticket, PRIORITIES, PRIORITY_LABELS } from "../types/board";
+import { type TicketFormValues, ticketSchema } from "../schemas/ticket";
 
 interface TicketFormProps {
   open: boolean;

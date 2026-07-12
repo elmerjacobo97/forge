@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import { Channel, Query, Realtime } from "appwrite";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { client } from "@/lib/appwrite";
 
 import { devBoardService } from "../services/dev-board-service";
-import type { ColumnId } from "../types";
+import { devBoardAnalyticsService } from "../services/dev-board-analytics-service";
+import type { AnalyticsRange } from "../types/analytics";
+import type { ColumnId } from "../types/board";
 
 const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const tableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_TICKETS_TABLE_ID;
@@ -26,6 +28,14 @@ export function useDevBoardTickets(userId: string | undefined, column: ColumnId)
     queryFn: ({ pageParam }) => devBoardService.fetchTicketPage(userId!, column, pageParam),
     initialPageParam: null as string | null,
     getNextPageParam: (page) => page.nextCursor,
+    enabled: Boolean(userId),
+  });
+}
+
+export function useDevBoardAnalytics(userId: string | undefined, range: AnalyticsRange) {
+  return useQuery({
+    queryKey: [...devBoardKeys.user(userId ?? "anonymous"), "analytics", range.from, range.to],
+    queryFn: () => devBoardAnalyticsService.fetchAnalytics(userId!, range),
     enabled: Boolean(userId),
   });
 }

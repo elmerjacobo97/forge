@@ -33,7 +33,7 @@ import {
   COLUMNS,
   PRIORITY_COLORS,
   PRIORITY_LABELS,
-} from "../types";
+} from "../types/board";
 import { computeElapsed, formatDuration, pauseTimer, resumeTimer } from "../utils/timer";
 
 interface TicketCardProps {

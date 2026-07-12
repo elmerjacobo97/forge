@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { COLUMNS } from "../types";
+import { COLUMNS } from "../types/board";
 
 export function BoardSkeleton() {
   return (

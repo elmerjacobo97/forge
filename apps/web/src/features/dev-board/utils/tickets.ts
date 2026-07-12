@@ -1,5 +1,5 @@
-import type { TicketFormValues } from "../schema";
-import type { ColumnId, Ticket } from "../types";
+import type { TicketFormValues } from "../schemas/ticket";
+import type { ColumnId, Ticket } from "../types/board";
 import { nowISO, startTimer, stopTimer } from "./timer";
 
 function positionAtEnd(tickets: Ticket[]): number {

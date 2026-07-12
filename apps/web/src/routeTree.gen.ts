@@ -38,6 +38,7 @@ import { Route as AuthenticatedBookmarksRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBase64RouteImport } from './routes/_authenticated/base64'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
+import { Route as AuthenticatedDevBoardAnalyticsRouteImport } from './routes/_authenticated/dev-board_.analytics'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -195,6 +196,12 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AuthRouteRoute,
 } as any)
+const AuthenticatedDevBoardAnalyticsRoute =
+  AuthenticatedDevBoardAnalyticsRouteImport.update({
+    id: '/dev-board_/analytics',
+    path: '/dev-board/analytics',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -224,6 +231,7 @@ export interface FileRoutesByFullPath {
   '/timestamp-converter': typeof AuthenticatedTimestampConverterRoute
   '/url-encoder': typeof AuthenticatedUrlEncoderRoute
   '/uuid-generator': typeof AuthenticatedUuidGeneratorRoute
+  '/dev-board/analytics': typeof AuthenticatedDevBoardAnalyticsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -253,6 +261,7 @@ export interface FileRoutesByTo {
   '/timestamp-converter': typeof AuthenticatedTimestampConverterRoute
   '/url-encoder': typeof AuthenticatedUrlEncoderRoute
   '/uuid-generator': typeof AuthenticatedUuidGeneratorRoute
+  '/dev-board/analytics': typeof AuthenticatedDevBoardAnalyticsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -285,6 +294,7 @@ export interface FileRoutesById {
   '/_authenticated/timestamp-converter': typeof AuthenticatedTimestampConverterRoute
   '/_authenticated/url-encoder': typeof AuthenticatedUrlEncoderRoute
   '/_authenticated/uuid-generator': typeof AuthenticatedUuidGeneratorRoute
+  '/_authenticated/dev-board_/analytics': typeof AuthenticatedDevBoardAnalyticsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/timestamp-converter'
     | '/url-encoder'
     | '/uuid-generator'
+    | '/dev-board/analytics'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -345,6 +356,7 @@ export interface FileRouteTypes {
     | '/timestamp-converter'
     | '/url-encoder'
     | '/uuid-generator'
+    | '/dev-board/analytics'
   id:
     | '__root__'
     | '/'
@@ -376,6 +388,7 @@ export interface FileRouteTypes {
     | '/_authenticated/timestamp-converter'
     | '/_authenticated/url-encoder'
     | '/_authenticated/uuid-generator'
+    | '/_authenticated/dev-board_/analytics'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -589,6 +602,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_authenticated/dev-board_/analytics': {
+      id: '/_authenticated/dev-board_/analytics'
+      path: '/dev-board/analytics'
+      fullPath: '/dev-board/analytics'
+      preLoaderRoute: typeof AuthenticatedDevBoardAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -631,6 +651,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTimestampConverterRoute: typeof AuthenticatedTimestampConverterRoute
   AuthenticatedUrlEncoderRoute: typeof AuthenticatedUrlEncoderRoute
   AuthenticatedUuidGeneratorRoute: typeof AuthenticatedUuidGeneratorRoute
+  AuthenticatedDevBoardAnalyticsRoute: typeof AuthenticatedDevBoardAnalyticsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -658,6 +679,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTimestampConverterRoute: AuthenticatedTimestampConverterRoute,
   AuthenticatedUrlEncoderRoute: AuthenticatedUrlEncoderRoute,
   AuthenticatedUuidGeneratorRoute: AuthenticatedUuidGeneratorRoute,
+  AuthenticatedDevBoardAnalyticsRoute: AuthenticatedDevBoardAnalyticsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

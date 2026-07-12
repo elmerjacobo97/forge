@@ -1,4 +1,4 @@
-import type { Ticket } from "../types";
+import type { Ticket } from "../types/board";
 
 export function nowISO(): string {
   return new Date().toISOString();

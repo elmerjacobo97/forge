@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-import { type ColumnId, type Ticket, COLUMN_LABELS } from "../types";
+import { type ColumnId, type Ticket, COLUMN_LABELS } from "../types/board";
 import { computeElapsed } from "../utils/timer";
 import { TicketCard } from "./ticket-card";
 

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { Ticket } from "../types";
-import { moveTicket } from "./tickets";
+import type { Ticket } from "../types/board";
+import { moveTicket } from "../utils/tickets";
 
 afterEach(() => vi.useRealTimers());
 

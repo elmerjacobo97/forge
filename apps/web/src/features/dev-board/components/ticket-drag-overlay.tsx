@@ -2,7 +2,7 @@ import { Clock } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-import type { Ticket } from "../types";
+import type { Ticket } from "../types/board";
 import { computeElapsed, formatDuration } from "../utils/timer";
 
 interface TicketDragOverlayProps {

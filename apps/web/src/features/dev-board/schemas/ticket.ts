@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { PRIORITIES } from "./types";
+import { PRIORITIES } from "../types/board";
 
 export const ticketSchema = z.object({
   title: z

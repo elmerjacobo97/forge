@@ -5,7 +5,7 @@ import { userQueryOptions } from "@/features/auth/hooks/queries";
 import type { AuthUser } from "@/features/auth/types";
 
 import { devBoardService, type TicketPage } from "../services/dev-board-service";
-import type { Ticket } from "../types";
+import type { Ticket } from "../types/board";
 import { devBoardKeys, devBoardMutationKeys } from "./queries";
 
 function restoreCachedTickets(
