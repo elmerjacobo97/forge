@@ -1,6 +1,6 @@
 # SPEC 05 — CLI Forge para proyectos del Dev Board
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** SPEC 03, SPEC 04
 > **Date:** 2026-07-19
 > **Objective:** Extender `forge-cli` con CRUD de proyectos Dev Board y alinear `ticket create|list` con `projectId` obligatorio, más skill para agentes.
