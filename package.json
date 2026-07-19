@@ -5,9 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @forge/web dev",
-    "build": "pnpm --filter @forge/web build",
+    "build": "pnpm run build:web && pnpm run build:function",
+    "build:web": "pnpm --filter @forge/web build",
+    "build:function": "pnpm --filter @forge/ai-content-generator build",
     "preview": "pnpm --filter @forge/web preview",
-    "test": "pnpm --filter @forge/web test",
+    "test": "pnpm run test:web && pnpm run test:function",
+    "test:web": "pnpm --filter @forge/web test",
+    "test:function": "pnpm --filter @forge/ai-content-generator test",
     "doctor": "pnpm --filter @forge/web doctor"
   }
 }
