@@ -59,14 +59,16 @@ export function ColumnView({
   return (
     <div
       className={cn(
-        "flex min-h-0 flex-1 flex-col rounded-xl border border-t-2 border-input/40 bg-muted/20 transition-colors",
+        "flex h-full w-72 shrink-0 flex-col rounded-xl border border-t-2 border-input/40 bg-muted/20 transition-colors",
         COLUMN_ACCENT[columnId],
         isHighlighted && "border-primary/40 bg-primary/5 ring-1 ring-primary/30",
       )}
     >
       <div className="flex items-center justify-between gap-2 px-3 py-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold">{COLUMN_LABELS[columnId]}</span>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="truncate text-xs font-semibold whitespace-nowrap">
+            {COLUMN_LABELS[columnId]}
+          </span>
           <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
             {totalTickets}
           </Badge>
