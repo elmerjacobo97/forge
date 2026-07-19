@@ -1,6 +1,7 @@
 import { Account, Client, TablesDB } from "node-appwrite"
 import { createBookmarksService } from "./bookmarks-service.js"
 import { createDevBoardService } from "./dev-board-service.js"
+import { createProjectsService } from "./projects-service.js"
 import { readConfig } from "./config.js"
 import { readSession } from "./session.js"
 import type { ForgeConfig, ForgeSession } from "./types.js"
@@ -69,6 +70,15 @@ export async function createAuthedBookmarksService() {
 export async function createAuthedDevBoardService() {
   const { config, session, tablesDB } = await createAuthedClient()
   return createDevBoardService({
+    tablesDB,
+    config,
+    userId: session.userId,
+  })
+}
+
+export async function createAuthedProjectsService() {
+  const { config, session, tablesDB } = await createAuthedClient()
+  return createProjectsService({
     tablesDB,
     config,
     userId: session.userId,
