@@ -1,6 +1,6 @@
 # SPEC 01 — Generación de contenido con IA
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** Ninguna
 > **Date:** 2026-07-18
 > **Objective:** Añadir generación segura con Groq para completar los campos derivados de Bookmarks y Snippets desde sus formularios.
