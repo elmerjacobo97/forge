@@ -10,7 +10,7 @@ const range: AnalyticsRange = {
 
 const data: AnalyticsData = {
   tickets: [{
-    id: "ticket-1", title: "Ship analytics", description: "", column: "done", position: 0,
+    id: "ticket-1", projectId: "project-1", title: "Ship analytics", description: "", column: "done", position: 0,
     priority: "high", createdAt: "2026-07-01T00:00:00.000Z", timerStartedAt: null,
     totalElapsedMs: 3_600_000, isPaused: false, lastMovedAt: "2026-07-03T12:00:00.000Z",
   }],

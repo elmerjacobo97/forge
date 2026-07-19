@@ -12,6 +12,7 @@ const timeEntriesTableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_TIME_ENTRIES_
 export interface TicketRow {
   $id: string;
   $createdAt: string;
+  projectId: string;
   title: string;
   description: string;
   column: ColumnId;
@@ -68,6 +69,7 @@ function eventData(ticket: Ticket, userId: string, eventType: string, fromColumn
 export function toTicket(row: TicketRow): Ticket {
   return {
     id: row.$id,
+    projectId: row.projectId,
     title: row.title,
     description: row.description,
     column: row.column,
@@ -84,6 +86,7 @@ export function toTicket(row: TicketRow): Ticket {
 function ticketData(ticket: Ticket, userId: string) {
   return {
     userId,
+    projectId: ticket.projectId,
     title: ticket.title,
     description: ticket.description,
     column: ticket.column,

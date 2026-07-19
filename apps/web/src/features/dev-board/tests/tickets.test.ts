@@ -8,6 +8,7 @@ afterEach(() => vi.useRealTimers());
 function ticket(id: string, column: Ticket["column"], position: number): Ticket {
   return {
     id,
+    projectId: "project-1",
     title: id,
     description: "",
     column,

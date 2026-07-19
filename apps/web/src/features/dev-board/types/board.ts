@@ -33,6 +33,7 @@ export const PRIORITY_COLORS: Record<Priority, string> = {
 
 export interface Ticket {
   id: string;
+  projectId: string;
   title: string;
   description: string;
   column: ColumnId;

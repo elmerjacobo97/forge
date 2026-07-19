@@ -16,10 +16,11 @@ function positionBefore(tickets: Ticket[], anchorId: string | null): number {
   return before ? (before.position + anchor.position) / 2 : anchor.position + 1024;
 }
 
-export function createTicket(values: TicketFormValues): Ticket {
+export function createTicket(values: TicketFormValues, projectId: string): Ticket {
   const now = nowISO();
   return {
     id: crypto.randomUUID(),
+    projectId,
     title: values.title,
     description: values.description,
     column: "backlog",

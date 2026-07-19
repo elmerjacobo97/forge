@@ -6,6 +6,7 @@ import { computeElapsed, pauseTimer, resumeTimer, startTimer, stopTimer } from "
 function createTicket(overrides: Partial<Ticket> = {}): Ticket {
   return {
     id: "ticket-1",
+    projectId: "project-1",
     title: "Test ticket",
     description: "",
     column: "in_progress",

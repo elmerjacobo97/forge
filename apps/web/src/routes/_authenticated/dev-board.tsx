@@ -183,7 +183,7 @@ function DevBoardRoute() {
     if (editTicket) {
       updateTicketMutation.mutate({ ...editTicket, ...values });
     } else {
-      createTicketMutation.mutate(createTicket(values));
+      createTicketMutation.mutate(createTicket(values, ""));
     }
   }
 
