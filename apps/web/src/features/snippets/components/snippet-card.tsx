@@ -1,27 +1,27 @@
+import { Check, Copy, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
-import { Snippet } from "../types";
 import { Button } from "@/components/ui/button";
-import { Trash2, Copy, Check } from "lucide-react";
-import { useDeleteSnippetMutation } from "../hooks/mutations";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCopy } from "@/lib/hooks/use-copy";
+import type { Snippet } from "../types";
 
 interface SnippetCardProps {
   snippet: Snippet;
+  onEdit: (snippet: Snippet) => void;
+  onDelete: (snippet: Snippet) => void;
 }
 
-export function SnippetCard({ snippet }: SnippetCardProps) {
-  const deleteMutation = useDeleteSnippetMutation();
+export function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
   const { copied, copy } = useCopy();
 
-  function deleteSnippet(id: string) {
-    deleteMutation.mutate(id);
-  }
-
   return (
-    <div
-      key={snippet.id}
-      className="group flex flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/20"
-    >
+    <div className="group flex flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/20">
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
@@ -36,14 +36,31 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
             {snippet.title}
           </h3>
         </div>
-        <Button
-          size="icon-sm"
-          variant="ghost"
-          onClick={() => deleteSnippet(snippet.id)}
-          className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              className="text-muted-foreground"
+              aria-label={`Actions for ${snippet.title}`}
+            >
+              <MoreHorizontal className="size-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(snippet)}>
+              <Pencil className="size-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => onDelete(snippet)}
+            >
+              <Trash2 className="size-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="mt-3 flex-1 space-y-3">

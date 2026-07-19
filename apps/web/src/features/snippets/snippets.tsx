@@ -4,18 +4,30 @@ import { Code2, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { AddSnippetDialog } from "./components/add-snippet-dialog";
+import { EditSnippetDialog } from "./components/edit-snippet-dialog";
 import { SnippetCard } from "./components/snippet-card";
+import { useDeleteSnippetMutation } from "./hooks/mutations";
 import { useSnippetsQuery } from "./hooks/queries";
 import { KINDS } from "./constants";
-import type { SnippetKind } from "./types";
+import type { Snippet, SnippetKind } from "./types";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 
 export function Snippets() {
   const [search, setSearch] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingSnippet, setEditingSnippet] = useState<Snippet | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Snippet | null>(null);
   const [selectedKind, setSelectedKind] = useState<SnippetKind | "all">("all");
 
   const debouncedSearch = useDebounce(search, 200);
@@ -25,6 +37,14 @@ export function Snippets() {
     isError,
     error,
   } = useSnippetsQuery();
+  const deleteMutation = useDeleteSnippetMutation();
+
+  function confirmDelete() {
+    if (!deleteTarget) return;
+    deleteMutation.mutate(deleteTarget.id, {
+      onSettled: () => setDeleteTarget(null),
+    });
+  }
 
   const filtered = useMemo(() => {
     const q = debouncedSearch.trim().toLowerCase();
@@ -122,7 +142,12 @@ export function Snippets() {
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {filtered.map((snippet) => (
-              <SnippetCard key={snippet.id} snippet={snippet} />
+              <SnippetCard
+                key={snippet.id}
+                snippet={snippet}
+                onEdit={setEditingSnippet}
+                onDelete={setDeleteTarget}
+              />
             ))}
           </div>
         )}
@@ -132,6 +157,47 @@ export function Snippets() {
         isOpen={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
       />
+
+      {editingSnippet ? (
+        <EditSnippetDialog
+          key={editingSnippet.id}
+          snippet={editingSnippet}
+          isOpen
+          onOpenChange={(open) => {
+            if (!open) setEditingSnippet(null);
+          }}
+        />
+      ) : null}
+
+      <Dialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete snippet?</DialogTitle>
+            <DialogDescription>
+              {deleteTarget
+                ? `“${deleteTarget.title}” will be permanently removed.`
+                : null}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
