@@ -1,6 +1,7 @@
 import {
   fetchFeatureRows,
   createFeatureRow,
+  updateFeatureRow,
   deleteFeatureRow,
   isAppwriteDataEnabled,
 } from "@/lib/appwrite-data";
@@ -33,6 +34,20 @@ export const snippetsService = {
   ): Promise<Snippet> {
     const resolvedUserId = requireAppwriteAccess(userId);
     const row = await createFeatureRow<SnippetPayload>(FEATURE, snippet, resolvedUserId);
+    return {
+      id: row.id,
+      createdAt: row.createdAt,
+      ...row.payload,
+    };
+  },
+
+  async updateSnippet(
+    snippetId: string,
+    snippet: SnippetPayload,
+    userId?: string,
+  ): Promise<Snippet> {
+    requireAppwriteAccess(userId);
+    const row = await updateFeatureRow<SnippetPayload>(snippetId, snippet);
     return {
       id: row.id,
       createdAt: row.createdAt,

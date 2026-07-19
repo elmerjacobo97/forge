@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const appwriteData = vi.hoisted(() => ({
   fetchFeatureRows: vi.fn(),
   createFeatureRow: vi.fn(),
+  updateFeatureRow: vi.fn(),
   deleteFeatureRow: vi.fn(),
   isAppwriteDataEnabled: vi.fn(),
 }));
@@ -89,6 +90,28 @@ describe("snippetsService", () => {
       ...snippet,
     });
     expect(appwriteData.createFeatureRow).toHaveBeenCalledWith("snippets", snippet, "user-1");
+  });
+
+  it("updates a snippet through Appwrite without changing id or createdAt", async () => {
+    const snippet = {
+      title: "Check status (updated)",
+      kind: "snippet" as const,
+      content: "git status --short",
+      language: "shell",
+      tags: ["git", "cli"],
+    };
+    appwriteData.updateFeatureRow.mockResolvedValue({
+      id: "snippet-1",
+      createdAt: "2026-07-12T10:00:00.000Z",
+      payload: snippet,
+    });
+
+    await expect(snippetsService.updateSnippet("snippet-1", snippet, "user-1")).resolves.toEqual({
+      id: "snippet-1",
+      createdAt: "2026-07-12T10:00:00.000Z",
+      ...snippet,
+    });
+    expect(appwriteData.updateFeatureRow).toHaveBeenCalledWith("snippet-1", snippet);
   });
 
   it("deletes a snippet through Appwrite", async () => {

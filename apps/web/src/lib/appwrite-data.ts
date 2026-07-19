@@ -62,6 +62,25 @@ export async function createFeatureRow<T>(
   };
 }
 
+export async function updateFeatureRow<T>(
+  id: string,
+  payload: T,
+): Promise<FeatureRow<T>> {
+  const row = await tablesDB.updateRow({
+    databaseId,
+    tableId,
+    rowId: id,
+    data: {
+      payload: JSON.stringify(payload),
+    },
+  });
+  return {
+    id: row.$id,
+    payload: JSON.parse(row.payload) as T,
+    createdAt: row.$createdAt,
+  };
+}
+
 export async function deleteFeatureRow(id: string): Promise<void> {
   await tablesDB.deleteRow({ databaseId, tableId, rowId: id });
 }
