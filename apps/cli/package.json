@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "forge": "./bin/forge.js"
+    "forge-cli": "./bin/forge-cli.js"
   },
   "files": [
     "bin",
@@ -12,10 +12,12 @@
   ],
   "scripts": {
     "build": "tsc",
-    "forge": "node ./bin/forge.js",
+    "forge-cli": "node ./bin/forge-cli.js",
     "test": "vitest run src"
   },
-
+  "dependencies": {
+    "node-appwrite": "^27.0.0"
+  },
   "devDependencies": {
     "@types/node": "^25.9.3",
     "typescript": "~5.8.3",

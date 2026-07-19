@@ -3,24 +3,24 @@
 > **Status:** Approved
 > **Depends on:** Ninguna
 > **Date:** 2026-07-18
-> **Objective:** Crear el CLI `forge` en el monorepo, autenticado contra Appwrite, con CRUD de bookmarks y skills para que agentes lo invoquen por comando.
+> **Objective:** Crear el CLI `forge-cli` en el monorepo, autenticado contra Appwrite, con CRUD de bookmarks y skills para que agentes lo invoquen por comando.
 
 ## Alcance
 
 **Incluye:**
 
-- Crear el paquete `apps/cli` (`@forge/cli`) en el workspace pnpm, con binario `forge`.
-- Autenticación interactiva contra Appwrite (`forge login` / `forge logout` / `forge whoami`) con sesión y config en `~/.forge/`.
+- Crear el paquete `apps/cli` (`@forge/cli`) en el workspace pnpm, con binario `forge-cli` (no `forge`, para evitar conflicto con Laravel Forge CLI / Herd).
+- Autenticación interactiva contra Appwrite (`forge-cli login` / `forge-cli logout` / `forge-cli whoami`) con sesión y config en `~/.forge/`.
 - Configurar endpoint, project ID e IDs de tablas/colecciones necesarios para bookmarks (mismo proyecto Appwrite que la web).
 - CRUD de bookmarks vía CLI, alineado al modelo web:
-  - `forge bookmark create` — campos: `title`, `url`, `category`, `description`, `tags`
-  - `forge bookmark list`
-  - `forge bookmark get <id>`
-  - `forge bookmark update <id>`
-  - `forge bookmark delete <id>`
+  - `forge-cli bookmark create` — campos: `title`, `url`, `category`, `description`, `tags`
+  - `forge-cli bookmark list`
+  - `forge-cli bookmark get <id>`
+  - `forge-cli bookmark update <id>`
+  - `forge-cli bookmark delete <id>`
 - Categorías válidas: `docs` | `git` | `tool` | `article` | `other`.
 - Salida legible por defecto y flag `--json` en los comandos de datos.
-- Skills para agentes en `.claude/skills/` y `.agents/skills/` que documenten cuándo y cómo invocar `forge bookmark …`.
+- Skills para agentes en `.claude/skills/` y `.agents/skills/` que documenten cuándo y cómo invocar `forge-cli bookmark …`.
 - Registrar el paquete en `pnpm-workspace.yaml` y documentar instalación/uso local (link del binario o `pnpm --filter @forge/cli`).
 - Pruebas unitarias de parsing/validación de comandos bookmark (sin depender de Appwrite real en CI).
 
@@ -94,15 +94,15 @@ Convenciones:
 
 ## Plan de implementación
 
-1. Crear `apps/cli` con `package.json` (`@forge/cli`, binario `forge`), `tsconfig.json` y un `src/main.ts` que imprima ayuda básica. Registrar el paquete en `pnpm-workspace.yaml`. Comprobar: `pnpm --filter @forge/cli exec forge --help` (o equivalente) responde sin error.
+1. Crear `apps/cli` con `package.json` (`@forge/cli`, binario `forge-cli`), `tsconfig.json` y un `src/main.ts` que imprima ayuda básica. Registrar el paquete en `pnpm-workspace.yaml`. Comprobar: `pnpm --filter @forge/cli exec forge-cli --help` (o equivalente) responde sin error.
 
-2. Añadir lectura/escritura de `~/.forge/config.json` y comando `forge init` (o flags en login) para guardar `endpoint`, `projectId`, `databaseId`, `bookmarksTableId`. Comprobar: tras init, el archivo existe con esos campos.
+2. Añadir lectura/escritura de `~/.forge/config.json` y comando `forge-cli init` (o flags en login) para guardar `endpoint`, `projectId`, `databaseId`, `bookmarksTableId`. Comprobar: tras init, el archivo existe con esos campos.
 
-3. Integrar el SDK Node de Appwrite: `forge login` (email/password), `forge logout`, `forge whoami`. Persistir sesión en `~/.forge/`. Comprobar: login real contra el proyecto → `whoami` muestra el usuario; logout deja de estar autenticado.
+3. Integrar el SDK Node de Appwrite: `forge-cli login` (email/password), `forge-cli logout`, `forge-cli whoami`. Persistir sesión en `~/.forge/`. Comprobar: login real contra el proyecto → `whoami` muestra el usuario; logout deja de estar autenticado.
 
 4. Implementar cliente de bookmarks en el CLI (list/create/get/update/delete) contra la misma tabla que la web, con permisos por usuario. Comprobar manualmente con cuenta de prueba: create → list → get → update → delete.
 
-5. Exponer los subcomandos `forge bookmark create|list|get|update|delete` con flags (`--title`, `--url`, `--category`, `--description`, `--tags`) y validación alineada al schema web. Comprobar: create con campos inválidos falla con mensaje claro; create válido aparece en la web.
+5. Exponer los subcomandos `forge-cli bookmark create|list|get|update|delete` con flags (`--title`, `--url`, `--category`, `--description`, `--tags`) y validación alineada al schema web. Comprobar: create con campos inválidos falla con mensaje claro; create válido aparece en la web.
 
 6. Añadir flag global/por comando `--json` y formateo texto por defecto. Comprobar: `list --json` es JSON parseable; sin flag es texto legible.
 
@@ -112,18 +112,18 @@ Convenciones:
 
 ## Criterios de aceptación
 
-- [ ] Existe `apps/cli` como `@forge/cli` en el workspace y el binario `forge` responde a `--help`.
-- [ ] `forge init` (o el flujo equivalente) escribe `~/.forge/config.json` con `endpoint`, `projectId`, `databaseId` y `bookmarksTableId`.
-- [ ] `forge login` con credenciales válidas deja una sesión usable; `forge whoami` muestra el usuario autenticado.
-- [ ] `forge logout` invalida/elimina la sesión local; comandos de bookmark posteriores fallan pidiendo login.
-- [ ] `forge bookmark create` con `title`, `url`, `category`, `description` y `tags` válidos crea una fila visible en la web de Bookmarks del mismo usuario.
-- [ ] `forge bookmark list` lista solo los bookmarks del usuario autenticado.
-- [ ] `forge bookmark get <id>` muestra un bookmark existente; con id inexistente o de otro usuario falla de forma clara.
-- [ ] `forge bookmark update <id>` modifica solo los campos indicados y persiste el cambio en Appwrite/web.
-- [ ] `forge bookmark delete <id>` elimina el bookmark; deja de aparecer en `list` y en la web.
+- [ ] Existe `apps/cli` como `@forge/cli` en el workspace y el binario `forge-cli` responde a `--help`.
+- [ ] `forge-cli init` (o el flujo equivalente) escribe `~/.forge/config.json` con `endpoint`, `projectId`, `databaseId` y `bookmarksTableId`.
+- [ ] `forge-cli login` con credenciales válidas deja una sesión usable; `forge-cli whoami` muestra el usuario autenticado.
+- [ ] `forge-cli logout` invalida/elimina la sesión local; comandos de bookmark posteriores fallan pidiendo login.
+- [ ] `forge-cli bookmark create` con `title`, `url`, `category`, `description` y `tags` válidos crea una fila visible en la web de Bookmarks del mismo usuario.
+- [ ] `forge-cli bookmark list` lista solo los bookmarks del usuario autenticado.
+- [ ] `forge-cli bookmark get <id>` muestra un bookmark existente; con id inexistente o de otro usuario falla de forma clara.
+- [ ] `forge-cli bookmark update <id>` modifica solo los campos indicados y persiste el cambio en Appwrite/web.
+- [ ] `forge-cli bookmark delete <id>` elimina el bookmark; deja de aparecer en `list` y en la web.
 - [ ] Inputs inválidos (URL malformed, category desconocida, description fuera de rango) rechazan el comando con mensaje de error no vacío y código de salida ≠ 0.
 - [ ] Con `--json`, `list`/`get`/`create`/`update` emiten JSON parseable; sin el flag, emiten texto legible.
-- [ ] Existen skills en `.claude/skills/` y `.agents/skills/` que documentan el flujo de bookmarks con ejemplos de comandos `forge`.
+- [ ] Existen skills en `.claude/skills/` y `.agents/skills/` que documentan el flujo de bookmarks con ejemplos de comandos `forge-cli`.
 - [ ] Las pruebas unitarias de validación/parsing del CLI pasan sin red ni Appwrite.
 
 ## Decisiones
@@ -136,7 +136,8 @@ Convenciones:
 - **No:** API key de Appwrite en v1. Salta permisos por usuario y es más fácil de filtrar mal.
 - **Sí:** agentes descubren comandos vía skills en `.claude/skills/` y `.agents/skills/`.
 - **No:** servidor MCP en esta spec. El CLI + skills basta para el flujo “añade esta URL a bookmarks”.
-- **Sí:** binario `forge` en `apps/cli` dentro del monorepo.
+- **Sí:** binario `forge-cli` en `apps/cli` dentro del monorepo.
+- **No:** binario `forge`. Choca con Laravel Forge CLI (Herd) en el PATH de muchas máquinas.
 - **No:** repo separado ni publicar a npm en v1.
 - **Sí:** salida texto por defecto y `--json` opcional.
 - **No:** JSON-only. Empeora uso humano en terminal.

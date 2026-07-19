@@ -9,6 +9,10 @@ importers:
   .: {}
 
   apps/cli:
+    dependencies:
+      node-appwrite:
+        specifier: ^27.0.0
+        version: 27.0.0
     devDependencies:
       '@types/node':
         specifier: ^25.9.3
@@ -3579,6 +3583,9 @@ packages:
       react: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
       react-dom: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
 
+  node-appwrite@27.0.0:
+    resolution: {integrity: sha512-RLjwWPbTMiaAwjBpaFRe0AjY2Fug/oL8xhvX2eDAcR3IsbERleUJCEOtrTRwZGwig4+d9gDfP9P7LHX17kXSMA==}
+
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
@@ -4247,6 +4254,10 @@ packages:
 
   undici-types@7.24.6:
     resolution: {integrity: sha512-WRNW+sJgj5OBN4/0JpHFqtqzhpbnV0GuB+OozA9gCL7a993SmU+1JBZCzLNxYsbMfIeDL+lTsphD5jN5N+n0zg==}
+
+  undici@6.27.0:
+    resolution: {integrity: sha512-YmfV3YnEDzXRC5lZ2jWtWWHKGUm1zIt8AhesR1tens+HTNv+YZlN/dp6G727LOvMJ8xjP9Be7Y2Sdr96LDm+pg==}
+    engines: {node: '>=18.17'}
 
   undici@7.28.0:
     resolution: {integrity: sha512-cRZYrTDwWznlnRiPjggAGxZXanty6M8RV1ff8Wm4LWXBp7/IG8v5DnOm74DtUBp9OONpK75YlPnIjQqX0dBDtA==}
@@ -7743,6 +7754,11 @@ snapshots:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
+  node-appwrite@27.0.0:
+    dependencies:
+      json-bigint: 1.0.0
+      undici: 6.27.0
+
   node-domexception@1.0.0: {}
 
   node-fetch@3.3.2:
@@ -8565,6 +8581,8 @@ snapshots:
   uint8array-extras@1.5.0: {}
 
   undici-types@7.24.6: {}
+
+  undici@6.27.0: {}
 
   undici@7.28.0: {}
 

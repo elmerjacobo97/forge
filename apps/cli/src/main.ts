@@ -1,13 +1,19 @@
 import { runInit } from "./commands/init.js"
+import { runLogin } from "./commands/login.js"
+import { runLogout } from "./commands/logout.js"
+import { runWhoami } from "./commands/whoami.js"
 
-const HELP = `forge — Forge CLI
+const HELP = `forge-cli — Forge CLI
 
 Usage:
-  forge --help
-  forge <command>
+  forge-cli --help
+  forge-cli <command>
 
 Commands:
-  init    Write Appwrite config to ~/.forge/config.json
+  init      Write Appwrite config to ~/.forge/config.json
+  login     Sign in with email/password
+  logout    Sign out and clear local session
+  whoami    Show the authenticated user
 
 Options:
   --help    Show this help
@@ -28,6 +34,15 @@ async function main(argv: string[]): Promise<void> {
   switch (command) {
     case "init":
       await runInit(rest)
+      return
+    case "login":
+      await runLogin(rest)
+      return
+    case "logout":
+      await runLogout(rest)
+      return
+    case "whoami":
+      await runWhoami(rest)
       return
     default:
       process.stderr.write(`Unknown command: ${command}\n\n${HELP}\n`)
