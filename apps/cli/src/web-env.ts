@@ -6,6 +6,7 @@ export type WebEnvConfig = {
   projectId?: string
   databaseId?: string
   bookmarksTableId?: string
+  devBoardProjectsTableId?: string
   devBoardTicketsTableId?: string
   devBoardEventsTableId?: string
   devBoardTimeEntriesTableId?: string
@@ -66,6 +67,9 @@ export async function loadConfigFromWebEnv(
     projectId: emptyToUndefined(env.VITE_APPWRITE_PROJECT_ID),
     databaseId: emptyToUndefined(env.VITE_APPWRITE_DATABASE_ID),
     bookmarksTableId: emptyToUndefined(env.VITE_APPWRITE_BOOKMARKS_COLLECTION_ID),
+    devBoardProjectsTableId: emptyToUndefined(
+      env.VITE_APPWRITE_DEV_BOARD_PROJECTS_TABLE_ID,
+    ),
     devBoardTicketsTableId: emptyToUndefined(
       env.VITE_APPWRITE_DEV_BOARD_TICKETS_TABLE_ID,
     ),

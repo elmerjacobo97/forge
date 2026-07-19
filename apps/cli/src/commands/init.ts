@@ -7,8 +7,9 @@ const INIT_HELP = `Usage:
   forge-cli init
   forge-cli init --from-web-env
   forge-cli init --endpoint <url> --project-id <id> --database-id <id> \\
-    --bookmarks-table-id <id> --dev-board-tickets-table-id <id> \\
-    --dev-board-events-table-id <id> --dev-board-time-entries-table-id <id>
+    --bookmarks-table-id <id> --dev-board-projects-table-id <id> \\
+    --dev-board-tickets-table-id <id> --dev-board-events-table-id <id> \\
+    --dev-board-time-entries-table-id <id>
 
 With no flags, prompts interactively. If apps/web/.env is found in the monorepo,
 values are offered as defaults (press Enter to accept).
@@ -19,6 +20,7 @@ Options:
   --project-id <id>                       Appwrite project ID
   --database-id <id>                      Appwrite database ID
   --bookmarks-table-id <id>               Bookmarks table/collection ID
+  --dev-board-projects-table-id <id>      Dev Board projects table ID
   --dev-board-tickets-table-id <id>       Dev Board tickets table ID
   --dev-board-events-table-id <id>        Dev Board events table ID
   --dev-board-time-entries-table-id <id>  Dev Board time entries table ID
@@ -39,6 +41,7 @@ function isConfigComplete(
   projectId: string | undefined,
   databaseId: string | undefined,
   bookmarksTableId: string | undefined,
+  devBoardProjectsTableId: string | undefined,
   devBoardTicketsTableId: string | undefined,
   devBoardEventsTableId: string | undefined,
   devBoardTimeEntriesTableId: string | undefined,
@@ -48,6 +51,7 @@ function isConfigComplete(
     projectId &&
     databaseId &&
     bookmarksTableId &&
+    devBoardProjectsTableId &&
     devBoardTicketsTableId &&
     devBoardEventsTableId &&
     devBoardTimeEntriesTableId
@@ -68,6 +72,9 @@ export async function runInit(args: string[]): Promise<void> {
   let databaseId = getFlagValue(args, "--database-id") ?? webEnv?.databaseId
   let bookmarksTableId =
     getFlagValue(args, "--bookmarks-table-id") ?? webEnv?.bookmarksTableId
+  let devBoardProjectsTableId =
+    getFlagValue(args, "--dev-board-projects-table-id") ??
+    webEnv?.devBoardProjectsTableId
   let devBoardTicketsTableId =
     getFlagValue(args, "--dev-board-tickets-table-id") ??
     webEnv?.devBoardTicketsTableId
@@ -83,6 +90,7 @@ export async function runInit(args: string[]): Promise<void> {
     getFlagValue(args, "--project-id"),
     getFlagValue(args, "--database-id"),
     getFlagValue(args, "--bookmarks-table-id"),
+    getFlagValue(args, "--dev-board-projects-table-id"),
     getFlagValue(args, "--dev-board-tickets-table-id"),
     getFlagValue(args, "--dev-board-events-table-id"),
     getFlagValue(args, "--dev-board-time-entries-table-id"),
@@ -108,6 +116,7 @@ export async function runInit(args: string[]): Promise<void> {
         projectId,
         databaseId,
         bookmarksTableId,
+        devBoardProjectsTableId,
         devBoardTicketsTableId,
         devBoardEventsTableId,
         devBoardTimeEntriesTableId,
@@ -131,6 +140,10 @@ export async function runInit(args: string[]): Promise<void> {
       "Bookmarks table ID",
       bookmarksTableId,
     )
+    devBoardProjectsTableId = await promptWithDefault(
+      "Dev Board projects table ID",
+      devBoardProjectsTableId,
+    )
     devBoardTicketsTableId = await promptWithDefault(
       "Dev Board tickets table ID",
       devBoardTicketsTableId,
@@ -150,13 +163,15 @@ export async function runInit(args: string[]): Promise<void> {
     !projectId ||
     !databaseId ||
     !bookmarksTableId ||
+    !devBoardProjectsTableId ||
     !devBoardTicketsTableId ||
     !devBoardEventsTableId ||
     !devBoardTimeEntriesTableId
   ) {
     process.stderr.write(
       "endpoint, projectId, databaseId, bookmarksTableId, " +
-        "devBoardTicketsTableId, devBoardEventsTableId, and " +
+        "devBoardProjectsTableId, devBoardTicketsTableId, " +
+        "devBoardEventsTableId, and " +
         "devBoardTimeEntriesTableId are all required.\n" +
         "Tip: from the repo root, run  forge-cli init --from-web-env\n" +
         "     (uses apps/web/.env) or  forge-cli init  (interactive)\n",
@@ -170,6 +185,7 @@ export async function runInit(args: string[]): Promise<void> {
     projectId,
     databaseId,
     bookmarksTableId,
+    devBoardProjectsTableId,
     devBoardTicketsTableId,
     devBoardEventsTableId,
     devBoardTimeEntriesTableId,
@@ -182,6 +198,7 @@ export async function runInit(args: string[]): Promise<void> {
       `  projectId: ${config.projectId}\n` +
       `  databaseId: ${config.databaseId}\n` +
       `  bookmarksTableId: ${config.bookmarksTableId}\n` +
+      `  devBoardProjectsTableId: ${config.devBoardProjectsTableId}\n` +
       `  devBoardTicketsTableId: ${config.devBoardTicketsTableId}\n` +
       `  devBoardEventsTableId: ${config.devBoardEventsTableId}\n` +
       `  devBoardTimeEntriesTableId: ${config.devBoardTimeEntriesTableId}\n\n` +

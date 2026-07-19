@@ -3,6 +3,7 @@ export type ForgeConfig = {
   projectId: string
   databaseId: string
   bookmarksTableId: string
+  devBoardProjectsTableId: string
   devBoardTicketsTableId: string
   devBoardEventsTableId: string
   devBoardTimeEntriesTableId: string

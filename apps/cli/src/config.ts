@@ -28,6 +28,7 @@ export function parseConfig(value: unknown): ForgeConfig {
   const projectId = record.projectId
   const databaseId = record.databaseId
   const bookmarksTableId = record.bookmarksTableId
+  const devBoardProjectsTableId = record.devBoardProjectsTableId
   const devBoardTicketsTableId = record.devBoardTicketsTableId
   const devBoardEventsTableId = record.devBoardEventsTableId
   const devBoardTimeEntriesTableId = record.devBoardTimeEntriesTableId
@@ -37,14 +38,17 @@ export function parseConfig(value: unknown): ForgeConfig {
     !isNonEmptyString(projectId) ||
     !isNonEmptyString(databaseId) ||
     !isNonEmptyString(bookmarksTableId) ||
+    !isNonEmptyString(devBoardProjectsTableId) ||
     !isNonEmptyString(devBoardTicketsTableId) ||
     !isNonEmptyString(devBoardEventsTableId) ||
     !isNonEmptyString(devBoardTimeEntriesTableId)
   ) {
     throw new Error(
       "Invalid config: endpoint, projectId, databaseId, bookmarksTableId, " +
-        "devBoardTicketsTableId, devBoardEventsTableId, and " +
-        "devBoardTimeEntriesTableId are required.",
+        "devBoardProjectsTableId, devBoardTicketsTableId, " +
+        "devBoardEventsTableId, and " +
+        "devBoardTimeEntriesTableId are required. " +
+        "Run: forge-cli init --from-web-env",
     )
   }
 
@@ -53,6 +57,7 @@ export function parseConfig(value: unknown): ForgeConfig {
     projectId: projectId.trim(),
     databaseId: databaseId.trim(),
     bookmarksTableId: bookmarksTableId.trim(),
+    devBoardProjectsTableId: devBoardProjectsTableId.trim(),
     devBoardTicketsTableId: devBoardTicketsTableId.trim(),
     devBoardEventsTableId: devBoardEventsTableId.trim(),
     devBoardTimeEntriesTableId: devBoardTimeEntriesTableId.trim(),
