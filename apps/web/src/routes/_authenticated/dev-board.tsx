@@ -43,11 +43,11 @@ function isColumnId(value: string): value is ColumnId {
 
 function DevBoardRoute() {
   const { data: user } = useUserQuery();
-  const backlog = useDevBoardTickets(user?.id, "backlog");
-  const todo = useDevBoardTickets(user?.id, "todo");
-  const inProgress = useDevBoardTickets(user?.id, "in_progress");
-  const review = useDevBoardTickets(user?.id, "review");
-  const done = useDevBoardTickets(user?.id, "done");
+  const backlog = useDevBoardTickets(user?.id, undefined, "backlog");
+  const todo = useDevBoardTickets(user?.id, undefined, "todo");
+  const inProgress = useDevBoardTickets(user?.id, undefined, "in_progress");
+  const review = useDevBoardTickets(user?.id, undefined, "review");
+  const done = useDevBoardTickets(user?.id, undefined, "done");
   const columns = { backlog, todo, in_progress: inProgress, review, done };
   const tickets = COLUMNS.flatMap(
     (column) => columns[column].data?.pages.flatMap((page) => page.tickets) ?? [],

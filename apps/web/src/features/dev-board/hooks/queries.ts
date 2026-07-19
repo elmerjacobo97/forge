@@ -24,17 +24,26 @@ export const devBoardMutationKeys = {
   update: ["dev-board", "update"] as const,
 };
 
-export function useDevBoardTickets(userId: string | undefined, column: ColumnId) {
+export function useDevBoardTickets(
+  userId: string | undefined,
+  projectId: string | undefined,
+  column: ColumnId,
+) {
   return useInfiniteQuery({
     queryKey: devBoardKeys.column(userId ?? "anonymous", column),
-    queryFn: ({ pageParam }) => devBoardService.fetchTicketPage(userId!, column, pageParam),
+    queryFn: ({ pageParam }) =>
+      devBoardService.fetchTicketPage(userId!, projectId!, column, pageParam),
     initialPageParam: null as string | null,
     getNextPageParam: (page) => page.nextCursor,
-    enabled: Boolean(userId),
+    enabled: Boolean(userId && projectId),
   });
 }
 
-export function useDevBoardAnalytics(userId: string | undefined, range: AnalyticsRange | undefined) {
+export function useDevBoardAnalytics(
+  userId: string | undefined,
+  projectId: string | undefined,
+  range: AnalyticsRange | undefined,
+) {
   return useQuery({
     queryKey: devBoardKeys.analytics(
       userId ?? "anonymous",
@@ -43,9 +52,9 @@ export function useDevBoardAnalytics(userId: string | undefined, range: Analytic
     ),
     queryFn: () => {
       if (!range) throw new Error("Select a complete date range.");
-      return devBoardAnalyticsService.fetchAnalytics(userId!, range);
+      return devBoardAnalyticsService.fetchAnalytics(userId!, projectId!, range);
     },
-    enabled: Boolean(userId && range),
+    enabled: Boolean(userId && projectId && range),
   });
 }
 

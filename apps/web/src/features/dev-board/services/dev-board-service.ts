@@ -100,10 +100,18 @@ function ticketData(ticket: Ticket, userId: string) {
 }
 
 export const devBoardService = {
-  async fetchTicketPage(userId: string, column: ColumnId, cursor: string | null): Promise<TicketPage> {
+  async fetchTicketPage(
+    userId: string,
+    projectId: string,
+    column: ColumnId,
+    cursor: string | null,
+  ): Promise<TicketPage> {
     assertConfigured();
+    if (!projectId) throw new Error("projectId is required.");
+
     const queries = [
       Query.equal("userId", userId),
+      Query.equal("projectId", projectId),
       Query.equal("column", column),
       Query.orderDesc("position"),
       Query.limit(TICKETS_PAGE_SIZE),
@@ -127,6 +135,8 @@ export const devBoardService = {
 
   async createTicket(ticket: Ticket, userId: string): Promise<Ticket> {
     assertConfigured();
+    if (!ticket.projectId) throw new Error("projectId is required.");
+
     await commitTransaction(async (transactionId) => {
       await tablesDB.createRow({
         databaseId,
@@ -153,18 +163,20 @@ export const devBoardService = {
     const previous = toTicket(
       (await tablesDB.getRow({ databaseId, tableId, rowId: ticket.id })) as unknown as TicketRow,
     );
+    // Tickets cannot be reassigned across projects in v1.
+    const scopedTicket: Ticket = { ...ticket, projectId: previous.projectId };
     const timerStartedAt = previous.timerStartedAt;
-    const stoppedTimer = timerStartedAt !== null && !ticket.timerStartedAt;
+    const stoppedTimer = timerStartedAt !== null && !scopedTicket.timerStartedAt;
     const eventType =
-      previous.column !== ticket.column
-        ? ticket.column === "done"
+      previous.column !== scopedTicket.column
+        ? scopedTicket.column === "done"
           ? "completed"
-          : ticket.column === "in_progress"
+          : scopedTicket.column === "in_progress"
             ? "started"
             : "moved"
         : stoppedTimer
           ? "paused"
-          : !previous.timerStartedAt && ticket.timerStartedAt
+          : !previous.timerStartedAt && scopedTicket.timerStartedAt
             ? "resumed"
             : null;
 
@@ -172,8 +184,8 @@ export const devBoardService = {
       await tablesDB.updateRow({
         databaseId,
         tableId,
-        rowId: ticket.id,
-        data: ticketData(ticket, userId),
+        rowId: scopedTicket.id,
+        data: ticketData(scopedTicket, userId),
         transactionId,
       });
       if (eventType) {
@@ -181,7 +193,7 @@ export const devBoardService = {
           databaseId,
           tableId: eventsTableId,
           rowId: ID.unique(),
-          data: eventData(ticket, userId, eventType, previous.column),
+          data: eventData(scopedTicket, userId, eventType, previous.column),
           permissions: privatePermissions(userId),
           transactionId,
         });
@@ -194,7 +206,7 @@ export const devBoardService = {
           rowId: ID.unique(),
           data: {
             userId,
-            ticketId: ticket.id,
+            ticketId: scopedTicket.id,
             startedAt: timerStartedAt,
             endedAt,
             durationMs: Math.max(0, Date.parse(endedAt) - Date.parse(timerStartedAt)),
@@ -204,7 +216,7 @@ export const devBoardService = {
         });
       }
     });
-    return ticket;
+    return scopedTicket;
   },
 
   async deleteTicket(ticketId: string): Promise<void> {

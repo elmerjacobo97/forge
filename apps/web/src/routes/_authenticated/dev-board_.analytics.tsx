@@ -78,7 +78,7 @@ function AnalyticsRoute() {
     },
     [preset, customRange],
   );
-  const analyticsQuery = useDevBoardAnalytics(user?.id, range);
+  const analyticsQuery = useDevBoardAnalytics(user?.id, undefined, range);
   const summary = analyticsQuery.data && range ? buildAnalytics(analyticsQuery.data, range) : null;
   const maxTicketDuration = summary?.topTickets[0]?.durationMs ?? 0;
 

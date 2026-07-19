@@ -4,6 +4,7 @@ import { tablesDB } from "@/lib/appwrite";
 
 import type { AnalyticsData, AnalyticsRange, TicketEvent } from "../types/analytics";
 import { COLUMNS, type Ticket } from "../types/board";
+import { filterRowsForTickets, ticketIdSet } from "../utils/project-scope";
 import { devBoardService } from "./dev-board-service";
 
 const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID;
@@ -32,20 +33,29 @@ async function listAllRows(tableId: string, queries: string[]) {
 }
 
 export const devBoardAnalyticsService = {
-  async fetchAnalytics(userId: string, range: AnalyticsRange): Promise<AnalyticsData> {
+  async fetchAnalytics(
+    userId: string,
+    projectId: string,
+    range: AnalyticsRange,
+  ): Promise<AnalyticsData> {
     assertConfigured();
+    if (!projectId) throw new Error("projectId is required.");
+
     const ticketPages = await Promise.all(
       COLUMNS.map(async (column) => {
         const tickets: Ticket[] = [];
         let cursor: string | null = null;
         do {
-          const page = await devBoardService.fetchTicketPage(userId, column, cursor);
+          const page = await devBoardService.fetchTicketPage(userId, projectId, column, cursor);
           tickets.push(...page.tickets);
           cursor = page.nextCursor;
         } while (cursor);
         return tickets;
       }),
     );
+    const tickets = ticketPages.flat();
+    const projectTicketIds = ticketIdSet(tickets);
+
     const [eventRows, timeRows] = await Promise.all([
       listAllRows(eventsTableId, [
         Query.equal("userId", userId),
@@ -60,9 +70,8 @@ export const devBoardAnalyticsService = {
       ]),
     ]);
 
-    return {
-      tickets: ticketPages.flat(),
-      events: eventRows.map((row) => ({
+    const events = filterRowsForTickets(
+      eventRows.map((row) => ({
         id: String(row.$id),
         ticketId: String(row.ticketId),
         eventType: row.eventType as TicketEvent["eventType"],
@@ -70,13 +79,20 @@ export const devBoardAnalyticsService = {
         toColumn: (row.toColumn as TicketEvent["toColumn"]) ?? null,
         occurredAt: String(row.occurredAt),
       })),
-      timeEntries: timeRows.map((row) => ({
+      projectTicketIds,
+    );
+
+    const timeEntries = filterRowsForTickets(
+      timeRows.map((row) => ({
         id: String(row.$id),
         ticketId: String(row.ticketId),
         startedAt: String(row.startedAt),
         endedAt: String(row.endedAt),
         durationMs: Number(row.durationMs),
       })),
-    };
+      projectTicketIds,
+    );
+
+    return { tickets, events, timeEntries };
   },
 };
