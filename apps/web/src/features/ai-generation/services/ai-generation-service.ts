@@ -1,5 +1,7 @@
 import { ExecutionMethod, type Models } from "appwrite";
 
+import { functions } from "@/lib/appwrite";
+
 import {
   aiGenerationErrorSchema,
   aiGenerationRequestSchema,
@@ -94,3 +96,8 @@ export function createAiGenerationService(
     },
   };
 }
+
+export const aiGenerationService = createAiGenerationService(
+  functions,
+  import.meta.env.VITE_APPWRITE_AI_CONTENT_FUNCTION_ID,
+);

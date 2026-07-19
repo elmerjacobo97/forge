@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { ExecutionMethod } from "appwrite";
 
+vi.mock("@/lib/appwrite", () => ({
+  functions: { createExecution: vi.fn() },
+}));
+
 import {
   AiGenerationServiceError,
   createAiGenerationService,
