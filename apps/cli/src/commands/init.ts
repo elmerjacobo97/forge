@@ -6,18 +6,23 @@ import { loadConfigFromWebEnv } from "../web-env.js"
 const INIT_HELP = `Usage:
   forge-cli init
   forge-cli init --from-web-env
-  forge-cli init --endpoint <url> --project-id <id> --database-id <id> --bookmarks-table-id <id>
+  forge-cli init --endpoint <url> --project-id <id> --database-id <id> \\
+    --bookmarks-table-id <id> --dev-board-tickets-table-id <id> \\
+    --dev-board-events-table-id <id> --dev-board-time-entries-table-id <id>
 
 With no flags, prompts interactively. If apps/web/.env is found in the monorepo,
 values are offered as defaults (press Enter to accept).
 
 Options:
-  --from-web-env                Read IDs from apps/web/.env (no prompts if complete)
-  --endpoint <url>              Appwrite endpoint
-  --project-id <id>             Appwrite project ID
-  --database-id <id>            Appwrite database ID
-  --bookmarks-table-id <id>     Bookmarks table/collection ID
-  --help                        Show this help
+  --from-web-env                          Read IDs from apps/web/.env (no prompts if complete)
+  --endpoint <url>                        Appwrite endpoint
+  --project-id <id>                       Appwrite project ID
+  --database-id <id>                      Appwrite database ID
+  --bookmarks-table-id <id>               Bookmarks table/collection ID
+  --dev-board-tickets-table-id <id>       Dev Board tickets table ID
+  --dev-board-events-table-id <id>        Dev Board events table ID
+  --dev-board-time-entries-table-id <id>  Dev Board time entries table ID
+  --help                                  Show this help
 `
 
 async function promptWithDefault(
@@ -27,6 +32,26 @@ async function promptWithDefault(
   const suffix = fallback ? ` [${fallback}]` : ""
   const answer = await promptText(`${label}${suffix}: `)
   return (answer || fallback || "").trim()
+}
+
+function isConfigComplete(
+  endpoint: string | undefined,
+  projectId: string | undefined,
+  databaseId: string | undefined,
+  bookmarksTableId: string | undefined,
+  devBoardTicketsTableId: string | undefined,
+  devBoardEventsTableId: string | undefined,
+  devBoardTimeEntriesTableId: string | undefined,
+): boolean {
+  return !!(
+    endpoint &&
+    projectId &&
+    databaseId &&
+    bookmarksTableId &&
+    devBoardTicketsTableId &&
+    devBoardEventsTableId &&
+    devBoardTimeEntriesTableId
+  )
 }
 
 export async function runInit(args: string[]): Promise<void> {
@@ -43,12 +68,24 @@ export async function runInit(args: string[]): Promise<void> {
   let databaseId = getFlagValue(args, "--database-id") ?? webEnv?.databaseId
   let bookmarksTableId =
     getFlagValue(args, "--bookmarks-table-id") ?? webEnv?.bookmarksTableId
+  let devBoardTicketsTableId =
+    getFlagValue(args, "--dev-board-tickets-table-id") ??
+    webEnv?.devBoardTicketsTableId
+  let devBoardEventsTableId =
+    getFlagValue(args, "--dev-board-events-table-id") ??
+    webEnv?.devBoardEventsTableId
+  let devBoardTimeEntriesTableId =
+    getFlagValue(args, "--dev-board-time-entries-table-id") ??
+    webEnv?.devBoardTimeEntriesTableId
 
-  const flagsComplete = !!(
-    getFlagValue(args, "--endpoint") &&
-    getFlagValue(args, "--project-id") &&
-    getFlagValue(args, "--database-id") &&
-    getFlagValue(args, "--bookmarks-table-id")
+  const flagsComplete = isConfigComplete(
+    getFlagValue(args, "--endpoint"),
+    getFlagValue(args, "--project-id"),
+    getFlagValue(args, "--database-id"),
+    getFlagValue(args, "--bookmarks-table-id"),
+    getFlagValue(args, "--dev-board-tickets-table-id"),
+    getFlagValue(args, "--dev-board-events-table-id"),
+    getFlagValue(args, "--dev-board-time-entries-table-id"),
   )
 
   if (fromWebEnv) {
@@ -65,7 +102,16 @@ export async function runInit(args: string[]): Promise<void> {
 
   const needsPrompt =
     !flagsComplete &&
-    (!fromWebEnv || !endpoint || !projectId || !databaseId || !bookmarksTableId)
+    (!fromWebEnv ||
+      !isConfigComplete(
+        endpoint,
+        projectId,
+        databaseId,
+        bookmarksTableId,
+        devBoardTicketsTableId,
+        devBoardEventsTableId,
+        devBoardTimeEntriesTableId,
+      ))
 
   if (needsPrompt) {
     if (webEnv && !fromWebEnv) {
@@ -85,11 +131,33 @@ export async function runInit(args: string[]): Promise<void> {
       "Bookmarks table ID",
       bookmarksTableId,
     )
+    devBoardTicketsTableId = await promptWithDefault(
+      "Dev Board tickets table ID",
+      devBoardTicketsTableId,
+    )
+    devBoardEventsTableId = await promptWithDefault(
+      "Dev Board events table ID",
+      devBoardEventsTableId,
+    )
+    devBoardTimeEntriesTableId = await promptWithDefault(
+      "Dev Board time entries table ID",
+      devBoardTimeEntriesTableId,
+    )
   }
 
-  if (!endpoint || !projectId || !databaseId || !bookmarksTableId) {
+  if (
+    !endpoint ||
+    !projectId ||
+    !databaseId ||
+    !bookmarksTableId ||
+    !devBoardTicketsTableId ||
+    !devBoardEventsTableId ||
+    !devBoardTimeEntriesTableId
+  ) {
     process.stderr.write(
-      "endpoint, projectId, databaseId, and bookmarksTableId are all required.\n" +
+      "endpoint, projectId, databaseId, bookmarksTableId, " +
+        "devBoardTicketsTableId, devBoardEventsTableId, and " +
+        "devBoardTimeEntriesTableId are all required.\n" +
         "Tip: from the repo root, run  forge-cli init --from-web-env\n" +
         "     (uses apps/web/.env) or  forge-cli init  (interactive)\n",
     )
@@ -102,6 +170,9 @@ export async function runInit(args: string[]): Promise<void> {
     projectId,
     databaseId,
     bookmarksTableId,
+    devBoardTicketsTableId,
+    devBoardEventsTableId,
+    devBoardTimeEntriesTableId,
   }
 
   const path = await writeConfig(config)
@@ -110,7 +181,10 @@ export async function runInit(args: string[]): Promise<void> {
       `  endpoint: ${config.endpoint}\n` +
       `  projectId: ${config.projectId}\n` +
       `  databaseId: ${config.databaseId}\n` +
-      `  bookmarksTableId: ${config.bookmarksTableId}\n\n` +
+      `  bookmarksTableId: ${config.bookmarksTableId}\n` +
+      `  devBoardTicketsTableId: ${config.devBoardTicketsTableId}\n` +
+      `  devBoardEventsTableId: ${config.devBoardEventsTableId}\n` +
+      `  devBoardTimeEntriesTableId: ${config.devBoardTimeEntriesTableId}\n\n` +
       `Next: forge-cli login\n`,
   )
 }

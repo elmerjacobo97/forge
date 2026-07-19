@@ -28,15 +28,23 @@ export function parseConfig(value: unknown): ForgeConfig {
   const projectId = record.projectId
   const databaseId = record.databaseId
   const bookmarksTableId = record.bookmarksTableId
+  const devBoardTicketsTableId = record.devBoardTicketsTableId
+  const devBoardEventsTableId = record.devBoardEventsTableId
+  const devBoardTimeEntriesTableId = record.devBoardTimeEntriesTableId
 
   if (
     !isNonEmptyString(endpoint) ||
     !isNonEmptyString(projectId) ||
     !isNonEmptyString(databaseId) ||
-    !isNonEmptyString(bookmarksTableId)
+    !isNonEmptyString(bookmarksTableId) ||
+    !isNonEmptyString(devBoardTicketsTableId) ||
+    !isNonEmptyString(devBoardEventsTableId) ||
+    !isNonEmptyString(devBoardTimeEntriesTableId)
   ) {
     throw new Error(
-      "Invalid config: endpoint, projectId, databaseId, and bookmarksTableId are required.",
+      "Invalid config: endpoint, projectId, databaseId, bookmarksTableId, " +
+        "devBoardTicketsTableId, devBoardEventsTableId, and " +
+        "devBoardTimeEntriesTableId are required.",
     )
   }
 
@@ -45,6 +53,9 @@ export function parseConfig(value: unknown): ForgeConfig {
     projectId: projectId.trim(),
     databaseId: databaseId.trim(),
     bookmarksTableId: bookmarksTableId.trim(),
+    devBoardTicketsTableId: devBoardTicketsTableId.trim(),
+    devBoardEventsTableId: devBoardEventsTableId.trim(),
+    devBoardTimeEntriesTableId: devBoardTimeEntriesTableId.trim(),
   }
 }
 
