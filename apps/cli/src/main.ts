@@ -2,6 +2,7 @@ import { runBookmark } from "./commands/bookmark.js"
 import { runInit } from "./commands/init.js"
 import { runLogin } from "./commands/login.js"
 import { runLogout } from "./commands/logout.js"
+import { runTicket } from "./commands/ticket.js"
 import { runWhoami } from "./commands/whoami.js"
 
 const HELP = `forge-cli — Forge CLI
@@ -16,6 +17,7 @@ Commands:
   logout    Sign out and clear local session
   whoami    Show the authenticated user
   bookmark  Manage bookmarks (create|list|get|update|delete)
+  ticket    Manage Dev Board tickets (create|list|get|update|delete|move)
 
 Options:
   --help    Show this help
@@ -48,6 +50,9 @@ async function main(argv: string[]): Promise<void> {
       return
     case "bookmark":
       await runBookmark(rest)
+      return
+    case "ticket":
+      await runTicket(rest)
       return
     default:
       process.stderr.write(`Unknown command: ${command}\n\n${HELP}\n`)
