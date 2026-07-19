@@ -1,3 +1,4 @@
+import { runBookmark } from "./commands/bookmark.js"
 import { runInit } from "./commands/init.js"
 import { runLogin } from "./commands/login.js"
 import { runLogout } from "./commands/logout.js"
@@ -14,6 +15,7 @@ Commands:
   login     Sign in with email/password
   logout    Sign out and clear local session
   whoami    Show the authenticated user
+  bookmark  Manage bookmarks (create|list|get|update|delete)
 
 Options:
   --help    Show this help
@@ -43,6 +45,9 @@ async function main(argv: string[]): Promise<void> {
       return
     case "whoami":
       await runWhoami(rest)
+      return
+    case "bookmark":
+      await runBookmark(rest)
       return
     default:
       process.stderr.write(`Unknown command: ${command}\n\n${HELP}\n`)

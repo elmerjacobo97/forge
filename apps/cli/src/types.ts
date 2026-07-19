@@ -11,15 +11,9 @@ export type ForgeSession = {
   sessionSecret: string
 }
 
-export type Category = "docs" | "git" | "tool" | "article" | "other"
+export const CATEGORIES = ["docs", "git", "tool", "article", "other"] as const
 
-export const CATEGORIES: readonly Category[] = [
-  "docs",
-  "git",
-  "tool",
-  "article",
-  "other",
-] as const
+export type Category = (typeof CATEGORIES)[number]
 
 export type Bookmark = {
   id: string
