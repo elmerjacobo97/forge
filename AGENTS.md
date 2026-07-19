@@ -16,15 +16,16 @@
 - Feature code owns its components, hooks, services, schemas, types, tests, and utilities under `apps/web/src/features/<feature>/`.
 - Put shared UI in `apps/web/src/components/`; put reusable infrastructure and pure helpers in `apps/web/src/lib/`. Keep routes as thin feature composition files.
 - Keep Function handlers, contracts, provider integration, network fetching, and tests under `functions/ai-content-generator/src/`.
-- Keep the CLI under `apps/cli/src/` (commands, Appwrite client, bookmark service, validation). Docs: `apps/cli/README.md`. Agent skill: `.claude/skills/forge-bookmarks/` and `.agents/skills/forge-bookmarks/`.
+- Keep the CLI under `apps/cli/src/` (commands, Appwrite client, bookmark/dev-board services, validation). Docs: `apps/cli/README.md`. Agent skills: `.claude/skills/forge-bookmarks/`, `.agents/skills/forge-bookmarks/`, `.claude/skills/forge-tickets/`, `.agents/skills/forge-tickets/`.
 - Import source through `@/*` (`apps/web/src/*`) or direct relative files. Do not add barrel files.
 - TypeScript is strict in both packages and rejects unused locals/parameters. Do not use `any`; validate browser, network, and model data as `unknown`.
 
 ## CLI (`forge-cli`)
 - Binary name is `forge-cli` (not `forge`) to avoid clashing with Laravel Forge CLI / Herd.
 - Build/link: `pnpm --filter @forge/cli build`, then `cd apps/cli && pnpm link --global`, or run `pnpm --filter @forge/cli forge-cli -- <args>`.
-- Config/session: `~/.forge/config.json` and `~/.forge/session.json` after `forge-cli init` and `forge-cli login`.
+- Config/session: `~/.forge/config.json` and `~/.forge/session.json` after `forge-cli init` and `forge-cli login`. Config includes bookmarks + Dev Board table IDs (`devBoardTicketsTableId`, `devBoardEventsTableId`, `devBoardTimeEntriesTableId`).
 - Bookmarks CRUD talks to the same Appwrite table as the web app (`forge-cli bookmark create|list|get|update|delete`). Use `--json` for machine-readable output on create/list/get/update.
+- Dev Board tickets: `forge-cli ticket create|list|get|update|delete|move` against the same tables as the web app. Change column only via `move` (timer/events/time entries parity). Use `--json` on create/list/get/update/move.
 - CLI unit tests must not call a real Appwrite project.
 
 ## Routing And Tools
