@@ -1,25 +1,24 @@
+import { ExternalLink, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
-import { Bookmark } from "../types";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Trash2 } from "lucide-react";
-import { useDeleteBookmarkMutation } from "../hooks/mutations";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import type { Bookmark } from "../types";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
+  onEdit: (bookmark: Bookmark) => void;
+  onDelete: (bookmark: Bookmark) => void;
 }
 
-export function BookmarkCard({ bookmark }: BookmarkCardProps) {
-  const deleteMutation = useDeleteBookmarkMutation();
-
-  function deleteBookmark(id: string) {
-    deleteMutation.mutate(id);
-  }
-
+export function BookmarkCard({ bookmark, onEdit, onDelete }: BookmarkCardProps) {
   return (
-    <div
-      key={bookmark.id}
-      className="group flex flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/20"
-    >
+    <div className="group flex flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/20">
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
@@ -34,14 +33,31 @@ export function BookmarkCard({ bookmark }: BookmarkCardProps) {
             {bookmark.title}
           </h3>
         </div>
-        <Button
-          size="icon-sm"
-          variant="ghost"
-          onClick={() => deleteBookmark(bookmark.id)}
-          className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              className="text-muted-foreground"
+              aria-label={`Actions for ${bookmark.title}`}
+            >
+              <MoreHorizontal className="size-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(bookmark)}>
+              <Pencil className="size-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => onDelete(bookmark)}
+            >
+              <Trash2 className="size-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="mt-3 flex-1 space-y-3">

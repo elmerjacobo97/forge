@@ -5,12 +5,22 @@ import { Globe, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { AddBookmarkDialog } from "@/features/bookmarks/components/add-bookmark-dialog";
+import { EditBookmarkDialog } from "@/features/bookmarks/components/edit-bookmark-dialog";
 import { BookmarkCard } from "@/features/bookmarks/components/bookmark-card";
+import { useDeleteBookmarkMutation } from "@/features/bookmarks/hooks/mutations";
 import { useBookmarksQuery } from "@/features/bookmarks/hooks/queries";
 import { CATEGORIES } from "@/features/bookmarks/constants";
-import { Category } from "@/features/bookmarks/types";
+import { Category, type Bookmark } from "@/features/bookmarks/types";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 
@@ -21,10 +31,20 @@ export const Route = createFileRoute("/_authenticated/bookmarks")({
 function RouteComponent() {
   const [search, setSearch] = useState("");
   const [isAddBookmarkDialogOpen, setIsAddBookmarkDialogOpen] = useState(false);
+  const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Bookmark | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | "all">("all");
 
   const debouncedSearch = useDebounce(search, 200);
   const { data: bookmarks = [], isLoading, isError, error } = useBookmarksQuery();
+  const deleteMutation = useDeleteBookmarkMutation();
+
+  function confirmDelete() {
+    if (!deleteTarget) return;
+    deleteMutation.mutate(deleteTarget.id, {
+      onSettled: () => setDeleteTarget(null),
+    });
+  }
 
   const filtered = useMemo(() => {
     const q = debouncedSearch.trim().toLowerCase();
@@ -120,17 +140,59 @@ function RouteComponent() {
               <BookmarkCard
                 key={bookmark.id}
                 bookmark={bookmark}
+                onEdit={setEditingBookmark}
+                onDelete={setDeleteTarget}
               />
             ))}
           </div>
         )}
       </div>
 
-      {/* Add Bookmark Dialog */}
       <AddBookmarkDialog
         isOpen={isAddBookmarkDialogOpen}
         onOpenChange={setIsAddBookmarkDialogOpen}
       />
+
+      {editingBookmark ? (
+        <EditBookmarkDialog
+          key={editingBookmark.id}
+          bookmark={editingBookmark}
+          isOpen
+          onOpenChange={(open) => {
+            if (!open) setEditingBookmark(null);
+          }}
+        />
+      ) : null}
+
+      <Dialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete bookmark?</DialogTitle>
+            <DialogDescription>
+              {deleteTarget
+                ? `“${deleteTarget.title}” will be permanently removed.`
+                : null}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const appwrite = vi.hoisted(() => ({
   createRow: vi.fn(),
+  updateRow: vi.fn(),
   deleteRow: vi.fn(),
   equal: vi.fn((field: string, value: string) => `equal:${field}:${value}`),
   orderDesc: vi.fn((field: string) => `orderDesc:${field}`),
@@ -16,6 +17,7 @@ vi.mock("@/lib/appwrite", () => ({
   tablesDB: {
     listRows: vi.fn(),
     createRow: appwrite.createRow,
+    updateRow: appwrite.updateRow,
     deleteRow: appwrite.deleteRow,
   },
 }));
@@ -136,6 +138,38 @@ describe("bookmarksService", () => {
       rowId: "generated-bookmark-id",
       data: { ...bookmark, userId: "user-1" },
       permissions: ["read:user:user-1", "update:user:user-1", "delete:user:user-1"],
+    });
+  });
+
+  it("updates a bookmark through Appwrite without changing id or createdAt", async () => {
+    appwrite.updateRow.mockResolvedValue({
+      $id: "bookmark-1",
+      $createdAt: "2026-07-12T10:00:00.000Z",
+      title: "Vitest Docs",
+      url: "https://vitest.dev/guide",
+      category: "docs",
+      description: "Updated description",
+      tags: ["testing", "docs"],
+    });
+    const service = await loadService();
+    const bookmark = {
+      title: "Vitest Docs",
+      url: "https://vitest.dev/guide",
+      category: "docs" as const,
+      description: "Updated description",
+      tags: ["testing", "docs"],
+    };
+
+    await expect(service.updateBookmark("bookmark-1", bookmark, "user-1")).resolves.toEqual({
+      id: "bookmark-1",
+      createdAt: "2026-07-12T10:00:00.000Z",
+      ...bookmark,
+    });
+    expect(appwrite.updateRow).toHaveBeenCalledWith({
+      databaseId: "database-id",
+      tableId: "bookmarks-table-id",
+      rowId: "bookmark-1",
+      data: bookmark,
     });
   });
 

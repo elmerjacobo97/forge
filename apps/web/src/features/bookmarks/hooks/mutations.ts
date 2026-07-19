@@ -25,6 +25,28 @@ export function useCreateBookmarkMutation() {
   });
 }
 
+export function useUpdateBookmarkMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...bookmark
+    }: { id: string } & Omit<Bookmark, "id" | "createdAt">) => {
+      const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
+      return bookmarksService.updateBookmark(id, bookmark, userId);
+    },
+    onSuccess: () => {
+      const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
+      queryClient.invalidateQueries({ queryKey: ["bookmarks", userId] });
+      toast.success("Bookmark updated successfully!");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to update bookmark.");
+    },
+  });
+}
+
 export function useDeleteBookmarkMutation() {
   const queryClient = useQueryClient();
 

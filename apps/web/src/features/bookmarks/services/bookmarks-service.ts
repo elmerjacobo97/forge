@@ -68,6 +68,35 @@ export const bookmarksService = {
     };
   },
 
+  async updateBookmark(
+    bookmarkId: string,
+    bookmark: Omit<Bookmark, "id" | "createdAt">,
+    userId?: string,
+  ): Promise<Bookmark> {
+    const config = requireAppwriteAccess(userId);
+    const row = await tablesDB.updateRow({
+      databaseId: config.databaseId,
+      tableId: config.tableId,
+      rowId: bookmarkId,
+      data: {
+        title: bookmark.title,
+        url: bookmark.url,
+        category: bookmark.category,
+        description: bookmark.description,
+        tags: bookmark.tags,
+      },
+    });
+    return {
+      id: row.$id,
+      title: row.title,
+      url: row.url,
+      category: row.category as Bookmark["category"],
+      description: row.description,
+      tags: row.tags || [],
+      createdAt: row.$createdAt,
+    };
+  },
+
   async deleteBookmark(bookmarkId: string, userId?: string): Promise<void> {
     const config = requireAppwriteAccess(userId);
     await tablesDB.deleteRow({
