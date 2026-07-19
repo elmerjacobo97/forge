@@ -1,3 +1,5 @@
+import { runInit } from "./commands/init.js"
+
 const HELP = `forge — Forge CLI
 
 Usage:
@@ -5,23 +7,36 @@ Usage:
   forge <command>
 
 Commands:
-  (coming soon)
+  init    Write Appwrite config to ~/.forge/config.json
 
 Options:
   --help    Show this help
 `
 
-function main(argv: string[]): void {
-  const args = argv.slice(2)
+async function main(argv: string[]): Promise<void> {
+  let args = argv.slice(2)
+  // pnpm run sometimes forwards a literal "--" before the command args
+  if (args[0] === "--") args = args.slice(1)
 
-  if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
+  if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
     process.stdout.write(`${HELP}\n`)
     return
   }
 
-  const unknown = args[0]
-  process.stderr.write(`Unknown command: ${unknown}\n\n${HELP}\n`)
-  process.exitCode = 1
+  const [command, ...rest] = args
+
+  switch (command) {
+    case "init":
+      await runInit(rest)
+      return
+    default:
+      process.stderr.write(`Unknown command: ${command}\n\n${HELP}\n`)
+      process.exitCode = 1
+  }
 }
 
-main(process.argv)
+main(process.argv).catch((error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error)
+  process.stderr.write(`Error: ${message}\n`)
+  process.exitCode = 1
+})
