@@ -75,16 +75,40 @@ describe("fetchPageContext URL validation", () => {
     ).rejects.toMatchObject({ code: "URL_NOT_ALLOWED" });
   });
 
-  it("rejects mixed public and private DNS results", async () => {
+  it("uses a public address when DNS also returns a private address", async () => {
+    const requestUrl = vi.fn(async () => pageResponse());
     await expect(
       fetchPageContext("https://example.com", {
         resolveHost: async () => [
           PUBLIC_ADDRESS,
           { address: "10.0.0.2", family: 4 },
         ],
-        requestUrl: async () => pageResponse(),
+        requestUrl,
       }),
-    ).rejects.toMatchObject({ code: "URL_NOT_ALLOWED" });
+    ).resolves.toMatchObject({ finalUrl: "https://example.com/" });
+    expect(requestUrl).toHaveBeenCalledWith(
+      expect.any(URL),
+      PUBLIC_ADDRESS,
+      expect.any(AbortSignal),
+    );
+  });
+
+  it("prefers IPv4 when both families are public", async () => {
+    const requestUrl = vi.fn(async () => pageResponse());
+    await expect(
+      fetchPageContext("https://example.com", {
+        resolveHost: async () => [
+          { address: "2606:4700:10::6814:179a", family: 6 },
+          PUBLIC_ADDRESS,
+        ],
+        requestUrl,
+      }),
+    ).resolves.toMatchObject({ finalUrl: "https://example.com/" });
+    expect(requestUrl).toHaveBeenCalledWith(
+      expect.any(URL),
+      PUBLIC_ADDRESS,
+      expect.any(AbortSignal),
+    );
   });
 
   it("pins the validated public address into the request", async () => {

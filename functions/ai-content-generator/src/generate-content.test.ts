@@ -48,17 +48,19 @@ describe("generateContent requests", () => {
     const request = createCompletion.mock.calls[0]?.[0];
     expect(request).toMatchObject({
       model: "openai/gpt-oss-20b",
+      max_completion_tokens: 2_048,
+      reasoning_effort: "low",
       response_format: {
         type: "json_schema",
         json_schema: {
           name: "bookmark_generation",
-          strict: true,
+          strict: false,
           schema: {
             required: ["category", "description", "tags"],
             additionalProperties: false,
             properties: {
               description: { minLength: 5, maxLength: 200 },
-              tags: { minItems: 3, maxItems: 5, uniqueItems: true },
+              tags: { minItems: 3, maxItems: 5 },
             },
           },
         },
@@ -98,20 +100,20 @@ describe("generateContent requests", () => {
         type: "json_schema",
         json_schema: {
           name: "snippet_generation",
-          strict: true,
+          strict: false,
           schema: {
             required: ["kind", "content", "language", "tags"],
             additionalProperties: false,
             properties: {
-              content: { minLength: 1, maxLength: 4_000 },
-              tags: { minItems: 3, maxItems: 5, uniqueItems: true },
+              content: { minLength: 1, maxLength: 1_200 },
+              tags: { minItems: 3, maxItems: 5 },
             },
           },
         },
       },
     });
     expect(request?.messages[1]?.content).toBe(
-      'Generate a snippet using only this title: "TypeScript constant example"',
+      'Generate a short, useful snippet using only this title: "TypeScript constant example". Keep content under 1200 characters.',
     );
   });
 });
@@ -179,6 +181,65 @@ describe("generateContent response validation", () => {
     });
   });
 
+  it("unwraps a single-object array response", async () => {
+    const { client } = completionClient(
+      JSON.stringify([
+        {
+          kind: "snippet",
+          content: "const value = 42;",
+          language: "typescript",
+          tags: ["typescript", "constant", "example"],
+        },
+      ]),
+    );
+
+    await expect(
+      generateContent({ type: "snippet", title: "TypeScript constant example" }, client),
+    ).resolves.toEqual({
+      type: "snippet",
+      data: {
+        kind: "snippet",
+        content: "const value = 42;",
+        language: "typescript",
+        tags: ["typescript", "constant", "example"],
+      },
+    });
+  });
+
+  it("recovers valid JSON from Groq failed_generation payloads", async () => {
+    const client: CompletionClient = {
+      createCompletion: vi.fn(async () => {
+        throw Object.assign(new Error("Request failed with status code 400"), {
+          status: 400,
+          error: {
+            message: "Generated JSON does not match the expected schema.",
+            type: "invalid_request_error",
+            code: "json_validate_failed",
+            failed_generation: JSON.stringify([
+              {
+                kind: "snippet",
+                content: "export function debounce<T extends (...args: never[]) => void>(fn: T, wait: number) { let t: ReturnType<typeof setTimeout>; return (...args: Parameters<T>) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); }; }",
+                language: "typescript",
+                tags: ["typescript", "debounce", "utility"],
+              },
+            ]),
+          },
+        });
+      }),
+    };
+
+    await expect(
+      generateContent({ type: "snippet", title: "Debounce utility in TypeScript" }, client),
+    ).resolves.toMatchObject({
+      type: "snippet",
+      data: {
+        kind: "snippet",
+        language: "typescript",
+        tags: ["typescript", "debounce", "utility"],
+      },
+    });
+  });
+
   it("translates Groq client failures", async () => {
     const client: CompletionClient = {
       createCompletion: vi.fn(async () => {
@@ -188,7 +249,10 @@ describe("generateContent response validation", () => {
 
     await expect(generateContent(bookmarkInput, client)).rejects.toMatchObject({
       code: "GENERATION_FAILED",
-      message: "AI generation failed.",
+      message: expect.stringContaining("AI generation failed:"),
+    });
+    await expect(generateContent(bookmarkInput, client)).rejects.toMatchObject({
+      message: expect.stringContaining("Provider details must remain private"),
     });
   });
 });

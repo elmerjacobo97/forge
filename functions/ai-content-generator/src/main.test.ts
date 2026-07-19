@@ -152,6 +152,9 @@ describe("handler error mapping", () => {
       context.invoke({ type: "snippet", title: "Example" }),
     ).resolves.toMatchObject({ statusCode, body: { error: { code } } });
     expect(JSON.stringify(context.json.mock.calls)).not.toContain("provider detail");
+    expect(context.reportError).toHaveBeenCalledWith(
+      expect.stringContaining(`AI generation failed with ${code}: provider detail`),
+    );
   });
 
   it("hides unexpected errors and secrets", async () => {
@@ -173,5 +176,8 @@ describe("handler error mapping", () => {
     });
     expect(JSON.stringify(context.json.mock.calls)).not.toContain("secret");
     expect(JSON.stringify(context.reportError.mock.calls)).not.toContain("secret");
+    expect(context.reportError).toHaveBeenCalledWith(
+      expect.stringContaining("[redacted]"),
+    );
   });
 });

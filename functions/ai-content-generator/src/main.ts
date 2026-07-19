@@ -1,3 +1,5 @@
+import { setDefaultResultOrder } from "node:dns";
+
 import {
   aiGenerationRequestSchema,
   type AiGenerationError,
@@ -5,6 +7,10 @@ import {
 } from "./contracts.js";
 import { FetchPageError, fetchPageContext } from "./fetch-page.js";
 import { GenerationError, generateContent } from "./generate-content.js";
+import { sanitizeErrorDetail } from "./error-detail.js";
+
+// Appwrite Function runtimes often lack reliable IPv6 egress; prefer IPv4 for Groq + page fetches.
+setDefaultResultOrder("ipv4first");
 
 interface RuntimeRequest {
   bodyJson: unknown;
@@ -102,16 +108,20 @@ export function createHandler(
       return res.json(response, 200);
     } catch (caughtError) {
       if (caughtError instanceof FetchPageError) {
-        reportError(`Bookmark fetch failed with ${caughtError.code}.`);
+        reportError(
+          `Bookmark fetch failed with ${caughtError.code}: ${caughtError.message}`,
+        );
         return publicError(res, caughtError.code);
       }
 
       if (caughtError instanceof GenerationError) {
-        reportError(`AI generation failed with ${caughtError.code}.`);
+        reportError(`AI generation failed with ${caughtError.code}: ${caughtError.message}`);
         return publicError(res, caughtError.code);
       }
 
-      reportError("Unhandled AI content generation failure.");
+      reportError(
+        `Unhandled AI content generation failure: ${sanitizeErrorDetail(caughtError)}`,
+      );
       return publicError(res, "GENERATION_FAILED", 500);
     }
   };

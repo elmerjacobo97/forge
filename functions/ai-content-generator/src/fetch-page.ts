@@ -5,6 +5,8 @@ import { BlockList, isIP } from "node:net";
 
 import * as cheerio from "cheerio";
 
+import { sanitizeErrorDetail } from "./error-detail.js";
+
 export const FETCH_TIMEOUT_MS = 5_000;
 export const MAX_REDIRECTS = 3;
 export const MAX_RESPONSE_BYTES = 1_000_000;
@@ -106,14 +108,20 @@ function defaultRequestUrl(
   return new Promise((resolve, reject) => {
     const transport = url.protocol === "https:" ? requestHttps : requestHttp;
     const request = transport(
-      url,
       {
+        protocol: url.protocol,
+        hostname: url.hostname,
+        port: url.port || undefined,
+        path: `${url.pathname}${url.search}`,
         method: "GET",
         headers: {
           accept: "text/html,application/xhtml+xml",
           "user-agent": "Forge AI Content Generator/1.0",
+          host: url.host,
         },
         signal,
+        servername: url.hostname,
+        family: address.family,
         lookup: (_hostname, _options, callback) => {
           callback(null, address.address, address.family);
         },
@@ -208,11 +216,12 @@ async function resolvePublicAddress(
     throw new FetchPageError("FETCH_FAILED", "The page host could not be resolved.");
   }
 
-  if (addresses.some(isBlockedAddress)) {
+  const publicAddresses = addresses.filter((address) => !isBlockedAddress(address));
+  if (publicAddresses.length === 0) {
     throw new FetchPageError("URL_NOT_ALLOWED", "Private or reserved networks are not allowed.");
   }
 
-  return addresses[0];
+  return publicAddresses.find((address) => address.family === 4) ?? publicAddresses[0];
 }
 
 async function readLimitedBody(
@@ -331,7 +340,10 @@ export async function fetchPageContext(
     if (error instanceof FetchPageError) {
       throw error;
     }
-    throw new FetchPageError("FETCH_FAILED", "The page could not be fetched.");
+    throw new FetchPageError(
+      "FETCH_FAILED",
+      `The page could not be fetched: ${sanitizeErrorDetail(error)}`,
+    );
   } finally {
     clearTimeout(timeout);
   }
