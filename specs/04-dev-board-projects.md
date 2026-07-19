@@ -1,6 +1,6 @@
 # SPEC 04 — Proyectos en el Dev Board
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** Ninguna (convive con SPEC 03; el CLI de tickets queda desalineado hasta una spec posterior)
 > **Date:** 2026-07-19
 > **Objective:** Añadir proyectos al Dev Board web de modo que cada ticket pertenezca a un proyecto y el kanban (y analytics) se vean por proyecto.
