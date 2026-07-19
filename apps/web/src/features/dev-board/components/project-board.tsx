@@ -250,7 +250,7 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Button asChild size="sm" variant="outline">
-            <Link to="/dev-board/analytics">
+            <Link to="/dev-board/$projectId/analytics" params={{ projectId }}>
               <BarChart3 className="size-3.5" />
               Analytics
             </Link>

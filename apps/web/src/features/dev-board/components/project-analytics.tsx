@@ -1,5 +1,5 @@
 import { Suspense, useMemo, useState } from "react";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { endOfDay, format, startOfDay, subDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import {
@@ -14,6 +14,7 @@ import {
   Trophy,
 } from "lucide-react";
 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,24 +31,18 @@ import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ToggleGroupItem, ToggleGroup } from "@/components/ui/toggle-group";
 import { useUserQuery } from "@/features/auth/hooks/queries";
-import { AnalyticsPreset } from "@/features/dev-board/types/analytics";
-import { AnalyticsCharts } from "@/features/dev-board/components/analytics-charts";
-import { AnalyticsSkeleton } from "@/features/dev-board/components/analytics-skeleton";
-import { ChartsSkeleton } from "@/features/dev-board/components/charts-skeleton";
-import { SectionEyebrow } from "@/features/dev-board/components/section-eyebrow";
-import { StatItem } from "@/features/dev-board/components/stat-item";
-import { useDevBoardAnalytics } from "@/features/dev-board/hooks/queries";
-import { PRIORITY_COLORS } from "@/features/dev-board/types/board";
-import {
-  downloadCsv,
-  formatRangeLabel,
-} from "@/features/dev-board/utils/analytics-range";
-import { analyticsCsv, buildAnalytics, presetRange } from "@/features/dev-board/utils/analytics";
-import { formatDuration } from "@/features/dev-board/utils/timer";
 
-export const Route = createFileRoute("/_authenticated/dev-board_/analytics")({
-  component: AnalyticsRoute,
-});
+import { useDevBoardAnalytics, useDevBoardProject } from "../hooks/queries";
+import { AnalyticsPreset } from "../types/analytics";
+import { PRIORITY_COLORS } from "../types/board";
+import { downloadCsv, formatRangeLabel } from "../utils/analytics-range";
+import { analyticsCsv, buildAnalytics, presetRange } from "../utils/analytics";
+import { formatDuration } from "../utils/timer";
+import { AnalyticsCharts } from "./analytics-charts";
+import { AnalyticsSkeleton } from "./analytics-skeleton";
+import { ChartsSkeleton } from "./charts-skeleton";
+import { SectionEyebrow } from "./section-eyebrow";
+import { StatItem } from "./stat-item";
 
 function formatCustomRange(range: DateRange | undefined): string {
   if (!range?.from) return "Select date range";
@@ -60,25 +55,27 @@ function lastFifteenDays(): DateRange {
   return { from: subDays(today, 14), to: today };
 }
 
-function AnalyticsRoute() {
+interface ProjectAnalyticsProps {
+  projectId: string;
+}
+
+export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
   const { data: user } = useUserQuery();
+  const projectQuery = useDevBoardProject(user?.id, projectId);
   const [preset, setPreset] = useState<AnalyticsPreset>("30d");
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const range = useMemo(
-    () => {
-      if (preset !== "custom") return presetRange(preset);
-      const from = customRange?.from;
-      const to = customRange?.to;
-      if (!from || !to) return undefined;
-      return {
-        from: startOfDay(from).toISOString(),
-        to: endOfDay(to).toISOString(),
-      };
-    },
-    [preset, customRange],
-  );
-  const analyticsQuery = useDevBoardAnalytics(user?.id, undefined, range);
+  const range = useMemo(() => {
+    if (preset !== "custom") return presetRange(preset);
+    const from = customRange?.from;
+    const to = customRange?.to;
+    if (!from || !to) return undefined;
+    return {
+      from: startOfDay(from).toISOString(),
+      to: endOfDay(to).toISOString(),
+    };
+  }, [preset, customRange]);
+  const analyticsQuery = useDevBoardAnalytics(user?.id, projectId, range);
   const summary = analyticsQuery.data && range ? buildAnalytics(analyticsQuery.data, range) : null;
   const maxTicketDuration = summary?.topTickets[0]?.durationMs ?? 0;
 
@@ -89,28 +86,39 @@ function AnalyticsRoute() {
     setPreset(nextPreset);
   }
 
-  function selectCustomRange(nextRange: DateRange | undefined) {
-    setCustomRange(nextRange);
+  if (projectQuery.isError) {
+    return (
+      <div className="flex flex-col gap-3">
+        <Button asChild size="sm" variant="ghost" className="w-fit gap-1.5">
+          <Link to="/dev-board">
+            <ArrowLeft className="size-3.5" />
+            Projects
+          </Link>
+        </Button>
+        <Alert variant="destructive">
+          <AlertTitle>Project not found</AlertTitle>
+          <AlertDescription>{projectQuery.error.message}</AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-col">
-          <h2 className="font-heading text-lg font-semibold">Dev Board Analytics</h2>
+        <div className="flex min-w-0 flex-col">
+          <h2 className="truncate font-heading text-lg font-semibold">
+            {projectQuery.data?.name ?? "Project"} analytics
+          </h2>
           <p className="text-sm text-muted-foreground">
-            Work trends, cycle time, and time invested.
+            Work trends, cycle time, and time invested for this project.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            asChild
-            size="sm"
-            variant="outline"
-          >
-            <Link to="/dev-board">
+          <Button asChild size="sm" variant="outline">
+            <Link to="/dev-board/$projectId" params={{ projectId }}>
               <ArrowLeft className="size-3.5" />
-              Dev Board
+              Board
             </Link>
           </Button>
           <Button
@@ -141,7 +149,11 @@ function AnalyticsRoute() {
           {preset === "custom" && (
             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="min-w-56 justify-start text-left font-normal">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-w-56 justify-start text-left font-normal"
+                >
                   <CalendarDays className="size-3.5" />
                   {formatCustomRange(customRange)}
                 </Button>
@@ -152,7 +164,7 @@ function AnalyticsRoute() {
                     <Calendar
                       mode="range"
                       selected={customRange}
-                      onSelect={selectCustomRange}
+                      onSelect={setCustomRange}
                       defaultMonth={customRange?.from}
                       numberOfMonths={2}
                       disabled={(date) =>
@@ -172,7 +184,7 @@ function AnalyticsRoute() {
 
       <div className="min-h-0 flex-1">
         <div className="flex flex-col gap-4 pb-6 *:shrink-0">
-          {analyticsQuery.isLoading ? (
+          {analyticsQuery.isLoading || projectQuery.isLoading ? (
             <AnalyticsSkeleton />
           ) : analyticsQuery.error ? (
             <Card>
@@ -236,10 +248,7 @@ function AnalyticsRoute() {
                   {summary.topTickets.length ? (
                     <ItemGroup>
                       {summary.topTickets.map(({ ticket, durationMs }, index) => (
-                        <Item
-                          key={ticket.id}
-                          variant="outline"
-                        >
+                        <Item key={ticket.id} variant="outline">
                           <ItemMedia>
                             <span className="flex size-6 items-center justify-center rounded-full bg-muted font-mono text-xs tabular-nums">
                               {index + 1}
