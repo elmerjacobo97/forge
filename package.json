@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @forge/web dev",
-    "build": "pnpm run build:web && pnpm run build:function",
+    "build": "pnpm run build:web && pnpm run build:function && pnpm run build:cli",
     "build:web": "pnpm --filter @forge/web build",
     "build:function": "pnpm --filter @forge/ai-content-generator build",
+    "build:cli": "pnpm --filter @forge/cli build",
     "preview": "pnpm --filter @forge/web preview",
-    "test": "pnpm run test:web && pnpm run test:function",
+    "test": "pnpm run test:web && pnpm run test:function && pnpm run test:cli",
     "test:web": "pnpm --filter @forge/web test",
     "test:function": "pnpm --filter @forge/ai-content-generator test",
+    "test:cli": "pnpm --filter @forge/cli test",
     "doctor": "pnpm --filter @forge/web doctor"
   }
 }

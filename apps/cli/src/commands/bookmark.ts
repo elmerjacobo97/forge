@@ -3,7 +3,12 @@ import {
   parseBookmarkCreateInput,
   parseBookmarkUpdateInput,
 } from "../bookmark-schema.js"
-import { getFlagValue, getPositionals, hasFlag } from "../flags.js"
+import {
+  getFlagValue,
+  getPositionals,
+  hasFlag,
+  parseTagsFlag,
+} from "../flags.js"
 import {
   writeBookmarkListOutput,
   writeBookmarkOutput,
@@ -45,14 +50,6 @@ Examples:
   forge-cli bookmark update <id> --title "New title"
   forge-cli bookmark delete <id>
 `
-
-function parseTagsFlag(raw: string | undefined): string[] {
-  if (raw == null || raw.trim() === "") return []
-  return raw
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter((tag) => tag.length > 0)
-}
 
 function fail(message: string): void {
   process.stderr.write(`${message}\n`)

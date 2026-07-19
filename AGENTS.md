@@ -1,14 +1,14 @@
 # AGENTS.md
 
 ## Scope
-- This pnpm workspace contains the browser app at `apps/web` (`@forge/web`) and the Appwrite Function at `functions/ai-content-generator` (`@forge/ai-content-generator`).
+- This pnpm workspace contains the browser app at `apps/web` (`@forge/web`), the Appwrite Function at `functions/ai-content-generator` (`@forge/ai-content-generator`), and the Node CLI at `apps/cli` (`@forge/cli`, binary `forge-cli`).
 - Keep `apps/web` browser-only. Server SDKs, secrets, provider calls, and remote page fetching belong in the Function. Do not add Tauri, Rust, native IPC, or desktop-only dependencies.
 - Do not create speculative workspace packages; `packages/*` is only a reserved workspace glob.
 
 ## Commands
 - Run commands from the repository root: `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`, `pnpm doctor`.
-- `pnpm build` and `pnpm test` verify both packages. Use `pnpm build:web`, `pnpm build:function`, `pnpm test:web`, or `pnpm test:function` for one package. There is no lint script or ESLint config.
-- Run one web test with `pnpm --filter @forge/web exec vitest run <path>` and one Function test with `pnpm --filter @forge/ai-content-generator exec vitest run <path>`; omit `run` for watch mode.
+- `pnpm build` and `pnpm test` verify web, Function, and CLI. Use `pnpm build:web`, `pnpm build:function`, `pnpm build:cli`, `pnpm test:web`, `pnpm test:function`, or `pnpm test:cli` for one package. There is no lint script or ESLint config.
+- Run one web test with `pnpm --filter @forge/web exec vitest run <path>`, one Function test with `pnpm --filter @forge/ai-content-generator exec vitest run <path>`, or one CLI test with `pnpm --filter @forge/cli exec vitest run <path>`; omit `run` for watch mode.
 - Vitest defaults to `environment: "node"` with globals enabled. Tests are `*.test.ts`; DOM APIs are unavailable unless a test opts into another environment.
 - Dependency installs enforce a 24-hour minimum package age and a no-downgrade trust policy in `pnpm-workspace.yaml`.
 
@@ -16,8 +16,16 @@
 - Feature code owns its components, hooks, services, schemas, types, tests, and utilities under `apps/web/src/features/<feature>/`.
 - Put shared UI in `apps/web/src/components/`; put reusable infrastructure and pure helpers in `apps/web/src/lib/`. Keep routes as thin feature composition files.
 - Keep Function handlers, contracts, provider integration, network fetching, and tests under `functions/ai-content-generator/src/`.
+- Keep the CLI under `apps/cli/src/` (commands, Appwrite client, bookmark service, validation). Docs: `apps/cli/README.md`. Agent skill: `.claude/skills/forge-bookmarks/` and `.agents/skills/forge-bookmarks/`.
 - Import source through `@/*` (`apps/web/src/*`) or direct relative files. Do not add barrel files.
 - TypeScript is strict in both packages and rejects unused locals/parameters. Do not use `any`; validate browser, network, and model data as `unknown`.
+
+## CLI (`forge-cli`)
+- Binary name is `forge-cli` (not `forge`) to avoid clashing with Laravel Forge CLI / Herd.
+- Build/link: `pnpm --filter @forge/cli build`, then `cd apps/cli && pnpm link --global`, or run `pnpm --filter @forge/cli forge-cli -- <args>`.
+- Config/session: `~/.forge/config.json` and `~/.forge/session.json` after `forge-cli init` and `forge-cli login`.
+- Bookmarks CRUD talks to the same Appwrite table as the web app (`forge-cli bookmark create|list|get|update|delete`). Use `--json` for machine-readable output on create/list/get/update.
+- CLI unit tests must not call a real Appwrite project.
 
 ## Routing And Tools
 - TanStack Router generates `apps/web/src/routeTree.gen.ts` during Vite dev/build. Never edit it manually.

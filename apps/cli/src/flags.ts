@@ -32,6 +32,15 @@ export function getPositionals(args: string[]): string[] {
   return positionals
 }
 
+/** Parse `--tags a,b,c` into a trimmed string array. */
+export function parseTagsFlag(raw: string | undefined): string[] {
+  if (raw == null || raw.trim() === "") return []
+  return raw
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0)
+}
+
 export async function promptText(question: string): Promise<string> {
   const rl = createInterface({ input, output })
   try {
