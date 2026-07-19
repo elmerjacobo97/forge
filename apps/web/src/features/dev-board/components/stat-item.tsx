@@ -10,10 +10,7 @@ interface StatItemProps {
 
 export function StatItem({ icon, label, value, trend }: StatItemProps) {
   return (
-    <Item
-      size="sm"
-      className="rounded-none border-0 px-4 py-3 first:pl-0 last:pr-0"
-    >
+    <Item size="sm">
       <ItemMedia
         variant="icon"
         className="size-8 rounded-full bg-muted text-muted-foreground"
