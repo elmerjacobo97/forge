@@ -39,6 +39,7 @@ import { Route as AuthenticatedBase64RouteImport } from './routes/_authenticated
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthenticatedDevBoardAnalyticsRouteImport } from './routes/_authenticated/dev-board_.analytics'
+import { Route as AuthenticatedDevBoardProjectIdRouteImport } from './routes/_authenticated/dev-board.$projectId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -202,6 +203,12 @@ const AuthenticatedDevBoardAnalyticsRoute =
     path: '/dev-board/analytics',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDevBoardProjectIdRoute =
+  AuthenticatedDevBoardProjectIdRouteImport.update({
+    id: '/$projectId',
+    path: '/$projectId',
+    getParentRoute: () => AuthenticatedDevBoardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -210,7 +217,7 @@ export interface FileRoutesByFullPath {
   '/base64': typeof AuthenticatedBase64Route
   '/bookmarks': typeof AuthenticatedBookmarksRoute
   '/color-converter': typeof AuthenticatedColorConverterRoute
-  '/dev-board': typeof AuthenticatedDevBoardRoute
+  '/dev-board': typeof AuthenticatedDevBoardRouteWithChildren
   '/diff-tool': typeof AuthenticatedDiffToolRoute
   '/file-validator': typeof AuthenticatedFileValidatorRoute
   '/format-converter': typeof AuthenticatedFormatConverterRoute
@@ -231,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/timestamp-converter': typeof AuthenticatedTimestampConverterRoute
   '/url-encoder': typeof AuthenticatedUrlEncoderRoute
   '/uuid-generator': typeof AuthenticatedUuidGeneratorRoute
+  '/dev-board/$projectId': typeof AuthenticatedDevBoardProjectIdRoute
   '/dev-board/analytics': typeof AuthenticatedDevBoardAnalyticsRoute
 }
 export interface FileRoutesByTo {
@@ -240,7 +248,7 @@ export interface FileRoutesByTo {
   '/base64': typeof AuthenticatedBase64Route
   '/bookmarks': typeof AuthenticatedBookmarksRoute
   '/color-converter': typeof AuthenticatedColorConverterRoute
-  '/dev-board': typeof AuthenticatedDevBoardRoute
+  '/dev-board': typeof AuthenticatedDevBoardRouteWithChildren
   '/diff-tool': typeof AuthenticatedDiffToolRoute
   '/file-validator': typeof AuthenticatedFileValidatorRoute
   '/format-converter': typeof AuthenticatedFormatConverterRoute
@@ -261,6 +269,7 @@ export interface FileRoutesByTo {
   '/timestamp-converter': typeof AuthenticatedTimestampConverterRoute
   '/url-encoder': typeof AuthenticatedUrlEncoderRoute
   '/uuid-generator': typeof AuthenticatedUuidGeneratorRoute
+  '/dev-board/$projectId': typeof AuthenticatedDevBoardProjectIdRoute
   '/dev-board/analytics': typeof AuthenticatedDevBoardAnalyticsRoute
 }
 export interface FileRoutesById {
@@ -273,7 +282,7 @@ export interface FileRoutesById {
   '/_authenticated/base64': typeof AuthenticatedBase64Route
   '/_authenticated/bookmarks': typeof AuthenticatedBookmarksRoute
   '/_authenticated/color-converter': typeof AuthenticatedColorConverterRoute
-  '/_authenticated/dev-board': typeof AuthenticatedDevBoardRoute
+  '/_authenticated/dev-board': typeof AuthenticatedDevBoardRouteWithChildren
   '/_authenticated/diff-tool': typeof AuthenticatedDiffToolRoute
   '/_authenticated/file-validator': typeof AuthenticatedFileValidatorRoute
   '/_authenticated/format-converter': typeof AuthenticatedFormatConverterRoute
@@ -294,6 +303,7 @@ export interface FileRoutesById {
   '/_authenticated/timestamp-converter': typeof AuthenticatedTimestampConverterRoute
   '/_authenticated/url-encoder': typeof AuthenticatedUrlEncoderRoute
   '/_authenticated/uuid-generator': typeof AuthenticatedUuidGeneratorRoute
+  '/_authenticated/dev-board/$projectId': typeof AuthenticatedDevBoardProjectIdRoute
   '/_authenticated/dev-board_/analytics': typeof AuthenticatedDevBoardAnalyticsRoute
 }
 export interface FileRouteTypes {
@@ -326,6 +336,7 @@ export interface FileRouteTypes {
     | '/timestamp-converter'
     | '/url-encoder'
     | '/uuid-generator'
+    | '/dev-board/$projectId'
     | '/dev-board/analytics'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/timestamp-converter'
     | '/url-encoder'
     | '/uuid-generator'
+    | '/dev-board/$projectId'
     | '/dev-board/analytics'
   id:
     | '__root__'
@@ -388,6 +400,7 @@ export interface FileRouteTypes {
     | '/_authenticated/timestamp-converter'
     | '/_authenticated/url-encoder'
     | '/_authenticated/uuid-generator'
+    | '/_authenticated/dev-board/$projectId'
     | '/_authenticated/dev-board_/analytics'
   fileRoutesById: FileRoutesById
 }
@@ -609,6 +622,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDevBoardAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dev-board/$projectId': {
+      id: '/_authenticated/dev-board/$projectId'
+      path: '/$projectId'
+      fullPath: '/dev-board/$projectId'
+      preLoaderRoute: typeof AuthenticatedDevBoardProjectIdRouteImport
+      parentRoute: typeof AuthenticatedDevBoardRoute
+    }
   }
 }
 
@@ -626,11 +646,24 @@ const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
   AuthRouteRouteChildren,
 )
 
+interface AuthenticatedDevBoardRouteChildren {
+  AuthenticatedDevBoardProjectIdRoute: typeof AuthenticatedDevBoardProjectIdRoute
+}
+
+const AuthenticatedDevBoardRouteChildren: AuthenticatedDevBoardRouteChildren = {
+  AuthenticatedDevBoardProjectIdRoute: AuthenticatedDevBoardProjectIdRoute,
+}
+
+const AuthenticatedDevBoardRouteWithChildren =
+  AuthenticatedDevBoardRoute._addFileChildren(
+    AuthenticatedDevBoardRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBase64Route: typeof AuthenticatedBase64Route
   AuthenticatedBookmarksRoute: typeof AuthenticatedBookmarksRoute
   AuthenticatedColorConverterRoute: typeof AuthenticatedColorConverterRoute
-  AuthenticatedDevBoardRoute: typeof AuthenticatedDevBoardRoute
+  AuthenticatedDevBoardRoute: typeof AuthenticatedDevBoardRouteWithChildren
   AuthenticatedDiffToolRoute: typeof AuthenticatedDiffToolRoute
   AuthenticatedFileValidatorRoute: typeof AuthenticatedFileValidatorRoute
   AuthenticatedFormatConverterRoute: typeof AuthenticatedFormatConverterRoute
@@ -658,7 +691,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBase64Route: AuthenticatedBase64Route,
   AuthenticatedBookmarksRoute: AuthenticatedBookmarksRoute,
   AuthenticatedColorConverterRoute: AuthenticatedColorConverterRoute,
-  AuthenticatedDevBoardRoute: AuthenticatedDevBoardRoute,
+  AuthenticatedDevBoardRoute: AuthenticatedDevBoardRouteWithChildren,
   AuthenticatedDiffToolRoute: AuthenticatedDiffToolRoute,
   AuthenticatedFileValidatorRoute: AuthenticatedFileValidatorRoute,
   AuthenticatedFormatConverterRoute: AuthenticatedFormatConverterRoute,

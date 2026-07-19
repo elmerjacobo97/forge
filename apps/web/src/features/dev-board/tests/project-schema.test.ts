@@ -10,8 +10,8 @@ describe("projectSchema", () => {
     });
   });
 
-  it("defaults missing description to an empty string", () => {
-    expect(projectSchema.parse({ name: "Forge" })).toEqual({
+  it("accepts an empty description", () => {
+    expect(projectSchema.parse({ name: "Forge", description: "" })).toEqual({
       name: "Forge",
       description: "",
     });

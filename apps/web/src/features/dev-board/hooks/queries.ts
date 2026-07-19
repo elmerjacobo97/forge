@@ -6,8 +6,9 @@ import { client } from "@/lib/appwrite";
 
 import { devBoardService, toTicket, type TicketPage, type TicketRow } from "../services/dev-board-service";
 import { devBoardAnalyticsService } from "../services/dev-board-analytics-service";
+import { projectsService } from "../services/projects-service";
 import type { AnalyticsRange } from "../types/analytics";
-import type { ColumnId } from "../types/board";
+import { COLUMNS, type ColumnId } from "../types/board";
 
 const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const tableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_TICKETS_TABLE_ID;
@@ -15,14 +16,42 @@ const tableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_TICKETS_TABLE_ID;
 export const devBoardKeys = {
   all: ["dev-board"] as const,
   user: (userId: string) => [...devBoardKeys.all, userId] as const,
-  column: (userId: string, column: ColumnId) => [...devBoardKeys.user(userId), column] as const,
-  analytics: (userId: string, from: string, to: string) =>
-    [...devBoardKeys.user(userId), "analytics", from, to] as const,
+  projects: (userId: string) => [...devBoardKeys.user(userId), "projects"] as const,
+  project: (userId: string, projectId: string) =>
+    [...devBoardKeys.user(userId), "project", projectId] as const,
+  column: (userId: string, projectId: string, column: ColumnId) =>
+    [...devBoardKeys.project(userId, projectId), column] as const,
+  analytics: (userId: string, projectId: string, from: string, to: string) =>
+    [...devBoardKeys.project(userId, projectId), "analytics", from, to] as const,
 };
 
 export const devBoardMutationKeys = {
   update: ["dev-board", "update"] as const,
 };
+
+function isColumnId(value: unknown): value is ColumnId {
+  return typeof value === "string" && (COLUMNS as readonly string[]).includes(value);
+}
+
+export function isColumnQueryKey(queryKey: readonly unknown[]): boolean {
+  return queryKey.length === 5 && queryKey[2] === "project" && isColumnId(queryKey[4]);
+}
+
+export function useDevBoardProjects(userId: string | undefined) {
+  return useQuery({
+    queryKey: devBoardKeys.projects(userId ?? "anonymous"),
+    queryFn: () => projectsService.listProjects(userId!),
+    enabled: Boolean(userId),
+  });
+}
+
+export function useDevBoardProject(userId: string | undefined, projectId: string | undefined) {
+  return useQuery({
+    queryKey: devBoardKeys.project(userId ?? "anonymous", projectId ?? "missing"),
+    queryFn: () => projectsService.getProject(projectId!, userId!),
+    enabled: Boolean(userId && projectId),
+  });
+}
 
 export function useDevBoardTickets(
   userId: string | undefined,
@@ -30,7 +59,7 @@ export function useDevBoardTickets(
   column: ColumnId,
 ) {
   return useInfiniteQuery({
-    queryKey: devBoardKeys.column(userId ?? "anonymous", column),
+    queryKey: devBoardKeys.column(userId ?? "anonymous", projectId ?? "missing", column),
     queryFn: ({ pageParam }) =>
       devBoardService.fetchTicketPage(userId!, projectId!, column, pageParam),
     initialPageParam: null as string | null,
@@ -47,6 +76,7 @@ export function useDevBoardAnalytics(
   return useQuery({
     queryKey: devBoardKeys.analytics(
       userId ?? "anonymous",
+      projectId ?? "missing",
       range?.from ?? "incomplete",
       range?.to ?? "incomplete",
     ),
@@ -64,6 +94,7 @@ function isTicketRow(payload: unknown): payload is TicketRow {
     payload !== null &&
     "$id" in payload &&
     "$createdAt" in payload &&
+    "projectId" in payload &&
     "title" in payload &&
     "column" in payload
   );
@@ -84,15 +115,18 @@ function updateRealtimeTicket(
   ticket: ReturnType<typeof toTicket>,
 ): void {
   const cachedTickets = queryClient.getQueriesData<InfiniteData<TicketPage>>({
-    queryKey: devBoardKeys.user(userId),
+    queryKey: devBoardKeys.project(userId, ticket.projectId),
   });
-  const previousColumn = cachedTickets.find(([, data]) =>
-    isTicketPage(data) && data.pages.some((page) => page.tickets.some((item) => item.id === ticket.id)),
-  )?.[0][2] as ColumnId | undefined;
+  const previousColumn = cachedTickets.find(
+    ([key, data]) =>
+      isColumnQueryKey(key) &&
+      isTicketPage(data) &&
+      data.pages.some((page) => page.tickets.some((item) => item.id === ticket.id)),
+  )?.[0][4] as ColumnId | undefined;
 
   if (previousColumn === ticket.column) {
     queryClient.setQueryData<InfiniteData<TicketPage>>(
-      devBoardKeys.column(userId, ticket.column),
+      devBoardKeys.column(userId, ticket.projectId, ticket.column),
       (current) =>
         current
           ? {
@@ -109,7 +143,7 @@ function updateRealtimeTicket(
 
   if (previousColumn) {
     queryClient.setQueryData<InfiniteData<TicketPage>>(
-      devBoardKeys.column(userId, previousColumn),
+      devBoardKeys.column(userId, ticket.projectId, previousColumn),
       (current) =>
         current
           ? {
@@ -125,7 +159,7 @@ function updateRealtimeTicket(
   }
 
   queryClient.setQueryData<InfiniteData<TicketPage>>(
-    devBoardKeys.column(userId, ticket.column),
+    devBoardKeys.column(userId, ticket.projectId, ticket.column),
     (current) => {
       if (!current || current.pages.length === 0) return current;
       const [firstPage, ...rest] = current.pages;
@@ -166,7 +200,7 @@ export function useDevBoardRealtime(userId: string | undefined): void {
           }
           void queryClient.invalidateQueries({
             queryKey: devBoardKeys.user(userId),
-            predicate: (query) => query.queryKey.length === 3,
+            predicate: (query) => isColumnQueryKey(query.queryKey),
           });
         },
         [Query.equal("userId", [userId])],
