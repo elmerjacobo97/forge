@@ -1,3 +1,6 @@
+import { useTransition } from "react";
+import { Loader2, Sparkles } from "lucide-react";
+
 import {
   Dialog,
   DialogContent,
@@ -17,6 +20,7 @@ import {
   InputGroup,
   InputGroupTextarea,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupText,
 } from "@/components/ui/input-group";
 import {
@@ -27,9 +31,26 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useForm } from "@tanstack/react-form";
+import { useForm, useStore } from "@tanstack/react-form";
+import { aiGenerationService } from "@/features/ai-generation/services/ai-generation-service";
 import { bookmarksSchema, BookmarksSchema } from "../schemas/bookmarks-schema";
 import { useCreateBookmarkMutation } from "../hooks/mutations";
+
+function canGenerateBookmark(title: string, url: string) {
+  if (title.trim().length < 2) return false;
+
+  try {
+    const parsedUrl = new URL(url);
+    return (
+      (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") &&
+      !!parsedUrl.hostname &&
+      !parsedUrl.username &&
+      !parsedUrl.password
+    );
+  } catch {
+    return false;
+  }
+}
 
 interface AddBookmarkDialogProps {
   isOpen: boolean;
@@ -41,6 +62,7 @@ export function AddBookmarkDialog({
   onOpenChange,
 }: AddBookmarkDialogProps) {
   const createMutation = useCreateBookmarkMutation();
+  const [isGenerating, startGenerating] = useTransition();
 
   const form = useForm({
     defaultValues: {
@@ -57,6 +79,8 @@ export function AddBookmarkDialog({
       addBookmark(value as BookmarksSchema);
     },
   });
+  const generationTitle = useStore(form.store, (state) => state.values.title);
+  const generationUrl = useStore(form.store, (state) => state.values.url);
 
   function addBookmark(data: BookmarksSchema) {
     const tags = data.tagsString
@@ -81,6 +105,27 @@ export function AddBookmarkDialog({
         },
       },
     );
+  }
+
+  function generateBookmark(title: string, url: string) {
+    if (!canGenerateBookmark(title, url)) return;
+
+    startGenerating(async () => {
+      try {
+        const response = await aiGenerationService.generate({
+          type: "bookmark",
+          title: title.trim(),
+          url,
+        });
+        if (response.type !== "bookmark") return;
+
+        form.setFieldValue("category", response.data.category);
+        form.setFieldValue("description", response.data.description);
+        form.setFieldValue("tagsString", response.data.tags.join(", "));
+      } catch {
+        return;
+      }
+    });
   }
 
   return (
@@ -206,9 +251,7 @@ export function AddBookmarkDialog({
               </form.Field>
             </div>
 
-            <form.Field
-              name="description"
-            >
+            <form.Field name="description">
               {(field) => {
                 const isInvalid =
                   field.state.meta.isTouched &&
@@ -228,10 +271,25 @@ export function AddBookmarkDialog({
                         className="resize-none"
                         aria-invalid={isInvalid}
                       />
-                      <InputGroupAddon align="block-end">
+                      <InputGroupAddon align="block-end" className="justify-between">
                         <InputGroupText className="tabular-nums text-xs">
                           {field.state.value.length}/200
                         </InputGroupText>
+                        <InputGroupButton
+                          size="icon-xs"
+                          disabled={
+                            isGenerating ||
+                            !canGenerateBookmark(generationTitle, generationUrl)
+                          }
+                          onClick={() => generateBookmark(generationTitle, generationUrl)}
+                          aria-label="Generate bookmark details with AI"
+                        >
+                          {isGenerating ? (
+                            <Loader2 className="animate-spin" />
+                          ) : (
+                            <Sparkles />
+                          )}
+                        </InputGroupButton>
                       </InputGroupAddon>
                     </InputGroup>
                     {isInvalid && (
