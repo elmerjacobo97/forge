@@ -1,0 +1,24 @@
+{
+  "name": "@forge/cli",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "forge": "./bin/forge.js"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "forge": "node ./bin/forge.js",
+    "test": "vitest run src"
+  },
+
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "typescript": "~5.8.3",
+    "vitest": "^4.1.10"
+  }
+}
