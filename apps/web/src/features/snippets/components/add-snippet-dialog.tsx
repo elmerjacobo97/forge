@@ -21,6 +21,7 @@ import {
   InputGroupAddon,
   InputGroupTextarea,
 } from "@/components/ui/input-group";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectTrigger,
@@ -219,18 +220,20 @@ export function AddSnippetDialog({
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Content</FieldLabel>
-                    <InputGroup>
-                      <InputGroupTextarea
-                        id={field.name}
-                        name={field.name}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="Paste or type your content here…"
-                        rows={8}
-                        className="font-mono resize-none"
-                        aria-invalid={isInvalid}
-                      />
+                    <InputGroup className="overflow-hidden">
+                      <ScrollArea className="h-52 w-full">
+                        <InputGroupTextarea
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          placeholder="Paste or type your content here…"
+                          rows={8}
+                          className="min-h-52 font-mono resize-none"
+                          aria-invalid={isInvalid}
+                        />
+                      </ScrollArea>
                       <InputGroupAddon align="block-end" className="justify-end">
                         <AiGenerationButton
                           label="Generate snippet details with AI"
