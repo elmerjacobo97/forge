@@ -1,5 +1,5 @@
 import { useTransition } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   Dialog,
@@ -20,7 +20,6 @@ import {
   InputGroup,
   InputGroupTextarea,
   InputGroupAddon,
-  InputGroupButton,
   InputGroupText,
 } from "@/components/ui/input-group";
 import {
@@ -32,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useForm, useStore } from "@tanstack/react-form";
+import { AiGenerationButton } from "@/features/ai-generation/components/ai-generation-button";
 import { aiGenerationService } from "@/features/ai-generation/services/ai-generation-service";
 import { bookmarksSchema, BookmarksSchema } from "../schemas/bookmarks-schema";
 import { useCreateBookmarkMutation } from "../hooks/mutations";
@@ -122,8 +122,12 @@ export function AddBookmarkDialog({
         form.setFieldValue("category", response.data.category);
         form.setFieldValue("description", response.data.description);
         form.setFieldValue("tagsString", response.data.tags.join(", "));
-      } catch {
-        return;
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to generate bookmark details.",
+        );
       }
     });
   }
@@ -275,21 +279,14 @@ export function AddBookmarkDialog({
                         <InputGroupText className="tabular-nums text-xs">
                           {field.state.value.length}/200
                         </InputGroupText>
-                        <InputGroupButton
-                          size="icon-xs"
+                        <AiGenerationButton
+                          label="Generate bookmark details with AI"
                           disabled={
-                            isGenerating ||
                             !canGenerateBookmark(generationTitle, generationUrl)
                           }
                           onClick={() => generateBookmark(generationTitle, generationUrl)}
-                          aria-label="Generate bookmark details with AI"
-                        >
-                          {isGenerating ? (
-                            <Loader2 className="animate-spin" />
-                          ) : (
-                            <Sparkles />
-                          )}
-                        </InputGroupButton>
+                          isGenerating={isGenerating}
+                        />
                       </InputGroupAddon>
                     </InputGroup>
                     {isInvalid && (

@@ -1,3 +1,6 @@
+import { useTransition } from "react";
+import { toast } from "sonner";
+
 import {
   Dialog,
   DialogContent,
@@ -13,7 +16,11 @@ import {
   FieldGroup,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { InputGroup, InputGroupTextarea } from "@/components/ui/input-group";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupTextarea,
+} from "@/components/ui/input-group";
 import {
   Select,
   SelectTrigger,
@@ -22,7 +29,9 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useForm } from "@tanstack/react-form";
+import { useForm, useStore } from "@tanstack/react-form";
+import { AiGenerationButton } from "@/features/ai-generation/components/ai-generation-button";
+import { aiGenerationService } from "@/features/ai-generation/services/ai-generation-service";
 import { snippetSchema, SnippetSchema } from "../schemas/snippet-schema";
 import { useCreateSnippetMutation } from "../hooks/mutations";
 
@@ -36,6 +45,7 @@ export function AddSnippetDialog({
   onOpenChange,
 }: AddSnippetDialogProps) {
   const createMutation = useCreateSnippetMutation();
+  const [isGenerating, startGenerating] = useTransition();
 
   const form = useForm({
     defaultValues: {
@@ -52,6 +62,7 @@ export function AddSnippetDialog({
       addSnippet(value as SnippetSchema);
     },
   });
+  const generationTitle = useStore(form.store, (state) => state.values.title);
 
   function addSnippet(data: SnippetSchema) {
     const tags = data.tagsString
@@ -78,6 +89,31 @@ export function AddSnippetDialog({
         },
       },
     );
+  }
+
+  function generateSnippet(title: string) {
+    if (title.trim().length < 2) return;
+
+    startGenerating(async () => {
+      try {
+        const response = await aiGenerationService.generate({
+          type: "snippet",
+          title: title.trim(),
+        });
+        if (response.type !== "snippet") return;
+
+        form.setFieldValue("kind", response.data.kind);
+        form.setFieldValue("content", response.data.content);
+        form.setFieldValue("language", response.data.language ?? "");
+        form.setFieldValue("tagsString", response.data.tags.join(", "));
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to generate snippet details.",
+        );
+      }
+    });
   }
 
   return (
@@ -195,6 +231,14 @@ export function AddSnippetDialog({
                         className="font-mono resize-none"
                         aria-invalid={isInvalid}
                       />
+                      <InputGroupAddon align="block-end" className="justify-end">
+                        <AiGenerationButton
+                          label="Generate snippet details with AI"
+                          disabled={generationTitle.trim().length < 2}
+                          onClick={() => generateSnippet(generationTitle)}
+                          isGenerating={isGenerating}
+                        />
+                      </InputGroupAddon>
                     </InputGroup>
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />
