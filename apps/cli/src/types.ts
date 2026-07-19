@@ -10,3 +10,33 @@ export type ForgeSession = {
   /** Appwrite session secret (from login cookie / X-Appwrite-Session). */
   sessionSecret: string
 }
+
+export type Category = "docs" | "git" | "tool" | "article" | "other"
+
+export const CATEGORIES: readonly Category[] = [
+  "docs",
+  "git",
+  "tool",
+  "article",
+  "other",
+] as const
+
+export type Bookmark = {
+  id: string
+  title: string
+  url: string
+  category: Category
+  description: string
+  tags: string[]
+  createdAt: string
+}
+
+export type BookmarkCreateInput = {
+  title: string
+  url: string
+  category: Category
+  description: string
+  tags: string[]
+}
+
+export type BookmarkUpdateInput = Partial<BookmarkCreateInput>

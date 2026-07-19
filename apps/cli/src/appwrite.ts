@@ -1,4 +1,5 @@
 import { Account, Client, TablesDB } from "node-appwrite"
+import { createBookmarksService } from "./bookmarks-service.js"
 import { readConfig } from "./config.js"
 import { readSession } from "./session.js"
 import type { ForgeConfig, ForgeSession } from "./types.js"
@@ -53,6 +54,15 @@ export async function createAuthedClient(): Promise<{
     account: new Account(client),
     tablesDB: new TablesDB(client),
   }
+}
+
+export async function createAuthedBookmarksService() {
+  const { config, session, tablesDB } = await createAuthedClient()
+  return createBookmarksService({
+    tablesDB,
+    config,
+    userId: session.userId,
+  })
 }
 
 /**
