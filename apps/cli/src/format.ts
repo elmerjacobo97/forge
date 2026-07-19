@@ -19,3 +19,31 @@ export function formatBookmarkListText(bookmarks: Bookmark[]): string {
   }
   return bookmarks.map(formatBookmarkText).join("\n\n")
 }
+
+export function formatBookmarkJson(bookmark: Bookmark): string {
+  return `${JSON.stringify(bookmark, null, 2)}\n`
+}
+
+export function formatBookmarkListJson(bookmarks: Bookmark[]): string {
+  return `${JSON.stringify(bookmarks, null, 2)}\n`
+}
+
+export function writeBookmarkOutput(
+  bookmark: Bookmark,
+  json: boolean,
+): void {
+  process.stdout.write(
+    json ? formatBookmarkJson(bookmark) : `${formatBookmarkText(bookmark)}\n`,
+  )
+}
+
+export function writeBookmarkListOutput(
+  bookmarks: Bookmark[],
+  json: boolean,
+): void {
+  process.stdout.write(
+    json
+      ? formatBookmarkListJson(bookmarks)
+      : `${formatBookmarkListText(bookmarks)}\n`,
+  )
+}

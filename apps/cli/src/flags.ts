@@ -9,6 +9,29 @@ export function getFlagValue(args: string[], name: string): string | undefined {
   return value
 }
 
+export function hasFlag(args: string[], name: string): boolean {
+  return args.includes(name)
+}
+
+/** Flags that do not take a following value (must not steal positionals). */
+export const BOOLEAN_FLAGS = new Set(["--json", "--help", "-h"])
+
+export function getPositionals(args: string[]): string[] {
+  const positionals: string[] = []
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg.startsWith("-")) {
+      if (!BOOLEAN_FLAGS.has(arg)) {
+        const next = args[i + 1]
+        if (next && !next.startsWith("-")) i += 1
+      }
+      continue
+    }
+    positionals.push(arg)
+  }
+  return positionals
+}
+
 export async function promptText(question: string): Promise<string> {
   const rl = createInterface({ input, output })
   try {

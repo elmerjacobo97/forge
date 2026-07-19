@@ -3,8 +3,11 @@ import {
   parseBookmarkCreateInput,
   parseBookmarkUpdateInput,
 } from "../bookmark-schema.js"
-import { getFlagValue } from "../flags.js"
-import { formatBookmarkListText, formatBookmarkText } from "../format.js"
+import { getFlagValue, getPositionals, hasFlag } from "../flags.js"
+import {
+  writeBookmarkListOutput,
+  writeBookmarkOutput,
+} from "../format.js"
 import { CATEGORIES } from "../types.js"
 
 const BOOKMARK_HELP = `Usage:
@@ -16,6 +19,9 @@ Commands:
   get       Get a bookmark by id
   update    Update a bookmark by id
   delete    Delete a bookmark by id
+
+Shared options:
+  --json                       Emit JSON instead of text (create|list|get|update)
 
 create options:
   --title <text>           Required (min 2)
@@ -34,7 +40,8 @@ update options (at least one):
 Examples:
   forge-cli bookmark create --title "Docs" --url "https://example.com" --category docs --description "Useful docs" --tags react,docs
   forge-cli bookmark list
-  forge-cli bookmark get <id>
+  forge-cli bookmark list --json
+  forge-cli bookmark get <id> --json
   forge-cli bookmark update <id> --title "New title"
   forge-cli bookmark delete <id>
 `
@@ -47,26 +54,13 @@ function parseTagsFlag(raw: string | undefined): string[] {
     .filter((tag) => tag.length > 0)
 }
 
-function getPositionals(args: string[]): string[] {
-  const positionals: string[] = []
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i]
-    if (arg.startsWith("--")) {
-      const next = args[i + 1]
-      if (next && !next.startsWith("--")) i += 1
-      continue
-    }
-    positionals.push(arg)
-  }
-  return positionals
-}
-
 function fail(message: string): void {
   process.stderr.write(`${message}\n`)
   process.exitCode = 1
 }
 
 async function runCreate(args: string[]): Promise<void> {
+  const json = hasFlag(args, "--json")
   const input = parseBookmarkCreateInput({
     title: getFlagValue(args, "--title"),
     url: getFlagValue(args, "--url"),
@@ -82,16 +76,18 @@ async function runCreate(args: string[]): Promise<void> {
 
   const service = await createAuthedBookmarksService()
   const bookmark = await service.create(input)
-  process.stdout.write(`${formatBookmarkText(bookmark)}\n`)
+  writeBookmarkOutput(bookmark, json)
 }
 
-async function runList(_args: string[]): Promise<void> {
+async function runList(args: string[]): Promise<void> {
+  const json = hasFlag(args, "--json")
   const service = await createAuthedBookmarksService()
   const bookmarks = await service.list()
-  process.stdout.write(`${formatBookmarkListText(bookmarks)}\n`)
+  writeBookmarkListOutput(bookmarks, json)
 }
 
 async function runGet(args: string[]): Promise<void> {
+  const json = hasFlag(args, "--json")
   const [id] = getPositionals(args)
   if (!id) {
     fail("Missing bookmark id.\n\nUsage: forge-cli bookmark get <id>")
@@ -100,10 +96,11 @@ async function runGet(args: string[]): Promise<void> {
 
   const service = await createAuthedBookmarksService()
   const bookmark = await service.get(id)
-  process.stdout.write(`${formatBookmarkText(bookmark)}\n`)
+  writeBookmarkOutput(bookmark, json)
 }
 
 async function runUpdate(args: string[]): Promise<void> {
+  const json = hasFlag(args, "--json")
   const [id] = getPositionals(args)
   if (!id) {
     fail("Missing bookmark id.\n\nUsage: forge-cli bookmark update <id> [--title …]")
@@ -131,7 +128,7 @@ async function runUpdate(args: string[]): Promise<void> {
 
   const service = await createAuthedBookmarksService()
   const bookmark = await service.update(id, input)
-  process.stdout.write(`${formatBookmarkText(bookmark)}\n`)
+  writeBookmarkOutput(bookmark, json)
 }
 
 async function runDelete(args: string[]): Promise<void> {
