@@ -23,20 +23,19 @@ pnpm --filter @forge/cli forge-cli -- --help
 
 ## Configure and sign in
 
-Use the same Appwrite IDs as `apps/web/.env` (`VITE_APPWRITE_*`):
+Easiest (from the monorepo, with `apps/web/.env` already filled):
 
 ```bash
-forge-cli init \
-  --endpoint "$VITE_APPWRITE_ENDPOINT" \
-  --project-id "$VITE_APPWRITE_PROJECT_ID" \
-  --database-id "$VITE_APPWRITE_DATABASE_ID" \
-  --bookmarks-table-id "$VITE_APPWRITE_BOOKMARKS_COLLECTION_ID"
+# from repo root (or apps/cli)
+forge-cli init --from-web-env
+# or interactive with defaults from apps/web/.env:
+forge-cli init
 
 forge-cli login --email you@example.com
 forge-cli whoami
 ```
 
-Config/session are stored under `~/.forge/` (`0600` files).
+`init` reads the same IDs as the web app (`VITE_APPWRITE_ENDPOINT`, `PROJECT_ID`, `DATABASE_ID`, `BOOKMARKS_COLLECTION_ID`). Config/session go under `~/.forge/` (`0600` files).
 
 ## Bookmarks
 

@@ -18,11 +18,9 @@ Bookmarks sync to the same Appwrite table as the web app. Auth is per-user; ther
 One-time config (same Appwrite project as `apps/web`):
 
 ```bash
-forge-cli init \
-  --endpoint "https://<REGION>.cloud.appwrite.io/v1" \
-  --project-id "<PROJECT_ID>" \
-  --database-id "<DATABASE_ID>" \
-  --bookmarks-table-id "<BOOKMARKS_TABLE_ID>"
+# preferred in this monorepo (reads apps/web/.env)
+forge-cli init --from-web-env
+# or interactive: forge-cli init
 ```
 
 Then sign in:
