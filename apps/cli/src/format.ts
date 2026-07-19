@@ -1,4 +1,4 @@
-import type { Bookmark, Ticket } from "./types.js"
+import type { Bookmark, Project, Ticket } from "./types.js"
 
 function formatDuration(ms: number): string {
   if (ms < 0) ms = 0
@@ -74,6 +74,7 @@ export function writeBookmarkListOutput(
 export function formatTicketText(ticket: Ticket): string {
   return (
     `id:          ${ticket.id}\n` +
+    `projectId:   ${ticket.projectId}\n` +
     `title:       ${ticket.title}\n` +
     `column:      ${ticket.column}\n` +
     `priority:    ${ticket.priority}\n` +
@@ -110,5 +111,52 @@ export function writeTicketListOutput(tickets: Ticket[], json: boolean): void {
     json
       ? formatTicketListJson(tickets)
       : `${formatTicketListText(tickets)}\n`,
+  )
+}
+
+function shortenDescription(description: string, max = 80): string {
+  if (!description) return "(none)"
+  if (description.length <= max) return description
+  return `${description.slice(0, max - 1)}…`
+}
+
+export function formatProjectText(project: Project): string {
+  return (
+    `id:          ${project.id}\n` +
+    `name:        ${project.name}\n` +
+    `description: ${shortenDescription(project.description)}\n` +
+    `createdAt:   ${project.createdAt}`
+  )
+}
+
+export function formatProjectListText(projects: Project[]): string {
+  if (projects.length === 0) {
+    return "No projects."
+  }
+  return projects.map(formatProjectText).join("\n\n")
+}
+
+export function formatProjectJson(project: Project): string {
+  return `${JSON.stringify(project, null, 2)}\n`
+}
+
+export function formatProjectListJson(projects: Project[]): string {
+  return `${JSON.stringify(projects, null, 2)}\n`
+}
+
+export function writeProjectOutput(project: Project, json: boolean): void {
+  process.stdout.write(
+    json ? formatProjectJson(project) : `${formatProjectText(project)}\n`,
+  )
+}
+
+export function writeProjectListOutput(
+  projects: Project[],
+  json: boolean,
+): void {
+  process.stdout.write(
+    json
+      ? formatProjectListJson(projects)
+      : `${formatProjectListText(projects)}\n`,
   )
 }

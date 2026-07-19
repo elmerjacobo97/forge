@@ -1,4 +1,8 @@
-import { createAuthedDevBoardService } from "../appwrite.js"
+import {
+  createAuthedClient,
+  createAuthedDevBoardService,
+} from "../appwrite.js"
+import { createDevBoardService } from "../dev-board-service.js"
 import {
   getFlagValue,
   getPositionals,
@@ -8,6 +12,7 @@ import {
   writeTicketListOutput,
   writeTicketOutput,
 } from "../format.js"
+import { createProjectsService } from "../projects-service.js"
 import {
   parseColumnId,
   parseTicketCreateInput,
@@ -21,7 +26,7 @@ const TICKET_HELP = `Usage:
 
 Commands:
   create    Create a ticket
-  list      List your tickets
+  list      List tickets in a project
   get       Get a ticket by id
   update    Update title/description/priority
   delete    Delete a ticket by id
@@ -31,12 +36,14 @@ Shared options:
   --json                       Emit JSON instead of text (create|list|get|update|move)
 
 create options:
+  --project-id <id>            Required Dev Board project id
   --title <text>               Required (1-120)
   --description <text>         Optional (default "")
   --priority <priority>        Optional (${PRIORITIES.join(" | ")}, default med)
   --column <column>            Optional (${COLUMNS.join(" | ")}, default backlog)
 
 list options:
+  --project-id <id>            Required Dev Board project id
   --column <column>            Optional filter by column
 
 update options (at least one):
@@ -48,10 +55,10 @@ move options:
   --column <column>            Required destination column
 
 Examples:
-  forge-cli ticket create --title "Ship CLI"
-  forge-cli ticket create --title "WIP" --column in_progress --priority high
-  forge-cli ticket list
-  forge-cli ticket list --column todo --json
+  forge-cli ticket create --project-id <id> --title "Ship CLI"
+  forge-cli ticket create --project-id <id> --title "WIP" --column in_progress --priority high
+  forge-cli ticket list --project-id <id>
+  forge-cli ticket list --project-id <id> --column todo --json
   forge-cli ticket get <id>
   forge-cli ticket update <id> --title "New title"
   forge-cli ticket move <id> --column in_progress
@@ -66,6 +73,7 @@ function fail(message: string): void {
 async function runCreate(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json")
   const input = parseTicketCreateInput({
+    projectId: getFlagValue(args, "--project-id"),
     title: getFlagValue(args, "--title"),
     description: getFlagValue(args, "--description") ?? "",
     priority: getFlagValue(args, "--priority") ?? "med",
@@ -77,13 +85,34 @@ async function runCreate(args: string[]): Promise<void> {
     return
   }
 
-  const service = await createAuthedDevBoardService()
+  const { config, session, tablesDB } = await createAuthedClient()
+  const projects = createProjectsService({
+    tablesDB,
+    config,
+    userId: session.userId,
+  })
+  // Verify the project exists and belongs to the authenticated user.
+  await projects.get(input.projectId)
+
+  const service = createDevBoardService({
+    tablesDB,
+    config,
+    userId: session.userId,
+  })
   const ticket = await service.create(input)
   writeTicketOutput(ticket, json)
 }
 
 async function runList(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json")
+  const projectId = getFlagValue(args, "--project-id")?.trim()
+  if (!projectId) {
+    fail(
+      "Project id is required (--project-id).\n\nUsage: forge-cli ticket list --project-id <id>",
+    )
+    return
+  }
+
   const columnRaw = getFlagValue(args, "--column")
   let columnFilter: ColumnId | undefined
 
@@ -97,7 +126,7 @@ async function runList(args: string[]): Promise<void> {
   }
 
   const service = await createAuthedDevBoardService()
-  const tickets = await service.list(columnFilter)
+  const tickets = await service.list(projectId, columnFilter)
   writeTicketListOutput(tickets, json)
 }
 

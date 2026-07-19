@@ -25,6 +25,7 @@ import type {
 const LIST_PAGE_SIZE = 100
 
 type TicketRow = Models.DefaultRow & {
+  projectId?: unknown
   title?: unknown
   description?: unknown
   column?: unknown
@@ -93,6 +94,7 @@ function asNullableString(value: unknown, field: string): string | null {
 export function mapRowToTicket(row: TicketRow): Ticket {
   return {
     id: row.$id,
+    projectId: asString(row.projectId, "projectId"),
     title: asString(row.title, "title"),
     description: asString(row.description, "description"),
     column: asColumn(row.column),
@@ -140,6 +142,7 @@ function privatePermissions(userId: string) {
 function ticketData(ticket: Ticket, userId: string) {
   return {
     userId,
+    projectId: ticket.projectId,
     title: ticket.title,
     description: ticket.description,
     column: ticket.column,
@@ -214,13 +217,17 @@ export function createDevBoardService(deps: DevBoardServiceDeps) {
     }
   }
 
-  async function listColumnTickets(column: ColumnId): Promise<Ticket[]> {
+  async function listColumnTickets(
+    projectId: string,
+    column: ColumnId,
+  ): Promise<Ticket[]> {
     const tickets: Ticket[] = []
     let cursor: string | null = null
 
     for (;;) {
       const queries = [
         Query.equal("userId", userId),
+        Query.equal("projectId", projectId),
         Query.equal("column", column),
         Query.orderDesc("position"),
         Query.limit(LIST_PAGE_SIZE),
@@ -296,7 +303,7 @@ export function createDevBoardService(deps: DevBoardServiceDeps) {
   }
 
   return {
-    async list(column?: ColumnId): Promise<Ticket[]> {
+    async list(projectId: string, column?: ColumnId): Promise<Ticket[]> {
       try {
         const tickets: Ticket[] = []
         let cursor: string | null = null
@@ -304,6 +311,7 @@ export function createDevBoardService(deps: DevBoardServiceDeps) {
         for (;;) {
           const queries = [
             Query.equal("userId", userId),
+            Query.equal("projectId", projectId),
             Query.orderDesc("$createdAt"),
             Query.limit(LIST_PAGE_SIZE),
           ]
@@ -339,6 +347,7 @@ export function createDevBoardService(deps: DevBoardServiceDeps) {
       const now = nowISO()
       let ticket: Ticket = {
         id: ID.unique(),
+        projectId: input.projectId,
         title: input.title,
         description: input.description,
         column: input.column,
@@ -424,7 +433,10 @@ export function createDevBoardService(deps: DevBoardServiceDeps) {
       }
 
       try {
-        const columnTickets = await listColumnTickets(column)
+        const columnTickets = await listColumnTickets(
+          previous.projectId,
+          column,
+        )
         const next = applyMoveTicket(previous, column, columnTickets)
         return await persistTicketUpdate(previous, next)
       } catch (error) {

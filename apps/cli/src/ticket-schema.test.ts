@@ -10,6 +10,7 @@ import {
 describe("parseTicketCreateInput", () => {
   it("accepts a valid ticket payload", () => {
     const result = parseTicketCreateInput({
+      projectId: "proj1",
       title: "Ship CLI tickets",
       description: "CRUD + move",
       priority: "med",
@@ -17,6 +18,7 @@ describe("parseTicketCreateInput", () => {
     })
 
     expect(result).toEqual({
+      projectId: "proj1",
       title: "Ship CLI tickets",
       description: "CRUD + move",
       priority: "med",
@@ -24,8 +26,9 @@ describe("parseTicketCreateInput", () => {
     })
   })
 
-  it("accepts empty description and trims title", () => {
+  it("accepts empty description and trims title and projectId", () => {
     const result = parseTicketCreateInput({
+      projectId: "  proj1  ",
       title: "  Fix bug  ",
       description: "",
       priority: "high",
@@ -33,6 +36,7 @@ describe("parseTicketCreateInput", () => {
     })
 
     expect(result).toEqual({
+      projectId: "proj1",
       title: "Fix bug",
       description: "",
       priority: "high",
@@ -42,6 +46,7 @@ describe("parseTicketCreateInput", () => {
 
   it("rejects empty title, unknown priority, and invalid column", () => {
     const result = parseTicketCreateInput({
+      projectId: "proj1",
       title: "   ",
       description: "ok",
       priority: "urgent",
@@ -57,6 +62,7 @@ describe("parseTicketCreateInput", () => {
 
   it("rejects title longer than 120 and description longer than 2000", () => {
     const result = parseTicketCreateInput({
+      projectId: "proj1",
       title: "x".repeat(121),
       description: "y".repeat(2001),
       priority: "low",
@@ -71,12 +77,27 @@ describe("parseTicketCreateInput", () => {
     )
   })
 
-  it("requires missing create fields with clear messages", () => {
+  it("requires project id and title with clear messages", () => {
     const result = parseTicketCreateInput({})
 
     expect(result).toHaveProperty("error")
     if (!("error" in result)) throw new Error("expected validation error")
+    expect(result.error).toContain("Project id is required (--project-id).")
     expect(result.error).toContain("Title is required (--title).")
+  })
+
+  it("rejects empty project id", () => {
+    const result = parseTicketCreateInput({
+      projectId: "   ",
+      title: "Ship",
+      description: "",
+      priority: "med",
+      column: "backlog",
+    })
+
+    expect(result).toHaveProperty("error")
+    if (!("error" in result)) throw new Error("expected validation error")
+    expect(result.error).toContain("Project id is required (--project-id).")
   })
 })
 
@@ -126,12 +147,16 @@ describe("parseColumnId / parsePriority", () => {
   it("rejects invalid enums", () => {
     const column = parseColumnId("blocked")
     expect(column).toHaveProperty("error")
-    if (!("error" in column)) throw new Error("expected validation error")
+    if (typeof column !== "object" || !("error" in column)) {
+      throw new Error("expected validation error")
+    }
     expect(column.error).toContain("Column must be one of:")
 
     const priority = parsePriority("medium")
     expect(priority).toHaveProperty("error")
-    if (!("error" in priority)) throw new Error("expected validation error")
+    if (typeof priority !== "object" || !("error" in priority)) {
+      throw new Error("expected validation error")
+    }
     expect(priority.error).toContain("Priority must be one of:")
   })
 })

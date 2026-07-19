@@ -69,6 +69,7 @@ export type ProjectUpdateInput = Partial<ProjectCreateInput>
 
 export type Ticket = {
   id: string
+  projectId: string
   title: string
   description: string
   column: ColumnId
@@ -82,6 +83,7 @@ export type Ticket = {
 }
 
 export type TicketCreateInput = {
+  projectId: string
   title: string
   description: string
   priority: Priority

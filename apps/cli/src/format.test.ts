@@ -4,12 +4,16 @@ import {
   formatBookmarkListJson,
   formatBookmarkListText,
   formatBookmarkText,
+  formatProjectJson,
+  formatProjectListJson,
+  formatProjectListText,
+  formatProjectText,
   formatTicketJson,
   formatTicketListJson,
   formatTicketListText,
   formatTicketText,
 } from "./format.js"
-import type { Bookmark, Ticket } from "./types.js"
+import type { Bookmark, Project, Ticket } from "./types.js"
 
 const sampleBookmark: Bookmark = {
   id: "row1",
@@ -23,6 +27,7 @@ const sampleBookmark: Bookmark = {
 
 const sampleTicket: Ticket = {
   id: "t1",
+  projectId: "p1",
   title: "Ship CLI tickets",
   description: "CRUD + move",
   column: "todo",
@@ -33,6 +38,13 @@ const sampleTicket: Ticket = {
   totalElapsedMs: 65_000,
   isPaused: false,
   lastMovedAt: "2026-07-18T13:00:00.000Z",
+}
+
+const sampleProject: Project = {
+  id: "p1",
+  name: "Forge",
+  description: "Dev tools",
+  createdAt: "2026-07-19T08:00:00.000Z",
 }
 
 describe("formatBookmarkText", () => {
@@ -71,9 +83,10 @@ describe("bookmark JSON formatters", () => {
 })
 
 describe("formatTicketText", () => {
-  it("renders id, title, column, priority, and timer summary", () => {
+  it("renders id, projectId, title, column, priority, and timer summary", () => {
     const text = formatTicketText(sampleTicket)
     expect(text).toContain("id:          t1")
+    expect(text).toContain("projectId:   p1")
     expect(text).toContain("title:       Ship CLI tickets")
     expect(text).toContain("column:      todo")
     expect(text).toContain("priority:    high")
@@ -122,5 +135,49 @@ describe("ticket JSON formatters", () => {
       formatTicketListJson([sampleTicket]),
     ) as Ticket[]
     expect(parsed).toEqual([sampleTicket])
+  })
+})
+
+describe("formatProjectText", () => {
+  it("renders id, name, description, and createdAt", () => {
+    const text = formatProjectText(sampleProject)
+    expect(text).toContain("id:          p1")
+    expect(text).toContain("name:        Forge")
+    expect(text).toContain("description: Dev tools")
+    expect(text).toContain("createdAt:   2026-07-19T08:00:00.000Z")
+  })
+
+  it("shows (none) for empty description", () => {
+    expect(
+      formatProjectText({ ...sampleProject, description: "" }),
+    ).toContain("description: (none)")
+  })
+
+  it("shortens long descriptions in text output", () => {
+    const long = "x".repeat(100)
+    const text = formatProjectText({ ...sampleProject, description: long })
+    expect(text).toContain("description: ")
+    expect(text).toContain("…")
+    expect(text).not.toContain(long)
+  })
+})
+
+describe("formatProjectListText", () => {
+  it("handles an empty list", () => {
+    expect(formatProjectListText([])).toBe("No projects.")
+  })
+})
+
+describe("project JSON formatters", () => {
+  it("emits parseable project JSON", () => {
+    const parsed = JSON.parse(formatProjectJson(sampleProject)) as Project
+    expect(parsed).toEqual(sampleProject)
+  })
+
+  it("emits a parseable project array (list --json)", () => {
+    const parsed = JSON.parse(
+      formatProjectListJson([sampleProject]),
+    ) as Project[]
+    expect(parsed).toEqual([sampleProject])
   })
 })

@@ -15,6 +15,11 @@ const columnSchema = z.enum(COLUMNS, {
   error: `Column must be one of: ${COLUMNS.join(", ")}.`,
 })
 
+const projectIdSchema = z
+  .string({ error: "Project id is required (--project-id)." })
+  .trim()
+  .min(1, "Project id is required (--project-id).")
+
 const titleSchema = z
   .string({ error: "Title is required (--title)." })
   .trim()
@@ -27,6 +32,7 @@ const descriptionSchema = z
   .max(2000, "Description must be at most 2000 characters.")
 
 export const ticketCreateSchema = z.object({
+  projectId: projectIdSchema,
   title: titleSchema,
   description: descriptionSchema,
   priority: prioritySchema,

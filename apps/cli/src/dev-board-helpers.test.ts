@@ -18,6 +18,7 @@ function ticket(
 ): Ticket {
   return {
     id,
+    projectId: "project-1",
     title: id,
     description: "",
     column,
