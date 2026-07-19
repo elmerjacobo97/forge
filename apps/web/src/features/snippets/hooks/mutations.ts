@@ -24,6 +24,28 @@ export function useCreateSnippetMutation() {
   });
 }
 
+export function useUpdateSnippetMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...snippet
+    }: { id: string } & Omit<Snippet, "id" | "createdAt">) => {
+      const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
+      return snippetsService.updateSnippet(id, snippet, userId);
+    },
+    onSuccess: () => {
+      const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
+      queryClient.invalidateQueries({ queryKey: ["snippets", userId] });
+      toast.success("Snippet updated successfully!");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to update snippet.");
+    },
+  });
+}
+
 export function useDeleteSnippetMutation() {
   const queryClient = useQueryClient();
 
