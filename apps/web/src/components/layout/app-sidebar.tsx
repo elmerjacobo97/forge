@@ -59,7 +59,10 @@ export function AppSidebar({ activePath }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link to="/" className="flex items-center gap-2 px-2 py-1.5">
+        <Link
+          to="/"
+          className="flex items-center gap-2 px-2 py-1.5"
+        >
           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-primary to-primary/70 text-primary-foreground shadow-sm ring-1 ring-primary/20">
             <Hammer className="size-4" />
           </span>
@@ -85,10 +88,14 @@ export function AppSidebar({ activePath }: AppSidebarProps) {
           <SidebarGroup key={category}>
             <SidebarGroupLabel>{category}</SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-1">
                 {items.map((tool) => (
                   <SidebarMenuItem key={tool.id}>
-                    <SidebarMenuButton asChild isActive={tool.path === activePath} tooltip={tool.name}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={tool.path === activePath}
+                      tooltip={tool.name}
+                    >
                       <Link to={tool.path}>
                         <tool.icon />
                         <span>{tool.name}</span>
@@ -105,18 +112,28 @@ export function AppSidebar({ activePath }: AppSidebarProps) {
       <SidebarFooter>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-auto w-full justify-start gap-2 p-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0">
+            <Button
+              variant="ghost"
+              className="h-auto w-full justify-start gap-2 p-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0"
+            >
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground">
                 <User className="size-3.5" />
               </span>
               <span className="min-w-0 flex-1 text-left group-data-[collapsible=icon]:hidden">
-                <span className="block truncate text-xs font-semibold">{user?.name || "Developer"}</span>
-                <span className="block truncate text-[10px] text-muted-foreground">{user?.email || ""}</span>
+                <span className="block truncate text-xs font-semibold">
+                  {user?.name || "Developer"}
+                </span>
+                <span className="block truncate text-[10px] text-muted-foreground">
+                  {user?.email || ""}
+                </span>
               </span>
               <ChevronsUpDown className="size-3.5 text-muted-foreground group-data-[collapsible=icon]:hidden" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent
+            align="end"
+            className="w-48"
+          >
             <DropdownMenuItem asChild>
               <Link to="/settings">
                 <Settings className="size-3.5" />
