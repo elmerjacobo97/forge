@@ -1,5 +1,6 @@
 import { Account, Client, TablesDB } from "node-appwrite"
 import { createBookmarksService } from "./bookmarks-service.js"
+import { createDevBoardService } from "./dev-board-service.js"
 import { readConfig } from "./config.js"
 import { readSession } from "./session.js"
 import type { ForgeConfig, ForgeSession } from "./types.js"
@@ -8,7 +9,7 @@ export async function requireConfig(): Promise<ForgeConfig> {
   const config = await readConfig()
   if (!config) {
     throw new Error(
-      "No config found. Run: forge-cli init --endpoint … --project-id … --database-id … --bookmarks-table-id …",
+      "No config found. Run: forge-cli init --from-web-env  (or forge-cli init)",
     )
   }
   return config
@@ -59,6 +60,15 @@ export async function createAuthedClient(): Promise<{
 export async function createAuthedBookmarksService() {
   const { config, session, tablesDB } = await createAuthedClient()
   return createBookmarksService({
+    tablesDB,
+    config,
+    userId: session.userId,
+  })
+}
+
+export async function createAuthedDevBoardService() {
+  const { config, session, tablesDB } = await createAuthedClient()
+  return createDevBoardService({
     tablesDB,
     config,
     userId: session.userId,
