@@ -53,6 +53,20 @@ export const PRIORITIES = ["low", "med", "high"] as const
 
 export type Priority = (typeof PRIORITIES)[number]
 
+export type Project = {
+  id: string
+  name: string
+  description: string
+  createdAt: string
+}
+
+export type ProjectCreateInput = {
+  name: string
+  description: string
+}
+
+export type ProjectUpdateInput = Partial<ProjectCreateInput>
+
 export type Ticket = {
   id: string
   title: string
