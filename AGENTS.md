@@ -1,22 +1,23 @@
 # AGENTS.md
 
 ## Scope
-- This is a pnpm workspace; `apps/web` (`@forge/web`) is currently the only package and deployable app.
-- Keep `apps/web` browser-only. Do not add Tauri, Rust, native IPC, or desktop-only dependencies.
+- This pnpm workspace contains the browser app at `apps/web` (`@forge/web`) and the Appwrite Function at `functions/ai-content-generator` (`@forge/ai-content-generator`).
+- Keep `apps/web` browser-only. Server SDKs, secrets, provider calls, and remote page fetching belong in the Function. Do not add Tauri, Rust, native IPC, or desktop-only dependencies.
 - Do not create speculative workspace packages; `packages/*` is only a reserved workspace glob.
 
 ## Commands
 - Run commands from the repository root: `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`, `pnpm doctor`.
-- `pnpm build` is the configured typecheck plus production build (`tsc && vite build`). There is no lint script or ESLint config.
-- Run one test file with `pnpm --filter @forge/web exec vitest run <path>`; omit `run` for watch mode.
+- `pnpm build` and `pnpm test` verify both packages. Use `pnpm build:web`, `pnpm build:function`, `pnpm test:web`, or `pnpm test:function` for one package. There is no lint script or ESLint config.
+- Run one web test with `pnpm --filter @forge/web exec vitest run <path>` and one Function test with `pnpm --filter @forge/ai-content-generator exec vitest run <path>`; omit `run` for watch mode.
 - Vitest defaults to `environment: "node"` with globals enabled. Tests are `*.test.ts`; DOM APIs are unavailable unless a test opts into another environment.
 - Dependency installs enforce a 24-hour minimum package age and a no-downgrade trust policy in `pnpm-workspace.yaml`.
 
 ## Structure
 - Feature code owns its components, hooks, services, schemas, types, tests, and utilities under `apps/web/src/features/<feature>/`.
 - Put shared UI in `apps/web/src/components/`; put reusable infrastructure and pure helpers in `apps/web/src/lib/`. Keep routes as thin feature composition files.
+- Keep Function handlers, contracts, provider integration, network fetching, and tests under `functions/ai-content-generator/src/`.
 - Import source through `@/*` (`apps/web/src/*`) or direct relative files. Do not add barrel files.
-- TypeScript is strict and rejects unused locals/parameters. Do not use `any`; validate untrusted values as `unknown`.
+- TypeScript is strict in both packages and rejects unused locals/parameters. Do not use `any`; validate browser, network, and model data as `unknown`.
 
 ## Routing And Tools
 - TanStack Router generates `apps/web/src/routeTree.gen.ts` during Vite dev/build. Never edit it manually.
@@ -25,7 +26,10 @@
 
 ## Appwrite
 - Copy `apps/web/.env.example` to `apps/web/.env` for local configuration. All `VITE_*` values are browser-visible; never put secrets there.
-- Reuse `client`, `account`, and `tablesDB` from `apps/web/src/lib/appwrite.ts`; do not construct feature-local Appwrite clients.
+- Reuse `client`, `account`, `tablesDB`, and `functions` from `apps/web/src/lib/appwrite.ts`; do not construct feature-local Appwrite clients.
+- `VITE_APPWRITE_AI_CONTENT_FUNCTION_ID` is the public Function ID used by the web app. `GROQ_API_KEY` is a secret Appwrite Function variable and must never appear in `apps/web`, a `VITE_*` variable, or browser storage.
+- `functions/ai-content-generator` runs on Node 22, accepts authenticated executions only, fixes the Groq model to `openai/gpt-oss-20b`, and validates fetched and generated data before responding.
+- Function metadata lives in `appwrite.config.json`. Push it with `appwrite push function --function-id ai-content-generator --activate`; redeploy after changing Function variables.
 - `apps/web/src/lib/appwrite-data.ts` stores simple feature payloads in the shared data table. Use a dedicated table only when query or scale needs justify it.
 - Bookmarks and Snippets require both a signed-in user and configured Appwrite storage. They intentionally have no `localStorage` fallback.
 - Theme tokens live in `apps/web/src/index.css`; shadcn configuration and aliases live in `apps/web/components.json`.
