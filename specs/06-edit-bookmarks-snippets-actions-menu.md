@@ -1,6 +1,6 @@
 # SPEC 06 — Editar bookmarks y snippets con menú de acciones
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** Ninguna
 > **Date:** 2026-07-19
 > **Objective:** En la web, reemplazar el botón de eliminar de las cards de bookmark y snippet por un menú `⋯` siempre visible con Edit y Delete, e implementar edición completa vía dialog dedicado (sin tocar `id` ni `createdAt`).
