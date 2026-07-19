@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { ProjectBoard } from "@/features/dev-board/components/project-board";
 
-export const Route = createFileRoute("/_authenticated/dev-board/$projectId")({
+export const Route = createFileRoute("/_authenticated/dev-board_/$projectId")({
   component: DevBoardProjectRoute,
 });
 
