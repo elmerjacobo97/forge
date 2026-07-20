@@ -1,12 +1,12 @@
 "use client"
 
-import { Moon, Search, Sun } from "lucide-react"
+import { Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { useTheme } from "next-themes"
+import { ThemeToggleButton } from "@/components/theme-toggle-button"
 import type { ToolDef } from "@/lib/tools"
 
 interface HeaderProps {
@@ -15,9 +15,6 @@ interface HeaderProps {
 }
 
 export function Header({ tool, onOpenPalette }: HeaderProps) {
-  const { resolvedTheme, setTheme } = useTheme()
-  const isDark = resolvedTheme === "dark"
-
   return (
     <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background/85 px-5 backdrop-blur-md">
       <div className="flex min-w-0 items-center gap-3">
@@ -48,20 +45,7 @@ export function Header({ tool, onOpenPalette }: HeaderProps) {
           </TooltipTrigger>
           <TooltipContent>Command palette</TooltipContent>
         </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={() => setTheme(isDark ? "light" : "dark")}
-              className="text-muted-foreground"
-              aria-label="Toggle theme"
-            >
-              {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{isDark ? "Light mode" : "Dark mode"}</TooltipContent>
-        </Tooltip>
+        <ThemeToggleButton />
       </div>
     </header>
   )

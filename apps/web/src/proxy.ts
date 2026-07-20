@@ -44,6 +44,7 @@ export async function proxy(request: NextRequest) {
     request.cookies.has("insforge_access_token") ||
     request.cookies.has("insforge_refresh_token");
   const isPublicPath =
+    request.nextUrl.pathname === "/" ||
     request.nextUrl.pathname === "/login" ||
     request.nextUrl.pathname === "/register" ||
     request.nextUrl.pathname === "/verify-email" ||

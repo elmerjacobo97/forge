@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import type { AuthUser } from "@/features/auth/types";
 import { createInsForgeServerClient } from "@/lib/insforge/server";
 
@@ -8,7 +10,7 @@ function profileName(profile: unknown): string {
   return typeof profile.name === "string" && profile.name ? profile.name : "Developer";
 }
 
-export async function getCurrentUser(): Promise<AuthUser | null> {
+export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
   const insforge = await createInsForgeServerClient();
   const { data, error } = await insforge.auth.getCurrentUser();
   if (error || !data.user) return null;
@@ -18,4 +20,4 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     email: data.user.email,
     name: profileName(data.user.profile),
   };
-}
+});
