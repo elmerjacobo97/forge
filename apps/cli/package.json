@@ -16,7 +16,7 @@
     "test": "vitest run src"
   },
   "dependencies": {
-    "node-appwrite": "^27.0.0",
+    "@insforge/sdk": "1.4.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
