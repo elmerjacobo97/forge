@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useForm } from "@tanstack/react-form";
-import { Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 
 import { signInAction } from "@/features/auth/actions";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import {
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupInput,
   InputGroupText,
 } from "@/components/ui/input-group";
@@ -31,6 +32,7 @@ import { loginSchema } from "../schemas/auth-schema";
 
 export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm({
@@ -122,7 +124,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
                       <InputGroupInput
                         id={field.name}
                         name={field.name}
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
@@ -131,6 +133,25 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
                         autoComplete="current-password"
                         disabled={isPending}
                       />
+                      <InputGroupAddon align="inline-end">
+                        <InputGroupButton
+                          size="icon-xs"
+                          onClick={() =>
+                            setShowPassword((current) => !current)
+                          }
+                          aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                          }
+                          aria-pressed={showPassword}
+                          disabled={isPending}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="size-3.5" aria-hidden="true" />
+                          ) : (
+                            <Eye className="size-3.5" aria-hidden="true" />
+                          )}
+                        </InputGroupButton>
+                      </InputGroupAddon>
                     </InputGroup>
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />

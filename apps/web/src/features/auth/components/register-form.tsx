@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useForm } from "@tanstack/react-form";
-import { Lock, Mail, User } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 
 import { registerAction } from "@/features/auth/actions";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupInput,
   InputGroupText,
 } from "@/components/ui/input-group";
@@ -26,6 +27,8 @@ import { registerSchema } from "../schemas/auth-schema";
 
 export function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm({
@@ -141,7 +144,7 @@ export function RegisterForm() {
                       <InputGroupInput
                         id={field.name}
                         name={field.name}
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
@@ -150,6 +153,25 @@ export function RegisterForm() {
                         autoComplete="new-password"
                         disabled={isPending}
                       />
+                      <InputGroupAddon align="inline-end">
+                        <InputGroupButton
+                          size="icon-xs"
+                          onClick={() =>
+                            setShowPassword((current) => !current)
+                          }
+                          aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                          }
+                          aria-pressed={showPassword}
+                          disabled={isPending}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="size-3.5" aria-hidden="true" />
+                          ) : (
+                            <Eye className="size-3.5" aria-hidden="true" />
+                          )}
+                        </InputGroupButton>
+                      </InputGroupAddon>
                     </InputGroup>
                     {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
@@ -171,7 +193,7 @@ export function RegisterForm() {
                       <InputGroupInput
                         id={field.name}
                         name={field.name}
-                        type="password"
+                        type={showConfirmPassword ? "text" : "password"}
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
@@ -180,6 +202,27 @@ export function RegisterForm() {
                         autoComplete="new-password"
                         disabled={isPending}
                       />
+                      <InputGroupAddon align="inline-end">
+                        <InputGroupButton
+                          size="icon-xs"
+                          onClick={() =>
+                            setShowConfirmPassword((current) => !current)
+                          }
+                          aria-label={
+                            showConfirmPassword
+                              ? "Hide password"
+                              : "Show password"
+                          }
+                          aria-pressed={showConfirmPassword}
+                          disabled={isPending}
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="size-3.5" aria-hidden="true" />
+                          ) : (
+                            <Eye className="size-3.5" aria-hidden="true" />
+                          )}
+                        </InputGroupButton>
+                      </InputGroupAddon>
                     </InputGroup>
                     {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
