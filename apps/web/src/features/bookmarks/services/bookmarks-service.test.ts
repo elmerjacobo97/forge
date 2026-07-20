@@ -1,3 +1,5 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 const database = vi.hoisted(() => ({ from: vi.fn() }));
 
 vi.mock("@/lib/insforge/browser", () => ({ insforge: { database } }));
