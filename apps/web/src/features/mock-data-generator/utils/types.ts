@@ -33,6 +33,7 @@ export type FieldTypeId =
 export type OutputFormat = "json" | "ndjson" | "csv";
 
 export interface SchemaField {
+  id: string;
   name: string;
   type: FieldTypeId;
   options?: Record<string, unknown>;

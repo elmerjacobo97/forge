@@ -12,6 +12,19 @@
     "test": "pnpm run test:web && pnpm run test:cli",
     "test:web": "pnpm --filter @forge/web test",
     "test:cli": "pnpm --filter @forge/cli test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "doctor": "pnpm --filter @forge/web doctor"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.2.10",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.5",
+    "typescript-eslint": "^8.64.0"
   }
 }

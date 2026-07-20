@@ -12,3 +12,5 @@ minimumReleaseAgeExclude:
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - "semver"
+  # eslint-config-next pulls 3.10.1, which lost provenance vs earlier 3.x releases
+  - "eslint-import-resolver-typescript"

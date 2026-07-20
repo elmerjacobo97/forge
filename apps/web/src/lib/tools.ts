@@ -222,10 +222,6 @@ export const tools: ToolDef[] = [
   },
 ];
 
-export function getTool(id: string): ToolDef | undefined {
-  return tools.find((t) => t.id === id);
-}
-
 export function getToolByPath(path: string): ToolDef | undefined {
   return tools.find((t) => t.path === path) ?? tools.find((t) => path.startsWith(`${t.path}/`));
 }

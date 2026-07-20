@@ -1,4 +1,5 @@
 import { ExternalLink, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { format } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ export function BookmarkCard({ bookmark, onEdit, onDelete }: BookmarkCardProps) 
               {bookmark.category}
             </Badge>
             <span className="text-xs text-muted-foreground">
-              {new Date(bookmark.createdAt).toLocaleDateString()}
+              {format(new Date(bookmark.createdAt), "MMM d, yyyy")}
             </span>
           </div>
           <h3 className="font-heading text-base font-medium leading-snug">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { format } from "date-fns";
 import { FolderKanban, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -178,7 +179,7 @@ export function ProjectList() {
                     {project.description || "No description"}
                   </p>
                   <p className="mt-auto pt-3 text-[11px] text-muted-foreground">
-                    Created {new Date(project.createdAt).toLocaleDateString()}
+                    Created {format(new Date(project.createdAt), "MMM d, yyyy")}
                   </p>
                 </Link>
               </article>

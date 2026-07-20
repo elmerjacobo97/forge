@@ -6,8 +6,9 @@
 - Do not create speculative workspace packages; `packages/*` is only a reserved workspace glob.
 
 ## Commands
-- Run commands from the repository root: `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`, `pnpm doctor`.
-- `pnpm build` and `pnpm test` verify web and CLI. Use `pnpm build:web`, `pnpm build:cli`, `pnpm test:web`, or `pnpm test:cli` for one package. There is no lint script or ESLint config.
+- Run commands from the repository root: `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm format`, `pnpm doctor`.
+- `pnpm build` and `pnpm test` verify web and CLI. Use `pnpm build:web`, `pnpm build:cli`, `pnpm test:web`, or `pnpm test:cli` for one package.
+- Lint/format: ESLint 9 flat config (`eslint.config.mjs`) + Prettier (`.prettierrc`). `pnpm lint` / `pnpm lint:fix` for ESLint; `pnpm format` / `pnpm format:check` for Prettier. Do not use Biome.
 - Run one web test with `pnpm --filter @forge/web exec vitest run <path>`, one Function test with `pnpm --filter @forge/ai-content-generator exec vitest run <path>`, or one CLI test with `pnpm --filter @forge/cli exec vitest run <path>`; omit `run` for watch mode.
 - Vitest defaults to `environment: "node"` with globals enabled. Tests are `*.test.ts`; DOM APIs are unavailable unless a test opts into another environment.
 - Dependency installs enforce a 24-hour minimum package age and a no-downgrade trust policy in `pnpm-workspace.yaml`.

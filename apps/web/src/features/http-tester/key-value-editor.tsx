@@ -28,7 +28,15 @@ export function KeyValueEditor({
   }
 
   function addPair() {
-    onChange([...pairs, { key: "", value: "", enabled: true }]);
+    onChange([
+      ...pairs,
+      {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        key: "",
+        value: "",
+        enabled: true,
+      },
+    ]);
   }
 
   function removePair(index: number) {
@@ -38,7 +46,7 @@ export function KeyValueEditor({
   return (
     <div className="flex flex-col gap-2">
       {pairs.map((pair, i) => (
-        <div key={i} className="flex items-center gap-2">
+        <div key={pair.id} className="flex items-center gap-2">
           <Checkbox
             checked={pair.enabled}
             onCheckedChange={(checked) =>

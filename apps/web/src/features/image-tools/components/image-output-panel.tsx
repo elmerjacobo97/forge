@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { Download } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -54,10 +55,13 @@ export function ImageOutputPanel({ output, sizeDelta, onDownload }: ImageOutputP
           </Tooltip>
         </div>
       </div>
-      <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto rounded-xl border bg-muted/20 p-3">
-        <img
+      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-auto rounded-xl border bg-muted/20 p-3">
+        <Image
           src={output.url}
           alt="Converted preview"
+          width={output.width}
+          height={output.height}
+          unoptimized
           className="max-h-full max-w-full rounded-lg object-contain"
         />
       </div>

@@ -7,6 +7,11 @@ interface UseImageConvertOptions {
   onSetError?: (error: string | null) => void
 }
 
+interface SizeOverride {
+  width: number
+  height: number
+}
+
 export function useImageConvert(
   source: SourceImage | null,
   { onSetError }: UseImageConvertOptions = {},
@@ -14,12 +19,20 @@ export function useImageConvert(
   const [format, setFormat] = useState<OutputFormat>("webp")
   const [quality, setQuality] = useState(80)
   const [resizeEnabled, setResizeEnabled] = useState(false)
-  const [targetWidth, setTargetWidth] = useState(0)
-  const [targetHeight, setTargetHeight] = useState(0)
+  const [sizeOverride, setSizeOverride] = useState<SizeOverride | null>(null)
   const [lockAspect, setLockAspect] = useState(true)
   const [output, setOutput] = useState<OutputResult | null>(null)
   const [loading, setLoading] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const [prevSource, setPrevSource] = useState(source)
+
+  if (source !== prevSource) {
+    setPrevSource(source)
+    setSizeOverride(null)
+  }
+
+  const targetWidth = sizeOverride?.width ?? source?.width ?? 0
+  const targetHeight = sizeOverride?.height ?? source?.height ?? 0
 
   const isLossy = LOSSY.includes(format)
   const currentMime = useMemo(() => FORMATS.find((f) => f.id === format)!.mime, [format])
@@ -30,13 +43,6 @@ export function useImageConvert(
   }, [source, output])
 
   useEffect(() => {
-    if (source) {
-      setTargetWidth(source.width)
-      setTargetHeight(source.height)
-    }
-  }, [source])
-
-  useEffect(() => {
     return () => {
       if (output) URL.revokeObjectURL(output.url)
     }
@@ -45,13 +51,16 @@ export function useImageConvert(
 
   function applyResize(value: number, axis: "w" | "h") {
     if (!source) return
-    if (axis === "w") setTargetWidth(value)
-    else setTargetHeight(value)
+    let width = sizeOverride?.width ?? source.width
+    let height = sizeOverride?.height ?? source.height
+    if (axis === "w") width = value
+    else height = value
     if (lockAspect && source.width && source.height) {
       const ratio = source.width / source.height
-      if (axis === "w") setTargetHeight(Math.round(value / ratio))
-      else setTargetWidth(Math.round(value * ratio))
+      if (axis === "w") height = Math.round(value / ratio)
+      else width = Math.round(value * ratio)
     }
+    setSizeOverride({ width, height })
   }
 
   const resetOutput = useCallback(() => {
@@ -142,6 +151,7 @@ export function useImageConvert(
     setLoading(false)
     setResizeEnabled(false)
     setQuality(80)
+    setSizeOverride(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [output])
 
@@ -153,9 +163,17 @@ export function useImageConvert(
     resizeEnabled,
     setResizeEnabled,
     targetWidth,
-    setTargetWidth,
+    setTargetWidth: (width: number) =>
+      setSizeOverride((prev) => ({
+        width,
+        height: prev?.height ?? source?.height ?? 0,
+      })),
     targetHeight,
-    setTargetHeight,
+    setTargetHeight: (height: number) =>
+      setSizeOverride((prev) => ({
+        width: prev?.width ?? source?.width ?? 0,
+        height,
+      })),
     lockAspect,
     setLockAspect,
     output,

@@ -176,7 +176,7 @@ function ResultGrid({
   const rows: ResultRow[] = [
     { label: "ISO 8601", value: date.toISOString(), copyKey: "iso" },
     { label: "UTC", value: date.toUTCString(), copyKey: "utc" },
-    { label: "Local", value: date.toLocaleString(), copyKey: "local" },
+    { label: "Local", value: safeFormat(date, "MMM d, yyyy HH:mm:ss"), copyKey: "local" },
     {
       label: `Timestamp (${unit})`,
       value: String(unit === "s" ? Math.floor(date.getTime() / 1000) : date.getTime()),
@@ -185,12 +185,12 @@ function ResultGrid({
     { label: "Relative", value: formatRelative(date), copyKey: "rel" },
     {
       label: "Date only",
-      value: safeFormat(date, { year: "numeric", month: "short", day: "numeric" }),
+      value: safeFormat(date, "MMM d, yyyy"),
       copyKey: "date",
     },
     {
       label: "Time only",
-      value: safeFormat(date, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }),
+      value: safeFormat(date, "HH:mm:ss"),
       copyKey: "time",
     },
   ]

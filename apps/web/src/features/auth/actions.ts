@@ -53,6 +53,8 @@ export async function verifyEmailAction(input: unknown): Promise<AuthActionResul
   redirect("/dev-board");
 }
 
+// Public credential flow (email verification resend) — no prior session exists.
+// react-doctor-disable-next-line react-doctor/server-auth-actions
 export async function resendVerificationAction(email: unknown): Promise<AuthActionResult> {
   const parsed = verifyEmailSchema.shape.email.safeParse(email);
   if (!parsed.success) return { ok: false, message: "Enter a valid email." };

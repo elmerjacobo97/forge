@@ -19,14 +19,21 @@ export function SchemaEditor({ fields, onChange }: SchemaEditorProps) {
   }
 
   function addField() {
-    onChange([...fields, { name: "", type: "fullName" }]);
+    onChange([
+      ...fields,
+      {
+        id: `field-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: "",
+        type: "fullName",
+      },
+    ]);
   }
 
   return (
     <div className="flex flex-col gap-2">
       {fields.map((field, i) => (
         <SchemaFieldRow
-          key={i}
+          key={field.id}
           field={field}
           onChange={(f) => updateField(i, f)}
           onRemove={() => removeField(i)}

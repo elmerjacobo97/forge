@@ -1,5 +1,6 @@
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
 import type { ReactNode } from "react";
+import { format, parseISO } from "date-fns";
 import { Inbox } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +39,7 @@ const priorityConfig = {
 } satisfies ChartConfig;
 
 function shortDate(value: string): string {
-  return new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return format(parseISO(value), "MMM d");
 }
 
 function minutesTick(value: number): string {

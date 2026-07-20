@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { endOfDay, format, startOfDay, subDays } from "date-fns";
@@ -40,11 +41,15 @@ import { PRIORITY_COLORS } from "../types/board";
 import { downloadCsv, formatRangeLabel } from "../utils/analytics-range";
 import { analyticsCsv, buildAnalytics, presetRange } from "../utils/analytics";
 import { formatDuration } from "../utils/timer";
-import { AnalyticsCharts } from "./analytics-charts";
 import { AnalyticsSkeleton } from "./analytics-skeleton";
 import { ChartsSkeleton } from "./charts-skeleton";
 import { SectionEyebrow } from "./section-eyebrow";
 import { StatItem } from "./stat-item";
+
+const AnalyticsCharts = dynamic(
+  () => import("./analytics-charts").then((mod) => mod.AnalyticsCharts),
+  { ssr: false, loading: () => <ChartsSkeleton /> },
+);
 
 function formatCustomRange(range: DateRange | undefined): string {
   if (!range?.from) return "Select date range";

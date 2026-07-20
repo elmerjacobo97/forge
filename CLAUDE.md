@@ -12,11 +12,13 @@ Run from the repo root (pnpm workspace, one app: `@forge/web` in `apps/web`).
 - `pnpm dev` — start the Next.js development server
 - `pnpm build` — build Next.js and the CLI
 - `pnpm test` — run the web test suite (Vitest) once
+- `pnpm lint` / `pnpm lint:fix` — ESLint (flat config at repo root)
+- `pnpm format` / `pnpm format:check` — Prettier (`.prettierrc`)
 - `pnpm doctor` — run React Doctor against the web app
 
 Single test file: `pnpm --filter @forge/web exec vitest run <path>` (or omit `run` to watch). Vitest configuration lives in `apps/web/vitest.config.ts`.
 
-There is no lint script configured in either `package.json`; do not assume ESLint is present.
+Linting uses ESLint + Prettier (not Biome). Config lives at the workspace root for the monorepo.
 
 ## Architecture
 

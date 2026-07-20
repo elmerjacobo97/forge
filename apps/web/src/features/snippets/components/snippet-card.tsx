@@ -1,4 +1,5 @@
 import { Check, Copy, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { format } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ export function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
               {snippet.kind}
             </Badge>
             <span className="text-xs text-muted-foreground">
-              {new Date(snippet.createdAt).toLocaleDateString()}
+              {format(new Date(snippet.createdAt), "MMM d, yyyy")}
             </span>
           </div>
           <h3 className="font-heading text-base font-medium leading-snug">

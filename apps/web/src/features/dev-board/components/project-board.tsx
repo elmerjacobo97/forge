@@ -97,27 +97,24 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
     return () => window.clearInterval(interval);
   }, [alertedTickets, tickets]);
 
-  useEffect(() => {
-    const pendingDrop = pendingDropRef.current;
-    if (!pendingDrop) return;
-
-    const persistedTicket = findTicket(tickets, pendingDrop.id);
-    if (
-      persistedTicket?.column === pendingDrop.column &&
-      persistedTicket.position === pendingDrop.position
-    ) {
-      pendingDropRef.current = null;
-      dragTicketsRef.current = null;
-      setDragTickets(null);
-    }
-  }, [tickets]);
+  const pendingDrop = pendingDropRef.current;
+  const dragSynced =
+    !pendingDrop ||
+    (() => {
+      const persistedTicket = findTicket(tickets, pendingDrop.id);
+      return (
+        persistedTicket?.column === pendingDrop.column &&
+        persistedTicket.position === pendingDrop.position
+      );
+    })();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor),
   );
 
-  const visibleTickets = dragTickets ?? tickets;
+  const visibleTickets =
+    dragTickets !== null && !dragSynced ? dragTickets : tickets;
   const activeTicket = activeId ? findTicket(visibleTickets, activeId) : undefined;
 
   const overColumn: ColumnId | null = (() => {
@@ -128,6 +125,7 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
   })();
 
   function handleDragStart(event: DragStartEvent) {
+    pendingDropRef.current = null;
     setActiveId(event.active.id as string);
     dragTicketsRef.current = tickets;
     setDragTickets(tickets);

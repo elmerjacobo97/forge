@@ -8,6 +8,7 @@ export type HttpMethod =
   | "OPTIONS";
 
 export interface KeyValue {
+  id: string;
   key: string;
   value: string;
   enabled: boolean;
@@ -41,15 +42,79 @@ export interface HistoryEntry {
   timestamp: number;
 }
 
-const STORAGE_KEY = "forge-http-history";
+const STORAGE_KEY = "forge-http-history:v1";
 const MAX_HISTORY = 50;
+
+function newPairId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeKeyValue(value: unknown): KeyValue | null {
+  if (typeof value !== "object" || value === null) return null;
+  const record = value as Record<string, unknown>;
+  if (typeof record.key !== "string" || typeof record.value !== "string") return null;
+  return {
+    id: typeof record.id === "string" ? record.id : newPairId(),
+    key: record.key,
+    value: record.value,
+    enabled: record.enabled !== false,
+  };
+}
+
+function normalizeRequest(value: unknown): HttpRequestConfig | null {
+  if (typeof value !== "object" || value === null) return null;
+  const record = value as Record<string, unknown>;
+  if (typeof record.method !== "string" || typeof record.url !== "string") return null;
+  const params = Array.isArray(record.params)
+    ? record.params.map(normalizeKeyValue).filter((p): p is KeyValue => p !== null)
+    : [];
+  const headers = Array.isArray(record.headers)
+    ? record.headers.map(normalizeKeyValue).filter((p): p is KeyValue => p !== null)
+    : [];
+  return {
+    method: record.method as HttpRequestConfig["method"],
+    url: record.url,
+    params,
+    headers,
+    bodyType: (typeof record.bodyType === "string" ? record.bodyType : "none") as HttpRequestConfig["bodyType"],
+    body: typeof record.body === "string" ? record.body : "",
+  };
+}
 
 export function loadHistory(): HistoryEntry[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((entry) => {
+      if (typeof entry !== "object" || entry === null) return [];
+      const record = entry as Record<string, unknown>;
+      const request = normalizeRequest(record.request);
+      if (!request || typeof record.id !== "string") return [];
+      const response = record.response;
+      if (typeof response !== "object" || response === null) return [];
+      const res = response as Record<string, unknown>;
+      if (
+        typeof res.status !== "number" ||
+        typeof res.durationMs !== "number" ||
+        typeof res.size !== "number"
+      ) {
+        return [];
+      }
+      return [
+        {
+          id: record.id,
+          request,
+          response: {
+            status: res.status,
+            durationMs: res.durationMs,
+            size: res.size,
+          },
+          timestamp: typeof record.timestamp === "number" ? record.timestamp : Date.now(),
+        },
+      ];
+    });
   } catch {
     return [];
   }
