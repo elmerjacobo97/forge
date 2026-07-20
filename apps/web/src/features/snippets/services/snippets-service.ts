@@ -1,62 +1,74 @@
-import {
-  fetchFeatureRows,
-  createFeatureRow,
-  updateFeatureRow,
-  deleteFeatureRow,
-  isAppwriteDataEnabled,
-} from "@/lib/appwrite-data";
+import { z } from "zod";
+
+import { insforge } from "@/lib/insforge/browser";
 import type { Snippet } from "../types";
 
-const FEATURE = "snippets";
+const snippetRowSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  kind: z.enum(["note", "prompt", "config", "snippet"]),
+  content: z.string(),
+  language: z.string().nullable(),
+  tags: z.array(z.string()),
+  created_at: z.string(),
+});
 
-type SnippetPayload = Omit<Snippet, "id" | "createdAt">;
+type SnippetInput = Omit<Snippet, "id" | "createdAt">;
 
-function requireAppwriteAccess(userId?: string): string {
+function requireUser(userId?: string): void {
   if (!userId) throw new Error("Sign in to use Snippets.");
-  if (!isAppwriteDataEnabled(userId)) throw new Error("Snippets storage is not configured.");
-  return userId;
+}
+
+function toSnippet(value: unknown): Snippet {
+  const row = snippetRowSchema.parse(value);
+  return { ...row, createdAt: row.created_at };
+}
+
+function failure(error: { message?: string } | null, fallback: string): Error {
+  return new Error(error?.message || fallback);
 }
 
 export const snippetsService = {
   async fetchSnippets(userId?: string): Promise<Snippet[]> {
-    const resolvedUserId = requireAppwriteAccess(userId);
-    const rows = await fetchFeatureRows<SnippetPayload>(FEATURE, resolvedUserId);
-    return rows.map((row) => ({
-      id: row.id,
-      createdAt: row.createdAt,
-      ...row.payload,
-    }));
+    requireUser(userId);
+    const { data, error } = await insforge.database
+      .from("snippets")
+      .select("id,title,kind,content,language,tags,created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw failure(error, "Failed to load snippets.");
+    return snippetRowSchema.array().parse(data).map(toSnippet);
   },
 
-  async createSnippet(
-    snippet: SnippetPayload,
-    userId?: string,
-  ): Promise<Snippet> {
-    const resolvedUserId = requireAppwriteAccess(userId);
-    const row = await createFeatureRow<SnippetPayload>(FEATURE, snippet, resolvedUserId);
-    return {
-      id: row.id,
-      createdAt: row.createdAt,
-      ...row.payload,
-    };
+  async createSnippet(snippet: SnippetInput, userId?: string): Promise<Snippet> {
+    requireUser(userId);
+    const { data, error } = await insforge.database
+      .from("snippets")
+      .insert([snippet])
+      .select("id,title,kind,content,language,tags,created_at")
+      .single();
+    if (error) throw failure(error, "Failed to create snippet.");
+    return toSnippet(data);
   },
 
   async updateSnippet(
     snippetId: string,
-    snippet: SnippetPayload,
+    snippet: SnippetInput,
     userId?: string,
   ): Promise<Snippet> {
-    requireAppwriteAccess(userId);
-    const row = await updateFeatureRow<SnippetPayload>(snippetId, snippet);
-    return {
-      id: row.id,
-      createdAt: row.createdAt,
-      ...row.payload,
-    };
+    requireUser(userId);
+    const { data, error } = await insforge.database
+      .from("snippets")
+      .update(snippet)
+      .eq("id", snippetId)
+      .select("id,title,kind,content,language,tags,created_at")
+      .single();
+    if (error) throw failure(error, "Failed to update snippet.");
+    return toSnippet(data);
   },
 
   async deleteSnippet(snippetId: string, userId?: string): Promise<void> {
-    requireAppwriteAccess(userId);
-    await deleteFeatureRow(snippetId);
+    requireUser(userId);
+    const { error } = await insforge.database.from("snippets").delete().eq("id", snippetId);
+    if (error) throw failure(error, "Failed to delete snippet.");
   },
 };

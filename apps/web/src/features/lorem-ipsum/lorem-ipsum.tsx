@@ -1,3 +1,5 @@
+"use client";
+
 import { useReducer, useState } from "react"
 import { Check, Copy, Eraser, RefreshCw } from "lucide-react"
 

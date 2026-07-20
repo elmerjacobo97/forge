@@ -1,137 +1,73 @@
-import { ID, Permission, Query, Role } from "appwrite";
+import { z } from "zod";
 
-import { tablesDB } from "@/lib/appwrite";
-
+import { insforge } from "@/lib/insforge/browser";
 import type { Project, ProjectCreateInput, ProjectUpdateInput } from "../types/project";
-import { assertProjectHasNoTickets } from "../utils/project-delete";
 
-const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const projectsTableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_PROJECTS_TABLE_ID;
-const ticketsTableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_TICKETS_TABLE_ID;
+const projectRowSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  created_at: z.string(),
+});
 
-export interface ProjectRow {
-  $id: string;
-  $createdAt: string;
-  userId: string;
-  name: string;
-  description: string;
+function toProject(value: unknown): Project {
+  const row = projectRowSchema.parse(value);
+  return { id: row.id, name: row.name, description: row.description, createdAt: row.created_at };
 }
 
-function assertConfigured(): void {
-  if (!databaseId || !projectsTableId || !ticketsTableId) {
-    throw new Error("Dev Board storage is not configured.");
-  }
-}
-
-function privatePermissions(userId: string) {
-  return [
-    Permission.read(Role.user(userId)),
-    Permission.update(Role.user(userId)),
-    Permission.delete(Role.user(userId)),
-  ];
-}
-
-export function toProject(row: ProjectRow): Project {
-  return {
-    id: row.$id,
-    name: row.name,
-    description: row.description,
-    createdAt: row.$createdAt,
-  };
-}
-
-async function requireOwnedProject(projectId: string, userId: string): Promise<ProjectRow> {
-  const row = (await tablesDB.getRow({
-    databaseId,
-    tableId: projectsTableId,
-    rowId: projectId,
-  })) as unknown as ProjectRow;
-
-  if (row.userId !== userId) {
-    throw new Error("Project not found.");
-  }
-
-  return row;
-}
-
-async function countTicketsForProject(projectId: string, userId: string): Promise<number> {
-  const response = await tablesDB.listRows({
-    databaseId,
-    tableId: ticketsTableId,
-    queries: [
-      Query.equal("userId", userId),
-      Query.equal("projectId", projectId),
-      Query.limit(1),
-    ],
-  });
-  return response.total;
+function failure(error: { message?: string } | null, fallback: string): Error {
+  return new Error(error?.message || fallback);
 }
 
 export const projectsService = {
-  async listProjects(userId: string): Promise<Project[]> {
-    assertConfigured();
-    const response = await tablesDB.listRows({
-      databaseId,
-      tableId: projectsTableId,
-      queries: [Query.equal("userId", userId), Query.orderDesc("$createdAt")],
-    });
-    return (response.rows as unknown as ProjectRow[]).map(toProject);
+  async listProjects(_userId: string): Promise<Project[]> {
+    const { data, error } = await insforge.database
+      .from("dev_board_projects")
+      .select("id,name,description,created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw failure(error, "Failed to load projects.");
+    return projectRowSchema.array().parse(data).map(toProject);
   },
 
-  async getProject(projectId: string, userId: string): Promise<Project> {
-    assertConfigured();
-    return toProject(await requireOwnedProject(projectId, userId));
+  async getProject(projectId: string, _userId: string): Promise<Project> {
+    const { data, error } = await insforge.database
+      .from("dev_board_projects")
+      .select("id,name,description,created_at")
+      .eq("id", projectId)
+      .single();
+    if (error) throw failure(error, "Project not found.");
+    return toProject(data);
   },
 
-  async createProject(input: ProjectCreateInput, userId: string): Promise<Project> {
-    assertConfigured();
-    const row = (await tablesDB.createRow({
-      databaseId,
-      tableId: projectsTableId,
-      rowId: ID.unique(),
-      data: {
-        userId,
-        name: input.name,
-        description: input.description,
-      },
-      permissions: privatePermissions(userId),
-    })) as unknown as ProjectRow;
-
-    return toProject(row);
+  async createProject(input: ProjectCreateInput, _userId: string): Promise<Project> {
+    const { data, error } = await insforge.database
+      .from("dev_board_projects")
+      .insert([input])
+      .select("id,name,description,created_at")
+      .single();
+    if (error) throw failure(error, "Failed to create project.");
+    return toProject(data);
   },
 
   async updateProject(
     projectId: string,
     input: ProjectUpdateInput,
-    userId: string,
+    _userId: string,
   ): Promise<Project> {
-    assertConfigured();
-    await requireOwnedProject(projectId, userId);
-
-    const data: Record<string, string> = {};
-    if (input.name !== undefined) data.name = input.name;
-    if (input.description !== undefined) data.description = input.description;
-
-    const row = (await tablesDB.updateRow({
-      databaseId,
-      tableId: projectsTableId,
-      rowId: projectId,
-      data,
-    })) as unknown as ProjectRow;
-
-    return toProject(row);
+    const { data, error } = await insforge.database
+      .from("dev_board_projects")
+      .update(input)
+      .eq("id", projectId)
+      .select("id,name,description,created_at")
+      .single();
+    if (error) throw failure(error, "Failed to update project.");
+    return toProject(data);
   },
 
-  async deleteProject(projectId: string, userId: string): Promise<void> {
-    assertConfigured();
-    await requireOwnedProject(projectId, userId);
-    // Count immediately before delete to reduce races with concurrent ticket creates.
-    assertProjectHasNoTickets(await countTicketsForProject(projectId, userId));
-
-    await tablesDB.deleteRow({
-      databaseId,
-      tableId: projectsTableId,
-      rowId: projectId,
+  async deleteProject(projectId: string, _userId: string): Promise<void> {
+    const { error } = await insforge.database.rpc("delete_empty_dev_board_project", {
+      p_project_id: projectId,
     });
+    if (error) throw failure(error, "Failed to delete project.");
   },
 };

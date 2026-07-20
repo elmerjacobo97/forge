@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react"
 import QRCode from "qrcode"
 import { Check, Copy, Download, Eraser } from "lucide-react"

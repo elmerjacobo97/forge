@@ -1,108 +1,74 @@
-import { tablesDB } from "@/lib/appwrite";
-import { Query, ID, Permission, Role } from "appwrite";
+import { z } from "zod";
+
+import { insforge } from "@/lib/insforge/browser";
 import type { Bookmark } from "../types";
 
-const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const tableId = import.meta.env.VITE_APPWRITE_BOOKMARKS_COLLECTION_ID;
+const bookmarkRowSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  url: z.string(),
+  category: z.enum(["docs", "git", "tool", "article", "other"]),
+  description: z.string(),
+  tags: z.array(z.string()),
+  created_at: z.string(),
+});
 
-function requireAppwriteAccess(userId?: string): {
-  databaseId: string;
-  tableId: string;
-  userId: string;
-} {
+type BookmarkInput = Omit<Bookmark, "id" | "createdAt">;
+
+function requireUser(userId?: string): void {
   if (!userId) throw new Error("Sign in to use Bookmarks.");
-  if (!databaseId || !tableId) throw new Error("Bookmarks storage is not configured.");
-  return { databaseId, tableId, userId };
+}
+
+function toBookmark(value: unknown): Bookmark {
+  const row = bookmarkRowSchema.parse(value);
+  return { ...row, createdAt: row.created_at };
+}
+
+function failure(error: { message?: string } | null, fallback: string): Error {
+  return new Error(error?.message || fallback);
 }
 
 export const bookmarksService = {
   async fetchBookmarks(userId?: string): Promise<Bookmark[]> {
-    const config = requireAppwriteAccess(userId);
-    const response = await tablesDB.listRows({
-      databaseId: config.databaseId,
-      tableId: config.tableId,
-      queries: [Query.equal("userId", config.userId), Query.orderDesc("$createdAt")],
-    });
-    return response.rows.map((row) => ({
-      id: row.$id,
-      title: row.title,
-      url: row.url,
-      category: row.category as Bookmark["category"],
-      description: row.description,
-      tags: row.tags || [],
-      createdAt: row.$createdAt,
-    }));
+    requireUser(userId);
+    const { data, error } = await insforge.database
+      .from("bookmarks")
+      .select("id,title,url,category,description,tags,created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw failure(error, "Failed to load bookmarks.");
+    return bookmarkRowSchema.array().parse(data).map(toBookmark);
   },
 
-  async createBookmark(
-    bookmark: Omit<Bookmark, "id" | "createdAt">,
-    userId?: string,
-  ): Promise<Bookmark> {
-    const config = requireAppwriteAccess(userId);
-    const row = await tablesDB.createRow({
-      databaseId: config.databaseId,
-      tableId: config.tableId,
-      rowId: ID.unique(),
-      data: {
-        title: bookmark.title,
-        url: bookmark.url,
-        category: bookmark.category,
-        description: bookmark.description,
-        tags: bookmark.tags,
-        userId: config.userId,
-      },
-      permissions: [
-        Permission.read(Role.user(config.userId)),
-        Permission.update(Role.user(config.userId)),
-        Permission.delete(Role.user(config.userId)),
-      ],
-    });
-    return {
-      id: row.$id,
-      title: row.title,
-      url: row.url,
-      category: row.category as Bookmark["category"],
-      description: row.description,
-      tags: row.tags || [],
-      createdAt: row.$createdAt,
-    };
+  async createBookmark(bookmark: BookmarkInput, userId?: string): Promise<Bookmark> {
+    requireUser(userId);
+    const { data, error } = await insforge.database
+      .from("bookmarks")
+      .insert([bookmark])
+      .select("id,title,url,category,description,tags,created_at")
+      .single();
+    if (error) throw failure(error, "Failed to create bookmark.");
+    return toBookmark(data);
   },
 
   async updateBookmark(
     bookmarkId: string,
-    bookmark: Omit<Bookmark, "id" | "createdAt">,
+    bookmark: BookmarkInput,
     userId?: string,
   ): Promise<Bookmark> {
-    const config = requireAppwriteAccess(userId);
-    const row = await tablesDB.updateRow({
-      databaseId: config.databaseId,
-      tableId: config.tableId,
-      rowId: bookmarkId,
-      data: {
-        title: bookmark.title,
-        url: bookmark.url,
-        category: bookmark.category,
-        description: bookmark.description,
-        tags: bookmark.tags,
-      },
-    });
-    return {
-      id: row.$id,
-      title: row.title,
-      url: row.url,
-      category: row.category as Bookmark["category"],
-      description: row.description,
-      tags: row.tags || [],
-      createdAt: row.$createdAt,
-    };
+    requireUser(userId);
+    const { data, error } = await insforge.database
+      .from("bookmarks")
+      .update(bookmark)
+      .eq("id", bookmarkId)
+      .select("id,title,url,category,description,tags,created_at")
+      .single();
+    if (error) throw failure(error, "Failed to update bookmark.");
+    return toBookmark(data);
   },
 
   async deleteBookmark(bookmarkId: string, userId?: string): Promise<void> {
-    const config = requireAppwriteAccess(userId);
-    await tablesDB.deleteRow({
-      databaseId: config.databaseId,
-      tableId: config.tableId,
-      rowId: bookmarkId,
-    });
+    requireUser(userId);
+    const { error } = await insforge.database.from("bookmarks").delete().eq("id", bookmarkId);
+    if (error) throw failure(error, "Failed to delete bookmark.");
   },
 };

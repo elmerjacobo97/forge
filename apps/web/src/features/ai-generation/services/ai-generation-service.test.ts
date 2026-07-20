@@ -1,10 +1,4 @@
 import { describe, expect, it, vi } from "vitest";
-import { ExecutionMethod } from "appwrite";
-
-vi.mock("@/lib/appwrite", () => ({
-  functions: { createExecution: vi.fn() },
-}));
-
 import {
   AiGenerationServiceError,
   createAiGenerationService,
@@ -36,26 +30,26 @@ const snippetResponse = {
 };
 
 function setup(responseBody: unknown = bookmarkResponse, responseStatusCode = 200) {
-  const createExecution = vi.fn(async () => ({
-    responseBody:
+  const fetcher = vi.fn(async () =>
+    new Response(
       typeof responseBody === "string" ? responseBody : JSON.stringify(responseBody),
-    responseStatusCode,
-  }));
-  const service = createAiGenerationService({ createExecution }, "ai-content-generator");
-  return { createExecution, service };
+      { status: responseStatusCode, headers: { "content-type": "application/json" } },
+    ),
+  );
+  const service = createAiGenerationService(fetcher);
+  return { fetcher, service };
 }
 
 describe("aiGenerationService", () => {
-  it("executes the configured Function and validates a bookmark response", async () => {
-    const { createExecution, service } = setup();
+  it("calls the Route Handler and validates a bookmark response", async () => {
+    const { fetcher, service } = setup();
 
     await expect(service.generate(bookmarkRequest)).resolves.toEqual(bookmarkResponse);
-    expect(createExecution).toHaveBeenCalledWith({
-      functionId: "ai-content-generator",
+    expect(fetcher).toHaveBeenCalledWith("/api/ai-content", {
+      method: "POST",
       body: JSON.stringify(bookmarkRequest),
-      async: false,
-      method: ExecutionMethod.POST,
       headers: { "content-type": "application/json" },
+      credentials: "same-origin",
     });
   });
 
@@ -68,22 +62,12 @@ describe("aiGenerationService", () => {
   });
 
   it("rejects invalid input before executing the Function", async () => {
-    const { createExecution, service } = setup();
+    const { fetcher, service } = setup();
 
     await expect(
       service.generate({ type: "bookmark", title: "Missing URL" } as never),
     ).rejects.toMatchObject({ code: "INVALID_INPUT" });
-    expect(createExecution).not.toHaveBeenCalled();
-  });
-
-  it("rejects calls when the Function ID is missing", async () => {
-    const createExecution = vi.fn();
-    const service = createAiGenerationService({ createExecution }, "");
-
-    await expect(service.generate(bookmarkRequest)).rejects.toThrow(
-      "AI generation is not configured.",
-    );
-    expect(createExecution).not.toHaveBeenCalled();
+    expect(fetcher).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -127,9 +111,9 @@ describe("aiGenerationService", () => {
     });
   });
 
-  it("hides Appwrite transport errors", async () => {
-    const { createExecution, service } = setup();
-    createExecution.mockRejectedValueOnce(new Error("internal Appwrite detail"));
+  it("hides transport errors", async () => {
+    const { fetcher, service } = setup();
+    fetcher.mockRejectedValueOnce(new Error("internal transport detail"));
 
     await expect(service.generate(bookmarkRequest)).rejects.toEqual(
       new AiGenerationServiceError("AI generation request failed.", "GENERATION_FAILED"),

@@ -1,5 +1,7 @@
+"use client";
+
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import { FolderKanban, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -166,8 +168,7 @@ export function ProjectList() {
                 </div>
 
                 <Link
-                  to="/dev-board/$projectId"
-                  params={{ projectId: project.id }}
+                  href={`/dev-board/${project.id}`}
                   className="flex min-h-24 flex-1 flex-col pr-8"
                 >
                   <h2 className="font-heading text-base font-medium leading-snug group-hover:underline">

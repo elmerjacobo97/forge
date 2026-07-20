@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useState } from "react"
 import { Check, Copy, Eraser, KeyRound } from "lucide-react"
 

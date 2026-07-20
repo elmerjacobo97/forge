@@ -1,8 +1,11 @@
-import { Link } from "@tanstack/react-router";
+"use client";
+
+import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useForm } from "@tanstack/react-form";
 import { Lock, Mail, User } from "lucide-react";
 
-import { useRegisterMutation } from "@/features/auth/hooks/mutations";
+import { registerAction } from "@/features/auth/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,7 +25,8 @@ import {
 import { registerSchema } from "../schemas/auth-schema";
 
 export function RegisterForm() {
-  const registerMutation = useRegisterMutation();
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const form = useForm({
     defaultValues: {
@@ -35,12 +39,13 @@ export function RegisterForm() {
       onSubmit: registerSchema,
     },
     onSubmit: async ({ value }) => {
-      const { name, email, password } = value;
-      registerMutation.mutate({ name, email, password });
+      startTransition(async () => {
+        setError(null);
+        const result = await registerAction(value);
+        if (!result.ok) setError(result.message);
+      });
     },
   });
-
-  const isPending = registerMutation.isPending;
 
   return (
     <Card className="w-full max-w-sm">
@@ -60,6 +65,7 @@ export function RegisterForm() {
           }}
         >
           <FieldGroup>
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <form.Field name="name">
               {(field) => {
                 const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
@@ -195,7 +201,7 @@ export function RegisterForm() {
         <div className="text-center text-xs text-muted-foreground">
           Already have an account?{" "}
           <Link
-            to="/login"
+            href="/login"
             className="text-primary hover:underline font-medium"
           >
             Sign in

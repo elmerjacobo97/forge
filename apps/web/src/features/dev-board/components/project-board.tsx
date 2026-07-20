@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import {
   DndContext,
   DragOverlay,
@@ -212,7 +214,7 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
     return (
       <div className="flex h-full flex-col gap-3">
         <Button asChild size="sm" variant="ghost" className="w-fit gap-1.5">
-          <Link to="/dev-board">
+          <Link href="/dev-board">
             <ArrowLeft className="size-3.5" />
             Projects
           </Link>
@@ -235,7 +237,7 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <Button asChild size="sm" variant="ghost" className="-ml-2 mb-1 h-7 gap-1.5 px-2">
-            <Link to="/dev-board">
+            <Link href="/dev-board">
               <ArrowLeft className="size-3.5" />
               Projects
             </Link>
@@ -250,7 +252,7 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Button asChild size="sm" variant="outline">
-            <Link to="/dev-board/$projectId/analytics" params={{ projectId }}>
+            <Link href={`/dev-board/${projectId}/analytics`}>
               <BarChart3 className="size-3.5" />
               Analytics
             </Link>

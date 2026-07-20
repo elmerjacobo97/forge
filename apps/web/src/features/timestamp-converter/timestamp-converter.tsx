@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useMemo, useState } from "react"
 import { ArrowLeftRight, Check, Copy } from "lucide-react"
 

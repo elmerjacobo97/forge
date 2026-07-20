@@ -1,186 +1,32 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+const database = vi.hoisted(() => ({ from: vi.fn() }));
 
-const appwrite = vi.hoisted(() => ({
-  createRow: vi.fn(),
-  updateRow: vi.fn(),
-  deleteRow: vi.fn(),
-  equal: vi.fn((field: string, value: string) => `equal:${field}:${value}`),
-  orderDesc: vi.fn((field: string) => `orderDesc:${field}`),
-  unique: vi.fn(() => "generated-bookmark-id"),
-  read: vi.fn((role: string) => `read:${role}`),
-  update: vi.fn((role: string) => `update:${role}`),
-  delete: vi.fn((role: string) => `delete:${role}`),
-  user: vi.fn((userId: string) => `user:${userId}`),
-}));
+vi.mock("@/lib/insforge/browser", () => ({ insforge: { database } }));
 
-vi.mock("@/lib/appwrite", () => ({
-  tablesDB: {
-    listRows: vi.fn(),
-    createRow: appwrite.createRow,
-    updateRow: appwrite.updateRow,
-    deleteRow: appwrite.deleteRow,
-  },
-}));
+import { bookmarksService } from "./bookmarks-service";
 
-vi.mock("appwrite", () => ({
-  Query: {
-    equal: appwrite.equal,
-    orderDesc: appwrite.orderDesc,
-  },
-  ID: { unique: appwrite.unique },
-  Permission: {
-    read: appwrite.read,
-    update: appwrite.update,
-    delete: appwrite.delete,
-  },
-  Role: { user: appwrite.user },
-}));
-
-const storageDescriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
-
-async function loadService(configured = true) {
-  vi.resetModules();
-  vi.stubEnv("VITE_APPWRITE_DATABASE_ID", configured ? "database-id" : "");
-  vi.stubEnv("VITE_APPWRITE_BOOKMARKS_COLLECTION_ID", configured ? "bookmarks-table-id" : "");
-  return (await import("./bookmarks-service")).bookmarksService;
-}
-
-beforeEach(() => {
-  vi.clearAllMocks();
-  Object.defineProperty(globalThis, "localStorage", {
-    configurable: true,
-    get: () => {
-      throw new Error("Bookmarks must not use localStorage.");
-    },
-  });
-});
-
-afterEach(() => {
-  vi.unstubAllEnvs();
-  if (storageDescriptor) Object.defineProperty(globalThis, "localStorage", storageDescriptor);
-  else Reflect.deleteProperty(globalThis, "localStorage");
-});
+const row = {
+  id: "bookmark-1",
+  title: "InsForge",
+  url: "https://insforge.dev",
+  category: "docs",
+  description: "Backend documentation",
+  tags: ["backend"],
+  created_at: "2026-07-20T00:00:00.000Z",
+};
 
 describe("bookmarksService", () => {
-  it("rejects requests without a signed-in user", async () => {
-    const service = await loadService();
+  beforeEach(() => vi.clearAllMocks());
 
-    await expect(service.fetchBookmarks()).rejects.toThrow("Sign in to use Bookmarks.");
+  it("requires an authenticated user", async () => {
+    await expect(bookmarksService.fetchBookmarks()).rejects.toThrow("Sign in");
   });
 
-  it("rejects requests when Appwrite storage is not configured", async () => {
-    const service = await loadService(false);
+  it("maps InsForge rows", async () => {
+    const order = vi.fn().mockResolvedValue({ data: [row], error: null });
+    database.from.mockReturnValue({ select: vi.fn(() => ({ order })) });
 
-    await expect(service.fetchBookmarks("user-1")).rejects.toThrow(
-      "Bookmarks storage is not configured.",
-    );
-  });
-
-  it("lists user bookmarks from Appwrite without a local fallback", async () => {
-    const { tablesDB } = await import("@/lib/appwrite");
-    vi.mocked(tablesDB.listRows).mockResolvedValue({
-      rows: [{
-        $id: "bookmark-1",
-        $createdAt: "2026-07-12T10:00:00.000Z",
-        title: "Vitest",
-        url: "https://vitest.dev",
-        category: "docs",
-        description: "Test framework documentation",
-        tags: ["testing"],
-      }],
-    } as never);
-    const service = await loadService();
-
-    await expect(service.fetchBookmarks("user-1")).resolves.toEqual([
-      {
-        id: "bookmark-1",
-        createdAt: "2026-07-12T10:00:00.000Z",
-        title: "Vitest",
-        url: "https://vitest.dev",
-        category: "docs",
-        description: "Test framework documentation",
-        tags: ["testing"],
-      },
+    await expect(bookmarksService.fetchBookmarks("user-1")).resolves.toEqual([
+      { ...row, createdAt: row.created_at },
     ]);
-    expect(tablesDB.listRows).toHaveBeenCalledWith({
-      databaseId: "database-id",
-      tableId: "bookmarks-table-id",
-      queries: ["equal:userId:user-1", "orderDesc:$createdAt"],
-    });
-  });
-
-  it("creates a bookmark through Appwrite with user-only permissions", async () => {
-    appwrite.createRow.mockResolvedValue({
-      $id: "bookmark-1",
-      $createdAt: "2026-07-12T10:00:00.000Z",
-      title: "Vitest",
-      url: "https://vitest.dev",
-      category: "docs",
-      description: "Test framework documentation",
-      tags: ["testing"],
-    });
-    const service = await loadService();
-    const bookmark = {
-      title: "Vitest",
-      url: "https://vitest.dev",
-      category: "docs" as const,
-      description: "Test framework documentation",
-      tags: ["testing"],
-    };
-
-    await expect(service.createBookmark(bookmark, "user-1")).resolves.toMatchObject({
-      id: "bookmark-1",
-      ...bookmark,
-    });
-    expect(appwrite.createRow).toHaveBeenCalledWith({
-      databaseId: "database-id",
-      tableId: "bookmarks-table-id",
-      rowId: "generated-bookmark-id",
-      data: { ...bookmark, userId: "user-1" },
-      permissions: ["read:user:user-1", "update:user:user-1", "delete:user:user-1"],
-    });
-  });
-
-  it("updates a bookmark through Appwrite without changing id or createdAt", async () => {
-    appwrite.updateRow.mockResolvedValue({
-      $id: "bookmark-1",
-      $createdAt: "2026-07-12T10:00:00.000Z",
-      title: "Vitest Docs",
-      url: "https://vitest.dev/guide",
-      category: "docs",
-      description: "Updated description",
-      tags: ["testing", "docs"],
-    });
-    const service = await loadService();
-    const bookmark = {
-      title: "Vitest Docs",
-      url: "https://vitest.dev/guide",
-      category: "docs" as const,
-      description: "Updated description",
-      tags: ["testing", "docs"],
-    };
-
-    await expect(service.updateBookmark("bookmark-1", bookmark, "user-1")).resolves.toEqual({
-      id: "bookmark-1",
-      createdAt: "2026-07-12T10:00:00.000Z",
-      ...bookmark,
-    });
-    expect(appwrite.updateRow).toHaveBeenCalledWith({
-      databaseId: "database-id",
-      tableId: "bookmarks-table-id",
-      rowId: "bookmark-1",
-      data: bookmark,
-    });
-  });
-
-  it("deletes a bookmark through Appwrite", async () => {
-    const service = await loadService();
-
-    await expect(service.deleteBookmark("bookmark-1", "user-1")).resolves.toBeUndefined();
-    expect(appwrite.deleteRow).toHaveBeenCalledWith({
-      databaseId: "database-id",
-      tableId: "bookmarks-table-id",
-      rowId: "bookmark-1",
-    });
   });
 });

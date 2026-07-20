@@ -1,4 +1,6 @@
-import { useNavigate } from "@tanstack/react-router"
+"use client"
+
+import { useRouter } from "next/navigation"
 
 import {
   Command,
@@ -18,10 +20,10 @@ interface CommandPaletteProps {
 }
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
-  const navigate = useNavigate()
+  const router = useRouter()
 
   function selectTool(path: string) {
-    void navigate({ to: path })
+    router.push(path)
     onOpenChange(false)
   }
 

@@ -1,4 +1,3 @@
-import { LinkProps } from "@tanstack/react-router";
 import {
   LucideIcon,
   Braces,
@@ -28,7 +27,7 @@ import {
 
 export interface ToolDef {
   id: string;
-  path: Exclude<LinkProps["to"], undefined>;
+  path: string;
   name: string;
   description: string;
   icon: LucideIcon;

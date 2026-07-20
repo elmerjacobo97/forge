@@ -1,3 +1,5 @@
+"use client";
+
 import { GeneralSettingsTab } from "./components/general-settings-tab";
 
 export function Settings() {

@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect } from "react"
 import { Eraser, ImageIcon, Loader2, X } from "lucide-react"
 

@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { ChevronsUpDown, Hammer, LogOut, Search, Settings, User } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+"use client";
 
-import { userQueryOptions } from "@/features/auth/hooks/queries";
-import { useLogoutMutation } from "@/features/auth/hooks/mutations";
+import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
+import { ChevronsUpDown, Hammer, LogOut, Search, Settings, User } from "lucide-react";
+import { signOutAction } from "@/features/auth/actions";
+import type { AuthUser } from "@/features/auth/types";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -32,13 +32,13 @@ import { useDebounce } from "@/lib/hooks/use-debounce";
 
 interface AppSidebarProps {
   activePath: string;
+  user: AuthUser;
 }
 
-export function AppSidebar({ activePath }: AppSidebarProps) {
+export function AppSidebar({ activePath, user }: AppSidebarProps) {
   const [query, setQuery] = useState("");
+  const [isSigningOut, startSignOut] = useTransition();
   const debouncedQuery = useDebounce(query, 200);
-  const { data: user } = useQuery(userQueryOptions);
-  const logoutMutation = useLogoutMutation();
   const grouped = useMemo(() => {
     const search = debouncedQuery.trim().toLowerCase();
     const filtered = search
@@ -60,7 +60,7 @@ export function AppSidebar({ activePath }: AppSidebarProps) {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <Link
-          to="/"
+          href="/"
           className="flex items-center gap-2 px-2 py-1.5"
         >
           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-primary to-primary/70 text-primary-foreground shadow-sm ring-1 ring-primary/20">
@@ -96,7 +96,7 @@ export function AppSidebar({ activePath }: AppSidebarProps) {
                       isActive={tool.path === activePath}
                       tooltip={tool.name}
                     >
-                      <Link to={tool.path}>
+                      <Link href={tool.path}>
                         <tool.icon />
                         <span>{tool.name}</span>
                       </Link>
@@ -135,7 +135,7 @@ export function AppSidebar({ activePath }: AppSidebarProps) {
             className="w-48"
           >
             <DropdownMenuItem asChild>
-              <Link to="/settings">
+              <Link href="/settings">
                 <Settings className="size-3.5" />
                 Settings
               </Link>
@@ -143,8 +143,8 @@ export function AppSidebar({ activePath }: AppSidebarProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
-              onClick={() => logoutMutation.mutate()}
-              disabled={logoutMutation.isPending}
+              onClick={() => startSignOut(() => signOutAction())}
+              disabled={isSigningOut}
             >
               <LogOut className="size-3.5" />
               Log out

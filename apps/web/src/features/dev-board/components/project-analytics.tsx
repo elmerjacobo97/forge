@@ -1,5 +1,7 @@
+"use client";
+
 import { Suspense, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import { endOfDay, format, startOfDay, subDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import {
@@ -90,7 +92,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
     return (
       <div className="flex flex-col gap-3">
         <Button asChild size="sm" variant="ghost" className="w-fit gap-1.5">
-          <Link to="/dev-board">
+          <Link href="/dev-board">
             <ArrowLeft className="size-3.5" />
             Projects
           </Link>
@@ -116,7 +118,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
         </div>
         <div className="flex items-center gap-2">
           <Button asChild size="sm" variant="outline">
-            <Link to="/dev-board/$projectId" params={{ projectId }}>
+            <Link href={`/dev-board/${projectId}`}>
               <ArrowLeft className="size-3.5" />
               Board
             </Link>

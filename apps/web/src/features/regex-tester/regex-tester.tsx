@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useState } from "react"
 import { Check, Copy, Eraser, Regex, XCircle } from "lucide-react"
 

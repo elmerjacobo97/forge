@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useMemo, useState } from "react"
 import { Check, Copy, Eraser, Hash } from "lucide-react"
 

@@ -1,8 +1,11 @@
-import { Link } from "@tanstack/react-router";
+"use client";
+
+import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useForm } from "@tanstack/react-form";
 import { Lock, Mail } from "lucide-react";
 
-import { useLoginMutation } from "@/features/auth/hooks/mutations";
+import { signInAction } from "@/features/auth/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,8 +29,9 @@ import {
 } from "@/components/ui/input-group";
 import { loginSchema } from "../schemas/auth-schema";
 
-export function LoginForm() {
-  const loginMutation = useLoginMutation();
+export function LoginForm({ redirectTo }: { redirectTo?: string }) {
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const form = useForm({
     defaultValues: {
@@ -38,11 +42,13 @@ export function LoginForm() {
       onSubmit: loginSchema,
     },
     onSubmit: async ({ value }) => {
-      loginMutation.mutate(value);
+      startTransition(async () => {
+        setError(null);
+        const result = await signInAction(value, redirectTo);
+        if (!result.ok) setError(result.message);
+      });
     },
   });
-
-  const isPending = loginMutation.isPending;
 
   return (
     <Card className="w-full max-w-sm">
@@ -62,6 +68,7 @@ export function LoginForm() {
           }}
         >
           <FieldGroup>
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <form.Field
               name="email"
             >
@@ -147,7 +154,7 @@ export function LoginForm() {
         <div className="text-center text-xs text-muted-foreground">
           Don't have an account?{" "}
           <Link
-            to="/register"
+            href="/register"
             className="text-primary hover:underline font-medium"
           >
             Sign up

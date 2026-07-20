@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useState } from "react"
 import { Check, Copy, Eraser, Fingerprint, RefreshCw } from "lucide-react"
 

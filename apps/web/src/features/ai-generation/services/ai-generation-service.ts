@@ -1,7 +1,3 @@
-import { ExecutionMethod, type Models } from "appwrite";
-
-import { functions } from "@/lib/appwrite";
-
 import {
   aiGenerationErrorSchema,
   aiGenerationRequestSchema,
@@ -13,15 +9,7 @@ import type {
   AiGenerationResponse,
 } from "../types";
 
-interface FunctionsExecutor {
-  createExecution(params: {
-    functionId: string;
-    body: string;
-    async: false;
-    method: ExecutionMethod;
-    headers: Record<string, string>;
-  }): Promise<Pick<Models.Execution, "responseBody" | "responseStatusCode">>;
-}
+type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 export class AiGenerationServiceError extends Error {
   constructor(
@@ -40,44 +28,38 @@ function invalidResponseError() {
   );
 }
 
-function parseBody(responseBody: string): unknown {
+async function parseBody(response: Response): Promise<unknown> {
   try {
-    return JSON.parse(responseBody);
+    return await response.json();
   } catch {
     throw invalidResponseError();
   }
 }
 
 export function createAiGenerationService(
-  functions: FunctionsExecutor,
-  functionId: string,
+  fetcher: Fetcher,
 ) {
   return {
     async generate(input: AiGenerationRequest): Promise<AiGenerationResponse> {
-      if (!functionId) {
-        throw new AiGenerationServiceError("AI generation is not configured.");
-      }
-
       const request = aiGenerationRequestSchema.safeParse(input);
       if (!request.success) {
         throw new AiGenerationServiceError("AI generation input is invalid.", "INVALID_INPUT");
       }
 
-      let execution: Pick<Models.Execution, "responseBody" | "responseStatusCode">;
+      let response: Response;
       try {
-        execution = await functions.createExecution({
-          functionId,
+        response = await fetcher("/api/ai-content", {
+          method: "POST",
           body: JSON.stringify(request.data),
-          async: false,
-          method: ExecutionMethod.POST,
           headers: { "content-type": "application/json" },
+          credentials: "same-origin",
         });
       } catch {
         throw new AiGenerationServiceError("AI generation request failed.", "GENERATION_FAILED");
       }
 
-      const body = parseBody(execution.responseBody);
-      if (execution.responseStatusCode < 200 || execution.responseStatusCode >= 300) {
+      const body = await parseBody(response);
+      if (!response.ok) {
         const parsedError = aiGenerationErrorSchema.safeParse(body);
         if (!parsedError.success) {
           throw invalidResponseError();
@@ -88,16 +70,15 @@ export function createAiGenerationService(
         );
       }
 
-      const response = aiGenerationResponseSchema.safeParse(body);
-      if (!response.success || response.data.type !== request.data.type) {
+      const parsedResponse = aiGenerationResponseSchema.safeParse(body);
+      if (!parsedResponse.success || parsedResponse.data.type !== request.data.type) {
         throw invalidResponseError();
       }
-      return response.data;
+      return parsedResponse.data;
     },
   };
 }
 
 export const aiGenerationService = createAiGenerationService(
-  functions,
-  import.meta.env.VITE_APPWRITE_AI_CONTENT_FUNCTION_ID,
+  fetch,
 );

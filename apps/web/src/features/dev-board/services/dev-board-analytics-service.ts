@@ -1,35 +1,29 @@
-import { Query } from "appwrite";
+import { z } from "zod";
 
-import { tablesDB } from "@/lib/appwrite";
-
-import type { AnalyticsData, AnalyticsRange, TicketEvent } from "../types/analytics";
+import { insforge } from "@/lib/insforge/browser";
+import type { AnalyticsData, AnalyticsRange } from "../types/analytics";
 import { COLUMNS, type Ticket } from "../types/board";
-import { filterRowsForTickets, ticketIdSet } from "../utils/project-scope";
 import { devBoardService } from "./dev-board-service";
 
-const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const eventsTableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_EVENTS_TABLE_ID;
-const timeEntriesTableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_TIME_ENTRIES_TABLE_ID;
+const eventRowSchema = z.object({
+  id: z.string(),
+  ticket_id: z.string(),
+  event_type: z.enum(["created", "moved", "started", "completed", "paused", "resumed"]),
+  from_column: z.enum(["backlog", "todo", "in_progress", "review", "done"]).nullable(),
+  to_column: z.enum(["backlog", "todo", "in_progress", "review", "done"]).nullable(),
+  occurred_at: z.string(),
+});
 
-function assertConfigured(): void {
-  if (!databaseId || !eventsTableId || !timeEntriesTableId) {
-    throw new Error("Dev Board analytics storage is not configured.");
-  }
-}
+const timeEntryRowSchema = z.object({
+  id: z.string(),
+  ticket_id: z.string(),
+  started_at: z.string(),
+  ended_at: z.string(),
+  duration_ms: z.coerce.number(),
+});
 
-async function listAllRows(tableId: string, queries: string[]) {
-  const rows: Record<string, unknown>[] = [];
-  let cursor: string | null = null;
-  do {
-    const response: { rows: Array<{ $id: string }>; total: number } = (await tablesDB.listRows({
-      databaseId,
-      tableId,
-      queries: [...queries, Query.limit(100), ...(cursor ? [Query.cursorAfter(cursor)] : [])],
-    })) as unknown as { rows: Array<{ $id: string }>; total: number };
-    rows.push(...(response.rows as unknown as Record<string, unknown>[]));
-    cursor = response.rows.length === 100 ? response.rows[response.rows.length - 1].$id : null;
-  } while (cursor);
-  return rows;
+function failure(error: { message?: string } | null, fallback: string): Error {
+  return new Error(error?.message || fallback);
 }
 
 export const devBoardAnalyticsService = {
@@ -38,9 +32,6 @@ export const devBoardAnalyticsService = {
     projectId: string,
     range: AnalyticsRange,
   ): Promise<AnalyticsData> {
-    assertConfigured();
-    if (!projectId) throw new Error("projectId is required.");
-
     const ticketPages = await Promise.all(
       COLUMNS.map(async (column) => {
         const tickets: Ticket[] = [];
@@ -54,44 +45,45 @@ export const devBoardAnalyticsService = {
       }),
     );
     const tickets = ticketPages.flat();
-    const projectTicketIds = ticketIdSet(tickets);
+    const ticketIds = tickets.map((ticket) => ticket.id);
+    if (ticketIds.length === 0) return { tickets, events: [], timeEntries: [] };
 
-    const [eventRows, timeRows] = await Promise.all([
-      listAllRows(eventsTableId, [
-        Query.equal("userId", userId),
-        Query.greaterThanEqual("occurredAt", range.from),
-        Query.lessThanEqual("occurredAt", range.to),
-        Query.orderDesc("occurredAt"),
-      ]),
-      listAllRows(timeEntriesTableId, [
-        Query.equal("userId", userId),
-        Query.lessThanEqual("startedAt", range.to),
-        Query.orderDesc("startedAt"),
-      ]),
+    const [eventsResult, timeEntriesResult] = await Promise.all([
+      insforge.database
+        .from("dev_board_events")
+        .select("id,ticket_id,event_type,from_column,to_column,occurred_at")
+        .in("ticket_id", ticketIds)
+        .gte("occurred_at", range.from)
+        .lte("occurred_at", range.to)
+        .order("occurred_at", { ascending: false }),
+      insforge.database
+        .from("dev_board_time_entries")
+        .select("id,ticket_id,started_at,ended_at,duration_ms")
+        .in("ticket_id", ticketIds)
+        .lte("started_at", range.to)
+        .order("started_at", { ascending: false }),
     ]);
 
-    const events = filterRowsForTickets(
-      eventRows.map((row) => ({
-        id: String(row.$id),
-        ticketId: String(row.ticketId),
-        eventType: row.eventType as TicketEvent["eventType"],
-        fromColumn: (row.fromColumn as TicketEvent["fromColumn"]) ?? null,
-        toColumn: (row.toColumn as TicketEvent["toColumn"]) ?? null,
-        occurredAt: String(row.occurredAt),
-      })),
-      projectTicketIds,
-    );
+    if (eventsResult.error) throw failure(eventsResult.error, "Failed to load ticket events.");
+    if (timeEntriesResult.error) {
+      throw failure(timeEntriesResult.error, "Failed to load time entries.");
+    }
 
-    const timeEntries = filterRowsForTickets(
-      timeRows.map((row) => ({
-        id: String(row.$id),
-        ticketId: String(row.ticketId),
-        startedAt: String(row.startedAt),
-        endedAt: String(row.endedAt),
-        durationMs: Number(row.durationMs),
-      })),
-      projectTicketIds,
-    );
+    const events = eventRowSchema.array().parse(eventsResult.data).map((row) => ({
+      id: row.id,
+      ticketId: row.ticket_id,
+      eventType: row.event_type,
+      fromColumn: row.from_column,
+      toColumn: row.to_column,
+      occurredAt: row.occurred_at,
+    }));
+    const timeEntries = timeEntryRowSchema.array().parse(timeEntriesResult.data).map((row) => ({
+      id: row.id,
+      ticketId: row.ticket_id,
+      startedAt: row.started_at,
+      endedAt: row.ended_at,
+      durationMs: row.duration_ms,
+    }));
 
     return { tickets, events, timeEntries };
   },

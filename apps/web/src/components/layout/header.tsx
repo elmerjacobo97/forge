@@ -1,3 +1,5 @@
+"use client"
+
 import { Moon, Search, Sun } from "lucide-react"
 
 import { Button } from "@/components/ui/button"

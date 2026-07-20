@@ -1,28 +1,22 @@
-import { ID, Permission, Query, Role } from "appwrite";
+import { z } from "zod";
 
-import { tablesDB } from "@/lib/appwrite";
-
+import { insforge } from "@/lib/insforge/browser";
 import { type ColumnId, type Ticket, TICKETS_PAGE_SIZE } from "../types/board";
 
-const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const tableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_TICKETS_TABLE_ID;
-const eventsTableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_EVENTS_TABLE_ID;
-const timeEntriesTableId = import.meta.env.VITE_APPWRITE_DEV_BOARD_TIME_ENTRIES_TABLE_ID;
-
-export interface TicketRow {
-  $id: string;
-  $createdAt: string;
-  projectId: string;
-  title: string;
-  description: string;
-  column: ColumnId;
-  position: number;
-  priority: Ticket["priority"];
-  totalElapsedMs: number;
-  timerStartedAt: string | null;
-  isPaused: boolean;
-  lastMovedAt: string;
-}
+const ticketRowSchema = z.object({
+  id: z.string(),
+  project_id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  column_id: z.enum(["backlog", "todo", "in_progress", "review", "done"]),
+  position: z.coerce.number(),
+  priority: z.enum(["low", "med", "high"]),
+  created_at: z.string(),
+  timer_started_at: z.string().nullable(),
+  total_elapsed_ms: z.coerce.number(),
+  is_paused: z.boolean(),
+  last_moved_at: z.string(),
+});
 
 export interface TicketPage {
   tickets: Ticket[];
@@ -30,197 +24,115 @@ export interface TicketPage {
   total: number;
 }
 
-function assertConfigured(): void {
-  if (!databaseId || !tableId || !eventsTableId || !timeEntriesTableId) {
-    throw new Error("Dev Board storage is not configured.");
-  }
-}
-
-function privatePermissions(userId: string) {
-  return [
-    Permission.read(Role.user(userId)),
-    Permission.update(Role.user(userId)),
-    Permission.delete(Role.user(userId)),
-  ];
-}
-
-async function commitTransaction(operation: (transactionId: string) => Promise<void>): Promise<void> {
-  const transaction = await tablesDB.createTransaction({});
-  try {
-    await operation(transaction.$id);
-    await tablesDB.updateTransaction({ transactionId: transaction.$id, commit: true });
-  } catch (error) {
-    await tablesDB.updateTransaction({ transactionId: transaction.$id, rollback: true });
-    throw error;
-  }
-}
-
-function eventData(ticket: Ticket, userId: string, eventType: string, fromColumn?: ColumnId) {
+function toTicket(value: unknown): Ticket {
+  const row = ticketRowSchema.parse(value);
   return {
-    userId,
-    ticketId: ticket.id,
-    eventType,
-    fromColumn,
-    toColumn: ticket.column,
-    occurredAt: ticket.lastMovedAt,
-  };
-}
-
-export function toTicket(row: TicketRow): Ticket {
-  return {
-    id: row.$id,
-    projectId: row.projectId,
+    id: row.id,
+    projectId: row.project_id,
     title: row.title,
     description: row.description,
-    column: row.column,
+    column: row.column_id,
     position: row.position,
     priority: row.priority,
-    createdAt: row.$createdAt,
-    timerStartedAt: row.timerStartedAt,
-    totalElapsedMs: row.totalElapsedMs,
-    isPaused: row.isPaused,
-    lastMovedAt: row.lastMovedAt,
+    createdAt: row.created_at,
+    timerStartedAt: row.timer_started_at,
+    totalElapsedMs: row.total_elapsed_ms,
+    isPaused: row.is_paused,
+    lastMovedAt: row.last_moved_at,
   };
 }
 
-function ticketData(ticket: Ticket, userId: string) {
-  return {
-    userId,
-    projectId: ticket.projectId,
-    title: ticket.title,
-    description: ticket.description,
-    column: ticket.column,
-    position: ticket.position,
-    priority: ticket.priority,
-    totalElapsedMs: ticket.totalElapsedMs,
-    timerStartedAt: ticket.timerStartedAt,
-    isPaused: ticket.isPaused,
-    lastMovedAt: ticket.lastMovedAt,
-  };
+function rpcTicket(value: unknown): Ticket {
+  if (Array.isArray(value)) return toTicket(value[0]);
+  return toTicket(value);
+}
+
+function failure(error: { message?: string } | null, fallback: string): Error {
+  return new Error(error?.message || fallback);
+}
+
+async function getTicket(ticketId: string): Promise<Ticket> {
+  const { data, error } = await insforge.database
+    .from("dev_board_tickets")
+    .select("id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at")
+    .eq("id", ticketId)
+    .single();
+  if (error) throw failure(error, "Ticket not found.");
+  return toTicket(data);
 }
 
 export const devBoardService = {
   async fetchTicketPage(
-    userId: string,
+    _userId: string,
     projectId: string,
     column: ColumnId,
     cursor: string | null,
   ): Promise<TicketPage> {
-    assertConfigured();
-    if (!projectId) throw new Error("projectId is required.");
-
-    const queries = [
-      Query.equal("userId", userId),
-      Query.equal("projectId", projectId),
-      Query.equal("column", column),
-      Query.orderDesc("position"),
-      Query.limit(TICKETS_PAGE_SIZE),
-    ];
-    if (cursor) queries.push(Query.cursorAfter(cursor));
-
-    const response = await tablesDB.listRows({
-      databaseId,
-      tableId,
-      queries,
-    });
-    const rows = response.rows as unknown as TicketRow[];
-    const lastRow = rows[rows.length - 1];
-
+    const offset = cursor ? Number(cursor) : 0;
+    const { data, error, count } = await insforge.database
+      .from("dev_board_tickets")
+      .select(
+        "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at",
+        { count: "exact" },
+      )
+      .eq("project_id", projectId)
+      .eq("column_id", column)
+      .order("position", { ascending: false })
+      .range(offset, offset + TICKETS_PAGE_SIZE - 1);
+    if (error) throw failure(error, "Failed to load tickets.");
+    const tickets = ticketRowSchema.array().parse(data).map(toTicket);
+    const nextOffset = offset + tickets.length;
     return {
-      tickets: rows.map(toTicket),
-      nextCursor: rows.length === TICKETS_PAGE_SIZE && lastRow ? lastRow.$id : null,
-      total: response.total,
+      tickets,
+      nextCursor: tickets.length === TICKETS_PAGE_SIZE ? String(nextOffset) : null,
+      total: count ?? tickets.length,
     };
   },
 
-  async createTicket(ticket: Ticket, userId: string): Promise<Ticket> {
-    assertConfigured();
-    if (!ticket.projectId) throw new Error("projectId is required.");
-
-    await commitTransaction(async (transactionId) => {
-      await tablesDB.createRow({
-        databaseId,
-        tableId,
-        rowId: ticket.id || ID.unique(),
-        data: ticketData(ticket, userId),
-        permissions: privatePermissions(userId),
-        transactionId,
-      });
-      await tablesDB.createRow({
-        databaseId,
-        tableId: eventsTableId,
-        rowId: ID.unique(),
-        data: eventData(ticket, userId, "created"),
-        permissions: privatePermissions(userId),
-        transactionId,
-      });
+  async createTicket(ticket: Ticket, _userId: string): Promise<Ticket> {
+    const { data, error } = await insforge.database.rpc("create_dev_board_ticket", {
+      p_project_id: ticket.projectId,
+      p_title: ticket.title,
+      p_description: ticket.description,
+      p_column_id: ticket.column,
+      p_priority: ticket.priority,
     });
-    return ticket;
+    if (error) throw failure(error, "Failed to create ticket.");
+    return rpcTicket(data);
   },
 
-  async updateTicket(ticket: Ticket, userId: string): Promise<Ticket> {
-    assertConfigured();
-    const previous = toTicket(
-      (await tablesDB.getRow({ databaseId, tableId, rowId: ticket.id })) as unknown as TicketRow,
-    );
-    // Tickets cannot be reassigned across projects in v1.
-    const scopedTicket: Ticket = { ...ticket, projectId: previous.projectId };
-    const timerStartedAt = previous.timerStartedAt;
-    const stoppedTimer = timerStartedAt !== null && !scopedTicket.timerStartedAt;
-    const eventType =
-      previous.column !== scopedTicket.column
-        ? scopedTicket.column === "done"
-          ? "completed"
-          : scopedTicket.column === "in_progress"
-            ? "started"
-            : "moved"
-        : stoppedTimer
-          ? "paused"
-          : !previous.timerStartedAt && scopedTicket.timerStartedAt
-            ? "resumed"
-            : null;
-
-    await commitTransaction(async (transactionId) => {
-      await tablesDB.updateRow({
-        databaseId,
-        tableId,
-        rowId: scopedTicket.id,
-        data: ticketData(scopedTicket, userId),
-        transactionId,
+  async updateTicket(ticket: Ticket, _userId: string): Promise<Ticket> {
+    const previous = await getTicket(ticket.id);
+    if (previous.column !== ticket.column) {
+      const { data, error } = await insforge.database.rpc("move_dev_board_ticket", {
+        p_ticket_id: ticket.id,
+        p_column_id: ticket.column,
       });
-      if (eventType) {
-        await tablesDB.createRow({
-          databaseId,
-          tableId: eventsTableId,
-          rowId: ID.unique(),
-          data: eventData(scopedTicket, userId, eventType, previous.column),
-          permissions: privatePermissions(userId),
-          transactionId,
-        });
-      }
-      if (stoppedTimer) {
-        const endedAt = new Date().toISOString();
-        await tablesDB.createRow({
-          databaseId,
-          tableId: timeEntriesTableId,
-          rowId: ID.unique(),
-          data: {
-            userId,
-            ticketId: scopedTicket.id,
-            startedAt: timerStartedAt,
-            endedAt,
-            durationMs: Math.max(0, Date.parse(endedAt) - Date.parse(timerStartedAt)),
-          },
-          permissions: privatePermissions(userId),
-          transactionId,
-        });
-      }
+      if (error) throw failure(error, "Failed to move ticket.");
+      return rpcTicket(data);
+    }
+    if (previous.timerStartedAt !== ticket.timerStartedAt || previous.isPaused !== ticket.isPaused) {
+      const { data, error } = await insforge.database.rpc("set_dev_board_ticket_timer", {
+        p_ticket_id: ticket.id,
+        p_action: ticket.isPaused ? "pause" : "resume",
+      });
+      if (error) throw failure(error, "Failed to update timer.");
+      return rpcTicket(data);
+    }
+    const { data, error } = await insforge.database.rpc("update_dev_board_ticket", {
+      p_ticket_id: ticket.id,
+      p_title: ticket.title,
+      p_description: ticket.description,
+      p_priority: ticket.priority,
     });
-    return scopedTicket;
+    if (error) throw failure(error, "Failed to update ticket.");
+    return rpcTicket(data);
   },
 
   async deleteTicket(ticketId: string): Promise<void> {
-    assertConfigured();
-    await tablesDB.deleteRow({ databaseId, tableId, rowId: ticketId });
+    const { error } = await insforge.database.rpc("delete_dev_board_ticket", {
+      p_ticket_id: ticketId,
+    });
+    if (error) throw failure(error, "Failed to delete ticket.");
   },
 };

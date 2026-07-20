@@ -1,3 +1,5 @@
+"use client";
+
 import { createContext, use, useLayoutEffect, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
@@ -23,14 +25,18 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 export function ThemeProvider({
   children,
   defaultTheme = "system",
-  storageKey = "vite-ui-theme",
+  storageKey = "forge-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
-  );
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
 
   useLayoutEffect(() => {
+    const storedTheme = localStorage.getItem(storageKey) as Theme | null;
+    if (storedTheme && storedTheme !== theme) {
+      setTheme(storedTheme);
+      return;
+    }
+
     const root = window.document.documentElement;
 
     root.classList.remove("light", "dark");
@@ -46,7 +52,7 @@ export function ThemeProvider({
     }
 
     root.classList.add(theme);
-  }, [theme]);
+  }, [storageKey, theme]);
 
   const value = {
     theme,
