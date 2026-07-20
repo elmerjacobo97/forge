@@ -178,6 +178,27 @@ export function useCreateDevBoardTicket() {
       );
       return previous;
     },
+    onSuccess: (createdTicket, optimisticTicket) => {
+      const userId = getUserId(queryClient);
+      if (!userId) return;
+      queryClient.setQueryData<InfiniteData<TicketPage>>(
+        devBoardKeys.column(userId, optimisticTicket.projectId, optimisticTicket.column),
+        (current) =>
+          current
+            ? {
+                ...current,
+                pages: current.pages.map((page) => ({
+                  ...page,
+                  tickets: page.tickets
+                    .map((ticket) =>
+                      ticket.id === optimisticTicket.id ? createdTicket : ticket,
+                    )
+                    .sort((a, b) => b.position - a.position),
+                })),
+              }
+            : current,
+      );
+    },
     onError: (error: Error, _ticket, previous) => {
       restoreCachedTickets(queryClient, previous ?? []);
       toast.error(error.message || "Failed to create ticket.");
