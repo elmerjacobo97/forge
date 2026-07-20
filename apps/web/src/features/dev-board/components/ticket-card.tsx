@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs -- @dnd-kit/sortable exposes refs/listeners that must be applied during render */
 import { useEffect, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -59,10 +60,15 @@ export function TicketCard({
   };
 
   const [elapsed, setElapsed] = useState(() => computeElapsed(ticket));
+  const [trackedTicket, setTrackedTicket] = useState(ticket);
+
+  // Sync elapsed when the ticket identity/timer fields change (React-recommended render adjust)
+  if (ticket !== trackedTicket) {
+    setTrackedTicket(ticket);
+    setElapsed(computeElapsed(ticket));
+  }
 
   useEffect(() => {
-    setElapsed(computeElapsed(ticket));
-
     if (!ticket.timerStartedAt || ticket.isPaused) {
       return;
     }
@@ -131,87 +137,87 @@ export function TicketCard({
         </div>
 
         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                className="shrink-0 opacity-0 group-hover:opacity-100"
-                aria-label="Ticket actions"
-              >
-                <MoreHorizontal className="size-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={() => onEdit(ticket)}>
-                <Pencil className="size-3" />
-                Edit
-              </DropdownMenuItem>
-              {inProgress && (
-                <DropdownMenuItem
-                  onClick={() =>
-                    updateTicketMutation.mutate(
-                      ticket.isPaused || !ticket.timerStartedAt
-                        ? resumeTimer(ticket)
-                        : pauseTimer(ticket),
-                    )
-                  }
-                >
-                  {timerPaused ? (
-                    <>
-                      <Play className="size-3" />
-                      Resume
-                    </>
-                  ) : (
-                    <>
-                      <Pause className="size-3" />
-                      Pause
-                    </>
-                  )}
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Move to</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  {COLUMNS.map((c) => {
-                    if (c === ticket.column) return null;
-
-                    return (
-                      <DropdownMenuItem
-                        key={c}
-                        onClick={() => onMoveToColumn(ticket.id, c)}
-                      >
-                        {COLUMN_LABELS[c]}
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Priority</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  {(Object.keys(PRIORITY_LABELS) as Priority[]).map((p) => (
-                    <DropdownMenuItem
-                      key={p}
-                        onClick={() => updateTicketMutation.mutate({ ...ticket, priority: p })}
-                    >
-                      <span
-                        className={cn("size-2 rounded-full", PRIORITY_COLORS[p])}
-                      />
-                      {PRIORITY_LABELS[p]}
-                      {ticket.priority === p && " ✓"}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              <DropdownMenuSeparator />
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              className="shrink-0 opacity-0 group-hover:opacity-100"
+              aria-label="Ticket actions"
+            >
+              <MoreHorizontal className="size-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem onClick={() => onEdit(ticket)}>
+              <Pencil className="size-3" />
+              Edit
+            </DropdownMenuItem>
+            {inProgress && (
               <DropdownMenuItem
-                onClick={() => deleteTicketMutation.mutate(ticket.id)}
-                className="text-destructive focus:text-destructive"
+                onClick={() =>
+                  updateTicketMutation.mutate(
+                    ticket.isPaused || !ticket.timerStartedAt
+                      ? resumeTimer(ticket)
+                      : pauseTimer(ticket),
+                  )
+                }
               >
-                <Trash2 className="size-3" />
-                Delete
+                {timerPaused ? (
+                  <>
+                    <Play className="size-3" />
+                    Resume
+                  </>
+                ) : (
+                  <>
+                    <Pause className="size-3" />
+                    Pause
+                  </>
+                )}
               </DropdownMenuItem>
-            </DropdownMenuContent>
+            )}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Move to</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {COLUMNS.map((c) => {
+                  if (c === ticket.column) return null;
+
+                  return (
+                    <DropdownMenuItem
+                      key={c}
+                      onClick={() => onMoveToColumn(ticket.id, c)}
+                    >
+                      {COLUMN_LABELS[c]}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Priority</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {(Object.keys(PRIORITY_LABELS) as Priority[]).map((p) => (
+                  <DropdownMenuItem
+                    key={p}
+                    onClick={() => updateTicketMutation.mutate({ ...ticket, priority: p })}
+                  >
+                    <span
+                      className={cn("size-2 rounded-full", PRIORITY_COLORS[p])}
+                    />
+                    {PRIORITY_LABELS[p]}
+                    {ticket.priority === p && " ✓"}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => deleteTicketMutation.mutate(ticket.id)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="size-3" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
         </DropdownMenu>
       </div>
 

@@ -74,11 +74,11 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [dragTickets, setDragTickets] = useState<Ticket[] | null>(null);
+  const [pendingDrop, setPendingDrop] = useState<Ticket | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTicket, setEditTicket] = useState<Ticket | null>(null);
   const [alertedTickets] = useState(loadAlertedTickets);
   const dragTicketsRef = useRef<Ticket[] | null>(null);
-  const pendingDropRef = useRef<Ticket | null>(null);
 
   function retryLoading() {
     void projectQuery.refetch();
@@ -97,7 +97,6 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
     return () => window.clearInterval(interval);
   }, [alertedTickets, tickets]);
 
-  const pendingDrop = pendingDropRef.current;
   const dragSynced =
     !pendingDrop ||
     (() => {
@@ -107,6 +106,12 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
         persistedTicket.position === pendingDrop.position
       );
     })();
+
+  // Clear optimistic drag overlay once the server list matches the drop
+  if (pendingDrop && dragSynced && dragTickets !== null) {
+    setPendingDrop(null);
+    setDragTickets(null);
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -125,7 +130,7 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
   })();
 
   function handleDragStart(event: DragStartEvent) {
-    pendingDropRef.current = null;
+    setPendingDrop(null);
     setActiveId(event.active.id as string);
     dragTicketsRef.current = tickets;
     setDragTickets(tickets);
@@ -170,10 +175,10 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
     );
     dragTicketsRef.current = nextTickets;
     setDragTickets(nextTickets);
-    pendingDropRef.current = movedTicket;
+    setPendingDrop(movedTicket);
     updateTicketMutation.mutate(movedTicket, {
       onError: () => {
-        pendingDropRef.current = null;
+        setPendingDrop(null);
         dragTicketsRef.current = null;
         setDragTickets(null);
       },
@@ -244,8 +249,8 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
             {projectQuery.data?.name ?? "Project"}
           </h1>
           <p className="text-xs text-muted-foreground">
-            {ticketCount} ticket{ticketCount === 1 ? "" : "s"} · drag to move · timer starts in "In
-            Progress"
+            {ticketCount} ticket{ticketCount === 1 ? "" : "s"} · drag to move · timer starts in
+            &quot;In Progress&quot;
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
