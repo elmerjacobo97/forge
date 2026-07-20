@@ -1,14 +1,14 @@
 # Forge
 
-> The desktop toolkit for modern developers.
+> El toolkit web para desarrolladores modernos.
 
 ## Visión
 
-Forge es una aplicación de escritorio diseñada para centralizar las utilidades que los desarrolladores utilizan diariamente en un solo lugar, con una experiencia rápida, moderna y completamente local.
+Forge es una aplicación web diseñada para centralizar las utilidades que los desarrolladores utilizan diariamente en un solo lugar, con una experiencia rápida, moderna y accesible desde cualquier navegador, sin instalación.
 
-En lugar de depender de decenas de sitios web, pequeñas herramientas online o scripts personales, Forge ofrece una colección de utilidades integradas para mejorar la productividad del desarrollo de software.
+En lugar de depender de decenas de sitios web, pequeñas herramientas online dispersas o scripts personales, Forge ofrece una colección de utilidades integradas — más un backend propio (Appwrite) para lo que necesita persistir — para mejorar la productividad del desarrollo de software.
 
-Nuestro objetivo es convertirnos en la herramienta de escritorio que todo desarrollador abre al iniciar su jornada de trabajo.
+Nuestro objetivo es convertirnos en la pestaña que todo desarrollador abre al iniciar su jornada de trabajo.
 
 ---
 
@@ -31,25 +31,25 @@ Los desarrolladores cambian constantemente entre múltiples herramientas para re
 Cada cambio de contexto implica:
 
 - pérdida de tiempo;
-- dependencia de servicios externos;
+- dependencia de sitios de terceros con anuncios, límites o downtime;
 - distracciones;
-- posibles riesgos de privacidad al compartir datos sensibles.
+- posibles riesgos de privacidad al compartir datos sensibles con servicios que no controlas.
 
 ---
 
 # Solución
 
-Forge reúne todas estas utilidades en una única aplicación nativa de escritorio, priorizando:
+Forge reúne todas estas utilidades en una única aplicación web, priorizando:
 
 - velocidad;
-- privacidad;
+- privacidad razonable (tus datos, tu cuenta, tu backend);
 - experiencia de usuario;
-- funcionamiento sin conexión;
+- acceso instantáneo desde cualquier navegador, sin instalar nada;
 - interfaz consistente.
 
 La filosofía del producto es simple:
 
-> "Todo lo que un desarrollador necesita, en un solo lugar."
+> "Todo lo que un desarrollador necesita, en una sola pestaña."
 
 ---
 
@@ -82,12 +82,13 @@ Profesionales técnicos que trabajan con datos y herramientas de desarrollo.
 
 # Propuesta de valor
 
-Forge permite ahorrar tiempo eliminando tareas repetitivas y reduciendo el cambio constante entre aplicaciones y páginas web.
+Forge permite ahorrar tiempo eliminando tareas repetitivas y reduciendo el cambio constante entre pestañas y páginas web dispersas.
 
 Beneficios principales:
 
-- Todo funciona localmente.
-- No requiere conexión para la mayoría de herramientas.
+- Todas las utilidades en un solo lugar, sin instalar nada.
+- Herramientas de cómputo puro (formatters, converters, generators) corren 100% en el navegador — el dato sensible no sale del cliente salvo que la herramienta lo requiera explícitamente (HTTP Tester, generación asistida por IA).
+- Lo que necesita persistir (bookmarks, snippets, Dev Board) vive en tu propia cuenta Appwrite, no en un tercero anónimo.
 - Interfaz moderna y consistente.
 - Herramientas optimizadas para flujos de trabajo reales.
 - Actualizaciones frecuentes con nuevas utilidades.
@@ -104,13 +105,13 @@ Cada herramienta debe resolver un problema específico sin complejidad innecesar
 
 ## Rapidez
 
-Abrir una utilidad y utilizarla debe tomar segundos.
+Abrir una utilidad y utilizarla debe tomar segundos, sin login para las herramientas de cómputo puro.
 
 ---
 
 ## Privacidad
 
-Siempre que sea posible, los datos permanecen en el dispositivo del usuario.
+Las herramientas de cómputo puro procesan todo client-side; nada se envía a un servidor. Lo que sí persiste (bookmarks, snippets, Dev Board) queda en la cuenta Appwrite del propio usuario, no en un backend de terceros ni compartido entre usuarios sin permiso explícito.
 
 ---
 
@@ -122,49 +123,49 @@ Pocas herramientas, pero bien diseñadas y confiables.
 
 ## Escalabilidad
 
-Forge debe crecer mediante módulos independientes que puedan incorporarse sin afectar la experiencia general.
+Forge debe crecer mediante módulos independientes (features) que puedan incorporarse sin afectar la experiencia general.
 
 ---
 
 # Estrategia de crecimiento
 
-El producto evolucionará de forma incremental.
+El producto evoluciona de forma incremental.
 
-## Etapa 1
+## Etapa 1 — Hecho
 
-Colección de utilidades esenciales.
+Colección de utilidades esenciales (~26 tools de cómputo puro: JSON, JWT, Base64, hashes, timestamps, colores, texto, etc.).
 
-Objetivo:
-
-Convertirse en una herramienta que el usuario utilice diariamente.
+Objetivo logrado: convertirse en una herramienta que el usuario abre a diario.
 
 ---
 
-## Etapa 2
+## Etapa 2 — En curso
 
-Agregar herramientas más avanzadas para desarrolladores profesionales.
+Herramientas más avanzadas para desarrolladores profesionales, con backend propio cuando aporta valor real.
 
-Ejemplos:
+Ya construido:
 
-- validadores;
-- convertidores;
-- herramientas para APIs;
-- generadores;
-- utilidades de productividad.
+- Dev Board (kanban + time tracking) y Bookmarks/Snippets sobre Appwrite.
+- HTTP Tester para requests reales.
+- Mock Data Generator.
+- Generación asistida por IA (Appwrite Function + Groq) ya integrada en bookmarks y snippets para autocompletar contenido.
+
+Próximo en esta etapa:
+
+- Saved HTTP collections/environments (extender HTTP Tester).
+- Extender IA asistida a más herramientas (regex, cURL↔código, mock data por lenguaje natural).
+- Team workspaces (Appwrite Teams) para compartir Dev Board/bookmarks/snippets.
 
 ---
 
-## Etapa 3
+## Etapa 3 — Extender el alcance sin salir del navegador
 
-Incorporar funcionalidades propias del sistema operativo.
+Nada de integraciones a nivel sistema operativo (eso requeriría una app nativa, fuera de alcance mientras Forge sea browser-only, ver `AGENTS.md`). En su lugar:
 
-Ejemplos:
-
-- historial del portapapeles;
-- integración con archivos;
-- automatizaciones;
-- accesos rápidos;
-- acciones globales.
+- PWA instalable (icono, funciona standalone, sigue siendo 100% web).
+- CLI (`forge-cli`, ya existe) para automatizar bookmarks/proyectos/tickets desde la terminal.
+- MCP server sobre la misma API para que agentes de IA operen Forge directamente.
+- Atajos de teclado por herramienta (hoy solo Cmd+K / Cmd+/ globales).
 
 ---
 
@@ -178,7 +179,7 @@ Crear un ecosistema extensible mediante módulos o plugins desarrollados por la 
 
 ## Plan Gratuito
 
-Incluye todas las utilidades esenciales.
+Incluye todas las utilidades esenciales, Dev Board/bookmarks/snippets personales, y generación asistida por IA con cuota razonable.
 
 Objetivo:
 
@@ -192,14 +193,12 @@ Suscripción mensual o anual.
 
 Beneficios potenciales:
 
-- herramientas avanzadas;
-- sincronización entre dispositivos;
-- organización mediante espacios de trabajo;
-- automatizaciones;
-- funciones impulsadas por IA;
-- historial extendido;
-- personalización avanzada;
-- acceso anticipado a nuevas funcionalidades.
+- Saved HTTP collections/environments ilimitadas.
+- Team workspaces (Dev Board y bookmarks/snippets compartidos entre miembros).
+- Feature flags dashboard.
+- Mayor cuota de generación IA y acceso a más herramientas IA-asistidas.
+- Historial extendido y personalización avanzada.
+- Acceso anticipado a nuevas utilidades.
 
 ---
 
@@ -216,14 +215,14 @@ Incluye:
 
 ## Empresas
 
-Licencias para equipos de desarrollo.
+Licencias para equipos de desarrollo, sobre Team workspaces.
 
 Posibles beneficios:
 
-- administración centralizada;
-- despliegue interno;
+- administración centralizada (Appwrite Teams, roles/permisos);
+- SSO / auditoría;
 - soporte prioritario;
-- funcionalidades empresariales.
+- funcionalidades empresariales (feature flags, webhook inspector, etc.).
 
 ---
 
@@ -231,7 +230,7 @@ Posibles beneficios:
 
 - Sitio web oficial.
 - GitHub.
-- Mac App Store (si aplica).
+- PWA instalable desde el navegador.
 - Redes sociales.
 - Contenido educativo.
 - Comunidades de desarrolladores.
@@ -258,16 +257,17 @@ La propia evolución del producto será parte de la estrategia de adquisición.
 # Diferenciadores
 
 - Enfoque exclusivo en desarrolladores.
-- Experiencia de escritorio nativa.
-- Prioridad al funcionamiento offline.
+- Acceso instantáneo desde el navegador, sin instalación.
+- Backend propio (Appwrite): tus datos en tu cuenta, no dispersos entre sitios de terceros.
 - Interfaz moderna y minimalista.
 - Alto rendimiento.
+- Extensible vía CLI y, próximamente, MCP para agentes de IA.
 - Evolución continua basada en necesidades reales del desarrollo diario.
 
 ---
 
 # Objetivo a largo plazo
 
-Convertirse en la aplicación de escritorio de referencia para utilidades de desarrollo, ofreciendo una experiencia unificada, rápida y confiable que acompañe a los desarrolladores durante toda su jornada de trabajo.
+Convertirse en la aplicación web de referencia para utilidades de desarrollo, ofreciendo una experiencia unificada, rápida y confiable que acompañe a los desarrolladores durante toda su jornada de trabajo.
 
-Forge busca ser una herramienta que permanezca siempre abierta, reduciendo la fricción en las tareas cotidianas y permitiendo que los desarrolladores dediquen más tiempo a crear software y menos tiempo a buscar herramientas.
+Forge busca ser una herramienta que permanezca siempre a una pestaña de distancia, reduciendo la fricción en las tareas cotidianas y permitiendo que los desarrolladores dediquen más tiempo a crear software y menos tiempo a buscar herramientas.

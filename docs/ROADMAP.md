@@ -1,12 +1,17 @@
 # Roadmap de mejoras — Forge
 
-> Complementa `docs/product.md` (visión) y `docs/IDEAS.md` (brainstorm de módulos). Forge es web-first: desktop, CLI, MCP y móvil se añaden después sobre APIs y modelos compartidos.
+> Complementa `docs/product.md` (visión) y `docs/IDEAS.md` (brainstorm de módulos). Forge es browser-only: `apps/cli` ya existe sobre la misma API Appwrite; MCP y móvil se añaden después sobre esos mismos modelos compartidos. `apps/desktop` está descartado salvo necesidad real (ver §2).
 
 ## 1. Estado actual
 
-Las herramientas viven en `apps/web/src/lib/tools.ts`. Dos niveles de madurez:
+El workspace ya tiene tres paquetes reales, no solo `apps/web`:
+- `apps/web` (`@forge/web`) — la app browser, herramientas en `apps/web/src/lib/tools.ts`.
+- `apps/cli` (`@forge/cli`, binario `forge-cli`) — CRUD de bookmarks/proyectos/tickets sobre las mismas tablas Appwrite que usa la web.
+- `functions/ai-content-generator` (`@forge/ai-content-generator`) — Appwrite Function (Groq) que genera contenido; consumida hoy por `features/ai-generation`.
+
+Las herramientas de `apps/web` tienen dos niveles de madurez:
 - **Tools simples**: un archivo `.tsx` + `utils/` (json-formatter, base64, uuid-generator, etc.)
-- **Features completos**: `components/hooks/services/schemas/types` (bookmarks, dev-board, mock-data-generator, http-tester, auth, settings)
+- **Features completos**: `components/hooks/services/schemas/types` (bookmarks, dev-board, mock-data-generator, http-tester, auth, settings, y **ai-generation** — usado transversalmente dentro de bookmarks y snippets, no es una tool con ruta propia).
 
 ### Restricciones web
 
@@ -24,11 +29,11 @@ Resto (json-formatter, uuid-generator, base64, timestamp-converter, jwt-decoder,
 
 ## 2. Estrategia web-first
 
-- Mantener `apps/web` como única aplicación hasta que una segunda app tenga consumidor real.
-- Modelar organizaciones, workspaces, miembros, roles, proyectos, tareas y entradas de tiempo en Appwrite antes de añadir CLI o MCP.
+- Mantener `apps/web` como única app de UI hasta que una segunda tenga consumidor real. `apps/cli` y `functions/ai-content-generator` ya son parte del workspace, no una app de UI competidora.
+- Modelar organizaciones, workspaces, miembros, roles, proyectos, tareas y entradas de tiempo en Appwrite antes de dar permisos multi-usuario reales (Team workspaces).
 - Exponer API autenticada con scopes y registro de auditoría antes de automatizar mutaciones por agentes.
-- Añadir `apps/cli` y MCP stdio sobre misma API cuando Dev Board remoto sea estable.
-- Evaluar `apps/desktop` solo para capacidades locales que no existen en navegador.
+- `apps/cli` (`forge-cli`) ya existe y cubre bookmarks/proyectos/tickets. Pendiente: **MCP stdio sobre la misma API** para que agentes operen Forge directamente.
+- `apps/desktop` queda descartado mientras Forge sea browser-only (regla dura en `AGENTS.md`, no dependencias Tauri/Rust/native-IPC). Solo reconsiderar si aparece una necesidad real que el navegador no pueda cubrir (ver sección "Descartado" en `docs/IDEAS.md`).
 
 ## 3. Mejoras transversales
 
@@ -37,7 +42,7 @@ Resto (json-formatter, uuid-generator, base64, timestamp-converter, jwt-decoder,
 - **Tests** — cero. Empezar por `utils/` puros (parsers/converters): alto valor, bajo costo, Vitest.
 - **Atajos por herramienta** — hoy solo Cmd+K / Cmd+/ globales.
 - **i18n** — UI en inglés, docs en español. Decidir idioma único o agregar i18n real.
-- **Limpieza** — carpeta vacía `src/features/types/`; README raíz de 378B sin contenido real.
+- **Limpieza** — carpetas basura en `apps/web/src/features/`: `types/` (vacía), `src/` (vacía), `node_modules/` (solo un cache `.vite` perdido ahí); README raíz de 378B sin contenido real.
 
 ## 4. Mejoras a herramientas existentes
 
@@ -54,11 +59,11 @@ Resto (json-formatter, uuid-generator, base64, timestamp-converter, jwt-decoder,
 
 ## 5. Features nuevos propuestos
 
-No duplican IDEAS.md (clipboard manager, port scanner, .env manager, etc. — ver ese doc):
+No duplican IDEAS.md (webhook inspector, feature flags, secrets vault, etc. — ver ese doc):
 
 - Cron expression parser/explainer
 - SQL formatter
-- cURL ↔ código (fetch/axios/etc.)
+- cURL ↔ código (fetch/axios/etc.) — versión determinista; versión IA-asistida en IDEAS.md
 - Markdown preview/editor
 - Conversor de base numérica (bin/hex/oct/dec)
 - String escape/unescape (JSON, HTML, shell)
@@ -66,9 +71,11 @@ No duplican IDEAS.md (clipboard manager, port scanner, .env manager, etc. — ve
 - Calculadora de chmod/permisos
 - Generador de slugs
 - Inspector ASCII/Unicode
+- MCP server sobre `forge-cli`/API Appwrite (ver IDEAS.md) — expone bookmarks/proyectos/tickets a agentes de IA.
+- Team workspaces (Appwrite Teams) para Dev Board/bookmarks/snippets compartidos — habilita el tier "Empresas" de `product.md`.
 
 ## 6. Prioridad sugerida
 
-- **P0**: Dev Board remoto con workspaces, entradas de tiempo y permisos Appwrite.
-- **P1**: reportes, favoritos/recientes, mejoras a json-formatter y HTTP Tester.
-- **P2**: API para CLI/MCP, PWA, tests y herramientas nuevas pequeñas.
+- **P0**: Saved HTTP collections (extiende HTTP Tester) y Webhook inspector — diferenciadores que aprovechan feature/infra ya existente.
+- **P1**: Team workspaces (habilita monetización Empresas), favoritos/recientes, reportes, mejoras a json-formatter y HTTP Tester, IA-asistida en regex/cURL/mock-data (infra Groq ya existe).
+- **P2**: MCP sobre `forge-cli`, PWA, tests y herramientas nuevas pequeñas.

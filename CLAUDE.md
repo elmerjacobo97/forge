@@ -20,7 +20,7 @@ There is no lint script configured in either `package.json`; do not assume ESLin
 
 ## Architecture
 
-**Workspace**: pnpm workspace rooted here, packages under `apps/*` and `packages/*`. Only `apps/web` exists today. Do not create empty packages speculatively, and do not add Tauri/Rust/native-IPC/desktop-only dependencies — this is a browser-only app (see project CLAUDE.md at repo root / `AGENTS.md`).
+**Workspace**: pnpm workspace rooted here, packages under `apps/*` and `packages/*`. Three real packages today: `apps/web` (`@forge/web`, browser app), `apps/cli` (`@forge/cli`, binary `forge-cli`, wraps the same Appwrite tables as the web app for bookmarks/projects/tickets), and `functions/ai-content-generator` (`@forge/ai-content-generator`, Appwrite Function running Groq, consumed by `features/ai-generation` inside bookmarks and snippets). `packages/*` is a reserved glob only — do not create empty packages speculatively. Keep `apps/web` itself browser-only: no Tauri/Rust/native-IPC/desktop-only dependencies there (see `AGENTS.md`).
 
 **Feature-first structure**: `apps/web/src/features/<feature>/` owns everything for that feature — `components/`, `hooks/`, `services/`, `schemas/`, `types/`, `utils/`. There are ~25 features, mostly standalone dev-utility tools (JSON formatter, JWT decoder, hash generator, etc.) plus larger stateful features (`dev-board`, `bookmarks`, `snippets`, `auth`, `settings`). Keep feature logic inside its feature folder unless it's genuinely shared.
 
