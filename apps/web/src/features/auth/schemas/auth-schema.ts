@@ -17,5 +17,10 @@ export const loginSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+export const verifyEmailSchema = z.object({
+  email: z.string().email("Enter a valid email"),
+  otp: z.string().regex(/^\d{6}$/, "Enter the 6-digit verification code"),
+});
+
 export type RegisterSchemaInput = z.infer<typeof registerSchema>;
 export type LoginSchemaInput = z.infer<typeof loginSchema>;

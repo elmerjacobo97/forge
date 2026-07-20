@@ -2,9 +2,13 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createAuthActions } from "@insforge/sdk/ssr";
+import { createAuthActions, createServerClient } from "@insforge/sdk/ssr";
 
-import { loginSchema, registerSchema } from "@/features/auth/schemas/auth-schema";
+import {
+  loginSchema,
+  registerSchema,
+  verifyEmailSchema,
+} from "@/features/auth/schemas/auth-schema";
 
 export type AuthActionResult = { ok: true } | { ok: false; message: string };
 
@@ -35,7 +39,29 @@ export async function registerAction(input: unknown): Promise<AuthActionResult> 
   const { error } = await auth.signUp({ email, password, name });
   if (error) return { ok: false, message: error.message };
 
-  redirect("/login?registered=1");
+  redirect(`/verify-email?email=${encodeURIComponent(email)}`);
+}
+
+export async function verifyEmailAction(input: unknown): Promise<AuthActionResult> {
+  const parsed = verifyEmailSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Enter the 6-digit verification code." };
+
+  const auth = createAuthActions({ cookies: await cookies() });
+  const { error } = await auth.verifyEmail(parsed.data);
+  if (error) return { ok: false, message: error.message };
+
+  redirect("/dev-board");
+}
+
+export async function resendVerificationAction(email: unknown): Promise<AuthActionResult> {
+  const parsed = verifyEmailSchema.shape.email.safeParse(email);
+  if (!parsed.success) return { ok: false, message: "Enter a valid email." };
+
+  const insforge = createServerClient({ cookies: await cookies() });
+  const { error } = await insforge.auth.resendVerificationEmail({ email: parsed.data });
+  if (error) return { ok: false, message: error.message };
+
+  return { ok: true };
 }
 
 export async function signOutAction(): Promise<void> {

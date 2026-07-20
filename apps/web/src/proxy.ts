@@ -46,6 +46,7 @@ export async function proxy(request: NextRequest) {
   const isPublicPath =
     request.nextUrl.pathname === "/login" ||
     request.nextUrl.pathname === "/register" ||
+    request.nextUrl.pathname === "/verify-email" ||
     request.nextUrl.pathname.startsWith("/api/");
 
   if (!hasSession && !isPublicPath) {
