@@ -113,7 +113,10 @@ export function FileValidator() {
     run()
 
     return () => {
-      requestIdRef.current++
+      // Invalidate in-flight work for this effect instance only
+      if (requestIdRef.current === id) {
+        requestIdRef.current = id + 1
+      }
     }
   }, [source, algo])
 

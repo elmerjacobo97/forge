@@ -181,7 +181,7 @@ export function LoremIpsum() {
                 checked={startWithLorem}
                 onCheckedChange={(v) => handleStartWithLoremChange(v === true)}
               >
-                Start with "Lorem ipsum…"
+                Start with &quot;Lorem ipsum…&quot;
               </MenubarCheckboxItem>
             </MenubarContent>
           </MenubarMenu>

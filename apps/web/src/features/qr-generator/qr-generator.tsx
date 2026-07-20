@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import QRCode from "qrcode"
 import { Check, Copy, Download, Eraser } from "lucide-react"
 
@@ -33,27 +33,34 @@ export function QrGenerator() {
   const [dataUrl, setDataUrl] = useState("")
   const { copied, copy } = useCopy()
 
-  const generate = useCallback(async () => {
-    if (!text.trim()) {
-      setDataUrl("")
-      return
+  useEffect(() => {
+    let cancelled = false
+
+    async function generate() {
+      if (!text.trim()) {
+        if (!cancelled) setDataUrl("")
+        return
+      }
+      try {
+        const url = await QRCode.toDataURL(text, {
+          errorCorrectionLevel: level,
+          margin,
+          width: size,
+          color: { dark, light },
+        })
+        if (!cancelled) setDataUrl(url)
+      } catch {
+        if (!cancelled) setDataUrl("")
+      }
     }
-    try {
-      const url = await QRCode.toDataURL(text, {
-        errorCorrectionLevel: level,
-        margin,
-        width: size,
-        color: { dark, light },
-      })
-      setDataUrl(url)
-    } catch {
-      setDataUrl("")
+
+    // Async encode from current inputs — external QR library
+    void generate()
+
+    return () => {
+      cancelled = true
     }
   }, [text, level, margin, size, dark, light])
-
-  useEffect(() => {
-    void generate()
-  }, [generate])
 
   function download() {
     if (!dataUrl) return
@@ -175,6 +182,8 @@ export function QrGenerator() {
         {dataUrl ? (
           <div className="flex flex-col items-center gap-4">
             <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-border/50">
+              {/* data: URLs are generated client-side; next/image is not appropriate */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={dataUrl} alt="QR code" className="block" />
             </div>
             <div className="flex items-center gap-4">

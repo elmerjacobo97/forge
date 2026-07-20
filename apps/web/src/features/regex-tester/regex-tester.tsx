@@ -60,7 +60,11 @@ export function RegexTester() {
   const { matches, highlighted } = useMemo<{ matches: Match[]; highlighted: Segment[] }>(() => {
     if (!regex || !test) return { matches: [], highlighted: [] }
     const result: Match[] = []
-    const globalRegex = regex.global ? regex : new RegExp(regex.source, regex.flags + "g")
+    // Always clone so we never mutate the RegExp from hook deps
+    const globalRegex = new RegExp(
+      regex.source,
+      regex.global ? regex.flags : `${regex.flags}g`,
+    )
     const segments: Segment[] = []
     let m: RegExpExecArray | null
     let lastIndex = 0

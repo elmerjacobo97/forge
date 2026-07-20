@@ -65,12 +65,12 @@ export function JwtDecoder() {
     [decoded]
   )
 
-  const isExpired = useMemo(() => {
-    if (!decoded?.payload.exp) return null
-    const exp = decoded.payload.exp
-    if (typeof exp !== "number") return null
-    return Date.now() >= exp * 1000
-  }, [decoded])
+  const isExpired =
+    typeof decoded?.payload.exp === "number"
+      ? // Wall-clock check for JWT `exp` claim display
+        // eslint-disable-next-line react-hooks/purity -- intentional Date.now for expiry badge
+        Date.now() >= decoded.payload.exp * 1000
+      : null
 
   function handleCopy(value: string, key: string) {
     copy(value)

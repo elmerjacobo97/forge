@@ -126,8 +126,8 @@ function mergeTwo(a: TSType, b: TSType, options: InferOptions): TSType {
   if (typeKey(a) === typeKey(b)) return a
 
   // null handling
-  if (a.kind === "primitive" && a.name === "null") return handleNull(b, options, true)
-  if (b.kind === "primitive" && b.name === "null") return handleNull(a, options, true)
+  if (a.kind === "primitive" && a.name === "null") return handleNull(b, options)
+  if (b.kind === "primitive" && b.name === "null") return handleNull(a, options)
 
   // objects
   if (a.kind === "object" && b.kind === "object") {
@@ -150,7 +150,7 @@ function mergeTwo(a: TSType, b: TSType, options: InferOptions): TSType {
   return union([a, b])
 }
 
-function handleNull(type: TSType, options: InferOptions, _fromNull: boolean): TSType {
+function handleNull(type: TSType, options: InferOptions): TSType {
   if (type.kind === "primitive" && type.name === "null") return primitive("null")
   if (options.optionalNulls) {
     // null makes the other type optional; we represent that at property level

@@ -66,7 +66,6 @@ export function useImageConvert(
   const resetOutput = useCallback(() => {
     if (output) URL.revokeObjectURL(output.url)
     setOutput(null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [output])
 
   const convert = useCallback(async () => {
@@ -152,7 +151,6 @@ export function useImageConvert(
     setResizeEnabled(false)
     setQuality(80)
     setSizeOverride(null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [output])
 
   return {
