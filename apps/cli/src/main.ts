@@ -13,7 +13,7 @@ Usage:
   forge-cli <command>
 
 Commands:
-  init      Write Appwrite config to ~/.forge/config.json
+  init      Write InsForge config to ~/.forge/config.json
   login     Sign in with email/password
   logout    Sign out and clear local session
   whoami    Show the authenticated user

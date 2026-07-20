@@ -1,4 +1,4 @@
-import { readFile, unlink, writeFile } from "node:fs/promises"
+import { chmod, readFile, unlink, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { ensureForgeDir, getForgeDir } from "./config.js"
 import type { ForgeSession } from "./types.js"
@@ -20,15 +20,23 @@ export function parseSession(value: unknown): ForgeSession {
 
   const record = value as Record<string, unknown>
   const userId = record.userId
-  const sessionSecret = record.sessionSecret
+  const accessToken = record.accessToken
+  const refreshToken = record.refreshToken
 
-  if (!isNonEmptyString(userId) || !isNonEmptyString(sessionSecret)) {
-    throw new Error("Invalid session: userId and sessionSecret are required.")
+  if (
+    !isNonEmptyString(userId) ||
+    !isNonEmptyString(accessToken) ||
+    !isNonEmptyString(refreshToken)
+  ) {
+    throw new Error(
+      "Invalid session: userId, accessToken, and refreshToken are required.",
+    )
   }
 
   return {
     userId: userId.trim(),
-    sessionSecret: sessionSecret.trim(),
+    accessToken: accessToken.trim(),
+    refreshToken: refreshToken.trim(),
   }
 }
 
@@ -56,6 +64,7 @@ export async function writeSession(session: ForgeSession): Promise<string> {
     encoding: "utf8",
     mode: 0o600,
   })
+  await chmod(SESSION_PATH, 0o600)
   return SESSION_PATH
 }
 

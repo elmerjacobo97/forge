@@ -1,4 +1,4 @@
-import { createAuthedBookmarksService } from "../appwrite.js"
+import { createAuthedBookmarksService } from "../insforge.js"
 import {
   parseBookmarkCreateInput,
   parseBookmarkUpdateInput,

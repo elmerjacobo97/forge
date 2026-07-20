@@ -1,195 +1,105 @@
+import type { InsForgeClient } from "@insforge/sdk"
 import {
-  ID,
-  Permission,
-  Query,
-  Role,
-  type Models,
-  type TablesDB,
-} from "node-appwrite"
+  asRecord,
+  asRows,
+  errorMessage,
+  stringField,
+  throwIfError,
+} from "./insforge-data.js"
 import type {
-  ForgeConfig,
   Project,
   ProjectCreateInput,
   ProjectUpdateInput,
 } from "./types.js"
 
+const TABLE = "dev_board_projects"
+const COLUMNS = "id,name,description,created_at"
+
 export const PROJECT_HAS_TICKETS_MESSAGE =
   "Cannot delete a project that still has tickets. Delete its tickets first."
 
-type ProjectRow = Models.DefaultRow & {
-  name?: unknown
-  description?: unknown
-  userId?: unknown
-}
-
-function asString(value: unknown, field: string): string {
-  if (typeof value !== "string") {
-    throw new Error(`Invalid project row: ${field} must be a string.`)
-  }
-  return value
-}
-
-export function mapRowToProject(row: ProjectRow): Project {
+export function mapRowToProject(value: unknown): Project {
+  const row = asRecord(value, "project row")
   return {
-    id: row.$id,
-    name: asString(row.name, "name"),
-    description: asString(row.description, "description"),
-    createdAt: row.$createdAt,
+    id: stringField(row, "id", "project row"),
+    name: stringField(row, "name", "project row"),
+    description: stringField(row, "description", "project row"),
+    createdAt: stringField(row, "created_at", "project row"),
   }
 }
 
-function assertOwnedByUser(row: ProjectRow, userId: string): void {
-  if (row.userId !== userId) {
-    throw new Error("Project not found.")
-  }
-}
+export type ProjectsServiceDeps = { client: InsForgeClient }
 
-function formatAppwriteError(error: unknown, fallback: string): Error {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "message" in error &&
-    typeof (error as { message: unknown }).message === "string"
-  ) {
-    const code =
-      "code" in error ? (error as { code: unknown }).code : undefined
-    if (code === 404) {
-      return new Error("Project not found.")
-    }
-    return new Error((error as { message: string }).message)
-  }
-  return new Error(fallback)
-}
-
-function privatePermissions(userId: string) {
-  return [
-    Permission.read(Role.user(userId)),
-    Permission.update(Role.user(userId)),
-    Permission.delete(Role.user(userId)),
-  ]
-}
-
-export type ProjectsServiceDeps = {
-  tablesDB: TablesDB
-  config: ForgeConfig
-  userId: string
-}
-
-export function createProjectsService(deps: ProjectsServiceDeps) {
-  const { tablesDB, config, userId } = deps
-  const databaseId = config.databaseId
-  const tableId = config.devBoardProjectsTableId
-  const ticketsTableId = config.devBoardTicketsTableId
-
-  async function getOwnedRow(id: string): Promise<ProjectRow> {
-    try {
-      const row = await tablesDB.getRow<ProjectRow>({
-        databaseId,
-        tableId,
-        rowId: id,
-      })
-      assertOwnedByUser(row, userId)
-      return row
-    } catch (error) {
-      throw formatAppwriteError(error, "Failed to get project.")
-    }
-  }
-
-  async function countTicketsForProject(projectId: string): Promise<number> {
-    const response = await tablesDB.listRows({
-      databaseId,
-      tableId: ticketsTableId,
-      queries: [
-        Query.equal("userId", userId),
-        Query.equal("projectId", projectId),
-        Query.limit(1),
-      ],
-    })
-    return response.total
+export function createProjectsService({ client }: ProjectsServiceDeps) {
+  async function get(id: string): Promise<Project> {
+    const response = await client.database
+      .from(TABLE)
+      .select(COLUMNS)
+      .eq("id", id)
+      .maybeSingle()
+    throwIfError(response.error, "Failed to get project.")
+    const data: unknown = response.data
+    if (data === null) throw new Error("Project not found.")
+    return mapRowToProject(data)
   }
 
   return {
     async list(): Promise<Project[]> {
-      try {
-        const response = await tablesDB.listRows<ProjectRow>({
-          databaseId,
-          tableId,
-          queries: [
-            Query.equal("userId", userId),
-            Query.orderDesc("$createdAt"),
-          ],
-        })
-        return response.rows.map(mapRowToProject)
-      } catch (error) {
-        throw formatAppwriteError(error, "Failed to list projects.")
-      }
+      const response = await client.database
+        .from(TABLE)
+        .select(COLUMNS)
+        .order("created_at", { ascending: false })
+      throwIfError(response.error, "Failed to list projects.")
+      const data: unknown = response.data
+      return asRows(data, "project list").map(mapRowToProject)
     },
 
-    async get(id: string): Promise<Project> {
-      const row = await getOwnedRow(id)
-      return mapRowToProject(row)
-    },
+    get,
 
     async create(input: ProjectCreateInput): Promise<Project> {
-      try {
-        const row = await tablesDB.createRow<ProjectRow>({
-          databaseId,
-          tableId,
-          rowId: ID.unique(),
-          data: {
-            userId,
-            name: input.name,
-            description: input.description,
-          },
-          permissions: privatePermissions(userId),
-        })
-        return mapRowToProject(row)
-      } catch (error) {
-        throw formatAppwriteError(error, "Failed to create project.")
-      }
+      const response = await client.database
+        .from(TABLE)
+        .insert([{ name: input.name, description: input.description }])
+        .select(COLUMNS)
+        .single()
+      throwIfError(response.error, "Failed to create project.")
+      const data: unknown = response.data
+      return mapRowToProject(data)
     },
 
     async update(id: string, input: ProjectUpdateInput): Promise<Project> {
-      const data: Record<string, string> = {}
-      if (input.name !== undefined) data.name = input.name
-      if (input.description !== undefined) data.description = input.description
-
-      if (Object.keys(data).length === 0) {
+      const changes: Record<string, string> = {}
+      if (input.name !== undefined) changes.name = input.name
+      if (input.description !== undefined) changes.description = input.description
+      if (Object.keys(changes).length === 0) {
         throw new Error("Nothing to update. Provide at least one field.")
       }
 
-      await getOwnedRow(id)
-
-      try {
-        const row = await tablesDB.updateRow<ProjectRow>({
-          databaseId,
-          tableId,
-          rowId: id,
-          data,
-        })
-        return mapRowToProject(row)
-      } catch (error) {
-        throw formatAppwriteError(error, "Failed to update project.")
-      }
+      await get(id)
+      const response = await client.database
+        .from(TABLE)
+        .update(changes)
+        .eq("id", id)
+        .select(COLUMNS)
+        .single()
+      throwIfError(response.error, "Failed to update project.")
+      const data: unknown = response.data
+      return mapRowToProject(data)
     },
 
     async delete(id: string): Promise<void> {
-      await getOwnedRow(id)
-
-      // Count immediately before delete to reduce races with concurrent ticket creates.
-      const ticketCount = await countTicketsForProject(id)
-      if (ticketCount > 0) {
-        throw new Error(PROJECT_HAS_TICKETS_MESSAGE)
+      const response = await client.database.rpc("delete_empty_dev_board_project", {
+        p_project_id: id,
+      })
+      if (response.error) {
+        const message = errorMessage(response.error, "Failed to delete project.")
+        if (message.includes("Project has tickets")) {
+          throw new Error(PROJECT_HAS_TICKETS_MESSAGE)
+        }
+        throw new Error(message)
       }
-
-      try {
-        await tablesDB.deleteRow({
-          databaseId,
-          tableId,
-          rowId: id,
-        })
-      } catch (error) {
-        throw formatAppwriteError(error, "Failed to delete project.")
+      if (response.data !== true) {
+        throw new Error("Invalid project delete response.")
       }
     },
   }

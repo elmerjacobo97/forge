@@ -1,4 +1,4 @@
-import { createEmailPasswordSession, requireConfig } from "../appwrite.js"
+import { createEmailPasswordSession, requireConfig } from "../insforge.js"
 import { getFlagValue, promptSecret, promptText } from "../flags.js"
 import { writeSession } from "../session.js"
 
@@ -35,12 +35,12 @@ export async function runLogin(args: string[]): Promise<void> {
     return
   }
 
-  const { userId, sessionSecret } = await createEmailPasswordSession({
+  const session = await createEmailPasswordSession({
     config,
     email,
     password,
   })
 
-  const path = await writeSession({ userId, sessionSecret })
-  process.stdout.write(`Logged in as ${userId}\nSession saved to ${path}\n`)
+  const path = await writeSession(session)
+  process.stdout.write(`Logged in as ${session.userId}\nSession saved to ${path}\n`)
 }

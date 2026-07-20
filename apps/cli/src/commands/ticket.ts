@@ -1,7 +1,7 @@
 import {
   createAuthedClient,
   createAuthedDevBoardService,
-} from "../appwrite.js"
+} from "../insforge.js"
 import { createDevBoardService } from "../dev-board-service.js"
 import {
   getFlagValue,
@@ -85,20 +85,12 @@ async function runCreate(args: string[]): Promise<void> {
     return
   }
 
-  const { config, session, tablesDB } = await createAuthedClient()
-  const projects = createProjectsService({
-    tablesDB,
-    config,
-    userId: session.userId,
-  })
+  const { client } = await createAuthedClient()
+  const projects = createProjectsService({ client })
   // Verify the project exists and belongs to the authenticated user.
   await projects.get(input.projectId)
 
-  const service = createDevBoardService({
-    tablesDB,
-    config,
-    userId: session.userId,
-  })
+  const service = createDevBoardService({ client })
   const ticket = await service.create(input)
   writeTicketOutput(ticket, json)
 }

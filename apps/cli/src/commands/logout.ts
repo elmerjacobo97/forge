@@ -1,11 +1,10 @@
-import { Account } from "node-appwrite"
-import { createClient, requireConfig } from "../appwrite.js"
+import { createClient, requireConfig } from "../insforge.js"
 import { clearSession, readSession } from "../session.js"
 
 const LOGOUT_HELP = `Usage:
   forge-cli logout
 
-Invalidates the current Appwrite session (when possible) and removes ~/.forge/session.json.
+Invalidates the current InsForge session (when possible) and removes ~/.forge/session.json.
 
 Options:
   --help    Show this help
@@ -25,9 +24,8 @@ export async function runLogout(args: string[]): Promise<void> {
 
   try {
     const config = await requireConfig()
-    const client = createClient(config, session.sessionSecret)
-    const account = new Account(client)
-    await account.deleteSession({ sessionId: "current" })
+    const client = createClient(config, session.accessToken)
+    await client.auth.signOut()
   } catch {
     // Still clear local session if remote delete fails (expired/network).
   }

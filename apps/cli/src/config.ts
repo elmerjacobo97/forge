@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { chmod, mkdir, readFile, writeFile } from "node:fs/promises"
 import { homedir } from "node:os"
 import { join } from "node:path"
 import type { ForgeConfig } from "./types.js"
@@ -24,43 +24,19 @@ export function parseConfig(value: unknown): ForgeConfig {
   }
 
   const record = value as Record<string, unknown>
-  const endpoint = record.endpoint
-  const projectId = record.projectId
-  const databaseId = record.databaseId
-  const bookmarksTableId = record.bookmarksTableId
-  const devBoardProjectsTableId = record.devBoardProjectsTableId
-  const devBoardTicketsTableId = record.devBoardTicketsTableId
-  const devBoardEventsTableId = record.devBoardEventsTableId
-  const devBoardTimeEntriesTableId = record.devBoardTimeEntriesTableId
+  const url = record.url
+  const anonKey = record.anonKey
 
-  if (
-    !isNonEmptyString(endpoint) ||
-    !isNonEmptyString(projectId) ||
-    !isNonEmptyString(databaseId) ||
-    !isNonEmptyString(bookmarksTableId) ||
-    !isNonEmptyString(devBoardProjectsTableId) ||
-    !isNonEmptyString(devBoardTicketsTableId) ||
-    !isNonEmptyString(devBoardEventsTableId) ||
-    !isNonEmptyString(devBoardTimeEntriesTableId)
-  ) {
+  if (!isNonEmptyString(url) || !isNonEmptyString(anonKey)) {
     throw new Error(
-      "Invalid config: endpoint, projectId, databaseId, bookmarksTableId, " +
-        "devBoardProjectsTableId, devBoardTicketsTableId, " +
-        "devBoardEventsTableId, and " +
-        "devBoardTimeEntriesTableId are required. " +
+      "Invalid config: url and anonKey are required. " +
         "Run: forge-cli init --from-web-env",
     )
   }
 
   return {
-    endpoint: endpoint.trim(),
-    projectId: projectId.trim(),
-    databaseId: databaseId.trim(),
-    bookmarksTableId: bookmarksTableId.trim(),
-    devBoardProjectsTableId: devBoardProjectsTableId.trim(),
-    devBoardTicketsTableId: devBoardTicketsTableId.trim(),
-    devBoardEventsTableId: devBoardEventsTableId.trim(),
-    devBoardTimeEntriesTableId: devBoardTimeEntriesTableId.trim(),
+    url: url.trim().replace(/\/+$/, ""),
+    anonKey: anonKey.trim(),
   }
 }
 
@@ -93,5 +69,6 @@ export async function writeConfig(config: ForgeConfig): Promise<string> {
     encoding: "utf8",
     mode: 0o600,
   })
+  await chmod(CONFIG_PATH, 0o600)
   return CONFIG_PATH
 }

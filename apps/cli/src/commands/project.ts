@@ -1,4 +1,4 @@
-import { createAuthedProjectsService } from "../appwrite.js"
+import { createAuthedProjectsService } from "../insforge.js"
 import {
   getFlagValue,
   getPositionals,

@@ -1,18 +1,12 @@
 export type ForgeConfig = {
-  endpoint: string
-  projectId: string
-  databaseId: string
-  bookmarksTableId: string
-  devBoardProjectsTableId: string
-  devBoardTicketsTableId: string
-  devBoardEventsTableId: string
-  devBoardTimeEntriesTableId: string
+  url: string
+  anonKey: string
 }
 
 export type ForgeSession = {
   userId: string
-  /** Appwrite session secret (from login cookie / X-Appwrite-Session). */
-  sessionSecret: string
+  accessToken: string
+  refreshToken: string
 }
 
 export const CATEGORIES = ["docs", "git", "tool", "article", "other"] as const

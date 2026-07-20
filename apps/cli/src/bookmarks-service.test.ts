@@ -2,25 +2,19 @@ import { describe, expect, it } from "vitest"
 import { mapRowToBookmark } from "./bookmarks-service.js"
 
 describe("mapRowToBookmark", () => {
-  it("maps a valid Appwrite row", () => {
-    expect(
-      mapRowToBookmark({
-        $id: "row1",
-        $createdAt: "2026-01-01T00:00:00.000Z",
-        $updatedAt: "2026-01-01T00:00:00.000Z",
-        $permissions: [],
-        $sequence: 1,
-        $tableId: "bookmarks",
-        $databaseId: "db",
-        title: "React docs",
-        url: "https://react.dev",
-        category: "docs",
-        description: "Official React documentation",
-        tags: ["react"],
-        userId: "user1",
-      }),
-    ).toEqual({
-      id: "row1",
+  const row = {
+    id: "d7f1ce67-cf72-4f8e-8545-f0d2fb4ec501",
+    title: "React docs",
+    url: "https://react.dev",
+    category: "docs",
+    description: "Official React documentation",
+    tags: ["react"],
+    created_at: "2026-01-01T00:00:00.000Z",
+  }
+
+  it("maps a valid InsForge row to the stable CLI format", () => {
+    expect(mapRowToBookmark(row)).toEqual({
+      id: row.id,
       title: "React docs",
       url: "https://react.dev",
       category: "docs",
@@ -30,41 +24,12 @@ describe("mapRowToBookmark", () => {
     })
   })
 
-  it("defaults missing tags to an empty array", () => {
-    const bookmark = mapRowToBookmark({
-      $id: "row1",
-      $createdAt: "2026-01-01T00:00:00.000Z",
-      $updatedAt: "2026-01-01T00:00:00.000Z",
-      $permissions: [],
-      $sequence: 1,
-      $tableId: "bookmarks",
-      $databaseId: "db",
-      title: "React docs",
-      url: "https://react.dev",
-      category: "docs",
-      description: "Official React documentation",
-      userId: "user1",
-    })
-    expect(bookmark.tags).toEqual([])
-  })
-
-  it("rejects an unknown category", () => {
-    expect(() =>
-      mapRowToBookmark({
-        $id: "row1",
-        $createdAt: "2026-01-01T00:00:00.000Z",
-        $updatedAt: "2026-01-01T00:00:00.000Z",
-        $permissions: [],
-        $sequence: 1,
-        $tableId: "bookmarks",
-        $databaseId: "db",
-        title: "React docs",
-        url: "https://react.dev",
-        category: "invalid",
-        description: "Official React documentation",
-        tags: [],
-        userId: "user1",
-      }),
-    ).toThrow(/category must be one of/)
+  it("rejects malformed network fields", () => {
+    expect(() => mapRowToBookmark({ ...row, tags: "react" })).toThrow(
+      /tags must be a string array/,
+    )
+    expect(() => mapRowToBookmark({ ...row, category: "invalid" })).toThrow(
+      /category must be one of/,
+    )
   })
 })

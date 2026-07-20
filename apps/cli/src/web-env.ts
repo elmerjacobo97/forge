@@ -2,14 +2,8 @@ import { readFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
 
 export type WebEnvConfig = {
-  endpoint?: string
-  projectId?: string
-  databaseId?: string
-  bookmarksTableId?: string
-  devBoardProjectsTableId?: string
-  devBoardTicketsTableId?: string
-  devBoardEventsTableId?: string
-  devBoardTimeEntriesTableId?: string
+  url?: string
+  anonKey?: string
   envPath: string
 }
 
@@ -33,18 +27,20 @@ function parseEnvFile(contents: string): Record<string, string> {
   return values
 }
 
-/** Walk up from startDir looking for apps/web/.env */
+/** Walk up from startDir looking for the web app's local environment. */
 export async function findWebEnvPath(
   startDir: string = process.cwd(),
 ): Promise<string | null> {
   let dir = startDir
   for (let i = 0; i < 8; i++) {
-    const candidate = join(dir, "apps", "web", ".env")
-    try {
-      await readFile(candidate, "utf8")
-      return candidate
-    } catch {
-      // continue
+    for (const filename of [".env.local", ".env"]) {
+      const candidate = join(dir, "apps", "web", filename)
+      try {
+        await readFile(candidate, "utf8")
+        return candidate
+      } catch {
+        // continue
+      }
     }
     const parent = dirname(dir)
     if (parent === dir) break
@@ -63,21 +59,11 @@ export async function loadConfigFromWebEnv(
   const env = parseEnvFile(raw)
 
   return {
-    endpoint: emptyToUndefined(env.VITE_APPWRITE_ENDPOINT),
-    projectId: emptyToUndefined(env.VITE_APPWRITE_PROJECT_ID),
-    databaseId: emptyToUndefined(env.VITE_APPWRITE_DATABASE_ID),
-    bookmarksTableId: emptyToUndefined(env.VITE_APPWRITE_BOOKMARKS_COLLECTION_ID),
-    devBoardProjectsTableId: emptyToUndefined(
-      env.VITE_APPWRITE_DEV_BOARD_PROJECTS_TABLE_ID,
+    url: emptyToUndefined(
+      env.NEXT_PUBLIC_INSFORGE_URL ?? env.VITE_INSFORGE_URL,
     ),
-    devBoardTicketsTableId: emptyToUndefined(
-      env.VITE_APPWRITE_DEV_BOARD_TICKETS_TABLE_ID,
-    ),
-    devBoardEventsTableId: emptyToUndefined(
-      env.VITE_APPWRITE_DEV_BOARD_EVENTS_TABLE_ID,
-    ),
-    devBoardTimeEntriesTableId: emptyToUndefined(
-      env.VITE_APPWRITE_DEV_BOARD_TIME_ENTRIES_TABLE_ID,
+    anonKey: emptyToUndefined(
+      env.NEXT_PUBLIC_INSFORGE_ANON_KEY ?? env.VITE_INSFORGE_ANON_KEY,
     ),
     envPath: path,
   }
