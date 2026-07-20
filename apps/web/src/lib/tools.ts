@@ -23,6 +23,7 @@ import {
   ImageIcon,
   Columns3,
   Dices,
+  Webhook,
 } from "lucide-react";
 
 export interface ToolDef {
@@ -74,6 +75,14 @@ export const tools: ToolDef[] = [
     name: "HTTP Tester",
     description: "Send HTTP requests and inspect responses (no CORS)",
     icon: Globe,
+    category: "Network",
+  },
+  {
+    id: "webhook-inspector",
+    path: "/webhook-inspector",
+    name: "Webhook Inspector",
+    description: "Create temporary URLs that capture and inspect incoming HTTP requests",
+    icon: Webhook,
     category: "Network",
   },
   {
