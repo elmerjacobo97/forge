@@ -22,7 +22,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="forge-theme">
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="dark"
+      enableSystem
+      storageKey="forge-theme"
+      disableTransitionOnChange
+    >
       <QueryClientProvider client={queryClient}>
         <TooltipProvider delayDuration={300}>
           {children}

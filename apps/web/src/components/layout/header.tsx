@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { useTheme } from "@/components/theme-provider"
+import { useTheme } from "next-themes"
 import type { ToolDef } from "@/lib/tools"
 
 interface HeaderProps {
@@ -15,8 +15,8 @@ interface HeaderProps {
 }
 
 export function Header({ tool, onOpenPalette }: HeaderProps) {
-  const { theme, setTheme } = useTheme()
-  const isDark = theme === "dark" || theme === "system"
+  const { resolvedTheme, setTheme } = useTheme()
+  const isDark = resolvedTheme === "dark"
 
   return (
     <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background/85 px-5 backdrop-blur-md">
