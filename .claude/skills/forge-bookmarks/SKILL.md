@@ -1,6 +1,6 @@
 ---
 name: forge-bookmarks
-description: Manage Forge bookmarks via the forge-cli binary (create, list, get, update, delete). Use when the user asks to save a URL, add a bookmark, list bookmarks, update or delete a bookmark, or run forge-cli bookmark commands against Appwrite.
+description: Manage Forge bookmarks via the forge-cli binary (create, list, get, update, delete). Use when the user asks to save a URL, add a bookmark, list bookmarks, update or delete a bookmark, or run forge-cli bookmark commands against InsForge.
 ---
 
 # Forge bookmarks (`forge-cli`)
@@ -11,14 +11,14 @@ Use the monorepo CLI binary **`forge-cli`** (not Laravel Forge’s `forge`). Pre
 pnpm --filter @forge/cli forge-cli -- <command>
 ```
 
-Bookmarks sync to the same Appwrite table as the web app. Auth is per-user; there is no offline mode.
+Bookmarks sync to the same InsForge table and RLS policies as the web app. Auth is per-user; there is no offline mode.
 
 ## Prerequisites
 
-One-time config (same Appwrite project as `apps/web`):
+One-time config (same InsForge project as `apps/web`):
 
 ```bash
-# preferred in this monorepo (reads apps/web/.env)
+# preferred in this monorepo (reads apps/web/.env.local)
 forge-cli init --from-web-env
 # or interactive: forge-cli init
 ```

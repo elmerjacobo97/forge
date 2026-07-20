@@ -1,6 +1,6 @@
 ---
 name: forge-projects
-description: Manage Forge Dev Board projects via the forge-cli binary (create, list, get, update, delete). Use when the user asks to create a project/board, list Dev Board projects, rename a project, delete an empty project, or run forge-cli project commands against Appwrite.
+description: Manage Forge Dev Board projects via the forge-cli binary (create, list, get, update, delete). Use when the user asks to create a project/board, list Dev Board projects, rename a project, delete an empty project, or run forge-cli project commands against InsForge.
 ---
 
 # Forge Dev Board projects (`forge-cli`)
@@ -11,14 +11,14 @@ Use the monorepo CLI binary **`forge-cli`** (not Laravel Forge’s `forge`). Pre
 pnpm --filter @forge/cli forge-cli -- <command>
 ```
 
-Projects sync to the same Appwrite Dev Board projects table as the web app. Auth is per-user; there is no offline mode.
+Projects sync to the same InsForge table and RLS policies as the web app. Auth is per-user; there is no offline mode.
 
 ## Prerequisites
 
-One-time config (same Appwrite project as `apps/web`, including Dev Board table IDs):
+One-time config (same InsForge project as `apps/web`):
 
 ```bash
-# preferred in this monorepo (reads apps/web/.env)
+# preferred in this monorepo (reads apps/web/.env.local)
 forge-cli init --from-web-env
 # or interactive: forge-cli init
 ```
@@ -31,7 +31,7 @@ forge-cli login --email "<email>"
 forge-cli whoami
 ```
 
-Session and config live in `~/.forge/` (`config.json`, `session.json`). Config must include `devBoardProjectsTableId` (plus tickets/events/time-entries IDs). Re-run `init --from-web-env` if that key is missing.
+Session and config live in `~/.forge/` (`config.json`, `session.json`) with mode `0600`.
 
 ## Create a project
 

@@ -7,5 +7,9 @@
 - Each item includes date + "Do instead".
 
 ## Execution & Validation (Highest Priority)
-1. **[2026-07-12] Browser-only web app with Vitest tests**
-   Do instead: run focused Vitest commands through `pnpm --filter @forge/web test` before reporting test work.
+1. **[2026-07-20] Next.js web and Node CLI have separate verification**
+   Do instead: run focused Vitest through package filters, then root `pnpm build` and `pnpm test` before reporting cross-package work.
+
+## Domain Behavior Guardrails
+1. **[2026-07-20] Dev Board writes are atomic InsForge RPCs**
+   Do instead: use ticket/project RPCs for lifecycle writes and validate snake_case network rows before mapping them to app types.

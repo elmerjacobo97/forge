@@ -1,6 +1,6 @@
 ---
 name: forge-tickets
-description: Manage Forge Dev Board tickets via the forge-cli binary (create, list, get, update, delete, move). Use when the user asks to create a ticket, move a card on the board, list tickets by project/column, update priority/title, or run forge-cli ticket commands against Appwrite.
+description: Manage Forge Dev Board tickets via the forge-cli binary (create, list, get, update, delete, move). Use when the user asks to create a ticket, move a card on the board, list tickets by project/column, update priority/title, or run forge-cli ticket commands against InsForge.
 ---
 
 # Forge Dev Board tickets (`forge-cli`)
@@ -11,14 +11,14 @@ Use the monorepo CLI binary **`forge-cli`** (not Laravel Forge’s `forge`). Pre
 pnpm --filter @forge/cli forge-cli -- <command>
 ```
 
-Tickets sync to the same Appwrite Dev Board tables as the web app (tickets, events, time entries). Auth is per-user; there is no offline mode. Every ticket belongs to a **project** (`--project-id`).
+Tickets sync to the same InsForge tables and transactional RPCs as the web app. Auth is per-user; there is no offline mode. Every ticket belongs to a **project** (`--project-id`).
 
 ## Prerequisites
 
-One-time config (same Appwrite project as `apps/web`, including Dev Board table IDs):
+One-time config (same InsForge project as `apps/web`):
 
 ```bash
-# preferred in this monorepo (reads apps/web/.env)
+# preferred in this monorepo (reads apps/web/.env.local)
 forge-cli init --from-web-env
 # or interactive: forge-cli init
 ```
@@ -31,7 +31,7 @@ forge-cli login --email "<email>"
 forge-cli whoami
 ```
 
-Session and config live in `~/.forge/` (`config.json`, `session.json`). Config must include `devBoardProjectsTableId`, `devBoardTicketsTableId`, `devBoardEventsTableId`, and `devBoardTimeEntriesTableId`.
+Session and config live in `~/.forge/` (`config.json`, `session.json`) with mode `0600`.
 
 If you do not have a project id yet, create one first (skill `forge-projects`):
 
