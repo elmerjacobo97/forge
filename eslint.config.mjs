@@ -53,6 +53,35 @@ export default defineConfig([
     },
   },
 
+  // Underscore-prefixed args/vars are intentional (API parity, reserved params)
+  {
+    files: ["**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
+
+  // shadcn UI + generated hooks — do not lint/edit these
+  {
+    files: [
+      "apps/web/src/components/ui/**/*.{ts,tsx}",
+      "apps/web/src/hooks/use-mobile.ts",
+    ],
+    rules: {
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/immutability": "off",
+    },
+  },
+
   // Disable formatting rules that conflict with Prettier (must be last)
   prettier,
 ]);
