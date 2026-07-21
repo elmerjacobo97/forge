@@ -143,6 +143,7 @@ export function EditSnippetDialog({ snippet, isOpen, onOpenChange }: EditSnippet
     >
       <DialogContent
         className="max-h-[calc(100vh-2rem)] max-w-md grid-rows-[auto_minmax(0,1fr)_auto]"
+        style={{ pointerEvents: "auto" }}
         onPointerDownOutside={(event) => {
           if (isSelectContentTarget(event.target)) event.preventDefault();
         }}
