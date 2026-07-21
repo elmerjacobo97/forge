@@ -3,6 +3,15 @@ import { z } from "zod";
 import { insforge } from "@/lib/insforge/browser";
 import type { Snippet } from "../types";
 
+const snippetToolSchema = z.enum([
+  "react-native",
+  "vscode",
+  "cursor",
+  "opencode",
+  "claude-code",
+  "other",
+]);
+
 const snippetRowSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -10,10 +19,16 @@ const snippetRowSchema = z.object({
   content: z.string(),
   language: z.string().nullable(),
   tags: z.array(z.string()),
+  tool: snippetToolSchema.nullable(),
+  custom_tool: z.string().nullable(),
+  version: z.string().nullable(),
+  context: z.string().nullable(),
   created_at: z.string(),
 });
 
 type SnippetInput = Omit<Snippet, "id" | "createdAt">;
+const snippetSelect =
+  "id,title,kind,content,language,tags,tool,custom_tool,version,context,created_at";
 
 function requireUser(userId?: string): void {
   if (!userId) throw new Error("Sign in to use Snippets.");
@@ -21,7 +36,33 @@ function requireUser(userId?: string): void {
 
 function toSnippet(value: unknown): Snippet {
   const row = snippetRowSchema.parse(value);
-  return { ...row, createdAt: row.created_at };
+  return {
+    id: row.id,
+    title: row.title,
+    kind: row.kind,
+    content: row.content,
+    language: row.language,
+    tags: row.tags,
+    tool: row.tool,
+    customTool: row.custom_tool,
+    version: row.version,
+    context: row.context,
+    createdAt: row.created_at,
+  };
+}
+
+function toSnippetPayload(snippet: SnippetInput) {
+  return {
+    title: snippet.title,
+    kind: snippet.kind,
+    content: snippet.content,
+    language: snippet.language,
+    tags: snippet.tags,
+    tool: snippet.tool,
+    custom_tool: snippet.customTool,
+    version: snippet.version,
+    context: snippet.context,
+  };
 }
 
 function failure(error: { message?: string } | null, fallback: string): Error {
@@ -33,7 +74,7 @@ export const snippetsService = {
     requireUser(userId);
     const { data, error } = await insforge.database
       .from("snippets")
-      .select("id,title,kind,content,language,tags,created_at")
+      .select(snippetSelect)
       .order("created_at", { ascending: false });
     if (error) throw failure(error, "Failed to load snippets.");
     return snippetRowSchema.array().parse(data).map(toSnippet);
@@ -43,24 +84,20 @@ export const snippetsService = {
     requireUser(userId);
     const { data, error } = await insforge.database
       .from("snippets")
-      .insert([snippet])
-      .select("id,title,kind,content,language,tags,created_at")
+      .insert([toSnippetPayload(snippet)])
+      .select(snippetSelect)
       .single();
     if (error) throw failure(error, "Failed to create snippet.");
     return toSnippet(data);
   },
 
-  async updateSnippet(
-    snippetId: string,
-    snippet: SnippetInput,
-    userId?: string,
-  ): Promise<Snippet> {
+  async updateSnippet(snippetId: string, snippet: SnippetInput, userId?: string): Promise<Snippet> {
     requireUser(userId);
     const { data, error } = await insforge.database
       .from("snippets")
-      .update(snippet)
+      .update(toSnippetPayload(snippet))
       .eq("id", snippetId)
-      .select("id,title,kind,content,language,tags,created_at")
+      .select(snippetSelect)
       .single();
     if (error) throw failure(error, "Failed to update snippet.");
     return toSnippet(data);
