@@ -1,6 +1,6 @@
 # SPEC 08 — Resources: configuraciones y recursos de desarrollo
 
-> **Estado:** Approved
+> **Estado:** Implemented
 > **Depende de:** SPEC 06 — Editar bookmarks y snippets con menú de acciones
 > **Fecha:** 2026-07-20
 > **Objetivo:** Convertir la herramienta Snippets en Resources bajo `/resources`, conservar sus recursos actuales y añadir configuraciones reutilizables de librerías y herramientas con metadatos, búsqueda, edición y copia.
