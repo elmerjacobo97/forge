@@ -38,7 +38,7 @@ export function EventDetail({ event }: EventDetailProps) {
     );
   }
 
-  const headerEntries = Object.entries(event.headers).toSorted(([a], [b]) =>
+  const headerEntries = [...Object.entries(event.headers)].sort(([a], [b]) =>
     a.localeCompare(b),
   );
 
