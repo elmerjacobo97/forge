@@ -21,7 +21,8 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm } from "@tanstack/react-form";
+import { useSelector } from "@tanstack/react-store";
 import { AiGenerationButton } from "@/features/ai-generation/components/ai-generation-button";
 import { aiGenerationService } from "@/features/ai-generation/services/ai-generation-service";
 import { FORMATS, TOOLS } from "../constants";
@@ -73,9 +74,9 @@ export function EditSnippetDialog({ snippet, isOpen, onOpenChange }: EditSnippet
       saveSnippet(value as SnippetSchema);
     },
   });
-  const generationTitle = useStore(form.store, (state) => state.values.title);
-  const selectedKind = useStore(form.store, (state) => state.values.kind);
-  const selectedTool = useStore(form.store, (state) => state.values.tool);
+  const generationTitle = useSelector(form.store, (state) => state.values.title);
+  const selectedKind = useSelector(form.store, (state) => state.values.kind);
+  const selectedTool = useSelector(form.store, (state) => state.values.tool);
   const isConfig = selectedKind === "config";
 
   function saveSnippet(data: SnippetSchema) {
