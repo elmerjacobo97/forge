@@ -3,6 +3,7 @@ import { runInit } from "./commands/init.js"
 import { runLogin } from "./commands/login.js"
 import { runLogout } from "./commands/logout.js"
 import { runProject } from "./commands/project.js"
+import { runResource } from "./commands/resource.js"
 import { runTicket } from "./commands/ticket.js"
 import { runWhoami } from "./commands/whoami.js"
 
@@ -18,6 +19,7 @@ Commands:
   logout    Sign out and clear local session
   whoami    Show the authenticated user
   bookmark  Manage bookmarks (create|list|get|update|delete)
+  resource  Manage resources (create|list|get|update|delete)
   project   Manage Dev Board projects (create|list|get|update|delete)
   ticket    Manage Dev Board tickets (create|list|get|update|delete|move)
 
@@ -52,6 +54,9 @@ async function main(argv: string[]): Promise<void> {
       return
     case "bookmark":
       await runBookmark(rest)
+      return
+    case "resource":
+      await runResource(rest)
       return
     case "project":
       await runProject(rest)

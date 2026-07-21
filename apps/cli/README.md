@@ -1,6 +1,6 @@
 # `@forge/cli` (`forge-cli`)
 
-Node CLI for Forge bookmarks, Dev Board projects, and tickets against the linked Forge InsForge backend.
+Node CLI for Forge bookmarks, resources, Dev Board projects, and tickets against the linked Forge InsForge backend.
 
 Binary name is **`forge-cli`** (not `forge`) to avoid clashing with Laravel Forge CLI / Herd.
 
@@ -63,6 +63,32 @@ forge-cli bookmark delete <id>
 
 Categories: `docs` | `git` | `tool` | `article` | `other`.
 
+## Resources
+
+```bash
+forge-cli resource create \
+  --title "ESLint flat" \
+  --kind config \
+  --content "{}" \
+  --language json \
+  --tool vscode \
+  --version "9" \
+  --tags eslint,lint
+
+forge-cli resource list
+forge-cli resource list --json
+forge-cli resource get <id> --json
+forge-cli resource update <id> --title "New title"
+forge-cli resource delete <id>
+```
+
+Kinds: `note` | `prompt` | `config` | `snippet`. Tools (required for `config`):
+`react-native` | `vscode` | `cursor` | `opencode` | `claude-code` | `other`.
+When `tool` is `other`, pass `--custom-tool`. Config metadata (`--tool`,
+`--custom-tool`, `--version`, `--context`) is stored only for `kind=config`.
+Resources sync to the InsForge `snippets` table (same as the web `/resources`
+tool). `--json` applies to `create|list|get|update`.
+
 ## Dev Board projects
 
 ```bash
@@ -111,5 +137,6 @@ row/RPC response mapping. They do not call the live backend.
 ## Agent skills
 
 - Bookmarks: `.claude/skills/forge-bookmarks/` and `.agents/skills/forge-bookmarks/`
+- Resources: `.claude/skills/forge-resources/` and `.agents/skills/forge-resources/`
 - Projects: `.claude/skills/forge-projects/` and `.agents/skills/forge-projects/`
 - Tickets: `.claude/skills/forge-tickets/` and `.agents/skills/forge-tickets/`

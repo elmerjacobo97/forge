@@ -92,3 +92,51 @@ export type TicketMoveInput = {
   id: string
   column: ColumnId
 }
+
+export const RESOURCE_KINDS = [
+  "note",
+  "prompt",
+  "config",
+  "snippet",
+] as const
+
+export type ResourceKind = (typeof RESOURCE_KINDS)[number]
+
+export const RESOURCE_TOOLS = [
+  "react-native",
+  "vscode",
+  "cursor",
+  "opencode",
+  "claude-code",
+  "other",
+] as const
+
+export type ResourceTool = (typeof RESOURCE_TOOLS)[number]
+
+export type Resource = {
+  id: string
+  title: string
+  kind: ResourceKind
+  content: string
+  language: string | null
+  tags: string[]
+  tool: ResourceTool | null
+  customTool: string | null
+  version: string | null
+  context: string | null
+  createdAt: string
+}
+
+export type ResourceCreateInput = {
+  title: string
+  kind: ResourceKind
+  content: string
+  language: string | null
+  tags: string[]
+  tool: ResourceTool | null
+  customTool: string | null
+  version: string | null
+  context: string | null
+}
+
+export type ResourceUpdateInput = Partial<ResourceCreateInput>

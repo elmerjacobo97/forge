@@ -1,4 +1,4 @@
-import type { Bookmark, Project, Ticket } from "./types.js"
+import type { Bookmark, Project, Resource, Ticket } from "./types.js"
 
 function formatDuration(ms: number): string {
   if (ms < 0) ms = 0
@@ -158,5 +158,58 @@ export function writeProjectListOutput(
     json
       ? formatProjectListJson(projects)
       : `${formatProjectListText(projects)}\n`,
+  )
+}
+
+function formatNullable(value: string | null): string {
+  return value ?? "(none)"
+}
+
+export function formatResourceText(resource: Resource): string {
+  const tags = resource.tags.length > 0 ? resource.tags.join(", ") : "(none)"
+  return (
+    `id:          ${resource.id}\n` +
+    `title:       ${resource.title}\n` +
+    `kind:        ${resource.kind}\n` +
+    `content:     ${resource.content}\n` +
+    `language:    ${formatNullable(resource.language)}\n` +
+    `tags:        ${tags}\n` +
+    `tool:        ${formatNullable(resource.tool)}\n` +
+    `customTool:  ${formatNullable(resource.customTool)}\n` +
+    `version:     ${formatNullable(resource.version)}\n` +
+    `context:     ${formatNullable(resource.context)}\n` +
+    `createdAt:   ${resource.createdAt}`
+  )
+}
+
+export function formatResourceListText(resources: Resource[]): string {
+  if (resources.length === 0) {
+    return "No resources."
+  }
+  return resources.map(formatResourceText).join("\n\n")
+}
+
+export function formatResourceJson(resource: Resource): string {
+  return `${JSON.stringify(resource, null, 2)}\n`
+}
+
+export function formatResourceListJson(resources: Resource[]): string {
+  return `${JSON.stringify(resources, null, 2)}\n`
+}
+
+export function writeResourceOutput(resource: Resource, json: boolean): void {
+  process.stdout.write(
+    json ? formatResourceJson(resource) : `${formatResourceText(resource)}\n`,
+  )
+}
+
+export function writeResourceListOutput(
+  resources: Resource[],
+  json: boolean,
+): void {
+  process.stdout.write(
+    json
+      ? formatResourceListJson(resources)
+      : `${formatResourceListText(resources)}\n`,
   )
 }

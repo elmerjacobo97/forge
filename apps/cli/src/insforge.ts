@@ -3,6 +3,7 @@ import {
   type InsForgeClient,
 } from "@insforge/sdk"
 import { createBookmarksService } from "./bookmarks-service.js"
+import { createResourcesService } from "./resources-service.js"
 import { readConfig } from "./config.js"
 import { createDevBoardService } from "./dev-board-service.js"
 import { createProjectsService } from "./projects-service.js"
@@ -99,6 +100,11 @@ export async function createAuthedClient(): Promise<{
 export async function createAuthedBookmarksService() {
   const { client } = await createAuthedClient()
   return createBookmarksService({ client })
+}
+
+export async function createAuthedResourcesService() {
+  const { client } = await createAuthedClient()
+  return createResourcesService({ client })
 }
 
 export async function createAuthedDevBoardService() {

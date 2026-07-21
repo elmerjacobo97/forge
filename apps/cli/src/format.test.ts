@@ -8,12 +8,16 @@ import {
   formatProjectListJson,
   formatProjectListText,
   formatProjectText,
+  formatResourceJson,
+  formatResourceListJson,
+  formatResourceListText,
+  formatResourceText,
   formatTicketJson,
   formatTicketListJson,
   formatTicketListText,
   formatTicketText,
 } from "./format.js"
-import type { Bookmark, Project, Ticket } from "./types.js"
+import type { Bookmark, Project, Resource, Ticket } from "./types.js"
 
 const sampleBookmark: Bookmark = {
   id: "row1",
@@ -45,6 +49,20 @@ const sampleProject: Project = {
   name: "Forge",
   description: "Dev tools",
   createdAt: "2026-07-19T08:00:00.000Z",
+}
+
+const sampleResource: Resource = {
+  id: "r1",
+  title: "ESLint flat",
+  kind: "config",
+  content: "{}",
+  language: "json",
+  tags: ["eslint"],
+  tool: "vscode",
+  customTool: null,
+  version: "9",
+  context: "workspace",
+  createdAt: "2026-01-01T00:00:00.000Z",
 }
 
 describe("formatBookmarkText", () => {
@@ -179,5 +197,50 @@ describe("project JSON formatters", () => {
       formatProjectListJson([sampleProject]),
     ) as Project[]
     expect(parsed).toEqual([sampleProject])
+  })
+})
+
+describe("formatResourceText", () => {
+  it("renders a readable resource block", () => {
+    const text = formatResourceText(sampleResource)
+    expect(text).toContain("id:          r1")
+    expect(text).toContain("title:       ESLint flat")
+    expect(text).toContain("kind:        config")
+    expect(text).toContain("tool:        vscode")
+    expect(text).toContain("tags:        eslint")
+  })
+
+  it("shows (none) for empty optional fields", () => {
+    expect(
+      formatResourceText({
+        ...sampleResource,
+        language: null,
+        tags: [],
+        tool: null,
+        customTool: null,
+        version: null,
+        context: null,
+      }),
+    ).toContain("language:    (none)")
+  })
+})
+
+describe("formatResourceListText", () => {
+  it("handles an empty list", () => {
+    expect(formatResourceListText([])).toBe("No resources.")
+  })
+})
+
+describe("resource JSON formatters", () => {
+  it("emits parseable resource JSON", () => {
+    const parsed = JSON.parse(formatResourceJson(sampleResource)) as Resource
+    expect(parsed).toEqual(sampleResource)
+  })
+
+  it("emits a parseable resource array", () => {
+    const parsed = JSON.parse(
+      formatResourceListJson([sampleResource]),
+    ) as Resource[]
+    expect(parsed).toEqual([sampleResource])
   })
 })

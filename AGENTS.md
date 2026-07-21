@@ -17,7 +17,7 @@
 - Feature code owns its components, hooks, services, schemas, types, tests, and utilities under `apps/web/src/features/<feature>/`.
 - Put shared UI in `apps/web/src/components/`; put reusable infrastructure and pure helpers in `apps/web/src/lib/`. Keep routes as thin feature composition files.
 - Keep Route Handlers and server-only feature code under `apps/web/src/app/api/` and `apps/web/src/features/<feature>/server/`.
-- Keep the CLI under `apps/cli/src/` (commands, InsForge client, bookmark/project/dev-board services, validation). Docs: `apps/cli/README.md`.
+- Keep the CLI under `apps/cli/src/` (commands, InsForge client, bookmark/resource/project/dev-board services, validation). Docs: `apps/cli/README.md`.
 - Import source through `@/*` (`apps/web/src/*`) or direct relative files. Do not add barrel files.
 - TypeScript is strict in both packages and rejects unused locals/parameters. Do not use `any`; validate browser, network, and model data as `unknown`.
 
@@ -26,6 +26,7 @@
 - Build/link: `pnpm --filter @forge/cli build`, then `cd apps/cli && pnpm link --global`, or run `pnpm --filter @forge/cli forge-cli -- <args>`.
 - Config/session: `~/.forge/config.json` and `~/.forge/session.json` after `forge-cli init` and `forge-cli login`. Files must remain mode `0600`.
 - Bookmarks CRUD talks to the same InsForge tables and RLS policies as web (`forge-cli bookmark create|list|get|update|delete`). Use `--json` for machine-readable output on create/list/get/update.
+- Resources CRUD talks to the same InsForge `snippets` table and RLS policies as web `/resources` (`forge-cli resource create|list|get|update|delete`). Use `--json` on create/list/get/update.
 - Dev Board projects: `forge-cli project create|list|get|update|delete` against the projects table. Delete is blocked if the project has tickets.
 - Dev Board tickets: `forge-cli ticket create|list|get|update|delete|move` against the same tables as the web app. `create` and `list` require `--project-id`. Change column only via `move` (timer/events/time entries parity). Use `--json` on create/list/get/update/move.
 - CLI unit tests must not call a real InsForge project.
