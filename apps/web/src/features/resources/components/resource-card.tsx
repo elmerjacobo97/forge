@@ -87,7 +87,7 @@ export function ResourceCard({ resource, onEdit, onDelete }: ResourceCardProps) 
       </div>
 
       <div className="mt-3 flex-1 space-y-3">
-        <pre className="max-h-32 overflow-hidden rounded-lg bg-muted/30 p-2 font-mono text-xs whitespace-pre-wrap break-all">
+        <pre className="max-h-32 overflow-y-auto rounded-lg bg-muted/30 p-2 font-mono text-xs whitespace-pre-wrap break-all">
           {resource.content}
         </pre>
         {resource.tags.length ? (
