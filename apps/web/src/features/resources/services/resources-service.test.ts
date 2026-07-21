@@ -4,18 +4,18 @@ const database = vi.hoisted(() => ({ from: vi.fn() }));
 
 vi.mock("@/lib/insforge/browser", () => ({ insforge: { database } }));
 
-import { snippetsService } from "./snippets-service";
+import { resourcesService } from "./resources-service";
 
-describe("snippetsService", () => {
+describe("resourcesService", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("requires an authenticated user", async () => {
-    await expect(snippetsService.fetchSnippets()).rejects.toThrow("Sign in");
+    await expect(resourcesService.fetchResources()).rejects.toThrow("Sign in");
   });
 
-  it("maps legacy rows with nullable resource metadata", async () => {
+  it("maps rows with nullable resource metadata", async () => {
     const row = {
-      id: "snippet-1",
+      id: "resource-1",
       title: "Legacy note",
       kind: "note",
       content: "Keep this resource",
@@ -30,7 +30,7 @@ describe("snippetsService", () => {
     const order = vi.fn().mockResolvedValue({ data: [row], error: null });
     database.from.mockReturnValue({ select: vi.fn(() => ({ order })) });
 
-    await expect(snippetsService.fetchSnippets("user-1")).resolves.toEqual([
+    await expect(resourcesService.fetchResources("user-1")).resolves.toEqual([
       {
         id: row.id,
         title: row.title,
@@ -49,7 +49,7 @@ describe("snippetsService", () => {
 
   it("maps complete configuration rows", async () => {
     const row = {
-      id: "snippet-2",
+      id: "resource-2",
       title: "React Native config",
       kind: "config",
       content: '{"strict":true}',
@@ -64,7 +64,7 @@ describe("snippetsService", () => {
     const order = vi.fn().mockResolvedValue({ data: [row], error: null });
     database.from.mockReturnValue({ select: vi.fn(() => ({ order })) });
 
-    await expect(snippetsService.fetchSnippets("user-1")).resolves.toEqual([
+    await expect(resourcesService.fetchResources("user-1")).resolves.toEqual([
       {
         id: row.id,
         title: row.title,
@@ -83,7 +83,7 @@ describe("snippetsService", () => {
 
   it("persists configuration metadata with nullable optional fields", async () => {
     const row = {
-      id: "snippet-3",
+      id: "resource-3",
       title: "VS Code config",
       kind: "config",
       content: "editor.formatOnSave=true",
@@ -112,7 +112,7 @@ describe("snippetsService", () => {
       context: null,
     };
 
-    await expect(snippetsService.createSnippet(input, "user-1")).resolves.toEqual({
+    await expect(resourcesService.createResource(input, "user-1")).resolves.toEqual({
       id: row.id,
       title: row.title,
       kind: row.kind,
@@ -142,7 +142,7 @@ describe("snippetsService", () => {
 
   it("updates configuration metadata with database column names", async () => {
     const row = {
-      id: "snippet-4",
+      id: "resource-4",
       title: "Custom tool config",
       kind: "config",
       content: "enabled=true",
@@ -172,7 +172,7 @@ describe("snippetsService", () => {
       context: row.context,
     };
 
-    await expect(snippetsService.updateSnippet(row.id, input, "user-1")).resolves.toMatchObject({
+    await expect(resourcesService.updateResource(row.id, input, "user-1")).resolves.toMatchObject({
       id: row.id,
       tool: row.tool,
       customTool: row.custom_tool,

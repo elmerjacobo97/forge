@@ -1,5 +1,5 @@
-import { Snippets } from "@/features/snippets/snippets";
+import { Resources } from "@/features/resources/resources";
 
 export default function ResourcesPage() {
-  return <Snippets />;
+  return <Resources />;
 }

@@ -19,7 +19,7 @@ export const aiGenerationRequestSchema = z.discriminatedUnion("type", [
     url: z.url(),
   }),
   z.strictObject({
-    type: z.literal("snippet"),
+    type: z.literal("resource"),
     title: z.string().trim().min(1),
   }),
 ]);
@@ -30,7 +30,7 @@ const bookmarkGenerationSchema = z.strictObject({
   tags: tagsSchema,
 });
 
-const snippetGenerationSchema = z.discriminatedUnion("kind", [
+const resourceGenerationSchema = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.enum(["note", "prompt"]),
     content: z.string().min(1).max(4_000),
@@ -38,7 +38,7 @@ const snippetGenerationSchema = z.discriminatedUnion("kind", [
     tags: tagsSchema,
   }),
   z.strictObject({
-    kind: z.enum(["config", "snippet"]),
+    kind: z.enum(["config", "code"]),
     content: z.string().min(1).max(4_000),
     language: z
       .string()
@@ -55,8 +55,8 @@ export const aiGenerationResponseSchema = z.discriminatedUnion("type", [
     data: bookmarkGenerationSchema,
   }),
   z.strictObject({
-    type: z.literal("snippet"),
-    data: snippetGenerationSchema,
+    type: z.literal("resource"),
+    data: resourceGenerationSchema,
   }),
 ]);
 

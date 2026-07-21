@@ -23,8 +23,8 @@ const bookmarkResponse: AiGenerationResponse = {
     tags: ["example", "article", "reference"],
   },
 };
-const snippetResponse: AiGenerationResponse = {
-  type: "snippet",
+const resourceResponse: AiGenerationResponse = {
+  type: "resource",
   data: {
     kind: "note",
     content: "Remember to review the example.",
@@ -51,7 +51,7 @@ beforeEach(() => vi.spyOn(console, "error").mockImplementation(() => undefined))
 describe("POST /api/ai-content", () => {
   it("rejects unauthenticated requests before processing input", async () => {
     const context = setup(false);
-    const response = await context.invoke({ type: "snippet", title: "Example" });
+    const response = await context.invoke({ type: "resource", title: "Example" });
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({
       error: { code: "UNAUTHORIZED", message: "Authentication is required." },
@@ -59,7 +59,7 @@ describe("POST /api/ai-content", () => {
     expect(context.generateContent).not.toHaveBeenCalled();
   });
 
-  it.each([null, { type: "bookmark", title: "Missing URL" }, { type: "snippet", title: "" }])(
+  it.each([null, { type: "bookmark", title: "Missing URL" }, { type: "resource", title: "" }])(
     "rejects invalid input",
     async (input) => {
       const context = setup();
@@ -83,13 +83,13 @@ describe("POST /api/ai-content", () => {
     });
   });
 
-  it("generates snippets without fetching a page", async () => {
+  it("generates resources without fetching a page", async () => {
     const context = setup();
-    context.generateContent.mockResolvedValueOnce(snippetResponse);
-    const response = await context.invoke({ type: "snippet", title: "Review reminder" });
-    await expect(response.json()).resolves.toEqual(snippetResponse);
+    context.generateContent.mockResolvedValueOnce(resourceResponse);
+    const response = await context.invoke({ type: "resource", title: "Review reminder" });
+    await expect(response.json()).resolves.toEqual(resourceResponse);
     expect(context.fetchPageContext).not.toHaveBeenCalled();
-    expect(context.generateContent).toHaveBeenCalledWith({ type: "snippet", title: "Review reminder" });
+    expect(context.generateContent).toHaveBeenCalledWith({ type: "resource", title: "Review reminder" });
   });
 
   it.each([
@@ -103,7 +103,7 @@ describe("POST /api/ai-content", () => {
     else context.generateContent.mockRejectedValueOnce(failure);
     const input = failure instanceof FetchPageError
       ? { type: "bookmark", title: "Example", url: "https://example.com/" }
-      : { type: "snippet", title: "Example" };
+      : { type: "resource", title: "Example" };
     const response = await context.invoke(input);
     expect(response.status).toBe(status);
     await expect(response.json()).resolves.toMatchObject({ error: { code } });

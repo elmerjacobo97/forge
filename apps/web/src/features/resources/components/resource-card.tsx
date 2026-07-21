@@ -11,18 +11,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCopy } from "@/lib/hooks/use-copy";
 import { FORMATS, TOOLS } from "../constants";
-import type { Snippet } from "../types";
+import type { Resource } from "../types";
 
-interface SnippetCardProps {
-  snippet: Snippet;
-  onEdit: (snippet: Snippet) => void;
-  onDelete: (snippet: Snippet) => void;
+interface ResourceCardProps {
+  resource: Resource;
+  onEdit: (resource: Resource) => void;
+  onDelete: (resource: Resource) => void;
 }
 
-function getToolLabel(snippet: Snippet): string | null {
-  if (!snippet.tool) return null;
-  if (snippet.tool === "other") return snippet.customTool || "Other";
-  return TOOLS.find((tool) => tool.value === snippet.tool)?.label ?? snippet.tool;
+function getToolLabel(resource: Resource): string | null {
+  if (!resource.tool) return null;
+  if (resource.tool === "other") return resource.customTool || "Other";
+  return TOOLS.find((tool) => tool.value === resource.tool)?.label ?? resource.tool;
 }
 
 function getFormatLabel(language: string | null): string | null {
@@ -30,10 +30,10 @@ function getFormatLabel(language: string | null): string | null {
   return FORMATS.find((format) => format.value === language.toLowerCase())?.label ?? language;
 }
 
-export function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
+export function ResourceCard({ resource, onEdit, onDelete }: ResourceCardProps) {
   const { copied, copy } = useCopy();
-  const toolLabel = getToolLabel(snippet);
-  const formatLabel = getFormatLabel(snippet.language);
+  const toolLabel = getToolLabel(resource);
+  const formatLabel = getFormatLabel(resource.language);
 
   return (
     <div className="group flex flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/20">
@@ -44,17 +44,17 @@ export function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
               variant="outline"
               className="capitalize"
             >
-              {snippet.kind}
+              {resource.kind}
             </Badge>
             <span className="text-xs text-muted-foreground">
-              {format(new Date(snippet.createdAt), "MMM d, yyyy")}
+              {format(new Date(resource.createdAt), "MMM d, yyyy")}
             </span>
           </div>
-          <h3 className="font-heading text-base font-medium leading-snug">{snippet.title}</h3>
-          {toolLabel || snippet.version || formatLabel ? (
+          <h3 className="font-heading text-base font-medium leading-snug">{resource.title}</h3>
+          {toolLabel || resource.version || formatLabel ? (
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
               {toolLabel ? <span>Tool: {toolLabel}</span> : null}
-              {snippet.version ? <span>Version: {snippet.version}</span> : null}
+              {resource.version ? <span>Version: {resource.version}</span> : null}
               {formatLabel ? <span>Format: {formatLabel}</span> : null}
             </div>
           ) : null}
@@ -65,19 +65,19 @@ export function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
               size="icon-sm"
               variant="ghost"
               className="text-muted-foreground"
-              aria-label={`Actions for ${snippet.title}`}
+              aria-label={`Actions for ${resource.title}`}
             >
               <MoreHorizontal className="size-3.5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(snippet)}>
+            <DropdownMenuItem onClick={() => onEdit(resource)}>
               <Pencil className="size-3.5" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
-              onClick={() => onDelete(snippet)}
+              onClick={() => onDelete(resource)}
             >
               <Trash2 className="size-3.5" />
               Delete
@@ -88,11 +88,11 @@ export function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
 
       <div className="mt-3 flex-1 space-y-3">
         <pre className="max-h-32 overflow-hidden rounded-lg bg-muted/30 p-2 font-mono text-xs whitespace-pre-wrap break-all">
-          {snippet.content}
+          {resource.content}
         </pre>
-        {snippet.tags.length ? (
+        {resource.tags.length ? (
           <div className="flex flex-wrap gap-1.5">
-            {snippet.tags.map((tag) => (
+            {resource.tags.map((tag) => (
               <Badge
                 key={tag}
                 variant="secondary"
@@ -110,7 +110,7 @@ export function SnippetCard({ snippet, onEdit, onDelete }: SnippetCardProps) {
           variant="outline"
           size="sm"
           className="w-full"
-          onClick={() => copy(snippet.content)}
+          onClick={() => copy(resource.content)}
         >
           {copied ? (
             <>

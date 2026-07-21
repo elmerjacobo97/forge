@@ -41,7 +41,7 @@ export interface CompletionClient {
 
 type GenerateContentInput =
   | { type: "bookmark"; title: string; url: string; page: FetchedPageContext }
-  | { type: "snippet"; title: string };
+  | { type: "resource"; title: string };
 
 const bookmarkJsonSchema: Record<string, unknown> = {
   type: "object",
@@ -57,10 +57,10 @@ const bookmarkJsonSchema: Record<string, unknown> = {
   additionalProperties: false,
 };
 
-const snippetJsonSchema: Record<string, unknown> = {
+const resourceJsonSchema: Record<string, unknown> = {
   type: "object",
   properties: {
-    kind: { type: "string", enum: ["note", "prompt", "config", "snippet"] },
+    kind: { type: "string", enum: ["note", "prompt", "config", "code"] },
     content: { type: "string", minLength: 1, maxLength: 1_200 },
     language: { type: ["string", "null"], minLength: 1, pattern: "^[a-z0-9][a-z0-9_+.-]*$" },
     tags: {
@@ -80,12 +80,12 @@ Write a concise description between 5 and 200 characters.
 Return 3 to 5 unique lowercase tags.
 Return one JSON object only. Never wrap the object in an array.`;
 
-const snippetSystemPrompt = `You generate a useful snippet using only its title.
+const resourceSystemPrompt = `You generate a useful resource using only its title.
 All generated content must be in English.
-Choose exactly one kind: note, prompt, config, or snippet.
+Choose exactly one kind: note, prompt, config, or code.
 Keep content between 1 and 1200 characters.
 Use null for language when kind is note or prompt.
-Use a lowercase technical language identifier when kind is config or snippet.
+Use a lowercase technical language identifier when kind is config or code.
 Return 3 to 5 unique lowercase tags.
 Return one JSON object only. Never wrap the object in an array.`;
 
@@ -153,15 +153,15 @@ function buildCompletionRequest(input: GenerateContentInput): CompletionRequest 
     max_completion_tokens: GROQ_MAX_COMPLETION_TOKENS,
     reasoning_effort: GROQ_REASONING_EFFORT,
     messages: [
-      { role: "system", content: snippetSystemPrompt },
+      { role: "system", content: resourceSystemPrompt },
       {
         role: "user",
-        content: `Generate a short, useful snippet using only this title: ${JSON.stringify(input.title)}. Keep content under 1200 characters.`,
+        content: `Generate a short, useful resource using only this title: ${JSON.stringify(input.title)}. Keep content under 1200 characters.`,
       },
     ],
     response_format: {
       type: "json_schema",
-      json_schema: { name: "snippet_generation", strict: false, schema: snippetJsonSchema },
+      json_schema: { name: "resource_generation", strict: false, schema: resourceJsonSchema },
     },
   };
 }

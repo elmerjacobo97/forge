@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-const baseSnippetSchema = z.object({
+const baseResourceSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
-  kind: z.enum(["note", "prompt", "config", "snippet"]),
+  kind: z.enum(["note", "prompt", "config", "code"]),
   content: z.string().min(1, "Content is required."),
   language: z.string(),
   tagsString: z.string(),
@@ -16,7 +16,7 @@ const baseSnippetSchema = z.object({
 });
 
 function addConditionalIssues(
-  value: z.infer<typeof baseSnippetSchema>,
+  value: z.infer<typeof baseResourceSchema>,
   context: z.RefinementCtx,
   requireTool: boolean,
 ): void {
@@ -37,12 +37,12 @@ function addConditionalIssues(
   }
 }
 
-export const snippetSchema = baseSnippetSchema.superRefine((value, context) => {
+export const resourceSchema = baseResourceSchema.superRefine((value, context) => {
   addConditionalIssues(value, context, true);
 });
 
-export const editSnippetSchema = baseSnippetSchema.superRefine((value, context) => {
+export const editResourceSchema = baseResourceSchema.superRefine((value, context) => {
   addConditionalIssues(value, context, false);
 });
 
-export type SnippetSchema = z.infer<typeof snippetSchema>;
+export type ResourceSchema = z.infer<typeof resourceSchema>;

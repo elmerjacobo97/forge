@@ -119,17 +119,17 @@ describe("Groq content generation", () => {
     });
   });
 
-  it("generates snippets from title only", async () => {
+  it("generates resources from title only", async () => {
     const { client, createCompletion } = completionClient(JSON.stringify({
-      kind: "snippet",
+      kind: "code",
       content: "const value = 42;",
       language: "typescript",
       tags: ["typescript", "constant", "example"],
     }));
-    await expect(generateContent({ type: "snippet", title: "TypeScript constant" }, client))
-      .resolves.toMatchObject({ type: "snippet", data: { language: "typescript" } });
+    await expect(generateContent({ type: "resource", title: "TypeScript constant" }, client))
+      .resolves.toMatchObject({ type: "resource", data: { language: "typescript" } });
     expect(createCompletion.mock.calls[0]?.[0].messages[1]?.content).toBe(
-      'Generate a short, useful snippet using only this title: "TypeScript constant". Keep content under 1200 characters.',
+      'Generate a short, useful resource using only this title: "TypeScript constant". Keep content under 1200 characters.',
     );
   });
 

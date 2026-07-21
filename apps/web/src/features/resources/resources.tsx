@@ -22,35 +22,35 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { AddSnippetDialog } from "./components/add-snippet-dialog";
-import { EditSnippetDialog } from "./components/edit-snippet-dialog";
-import { SnippetCard } from "./components/snippet-card";
-import { useDeleteSnippetMutation } from "./hooks/mutations";
-import { useSnippetsQuery } from "./hooks/queries";
+import { AddResourceDialog } from "./components/add-resource-dialog";
+import { EditResourceDialog } from "./components/edit-resource-dialog";
+import { ResourceCard } from "./components/resource-card";
+import { useDeleteResourceMutation } from "./hooks/mutations";
+import { useResourcesQuery } from "./hooks/queries";
 import { FORMATS, KINDS, TOOLS } from "./constants";
-import type { Snippet, SnippetFormat, SnippetKind, SnippetTool } from "./types";
+import type { Resource, ResourceFormat, ResourceKind, ResourceTool } from "./types";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 
-export function Snippets() {
+export function Resources() {
   const [search, setSearch] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingSnippet, setEditingSnippet] = useState<Snippet | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Snippet | null>(null);
-  const [selectedKind, setSelectedKind] = useState<SnippetKind | "all">("all");
-  const [selectedTool, setSelectedTool] = useState<SnippetTool | "all">("all");
-  const [selectedFormat, setSelectedFormat] = useState<SnippetFormat | "all">("all");
+  const [editingResource, setEditingResource] = useState<Resource | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Resource | null>(null);
+  const [selectedKind, setSelectedKind] = useState<ResourceKind | "all">("all");
+  const [selectedTool, setSelectedTool] = useState<ResourceTool | "all">("all");
+  const [selectedFormat, setSelectedFormat] = useState<ResourceFormat | "all">("all");
   const [selectedTag, setSelectedTag] = useState("all");
 
   const debouncedSearch = useDebounce(search, 200);
-  const { data: snippets = [], isLoading, isError, error } = useSnippetsQuery();
-  const deleteMutation = useDeleteSnippetMutation();
+  const { data: resources = [], isLoading, isError, error } = useResourcesQuery();
+  const deleteMutation = useDeleteResourceMutation();
   const tags = useMemo(
     () =>
-      Array.from(new Set(snippets.flatMap((snippet) => snippet.tags))).sort((a, b) =>
+      Array.from(new Set(resources.flatMap((resource) => resource.tags))).sort((a, b) =>
         a.localeCompare(b),
       ),
-    [snippets],
+    [resources],
   );
 
   function confirmDelete() {
@@ -62,26 +62,26 @@ export function Snippets() {
 
   const filtered = useMemo(() => {
     const q = debouncedSearch.trim().toLowerCase();
-    return snippets.filter((snippet) => {
+    return resources.filter((resource) => {
       const matchesSearch =
         !q ||
-        snippet.title.toLowerCase().includes(q) ||
-        snippet.content.toLowerCase().includes(q) ||
-        snippet.tags.some((tag) => tag.toLowerCase().includes(q));
-      const matchesKind = selectedKind === "all" || snippet.kind === selectedKind;
-      const matchesTool = selectedTool === "all" || snippet.tool === selectedTool;
-      const isKnownFormat = snippet.language
-        ? FORMATS.some((format) => format.value === snippet.language?.toLowerCase())
+        resource.title.toLowerCase().includes(q) ||
+        resource.content.toLowerCase().includes(q) ||
+        resource.tags.some((tag) => tag.toLowerCase().includes(q));
+      const matchesKind = selectedKind === "all" || resource.kind === selectedKind;
+      const matchesTool = selectedTool === "all" || resource.tool === selectedTool;
+      const isKnownFormat = resource.language
+        ? FORMATS.some((format) => format.value === resource.language?.toLowerCase())
         : false;
       const matchesFormat =
         selectedFormat === "all" ||
         (selectedFormat === "other"
-          ? snippet.language === "other" || (snippet.language !== null && !isKnownFormat)
-          : snippet.language?.toLowerCase() === selectedFormat);
-      const matchesTag = selectedTag === "all" || snippet.tags.includes(selectedTag);
+          ? resource.language === "other" || (resource.language !== null && !isKnownFormat)
+          : resource.language?.toLowerCase() === selectedFormat);
+      const matchesTag = selectedTag === "all" || resource.tags.includes(selectedTag);
       return matchesSearch && matchesKind && matchesTool && matchesFormat && matchesTag;
     });
-  }, [snippets, debouncedSearch, selectedKind, selectedTool, selectedFormat, selectedTag]);
+  }, [resources, debouncedSearch, selectedKind, selectedTool, selectedFormat, selectedTag]);
 
   if (isError) {
     return (
@@ -136,7 +136,7 @@ export function Snippets() {
 
           <Select
             value={selectedTool}
-            onValueChange={(value) => setSelectedTool(value as SnippetTool | "all")}
+            onValueChange={(value) => setSelectedTool(value as ResourceTool | "all")}
           >
             <SelectTrigger
               size="sm"
@@ -160,7 +160,7 @@ export function Snippets() {
 
           <Select
             value={selectedFormat}
-            onValueChange={(value) => setSelectedFormat(value as SnippetFormat | "all")}
+            onValueChange={(value) => setSelectedFormat(value as ResourceFormat | "all")}
           >
             <SelectTrigger
               size="sm"
@@ -242,11 +242,11 @@ export function Snippets() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((snippet) => (
-              <SnippetCard
-                key={snippet.id}
-                snippet={snippet}
-                onEdit={setEditingSnippet}
+            {filtered.map((resource) => (
+              <ResourceCard
+                key={resource.id}
+                resource={resource}
+                onEdit={setEditingResource}
                 onDelete={setDeleteTarget}
               />
             ))}
@@ -254,18 +254,18 @@ export function Snippets() {
         )}
       </div>
 
-      <AddSnippetDialog
+      <AddResourceDialog
         isOpen={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
       />
 
-      {editingSnippet ? (
-        <EditSnippetDialog
-          key={editingSnippet.id}
-          snippet={editingSnippet}
+      {editingResource ? (
+        <EditResourceDialog
+          key={editingResource.id}
+          resource={editingResource}
           isOpen
           onOpenChange={(open) => {
-            if (!open) setEditingSnippet(null);
+            if (!open) setEditingResource(null);
           }}
         />
       ) : null}

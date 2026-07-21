@@ -97,7 +97,7 @@ export const RESOURCE_KINDS = [
   "note",
   "prompt",
   "config",
-  "snippet",
+  "code",
 ] as const
 
 export type ResourceKind = (typeof RESOURCE_KINDS)[number]

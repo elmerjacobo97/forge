@@ -82,11 +82,11 @@ forge-cli resource update <id> --title "New title"
 forge-cli resource delete <id>
 ```
 
-Kinds: `note` | `prompt` | `config` | `snippet`. Tools (required for `config`):
+Kinds: `note` | `prompt` | `config` | `code`. Tools (required for `config`):
 `react-native` | `vscode` | `cursor` | `opencode` | `claude-code` | `other`.
 When `tool` is `other`, pass `--custom-tool`. Config metadata (`--tool`,
 `--custom-tool`, `--version`, `--context`) is stored only for `kind=config`.
-Resources sync to the InsForge `snippets` table (same as the web `/resources`
+Resources sync to the InsForge `resources` table (same as the web `/resources`
 tool). `--json` applies to `create|list|get|update`.
 
 ## Dev Board projects

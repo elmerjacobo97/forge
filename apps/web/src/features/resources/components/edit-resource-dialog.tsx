@@ -25,10 +25,12 @@ import { useSelector } from "@tanstack/react-store";
 import { AiGenerationButton } from "@/features/ai-generation/components/ai-generation-button";
 import { aiGenerationService } from "@/features/ai-generation/services/ai-generation-service";
 import { FORMATS, TOOLS } from "../constants";
-import { snippetSchema, SnippetSchema } from "../schemas/snippet-schema";
-import { useCreateSnippetMutation } from "../hooks/mutations";
+import { editResourceSchema, resourceSchema, ResourceSchema } from "../schemas/resource-schema";
+import { useUpdateResourceMutation } from "../hooks/mutations";
+import type { Resource } from "../types";
 
-interface AddSnippetDialogProps {
+interface EditResourceDialogProps {
+  resource: Resource;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -42,27 +44,33 @@ function toFormatValue(language: string | null): string {
   return value && FORMATS.some((format) => format.value === value) ? value : value ? "other" : "";
 }
 
-export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps) {
-  const createMutation = useCreateSnippetMutation();
+export function EditResourceDialog({ resource, isOpen, onOpenChange }: EditResourceDialogProps) {
+  const updateMutation = useUpdateResourceMutation();
   const [isGenerating, startGenerating] = useTransition();
+  const originalLanguage = resource.language;
+  const legacyFormat =
+    originalLanguage && !FORMATS.some((format) => format.value === originalLanguage.toLowerCase())
+      ? originalLanguage
+      : null;
+  const allowsLegacyMissingTool = resource.kind === "config" && resource.tool === null;
 
   const form = useForm({
     defaultValues: {
-      title: "",
-      kind: "note" as "note" | "prompt" | "config" | "snippet",
-      content: "",
-      language: "",
-      tagsString: "",
-      tool: "",
-      customTool: "",
-      version: "",
-      context: "",
+      title: resource.title,
+      kind: resource.kind,
+      content: resource.content,
+      language: toFormatValue(resource.language),
+      tagsString: resource.tags.join(", "),
+      tool: resource.tool ?? "",
+      customTool: resource.customTool ?? "",
+      version: resource.version ?? "",
+      context: resource.context ?? "",
     },
     validators: {
-      onSubmit: snippetSchema,
+      onSubmit: allowsLegacyMissingTool ? editResourceSchema : resourceSchema,
     },
     onSubmit: async ({ value }) => {
-      addSnippet(value as SnippetSchema);
+      saveResource(value as ResourceSchema);
     },
   });
   const generationTitle = useSelector(form.store, (state) => state.values.title);
@@ -70,22 +78,23 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
   const selectedTool = useSelector(form.store, (state) => state.values.tool);
   const isConfig = selectedKind === "config";
 
-  function addSnippet(data: SnippetSchema) {
+  function saveResource(data: ResourceSchema) {
     const tags = data.tagsString
-      ? data.tagsString.split(",").flatMap((t: string) => {
-          const trimmed = t.trim().toLowerCase();
+      ? data.tagsString.split(",").flatMap((tag: string) => {
+          const trimmed = tag.trim().toLowerCase();
           return trimmed ? [trimmed] : [];
         })
       : [];
-
-    const language = data.language.trim() || null;
-    const tool = data.tool || null;
+    const language =
+      legacyFormat && data.language === "other" ? legacyFormat : data.language.trim() || null;
+    const tool = isConfig ? data.tool || null : null;
     const customTool = tool === "other" ? data.customTool.trim() || null : null;
-    const version = data.version.trim() || null;
-    const context = data.context.trim() || null;
+    const version = isConfig ? data.version.trim() || null : null;
+    const context = isConfig ? data.context.trim() || null : null;
 
-    createMutation.mutate(
+    updateMutation.mutate(
       {
+        id: resource.id,
         title: data.title,
         kind: data.kind,
         content: data.content,
@@ -99,22 +108,21 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
       {
         onSuccess: () => {
           onOpenChange(false);
-          form.reset();
         },
       },
     );
   }
 
-  function generateSnippet(title: string) {
+  function generateResource(title: string) {
     if (title.trim().length < 2) return;
 
     startGenerating(async () => {
       try {
         const response = await aiGenerationService.generate({
-          type: "snippet",
+          type: "resource",
           title: title.trim(),
         });
-        if (response.type !== "snippet") return;
+        if (response.type !== "resource") return;
 
         form.setFieldValue("kind", response.data.kind);
         form.setFieldValue("content", response.data.content);
@@ -144,18 +152,16 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
         }}
       >
         <DialogHeader>
-          <DialogTitle>Add Resource</DialogTitle>
-          <DialogDescription>
-            Save a note, prompt, snippet, or reusable configuration.
-          </DialogDescription>
+          <DialogTitle>Edit Resource</DialogTitle>
+          <DialogDescription>Update this resource. Changes save to your library.</DialogDescription>
         </DialogHeader>
 
         <div className="-mx-4 no-scrollbar max-h-[50vh] overflow-y-auto px-4">
           <form
-            id="form-add-snippet"
-            onSubmit={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+            id="form-edit-resource"
+            onSubmit={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
               form.handleSubmit();
             }}
           >
@@ -171,7 +177,7 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
                         name={field.name}
                         value={field.state.value}
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
+                        onChange={(event) => field.handleChange(event.target.value)}
                         placeholder="e.g. System prompt for code review"
                         autoComplete="off"
                         aria-invalid={isInvalid}
@@ -188,7 +194,9 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
                     <Field>
                       <FieldLabel>Kind</FieldLabel>
                       <Select
-                        onValueChange={(val) => field.handleChange(val as SnippetSchema["kind"])}
+                        onValueChange={(value) =>
+                          field.handleChange(value as ResourceSchema["kind"])
+                        }
                         value={field.state.value}
                       >
                         <SelectTrigger>
@@ -198,7 +206,7 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
                           <SelectItem value="note">Note</SelectItem>
                           <SelectItem value="prompt">Prompt</SelectItem>
                           <SelectItem value="config">Config</SelectItem>
-                          <SelectItem value="snippet">Snippet</SelectItem>
+                          <SelectItem value="code">Code</SelectItem>
                         </SelectContent>
                       </Select>
                     </Field>
@@ -244,7 +252,7 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
                             <FieldLabel>Tool</FieldLabel>
                             <Select
                               onValueChange={(value) =>
-                                field.handleChange(value as SnippetSchema["tool"])
+                                field.handleChange(value as ResourceSchema["tool"])
                               }
                               value={field.state.value || undefined}
                             >
@@ -275,9 +283,9 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
                           <Input
                             id={field.name}
                             name={field.name}
-                            value={field.state.value ?? ""}
+                            value={field.state.value}
                             onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
+                            onChange={(event) => field.handleChange(event.target.value)}
                             placeholder="e.g. 0.75 (optional)"
                           />
                         </Field>
@@ -296,9 +304,9 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
                             <Input
                               id={field.name}
                               name={field.name}
-                              value={field.state.value ?? ""}
+                              value={field.state.value}
                               onBlur={field.handleBlur}
-                              onChange={(e) => field.handleChange(e.target.value)}
+                              onChange={(event) => field.handleChange(event.target.value)}
                               placeholder="e.g. Zed"
                               aria-invalid={isInvalid}
                             />
@@ -317,9 +325,9 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
                           <InputGroupTextarea
                             id={field.name}
                             name={field.name}
-                            value={field.state.value ?? ""}
+                            value={field.state.value}
                             onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
+                            onChange={(event) => field.handleChange(event.target.value)}
                             placeholder="How or where this configuration is used (optional)"
                             rows={3}
                             className="min-h-20"
@@ -343,7 +351,7 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
                           name={field.name}
                           value={field.state.value}
                           onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
+                          onChange={(event) => field.handleChange(event.target.value)}
                           placeholder="Paste or type your content here…"
                           rows={8}
                           className="min-h-52 max-h-52 overflow-y-auto font-mono resize-none"
@@ -356,7 +364,7 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
                           <AiGenerationButton
                             label="Generate resource details with AI"
                             disabled={generationTitle.trim().length < 2}
-                            onClick={() => generateSnippet(generationTitle)}
+                            onClick={() => generateResource(generationTitle)}
                             isGenerating={isGenerating}
                           />
                         </InputGroupAddon>
@@ -376,7 +384,7 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
                       name={field.name}
                       value={field.state.value}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(event) => field.handleChange(event.target.value)}
                       placeholder="prompt, review, yaml"
                     />
                   </Field>
@@ -389,17 +397,15 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={() => {
-              onOpenChange(false);
-            }}
+            onClick={() => onOpenChange(false)}
           >
             Cancel
           </Button>
           <Button
             type="submit"
-            form="form-add-snippet"
+            form="form-edit-resource"
           >
-            Save Resource
+            Save Changes
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -10,14 +10,18 @@ CREATE TABLE public.bookmarks (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE public.snippets (
+CREATE TABLE public.resources (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL CHECK (char_length(title) BETWEEN 1 AND 200),
-  kind TEXT NOT NULL CHECK (kind IN ('note', 'prompt', 'config', 'snippet')),
+  kind TEXT NOT NULL CHECK (kind IN ('note', 'prompt', 'config', 'code')),
   content TEXT NOT NULL CHECK (char_length(content) <= 100000),
   language TEXT CHECK (language IS NULL OR char_length(language) <= 100),
   tags TEXT[] NOT NULL DEFAULT '{}',
+  tool TEXT NULL,
+  custom_tool TEXT NULL,
+  version TEXT NULL,
+  context TEXT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -70,7 +74,7 @@ CREATE TABLE public.dev_board_time_entries (
 );
 
 CREATE INDEX bookmarks_user_created_idx ON public.bookmarks (user_id, created_at DESC);
-CREATE INDEX snippets_user_created_idx ON public.snippets (user_id, created_at DESC);
+CREATE INDEX resources_user_created_idx ON public.resources (user_id, created_at DESC);
 CREATE INDEX dev_board_projects_user_created_idx ON public.dev_board_projects (user_id, created_at DESC);
 CREATE INDEX dev_board_tickets_project_column_position_idx
   ON public.dev_board_tickets (user_id, project_id, column_id, position DESC);
@@ -84,8 +88,8 @@ CREATE TRIGGER bookmarks_updated_at
   BEFORE UPDATE ON public.bookmarks
   FOR EACH ROW EXECUTE FUNCTION system.update_updated_at();
 
-CREATE TRIGGER snippets_updated_at
-  BEFORE UPDATE ON public.snippets
+CREATE TRIGGER resources_updated_at
+  BEFORE UPDATE ON public.resources
   FOR EACH ROW EXECUTE FUNCTION system.update_updated_at();
 
 CREATE TRIGGER dev_board_projects_updated_at
@@ -112,8 +116,8 @@ CREATE TRIGGER bookmarks_prevent_user_change
   BEFORE UPDATE ON public.bookmarks
   FOR EACH ROW EXECUTE FUNCTION public.prevent_user_id_change();
 
-CREATE TRIGGER snippets_prevent_user_change
-  BEFORE UPDATE ON public.snippets
+CREATE TRIGGER resources_prevent_user_change
+  BEFORE UPDATE ON public.resources
   FOR EACH ROW EXECUTE FUNCTION public.prevent_user_id_change();
 
 CREATE TRIGGER dev_board_projects_prevent_user_change
@@ -121,7 +125,7 @@ CREATE TRIGGER dev_board_projects_prevent_user_change
   FOR EACH ROW EXECUTE FUNCTION public.prevent_user_id_change();
 
 ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.snippets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.dev_board_projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.dev_board_tickets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.dev_board_events ENABLE ROW LEVEL SECURITY;
@@ -138,15 +142,15 @@ CREATE POLICY bookmarks_update_own ON public.bookmarks
 CREATE POLICY bookmarks_delete_own ON public.bookmarks
   FOR DELETE TO authenticated USING (user_id = (SELECT auth.uid()));
 
-CREATE POLICY snippets_select_own ON public.snippets
+CREATE POLICY resources_select_own ON public.resources
   FOR SELECT TO authenticated USING (user_id = (SELECT auth.uid()));
-CREATE POLICY snippets_insert_own ON public.snippets
+CREATE POLICY resources_insert_own ON public.resources
   FOR INSERT TO authenticated WITH CHECK (user_id = (SELECT auth.uid()));
-CREATE POLICY snippets_update_own ON public.snippets
+CREATE POLICY resources_update_own ON public.resources
   FOR UPDATE TO authenticated
   USING (user_id = (SELECT auth.uid()))
   WITH CHECK (user_id = (SELECT auth.uid()));
-CREATE POLICY snippets_delete_own ON public.snippets
+CREATE POLICY resources_delete_own ON public.resources
   FOR DELETE TO authenticated USING (user_id = (SELECT auth.uid()));
 
 CREATE POLICY dev_board_projects_select_own ON public.dev_board_projects
@@ -169,7 +173,7 @@ CREATE POLICY dev_board_time_entries_select_own ON public.dev_board_time_entries
 
 GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.bookmarks TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.snippets TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.resources TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.dev_board_projects TO authenticated;
 GRANT SELECT ON public.dev_board_tickets TO authenticated;
 GRANT SELECT ON public.dev_board_events TO authenticated;

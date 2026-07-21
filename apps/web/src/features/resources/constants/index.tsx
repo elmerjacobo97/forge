@@ -1,14 +1,14 @@
-import type { SnippetFormat, SnippetKind, SnippetTool } from "../types";
+import type { ResourceFormat, ResourceKind, ResourceTool } from "../types";
 
-export const KINDS: { value: SnippetKind | "all"; label: string }[] = [
+export const KINDS: { value: ResourceKind | "all"; label: string }[] = [
   { value: "all", label: "All" },
   { value: "note", label: "Notes" },
   { value: "prompt", label: "Prompts" },
   { value: "config", label: "Configs" },
-  { value: "snippet", label: "Snippets" },
+  { value: "code", label: "Code" },
 ] as const;
 
-export const TOOLS: { value: SnippetTool; label: string }[] = [
+export const TOOLS: { value: ResourceTool; label: string }[] = [
   { value: "react-native", label: "React Native" },
   { value: "vscode", label: "VS Code" },
   { value: "cursor", label: "Cursor" },
@@ -17,7 +17,7 @@ export const TOOLS: { value: SnippetTool; label: string }[] = [
   { value: "other", label: "Other" },
 ] as const;
 
-export const FORMATS: { value: SnippetFormat; label: string }[] = [
+export const FORMATS: { value: ResourceFormat; label: string }[] = [
   { value: "json", label: "JSON" },
   { value: "yaml", label: "YAML" },
   { value: "javascript", label: "JavaScript" },

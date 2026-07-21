@@ -26,7 +26,7 @@
 - Build/link: `pnpm --filter @forge/cli build`, then `cd apps/cli && pnpm link --global`, or run `pnpm --filter @forge/cli forge-cli -- <args>`.
 - Config/session: `~/.forge/config.json` and `~/.forge/session.json` after `forge-cli init` and `forge-cli login`. Files must remain mode `0600`.
 - Bookmarks CRUD talks to the same InsForge tables and RLS policies as web (`forge-cli bookmark create|list|get|update|delete`). Use `--json` for machine-readable output on create/list/get/update.
-- Resources CRUD talks to the same InsForge `snippets` table and RLS policies as web `/resources` (`forge-cli resource create|list|get|update|delete`). Use `--json` on create/list/get/update.
+- Resources CRUD talks to the same InsForge `resources` table and RLS policies as web `/resources` (`forge-cli resource create|list|get|update|delete`). Use `--json` on create/list/get/update.
 - Dev Board projects: `forge-cli project create|list|get|update|delete` against the projects table. Delete is blocked if the project has tickets.
 - Dev Board tickets: `forge-cli ticket create|list|get|update|delete|move` against the same tables as the web app. `create` and `list` require `--project-id`. Change column only via `move` (timer/events/time entries parity). Use `--json` on create/list/get/update/move.
 - CLI unit tests must not call a real InsForge project.

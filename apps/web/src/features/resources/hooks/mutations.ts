@@ -1,21 +1,21 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { userQueryOptions } from "@/features/auth/hooks/queries";
 import type { AuthUser } from "@/features/auth/types";
-import { snippetsService } from "../services/snippets-service";
-import type { Snippet } from "../types";
+import { resourcesService } from "../services/resources-service";
+import type { Resource } from "../types";
 import { toast } from "sonner";
 
-export function useCreateSnippetMutation() {
+export function useCreateResourceMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (snippet: Omit<Snippet, "id" | "createdAt">) => {
+    mutationFn: (resource: Omit<Resource, "id" | "createdAt">) => {
       const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
-      return snippetsService.createSnippet(snippet, userId);
+      return resourcesService.createResource(resource, userId);
     },
     onSuccess: () => {
       const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
-      queryClient.invalidateQueries({ queryKey: ["snippets", userId] });
+      queryClient.invalidateQueries({ queryKey: ["resources", userId] });
       toast.success("Resource added successfully!");
     },
     onError: (error: Error) => {
@@ -24,17 +24,17 @@ export function useCreateSnippetMutation() {
   });
 }
 
-export function useUpdateSnippetMutation() {
+export function useUpdateResourceMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, ...snippet }: { id: string } & Omit<Snippet, "id" | "createdAt">) => {
+    mutationFn: ({ id, ...resource }: { id: string } & Omit<Resource, "id" | "createdAt">) => {
       const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
-      return snippetsService.updateSnippet(id, snippet, userId);
+      return resourcesService.updateResource(id, resource, userId);
     },
     onSuccess: () => {
       const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
-      queryClient.invalidateQueries({ queryKey: ["snippets", userId] });
+      queryClient.invalidateQueries({ queryKey: ["resources", userId] });
       toast.success("Resource updated successfully!");
     },
     onError: (error: Error) => {
@@ -43,17 +43,17 @@ export function useUpdateSnippetMutation() {
   });
 }
 
-export function useDeleteSnippetMutation() {
+export function useDeleteResourceMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (snippetId: string) => {
+    mutationFn: (resourceId: string) => {
       const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
-      return snippetsService.deleteSnippet(snippetId, userId);
+      return resourcesService.deleteResource(resourceId, userId);
     },
     onSuccess: () => {
       const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
-      queryClient.invalidateQueries({ queryKey: ["snippets", userId] });
+      queryClient.invalidateQueries({ queryKey: ["resources", userId] });
       toast.success("Resource deleted successfully!");
     },
     onError: (error: Error) => {

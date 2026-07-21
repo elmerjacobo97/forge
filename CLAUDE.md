@@ -24,7 +24,7 @@ Linting uses ESLint + Prettier (not Biome). Config lives at the workspace root f
 
 **Workspace**: pnpm workspace with `apps/web` (Next.js 16) and `apps/cli` (`forge-cli`). Both use the same InsForge backend. `packages/*` remains reserved; do not create packages speculatively.
 
-**Feature-first structure**: `apps/web/src/features/<feature>/` owns everything for that feature — `components/`, `hooks/`, `services/`, `schemas/`, `types/`, `utils/`. There are ~25 features, mostly standalone dev-utility tools (JSON formatter, JWT decoder, hash generator, etc.) plus larger stateful features (`dev-board`, `bookmarks`, `snippets`, `auth`, `settings`). Keep feature logic inside its feature folder unless it's genuinely shared.
+**Feature-first structure**: `apps/web/src/features/<feature>/` owns everything for that feature — `components/`, `hooks/`, `services/`, `schemas/`, `types/`, `utils/`. There are ~25 features, mostly standalone dev-utility tools (JSON formatter, JWT decoder, hash generator, etc.) plus larger stateful features (`dev-board`, `bookmarks`, `resources`, `auth`, `settings`). Keep feature logic inside its feature folder unless it's genuinely shared.
 
 **Routing**: Next.js App Router under `apps/web/src/app/`. `(auth)` holds login/register and `(authenticated)` performs the server-side session guard. Keep pages thin.
 

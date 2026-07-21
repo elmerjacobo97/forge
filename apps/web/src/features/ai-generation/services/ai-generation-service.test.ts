@@ -19,10 +19,10 @@ const bookmarkResponse = {
   },
 };
 
-const snippetResponse = {
-  type: "snippet" as const,
+const resourceResponse = {
+  type: "resource" as const,
   data: {
-    kind: "snippet" as const,
+    kind: "code" as const,
     content: "const answer = 42;",
     language: "typescript",
     tags: ["typescript", "constant", "example"],
@@ -53,12 +53,12 @@ describe("aiGenerationService", () => {
     });
   });
 
-  it("validates a snippet response", async () => {
-    const { service } = setup(snippetResponse);
+  it("validates a resource response", async () => {
+    const { service } = setup(resourceResponse);
 
     await expect(
-      service.generate({ type: "snippet", title: "TypeScript constant" }),
-    ).resolves.toEqual(snippetResponse);
+      service.generate({ type: "resource", title: "TypeScript constant" }),
+    ).resolves.toEqual(resourceResponse);
   });
 
   it("rejects invalid input before executing the Function", async () => {
@@ -73,7 +73,7 @@ describe("aiGenerationService", () => {
   it.each([
     "not json",
     { type: "bookmark", data: { category: "docs" } },
-    snippetResponse,
+    resourceResponse,
     { unrelated: true },
   ])("rejects invalid or mismatched successful responses", async (body) => {
     const { service } = setup(body);

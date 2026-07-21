@@ -14,7 +14,7 @@ import type {
   ResourceUpdateInput,
 } from "./types.js"
 
-const TABLE = "snippets"
+const TABLE = "resources"
 const COLUMNS =
   "id,title,kind,content,language,tags,tool,custom_tool,version,context,created_at"
 

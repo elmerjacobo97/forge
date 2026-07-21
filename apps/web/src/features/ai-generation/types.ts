@@ -17,7 +17,7 @@ export type BookmarkGeneration = Extract<
   { type: "bookmark" }
 >["data"];
 
-export type SnippetGeneration = Extract<
+export type ResourceGeneration = Extract<
   AiGenerationResponse,
-  { type: "snippet" }
+  { type: "resource" }
 >["data"];

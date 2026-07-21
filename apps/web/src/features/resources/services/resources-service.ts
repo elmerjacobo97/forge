@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 import { insforge } from "@/lib/insforge/browser";
-import type { Snippet } from "../types";
+import type { Resource } from "../types";
 
-const snippetToolSchema = z.enum([
+const resourceToolSchema = z.enum([
   "react-native",
   "vscode",
   "cursor",
@@ -12,30 +12,30 @@ const snippetToolSchema = z.enum([
   "other",
 ]);
 
-const snippetRowSchema = z.object({
+const resourceRowSchema = z.object({
   id: z.string(),
   title: z.string(),
-  kind: z.enum(["note", "prompt", "config", "snippet"]),
+  kind: z.enum(["note", "prompt", "config", "code"]),
   content: z.string(),
   language: z.string().nullable(),
   tags: z.array(z.string()),
-  tool: snippetToolSchema.nullable(),
+  tool: resourceToolSchema.nullable(),
   custom_tool: z.string().nullable(),
   version: z.string().nullable(),
   context: z.string().nullable(),
   created_at: z.string(),
 });
 
-type SnippetInput = Omit<Snippet, "id" | "createdAt">;
-const snippetSelect =
+type ResourceInput = Omit<Resource, "id" | "createdAt">;
+const resourceSelect =
   "id,title,kind,content,language,tags,tool,custom_tool,version,context,created_at";
 
 function requireUser(userId?: string): void {
   if (!userId) throw new Error("Sign in to use Resources.");
 }
 
-function toSnippet(value: unknown): Snippet {
-  const row = snippetRowSchema.parse(value);
+function toResource(value: unknown): Resource {
+  const row = resourceRowSchema.parse(value);
   return {
     id: row.id,
     title: row.title,
@@ -51,17 +51,17 @@ function toSnippet(value: unknown): Snippet {
   };
 }
 
-function toSnippetPayload(snippet: SnippetInput) {
+function toResourcePayload(resource: ResourceInput) {
   return {
-    title: snippet.title,
-    kind: snippet.kind,
-    content: snippet.content,
-    language: snippet.language,
-    tags: snippet.tags,
-    tool: snippet.tool,
-    custom_tool: snippet.customTool,
-    version: snippet.version,
-    context: snippet.context,
+    title: resource.title,
+    kind: resource.kind,
+    content: resource.content,
+    language: resource.language,
+    tags: resource.tags,
+    tool: resource.tool,
+    custom_tool: resource.customTool,
+    version: resource.version,
+    context: resource.context,
   };
 }
 
@@ -69,43 +69,47 @@ function failure(error: { message?: string } | null, fallback: string): Error {
   return new Error(error?.message || fallback);
 }
 
-export const snippetsService = {
-  async fetchSnippets(userId?: string): Promise<Snippet[]> {
+export const resourcesService = {
+  async fetchResources(userId?: string): Promise<Resource[]> {
     requireUser(userId);
     const { data, error } = await insforge.database
-      .from("snippets")
-      .select(snippetSelect)
+      .from("resources")
+      .select(resourceSelect)
       .order("created_at", { ascending: false });
     if (error) throw failure(error, "Failed to load resources.");
-    return snippetRowSchema.array().parse(data).map(toSnippet);
+    return resourceRowSchema.array().parse(data).map(toResource);
   },
 
-  async createSnippet(snippet: SnippetInput, userId?: string): Promise<Snippet> {
+  async createResource(resource: ResourceInput, userId?: string): Promise<Resource> {
     requireUser(userId);
     const { data, error } = await insforge.database
-      .from("snippets")
-      .insert([toSnippetPayload(snippet)])
-      .select(snippetSelect)
+      .from("resources")
+      .insert([toResourcePayload(resource)])
+      .select(resourceSelect)
       .single();
     if (error) throw failure(error, "Failed to create resource.");
-    return toSnippet(data);
+    return toResource(data);
   },
 
-  async updateSnippet(snippetId: string, snippet: SnippetInput, userId?: string): Promise<Snippet> {
+  async updateResource(
+    resourceId: string,
+    resource: ResourceInput,
+    userId?: string,
+  ): Promise<Resource> {
     requireUser(userId);
     const { data, error } = await insforge.database
-      .from("snippets")
-      .update(toSnippetPayload(snippet))
-      .eq("id", snippetId)
-      .select(snippetSelect)
+      .from("resources")
+      .update(toResourcePayload(resource))
+      .eq("id", resourceId)
+      .select(resourceSelect)
       .single();
     if (error) throw failure(error, "Failed to update resource.");
-    return toSnippet(data);
+    return toResource(data);
   },
 
-  async deleteSnippet(snippetId: string, userId?: string): Promise<void> {
+  async deleteResource(resourceId: string, userId?: string): Promise<void> {
     requireUser(userId);
-    const { error } = await insforge.database.from("snippets").delete().eq("id", snippetId);
+    const { error } = await insforge.database.from("resources").delete().eq("id", resourceId);
     if (error) throw failure(error, "Failed to delete resource.");
   },
 };

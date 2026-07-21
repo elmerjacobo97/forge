@@ -57,7 +57,7 @@ export const tools: ToolDef[] = [
     id: "resources",
     path: "/resources",
     name: "Resources",
-    description: "Save notes, prompts, snippets, and reusable configs",
+    description: "Save notes, prompts, code, and reusable configs",
     icon: NotebookText,
     category: "Resources",
   },

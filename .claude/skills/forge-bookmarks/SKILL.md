@@ -88,4 +88,4 @@ forge-cli logout
 - Ensure `init` + `login` before bookmark mutations.
 - Prefer `--json` when parsing results in automation.
 - Categories only: `docs`, `git`, `tool`, `article`, `other`.
-- Do not add tickets, snippets, MCP, or AI generation here — bookmarks CRUD only.
+- Do not add tickets, resources, MCP, or AI generation here — bookmarks CRUD only.
