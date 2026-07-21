@@ -31,7 +31,7 @@ const snippetSelect =
   "id,title,kind,content,language,tags,tool,custom_tool,version,context,created_at";
 
 function requireUser(userId?: string): void {
-  if (!userId) throw new Error("Sign in to use Snippets.");
+  if (!userId) throw new Error("Sign in to use Resources.");
 }
 
 function toSnippet(value: unknown): Snippet {
@@ -76,7 +76,7 @@ export const snippetsService = {
       .from("snippets")
       .select(snippetSelect)
       .order("created_at", { ascending: false });
-    if (error) throw failure(error, "Failed to load snippets.");
+    if (error) throw failure(error, "Failed to load resources.");
     return snippetRowSchema.array().parse(data).map(toSnippet);
   },
 
@@ -87,7 +87,7 @@ export const snippetsService = {
       .insert([toSnippetPayload(snippet)])
       .select(snippetSelect)
       .single();
-    if (error) throw failure(error, "Failed to create snippet.");
+    if (error) throw failure(error, "Failed to create resource.");
     return toSnippet(data);
   },
 
@@ -99,13 +99,13 @@ export const snippetsService = {
       .eq("id", snippetId)
       .select(snippetSelect)
       .single();
-    if (error) throw failure(error, "Failed to update snippet.");
+    if (error) throw failure(error, "Failed to update resource.");
     return toSnippet(data);
   },
 
   async deleteSnippet(snippetId: string, userId?: string): Promise<void> {
     requireUser(userId);
     const { error } = await insforge.database.from("snippets").delete().eq("id", snippetId);
-    if (error) throw failure(error, "Failed to delete snippet.");
+    if (error) throw failure(error, "Failed to delete resource.");
   },
 };

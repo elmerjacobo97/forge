@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { tools } from "@/lib/tools";
 
-const featuredIds = new Set(["dev-board", "bookmarks", "snippets"]);
+const featuredIds = new Set(["dev-board", "bookmarks", "resources"]);
 const utilityIds = new Set([
   "json-formatter",
   "http-tester",
@@ -54,7 +54,9 @@ export function LandingTools({ isAuthenticated }: { isAuthenticated: boolean }) 
                     {devBoard.category}
                   </span>
                 </div>
-                <h3 className="font-heading text-2xl font-semibold tracking-tight">{devBoard.name}</h3>
+                <h3 className="font-heading text-2xl font-semibold tracking-tight">
+                  {devBoard.name}
+                </h3>
                 <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
                   {devBoard.description}
                 </p>
@@ -120,7 +122,10 @@ export function LandingTools({ isAuthenticated }: { isAuthenticated: boolean }) 
           {isAuthenticated ? (
             <>
               Plus {remainingCount} more tools in your{" "}
-              <Link href="/dev-board" className="text-primary underline-offset-4 hover:underline">
+              <Link
+                href="/dev-board"
+                className="text-primary underline-offset-4 hover:underline"
+              >
                 dashboard
               </Link>
               .
@@ -128,7 +133,10 @@ export function LandingTools({ isAuthenticated }: { isAuthenticated: boolean }) 
           ) : (
             <>
               Plus {remainingCount} more tools after you{" "}
-              <Link href="/register" className="text-primary underline-offset-4 hover:underline">
+              <Link
+                href="/register"
+                className="text-primary underline-offset-4 hover:underline"
+              >
                 create an account
               </Link>
               .

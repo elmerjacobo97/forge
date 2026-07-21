@@ -20,7 +20,7 @@ const pillars = [
     icon: Bookmark,
     title: "A workspace that remembers",
     description:
-      "Sign in to persist Dev Board tickets, bookmarks, snippets, and settings — synced to your account and available from any browser.",
+      "Sign in to persist Dev Board tickets, bookmarks, resources, and settings — synced to your account and available from any browser.",
   },
 ] as const;
 

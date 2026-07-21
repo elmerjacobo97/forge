@@ -50,19 +50,22 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
               Forge
             </p>
             <h1 className="max-w-xl font-heading text-[clamp(1.75rem,4vw,2.65rem)] font-semibold leading-[1.12] tracking-tight text-balance">
-              Everything a developer needs, in{" "}
-              <span className="landing-copper-text">one tab.</span>
+              Everything a developer needs, in <span className="landing-copper-text">one tab.</span>
             </h1>
           </div>
 
           <p className="landing-fade-up landing-delay-2 max-w-md text-base leading-relaxed text-muted-foreground sm:text-[1.05rem]">
-            A focused web workspace with utilities, kanban time tracking, bookmarks, and snippets —
+            A focused web workspace with utilities, kanban time tracking, bookmarks, and resources —
             quenched steel surfaces, copper accents, zero context switching.
           </p>
 
           <div className="landing-fade-up landing-delay-3 flex flex-wrap items-center gap-3">
             {isAuthenticated ? (
-              <Button size="lg" className="h-10 px-5" asChild>
+              <Button
+                size="lg"
+                className="h-10 px-5"
+                asChild
+              >
                 <Link href="/dev-board">
                   <LayoutDashboard data-icon="inline-start" />
                   Go to dashboard
@@ -71,13 +74,22 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
               </Button>
             ) : (
               <>
-                <Button size="lg" className="h-10 px-5 shadow-md shadow-primary/15" asChild>
+                <Button
+                  size="lg"
+                  className="h-10 px-5 shadow-md shadow-primary/15"
+                  asChild
+                >
                   <Link href="/register">
                     Get started
                     <ArrowRight data-icon="inline-end" />
                   </Link>
                 </Button>
-                <Button variant="outline" size="lg" className="h-10 px-5" asChild>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="h-10 px-5"
+                  asChild
+                >
                   <Link href="/login">Sign in</Link>
                 </Button>
               </>
@@ -130,7 +142,9 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
                     <span className="text-[10px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
                       {column.name}
                     </span>
-                    <span className="font-mono text-[10px] text-muted-foreground">{column.count}</span>
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      {column.count}
+                    </span>
                   </div>
                   <div className="space-y-2">
                     {column.cards.map((card) => (

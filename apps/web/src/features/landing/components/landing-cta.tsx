@@ -30,10 +30,14 @@ export function LandingCta({ isAuthenticated }: LandingCtaProps) {
                     Your workspace is ready.
                   </h2>
                   <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-                    Jump back into Dev Board, bookmarks, snippets, and your full toolkit.
+                    Jump back into Dev Board, bookmarks, resources, and your full toolkit.
                   </p>
                   <div className="mt-8">
-                    <Button size="lg" className="h-10 px-5 shadow-md shadow-primary/15" asChild>
+                    <Button
+                      size="lg"
+                      className="h-10 px-5 shadow-md shadow-primary/15"
+                      asChild
+                    >
                       <Link href="/dev-board">
                         <LayoutDashboard data-icon="inline-start" />
                         Go to dashboard
@@ -53,13 +57,22 @@ export function LandingCta({ isAuthenticated }: LandingCtaProps) {
                     toolkit ready every morning.
                   </p>
                   <div className="mt-8 flex flex-wrap items-center gap-3">
-                    <Button size="lg" className="h-10 px-5 shadow-md shadow-primary/15" asChild>
+                    <Button
+                      size="lg"
+                      className="h-10 px-5 shadow-md shadow-primary/15"
+                      asChild
+                    >
                       <Link href="/register">
                         Get started free
                         <ArrowRight data-icon="inline-end" />
                       </Link>
                     </Button>
-                    <Button variant="outline" size="lg" className="h-10 px-5" asChild>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="h-10 px-5"
+                      asChild
+                    >
                       <Link href="/login">I already have an account</Link>
                     </Button>
                   </div>

@@ -7,7 +7,7 @@ import { LandingPage } from "@/features/landing/components/landing-page";
 export const metadata: Metadata = {
   title: "Forge — A focused dev toolkit",
   description:
-    "Everything a developer needs, in one tab. Utilities, Dev Board, bookmarks, and snippets in a fast web workspace.",
+    "Everything a developer needs, in one tab. Utilities, Dev Board, bookmarks, and resources in a fast web workspace.",
 };
 
 async function HomeContent() {
@@ -16,7 +16,12 @@ async function HomeContent() {
 }
 
 function LandingFallback() {
-  return <div className="min-h-screen bg-background" aria-hidden />;
+  return (
+    <div
+      className="min-h-screen bg-background"
+      aria-hidden
+    />
+  );
 }
 
 export default function HomePage() {

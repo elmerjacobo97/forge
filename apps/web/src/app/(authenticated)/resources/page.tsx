@@ -1,5 +1,5 @@
 import { Snippets } from "@/features/snippets/snippets";
 
-export default function SnippetsPage() {
+export default function ResourcesPage() {
   return <Snippets />;
 }

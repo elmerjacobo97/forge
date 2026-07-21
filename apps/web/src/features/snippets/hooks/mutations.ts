@@ -16,10 +16,10 @@ export function useCreateSnippetMutation() {
     onSuccess: () => {
       const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
       queryClient.invalidateQueries({ queryKey: ["snippets", userId] });
-      toast.success("Snippet added successfully!");
+      toast.success("Resource added successfully!");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to add snippet.");
+      toast.error(error.message || "Failed to add resource.");
     },
   });
 }
@@ -28,20 +28,17 @@ export function useUpdateSnippetMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      ...snippet
-    }: { id: string } & Omit<Snippet, "id" | "createdAt">) => {
+    mutationFn: ({ id, ...snippet }: { id: string } & Omit<Snippet, "id" | "createdAt">) => {
       const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
       return snippetsService.updateSnippet(id, snippet, userId);
     },
     onSuccess: () => {
       const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
       queryClient.invalidateQueries({ queryKey: ["snippets", userId] });
-      toast.success("Snippet updated successfully!");
+      toast.success("Resource updated successfully!");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to update snippet.");
+      toast.error(error.message || "Failed to update resource.");
     },
   });
 }
@@ -57,10 +54,10 @@ export function useDeleteSnippetMutation() {
     onSuccess: () => {
       const userId = queryClient.getQueryData<AuthUser>(userQueryOptions.queryKey)?.id;
       queryClient.invalidateQueries({ queryKey: ["snippets", userId] });
-      toast.success("Snippet deleted successfully!");
+      toast.success("Resource deleted successfully!");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to delete snippet.");
+      toast.error(error.message || "Failed to delete resource.");
     },
   });
 }

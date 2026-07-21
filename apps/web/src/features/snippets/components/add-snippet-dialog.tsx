@@ -121,7 +121,9 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
         form.setFieldValue("language", toFormatValue(response.data.language));
         form.setFieldValue("tagsString", response.data.tags.join(", "));
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Failed to generate snippet details.");
+        toast.error(
+          error instanceof Error ? error.message : "Failed to generate resource details.",
+        );
       }
     });
   }
@@ -141,9 +143,9 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
         }}
       >
         <DialogHeader>
-          <DialogTitle>Add Snippet</DialogTitle>
+          <DialogTitle>Add Resource</DialogTitle>
           <DialogDescription>
-            Save a note, prompt, config, or code snippet for quick reuse.
+            Save a note, prompt, snippet, or reusable configuration.
           </DialogDescription>
         </DialogHeader>
 
@@ -351,7 +353,7 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
                           className="justify-end"
                         >
                           <AiGenerationButton
-                            label="Generate snippet details with AI"
+                            label="Generate resource details with AI"
                             disabled={generationTitle.trim().length < 2}
                             onClick={() => generateSnippet(generationTitle)}
                             isGenerating={isGenerating}
@@ -396,7 +398,7 @@ export function AddSnippetDialog({ isOpen, onOpenChange }: AddSnippetDialogProps
             type="submit"
             form="form-add-snippet"
           >
-            Save Snippet
+            Save Resource
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -129,7 +129,9 @@ export function EditSnippetDialog({ snippet, isOpen, onOpenChange }: EditSnippet
         form.setFieldValue("language", toFormatValue(response.data.language));
         form.setFieldValue("tagsString", response.data.tags.join(", "));
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Failed to generate snippet details.");
+        toast.error(
+          error instanceof Error ? error.message : "Failed to generate resource details.",
+        );
       }
     });
   }
@@ -149,8 +151,8 @@ export function EditSnippetDialog({ snippet, isOpen, onOpenChange }: EditSnippet
         }}
       >
         <DialogHeader>
-          <DialogTitle>Edit Snippet</DialogTitle>
-          <DialogDescription>Update this snippet. Changes save to your library.</DialogDescription>
+          <DialogTitle>Edit Resource</DialogTitle>
+          <DialogDescription>Update this resource. Changes save to your library.</DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="min-h-0 min-w-0 pr-3">
@@ -359,7 +361,7 @@ export function EditSnippetDialog({ snippet, isOpen, onOpenChange }: EditSnippet
                           className="justify-end"
                         >
                           <AiGenerationButton
-                            label="Generate snippet details with AI"
+                            label="Generate resource details with AI"
                             disabled={generationTitle.trim().length < 2}
                             onClick={() => generateSnippet(generationTitle)}
                             isGenerating={isGenerating}
