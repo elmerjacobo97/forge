@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -128,7 +129,7 @@ export function WebhookInspector() {
               : undefined
           }
         >
-          <Plus className="size-3.5" />
+          <Plus data-icon="inline-start" />
           Create
         </Button>
       </div>
@@ -143,89 +144,109 @@ export function WebhookInspector() {
         </Alert>
       ) : null}
 
-      <ResizablePanelGroup
-        orientation="vertical"
-        className="min-h-0 flex-1 rounded-xl border border-border"
-      >
-        <ResizablePanel defaultSize={selectedEndpoint ? 38 : 100} minSize={24}>
-          <div className="h-full space-y-3 overflow-y-auto p-3">
-            {isLoading ? (
-              [1, 2, 3].map((index) => (
-                <div
-                  key={index}
-                  className="h-24 animate-pulse rounded-xl border border-border bg-card"
-                />
-              ))
-            ) : endpoints.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-                <Webhook className="size-8 text-muted-foreground/40" />
-                <p className="text-sm font-medium">No webhook endpoints yet</p>
-                <p className="max-w-sm text-xs text-muted-foreground">
-                  Create an endpoint to get a public URL that captures incoming
-                  HTTP requests.
-                </p>
-                <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-                  <Plus className="size-3.5" />
-                  Create endpoint
-                </Button>
-              </div>
-            ) : (
-              endpoints.map((endpoint) => (
-                <EndpointRow
-                  key={endpoint.id}
-                  endpoint={endpoint}
-                  selected={endpoint.id === activeEndpointId}
-                  onSelect={selectEndpoint}
-                  onDelete={setDeleteTarget}
-                />
-              ))
-            )}
+      <ResizablePanelGroup orientation="vertical" className="min-h-0 flex-1">
+        <ResizablePanel defaultSize={38} minSize={20} className="p-2">
+          <div className="flex h-full min-h-0 flex-col gap-1.5">
+            <Label className="text-xs font-medium text-muted-foreground">
+              Endpoints
+            </Label>
+            <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-input/60 bg-muted/20 p-2">
+              {isLoading ? (
+                <div className="flex flex-col gap-2">
+                  {[1, 2, 3].map((index) => (
+                    <div
+                      key={index}
+                      className="h-24 animate-pulse rounded-xl border border-border bg-card"
+                    />
+                  ))}
+                </div>
+              ) : endpoints.length === 0 ? (
+                <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+                  <Webhook className="size-8 text-muted-foreground/40" />
+                  <p className="text-sm font-medium">No webhook endpoints yet</p>
+                  <p className="max-w-sm text-xs text-muted-foreground">
+                    Create an endpoint to get a public URL that captures incoming
+                    HTTP requests.
+                  </p>
+                  <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                    <Plus data-icon="inline-start" />
+                    Create endpoint
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {endpoints.map((endpoint) => (
+                    <EndpointRow
+                      key={endpoint.id}
+                      endpoint={endpoint}
+                      selected={endpoint.id === activeEndpointId}
+                      onSelect={selectEndpoint}
+                      onDelete={setDeleteTarget}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </ResizablePanel>
 
-        {selectedEndpoint ? (
-          <>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={62} minSize={30}>
-              <div className="flex h-full min-h-0 flex-col">
-                <div className="border-b border-border px-3 py-2">
-                  <p className="text-xs font-medium">
-                    Events ·{" "}
-                    <span className="text-muted-foreground">
-                      {selectedEndpoint.name.trim() || "Untitled endpoint"}
-                    </span>
-                  </p>
-                </div>
-                {eventsError ? (
-                  <Alert variant="destructive" className="m-3">
-                    <AlertTitle>Could not load events</AlertTitle>
-                    <AlertDescription>
-                      {eventsErrorValue.message}
-                    </AlertDescription>
-                  </Alert>
-                ) : (
-                  <ResizablePanelGroup
-                    orientation="horizontal"
-                    className="min-h-0 flex-1"
-                  >
-                    <ResizablePanel defaultSize={36} minSize={24}>
+        <ResizableHandle withHandle className="bg-transparent" />
+
+        <ResizablePanel defaultSize={62} minSize={24}>
+          {selectedEndpoint ? (
+            <div className="flex h-full min-h-0 flex-col gap-1.5 p-2 pt-0">
+              <Label className="text-xs font-medium text-muted-foreground">
+                Events · {selectedEndpoint.name.trim() || "Untitled endpoint"}
+              </Label>
+              {eventsError ? (
+                <Alert variant="destructive">
+                  <AlertTitle>Could not load events</AlertTitle>
+                  <AlertDescription>
+                    {eventsErrorValue.message}
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <ResizablePanelGroup
+                  orientation="horizontal"
+                  className="min-h-0 flex-1"
+                >
+                  <ResizablePanel defaultSize={36} minSize={20} className="pr-2">
+                    <div className="h-full min-h-0 overflow-hidden rounded-xl border border-input/60 bg-muted/20">
                       <EventFeed
                         events={events}
                         selectedId={activeEventId}
                         onSelect={selectEvent}
                         isLoading={eventsLoading}
                       />
-                    </ResizablePanel>
-                    <ResizableHandle withHandle />
-                    <ResizablePanel defaultSize={64} minSize={30}>
+                    </div>
+                  </ResizablePanel>
+
+                  <ResizableHandle withHandle className="bg-transparent" />
+
+                  <ResizablePanel defaultSize={64} minSize={30} className="pl-2">
+                    <div className="h-full min-h-0 overflow-hidden rounded-xl border border-input/60 bg-muted/20">
                       <EventDetail event={selectedEvent} />
-                    </ResizablePanel>
-                  </ResizablePanelGroup>
-                )}
+                    </div>
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+              )}
+            </div>
+          ) : (
+            <div className="flex h-full min-h-0 flex-col gap-1.5 p-2 pt-0">
+              <Label className="text-xs font-medium text-muted-foreground">
+                Events
+              </Label>
+              <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-input/40 bg-muted/10 p-6 text-center">
+                <Webhook className="size-8 text-muted-foreground/40" />
+                <p className="text-sm font-medium">Select an endpoint</p>
+                <p className="max-w-sm text-xs text-muted-foreground">
+                  Choose a webhook endpoint above to inspect captured HTTP
+                  requests.
+                </p>
               </div>
-            </ResizablePanel>
-          </>
-        ) : null}
+            </div>
+          )}
+        </ResizablePanel>
       </ResizablePanelGroup>
 
       <CreateEndpointDialog

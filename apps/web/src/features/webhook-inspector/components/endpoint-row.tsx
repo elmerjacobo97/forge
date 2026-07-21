@@ -62,7 +62,7 @@ export function EndpointRow({
         <div className="mt-0.5 rounded-md border border-border bg-muted/40 p-2 text-muted-foreground">
           <Webhook className="size-4" />
         </div>
-        <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate text-sm font-medium">{label}</p>
             {expired ? (
@@ -96,7 +96,11 @@ export function EndpointRow({
                 copy(url);
               }}
             >
-              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+              {copied ? (
+                <Check data-icon="inline-start" />
+              ) : (
+                <Copy data-icon="inline-start" />
+              )}
               {copied ? "Copied" : "Copy URL"}
             </Button>
           </TooltipTrigger>
@@ -115,7 +119,7 @@ export function EndpointRow({
                 onDelete(endpoint);
               }}
             >
-              <Trash2 className="size-3.5" />
+              <Trash2 />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Delete endpoint</TooltipContent>
