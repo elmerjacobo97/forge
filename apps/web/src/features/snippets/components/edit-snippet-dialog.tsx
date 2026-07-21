@@ -12,7 +12,6 @@ import {
 import { Field, FieldLabel, FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupTextarea } from "@/components/ui/input-group";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectTrigger,
@@ -143,7 +142,7 @@ export function EditSnippetDialog({ snippet, isOpen, onOpenChange }: EditSnippet
       onOpenChange={onOpenChange}
     >
       <DialogContent
-        className="max-h-[calc(100vh-2rem)] max-w-md grid-rows-[auto_minmax(0,1fr)_auto]"
+        className="max-w-md"
         style={{ pointerEvents: "auto" }}
         onPointerDownOutside={(event) => {
           if (isSelectContentTarget(event.target)) event.preventDefault();
@@ -157,7 +156,7 @@ export function EditSnippetDialog({ snippet, isOpen, onOpenChange }: EditSnippet
           <DialogDescription>Update this resource. Changes save to your library.</DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="min-h-0 min-w-0 pr-3">
+        <div className="-mx-4 no-scrollbar max-h-[50vh] overflow-y-auto px-4">
           <form
             id="form-edit-snippet"
             onSubmit={(event) => {
@@ -393,7 +392,7 @@ export function EditSnippetDialog({ snippet, isOpen, onOpenChange }: EditSnippet
               </form.Field>
             </FieldGroup>
           </form>
-        </ScrollArea>
+        </div>
 
         <DialogFooter>
           <Button
