@@ -9,6 +9,8 @@ import {
 } from "../constants";
 import { isValidMonitorUrl } from "../utils/url";
 
+export const SLACK_WEBHOOK_HOST = "hooks.slack.com";
+
 const monitorUrlSchema = z
   .string()
   .trim()
@@ -54,6 +56,44 @@ export const notificationSettingsSchema = z.object({
 
 export type NotificationSettingsInput = z.infer<typeof notificationSettingsSchema>;
 
+export function isValidSlackWebhookUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return (
+      parsed.protocol === "https:" &&
+      parsed.hostname === SLACK_WEBHOOK_HOST &&
+      parsed.port === ""
+    );
+  } catch {
+    return false;
+  }
+}
+
+const slackWebhookUrlSchema = z
+  .string()
+  .trim()
+  .optional()
+  .transform((value) => (value ? value : undefined))
+  .refine((value) => value === undefined || isValidSlackWebhookUrl(value), {
+    message: "Slack webhook URL must use HTTPS and the hooks.slack.com host.",
+  });
+
+export const slackNotificationSettingsSchema = z
+  .object({
+    slackWebhookUrl: slackWebhookUrlSchema,
+    slackEnabled: z.boolean(),
+    clearSlackWebhook: z.boolean(),
+  })
+  .transform((value) => ({
+    ...value,
+    slackWebhookUrl: value.clearSlackWebhook ? undefined : value.slackWebhookUrl,
+    slackEnabled: value.clearSlackWebhook ? false : value.slackEnabled,
+  }));
+
+export type SlackNotificationSettingsInput = z.infer<
+  typeof slackNotificationSettingsSchema
+>;
+
 export const uptimeMonitorRowSchema = z.object({
   id: z.uuid(),
   user_id: z.uuid(),
@@ -91,6 +131,8 @@ export const uptimeNotificationSettingsRowSchema = z.object({
   user_id: z.uuid(),
   telegram_bot_token: z.string().nullable(),
   telegram_chat_id: z.string().nullable(),
+  slack_webhook_url: z.string().nullable().optional(),
+  slack_enabled: z.boolean().default(false),
   updated_at: z.string(),
 });
 

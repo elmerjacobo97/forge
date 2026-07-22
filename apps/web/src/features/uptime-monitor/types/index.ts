@@ -42,6 +42,13 @@ export type UptimeNotificationSettings = {
   updatedAt: string;
 };
 
+export type SlackNotificationSettings = {
+  userId: string;
+  slackConfigured: boolean;
+  slackEnabled: boolean;
+  updatedAt: string;
+};
+
 export type LatencyRange = "24h" | "7d" | "30d";
 
 export type LatencyBucket = {
