@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-const database = vi.hoisted(() => ({ from: vi.fn() }));
+const database = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn() }));
 const createInsForgeServerClient = vi.hoisted(() => vi.fn(async () => ({ database })));
 
 vi.mock("@/lib/insforge/server", () => ({
@@ -13,6 +13,7 @@ import { uptimeMonitorService } from "./uptime-monitor-service";
 
 const userId = "550e8400-e29b-41d4-a716-446655440000";
 const monitorId = "550e8400-e29b-41d4-a716-446655440001";
+const monitorIdB = "550e8400-e29b-41d4-a716-446655440099";
 
 const monitorRow = {
   id: monitorId,
@@ -200,6 +201,147 @@ describe("uptimeMonitorService", () => {
       telegramBotToken: "bot-token",
       telegramChatId: "chat-1",
       updatedAt: settingsRow.updated_at,
+    });
+  });
+
+  it("maps latency bucket rows from RPC (coerces numeric strings)", async () => {
+    database.rpc.mockResolvedValue({
+      data: [
+        {
+          bucket_start: "2026-07-22T10:00:00.000Z",
+          avg_latency_ms: "142.5",
+          ok_count: "9",
+          total_count: "10",
+        },
+      ],
+      error: null,
+    });
+
+    await expect(
+      uptimeMonitorService.getLatencyBuckets(monitorId, "24h", userId),
+    ).resolves.toEqual([
+      {
+        bucketStart: "2026-07-22T10:00:00.000Z",
+        avgLatencyMs: 142.5,
+        okCount: 9,
+        totalCount: 10,
+      },
+    ]);
+    expect(database.rpc).toHaveBeenCalledWith("uptime_latency_buckets", {
+      p_monitor_id: monitorId,
+      p_range: "24h",
+    });
+  });
+
+  it("rejects an invalid latency range", async () => {
+    await expect(
+      uptimeMonitorService.getLatencyBuckets(monitorId, "1h" as "24h", userId),
+    ).rejects.toThrow();
+    expect(database.rpc).not.toHaveBeenCalled();
+  });
+
+  it("maps daily uptime rows and computes percentage", async () => {
+    database.rpc.mockResolvedValue({
+      data: [
+        { day: "2026-07-21", ok_count: 95, total_count: 100 },
+        { day: "2026-07-22T00:00:00.000Z", ok_count: 0, total_count: 12 },
+      ],
+      error: null,
+    });
+
+    await expect(uptimeMonitorService.getDailyUptime(monitorId, userId)).resolves.toEqual([
+      {
+        date: "2026-07-21",
+        uptimePercentage: 95,
+        okCount: 95,
+        totalCount: 100,
+      },
+      {
+        date: "2026-07-22",
+        uptimePercentage: 0,
+        okCount: 0,
+        totalCount: 12,
+      },
+    ]);
+    expect(database.rpc).toHaveBeenCalledWith("uptime_daily_uptime", {
+      p_monitor_id: monitorId,
+    });
+  });
+
+  it("groups sparkline rows by monitor and fills empty monitors", async () => {
+    database.rpc.mockResolvedValue({
+      data: [
+        {
+          monitor_id: monitorId,
+          bucket_start: "2026-07-22T10:00:00.000Z",
+          avg_latency_ms: 80,
+          ok_count: 2,
+          total_count: 2,
+        },
+      ],
+      error: null,
+    });
+
+    await expect(
+      uptimeMonitorService.getSparklines([monitorId, monitorIdB], userId),
+    ).resolves.toEqual([
+      {
+        monitorId,
+        buckets: [
+          {
+            bucketStart: "2026-07-22T10:00:00.000Z",
+            avgLatencyMs: 80,
+            okCount: 2,
+            totalCount: 2,
+          },
+        ],
+      },
+      { monitorId: monitorIdB, buckets: [] },
+    ]);
+    expect(database.rpc).toHaveBeenCalledWith("uptime_sparklines", {
+      p_monitor_ids: [monitorId, monitorIdB],
+    });
+  });
+
+  it("returns empty sparklines without calling RPC when no monitor ids", async () => {
+    await expect(uptimeMonitorService.getSparklines([], userId)).resolves.toEqual([]);
+    expect(database.rpc).not.toHaveBeenCalled();
+  });
+
+  it("computes uptime stats from latency bucket aggregations", async () => {
+    database.rpc
+      .mockResolvedValueOnce({
+        data: [
+          {
+            bucket_start: "2026-07-22T10:00:00.000Z",
+            avg_latency_ms: 100,
+            ok_count: 9,
+            total_count: 10,
+          },
+        ],
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: [
+          {
+            bucket_start: "2026-07-20T00:00:00.000Z",
+            avg_latency_ms: 110,
+            ok_count: 48,
+            total_count: 50,
+          },
+        ],
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: [],
+        error: null,
+      });
+
+    await expect(uptimeMonitorService.getUptimeStats(monitorId, userId)).resolves.toEqual({
+      monitorId,
+      uptime24h: 90,
+      uptime7d: 96,
+      uptime30d: null,
     });
   });
 });

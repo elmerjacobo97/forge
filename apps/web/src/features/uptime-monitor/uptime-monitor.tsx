@@ -19,8 +19,8 @@ import { MonitorFormDialog } from "./components/monitor-form-dialog";
 import { MonitorTableRow } from "./components/monitor-table-row";
 import { TelegramSettingsDialog } from "./components/telegram-settings-dialog";
 import { useDeleteUptimeMonitorMutation } from "./hooks/mutations";
-import { useUptimeMonitorsQuery } from "./hooks/queries";
-import type { UptimeMonitor } from "./types";
+import { useSparklinesQuery, useUptimeMonitorsQuery } from "./hooks/queries";
+import type { LatencyBucket, UptimeMonitor } from "./types";
 
 export function UptimeMonitor() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -29,9 +29,20 @@ export function UptimeMonitor() {
   const [deleteTarget, setDeleteTarget] = useState<UptimeMonitor | null>(null);
 
   const { data: monitors = [], isLoading, isError, error } = useUptimeMonitorsQuery();
+  const monitorIds = monitors.map((monitor) => monitor.id);
+  const {
+    data: sparklines = [],
+    isLoading: sparklinesLoading,
+    isError: sparklinesError,
+    error: sparklinesErrorValue,
+  } = useSparklinesQuery(monitorIds);
   const deleteMutation = useDeleteUptimeMonitorMutation();
 
   const atLimit = monitors.length >= UPTIME_MAX_MONITORS_PER_USER;
+
+  const sparklineBucketsByMonitor = new Map<string, LatencyBucket[]>(
+    sparklines.map((sparkline) => [sparkline.monitorId, sparkline.buckets]),
+  );
 
   function confirmDelete() {
     if (!deleteTarget) return;
@@ -90,6 +101,13 @@ export function UptimeMonitor() {
         </Alert>
       ) : null}
 
+      {sparklinesError ? (
+        <Alert variant="destructive">
+          <AlertTitle>Could not load latency sparklines</AlertTitle>
+          <AlertDescription>{sparklinesErrorValue.message}</AlertDescription>
+        </Alert>
+      ) : null}
+
       <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-input/60">
         {isLoading ? (
           <div className="flex flex-col gap-2 p-2">
@@ -123,6 +141,7 @@ export function UptimeMonitor() {
                 <TableHead>Monitor</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Last latency</TableHead>
+                <TableHead>24h trend</TableHead>
                 <TableHead>Uptime (24h)</TableHead>
                 <TableHead>Enabled</TableHead>
                 <TableHead className="w-24" />
@@ -133,6 +152,8 @@ export function UptimeMonitor() {
                 <MonitorTableRow
                   key={monitor.id}
                   monitor={monitor}
+                  sparklineBuckets={sparklineBucketsByMonitor.get(monitor.id) ?? []}
+                  sparklinesLoading={sparklinesLoading}
                   onEdit={setEditingMonitor}
                   onDelete={setDeleteTarget}
                 />

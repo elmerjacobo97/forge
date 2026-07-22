@@ -7,17 +7,26 @@ import type {
 } from "../schemas/uptime-monitor-schema";
 import {
   createUptimeMonitorSchema,
+  dailyUptimeRowSchema,
+  latencyBucketRowSchema,
+  latencyRangeSchema,
   notificationSettingsSchema,
+  sparklineBucketRowSchema,
   uptimeCheckRowSchema,
   uptimeIncidentRowSchema,
   uptimeMonitorRowSchema,
   uptimeNotificationSettingsRowSchema,
 } from "../schemas/uptime-monitor-schema";
 import type {
+  DailyUptime,
+  LatencyBucket,
+  LatencyRange,
+  MonitorSparkline,
   UptimeCheck,
   UptimeIncident,
   UptimeMonitor,
   UptimeNotificationSettings,
+  UptimeStatsSummary,
 } from "../types";
 import { assertCanCreateMonitor } from "../utils/limits";
 
@@ -85,6 +94,58 @@ function toSettings(value: unknown): UptimeNotificationSettings {
     telegramChatId: row.telegram_chat_id,
     updatedAt: row.updated_at,
   };
+}
+
+function toLatencyBucket(value: unknown): LatencyBucket {
+  const row = latencyBucketRowSchema.parse(value);
+  return {
+    bucketStart: row.bucket_start,
+    avgLatencyMs: row.total_count === 0 ? null : row.avg_latency_ms,
+    okCount: row.ok_count,
+    totalCount: row.total_count,
+  };
+}
+
+function toDailyUptime(value: unknown): DailyUptime {
+  const row = dailyUptimeRowSchema.parse(value);
+  return {
+    date: row.day.slice(0, 10),
+    uptimePercentage: row.total_count === 0 ? null : (row.ok_count / row.total_count) * 100,
+    okCount: row.ok_count,
+    totalCount: row.total_count,
+  };
+}
+
+function uptimeFromBuckets(buckets: LatencyBucket[]): number | null {
+  let okCount = 0;
+  let totalCount = 0;
+  for (const bucket of buckets) {
+    okCount += bucket.okCount;
+    totalCount += bucket.totalCount;
+  }
+  if (totalCount === 0) return null;
+  return (okCount / totalCount) * 100;
+}
+
+function groupSparklineRows(monitorIds: string[], rows: unknown[]): MonitorSparkline[] {
+  const bucketsByMonitor = new Map<string, LatencyBucket[]>(
+    monitorIds.map((id) => [id, []]),
+  );
+  for (const value of rows) {
+    const row = sparklineBucketRowSchema.parse(value);
+    const list = bucketsByMonitor.get(row.monitor_id);
+    if (!list) continue;
+    list.push({
+      bucketStart: row.bucket_start,
+      avgLatencyMs: row.total_count === 0 ? null : row.avg_latency_ms,
+      okCount: row.ok_count,
+      totalCount: row.total_count,
+    });
+  }
+  return monitorIds.map((monitorId) => ({
+    monitorId,
+    buckets: bucketsByMonitor.get(monitorId) ?? [],
+  }));
 }
 
 function toMonitorPayload(input: CreateUptimeMonitorInput) {
@@ -264,5 +325,57 @@ export const uptimeMonitorService = {
       .single();
     if (error) throw failure(error, "Failed to save notification settings.");
     return toSettings(data);
+  },
+
+  async getLatencyBuckets(
+    monitorId: string,
+    range: LatencyRange,
+    userId?: string,
+  ): Promise<LatencyBucket[]> {
+    requireUser(userId);
+    const parsedRange = latencyRangeSchema.parse(range);
+    const insforge = await createInsForgeServerClient();
+    const { data, error } = await insforge.database.rpc("uptime_latency_buckets", {
+      p_monitor_id: monitorId,
+      p_range: parsedRange,
+    });
+    if (error) throw failure(error, "Failed to load latency buckets.");
+    return latencyBucketRowSchema.array().parse(data ?? []).map(toLatencyBucket);
+  },
+
+  async getDailyUptime(monitorId: string, userId?: string): Promise<DailyUptime[]> {
+    requireUser(userId);
+    const insforge = await createInsForgeServerClient();
+    const { data, error } = await insforge.database.rpc("uptime_daily_uptime", {
+      p_monitor_id: monitorId,
+    });
+    if (error) throw failure(error, "Failed to load daily uptime.");
+    return dailyUptimeRowSchema.array().parse(data ?? []).map(toDailyUptime);
+  },
+
+  async getSparklines(monitorIds: string[], userId?: string): Promise<MonitorSparkline[]> {
+    requireUser(userId);
+    if (monitorIds.length === 0) return [];
+    const insforge = await createInsForgeServerClient();
+    const { data, error } = await insforge.database.rpc("uptime_sparklines", {
+      p_monitor_ids: monitorIds,
+    });
+    if (error) throw failure(error, "Failed to load sparklines.");
+    return groupSparklineRows(monitorIds, data ?? []);
+  },
+
+  async getUptimeStats(monitorId: string, userId?: string): Promise<UptimeStatsSummary> {
+    requireUser(userId);
+    const [buckets24h, buckets7d, buckets30d] = await Promise.all([
+      uptimeMonitorService.getLatencyBuckets(monitorId, "24h", userId),
+      uptimeMonitorService.getLatencyBuckets(monitorId, "7d", userId),
+      uptimeMonitorService.getLatencyBuckets(monitorId, "30d", userId),
+    ]);
+    return {
+      monitorId,
+      uptime24h: uptimeFromBuckets(buckets24h),
+      uptime7d: uptimeFromBuckets(buckets7d),
+      uptime30d: uptimeFromBuckets(buckets30d),
+    };
   },
 };

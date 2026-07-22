@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ArrowLeft, History, ShieldAlert } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Empty,
   EmptyDescription,
@@ -13,6 +15,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -21,45 +24,51 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  useUptimeMonitorIncidentsQuery,
-  useUptimeMonitorChecksQuery,
-  useUptimeMonitorsQuery,
-} from "../hooks/queries";
-import { formatIncidentDuration, formatLatency } from "../utils/stats";
+import { useMonitorDetailQuery, useUptimeMonitorsQuery } from "../hooks/queries";
+import type { LatencyRange } from "../types";
+import { formatIncidentDuration, formatLatency, formatUptimePercentage } from "../utils/stats";
+import { LatencyChart } from "./latency-chart";
 import { MonitorStatusBadge } from "./monitor-status-badge";
+import { UptimeBarStrip } from "./uptime-bar-strip";
 
 type MonitorDetailProps = {
   monitorId: string;
 };
 
-export function MonitorDetail({ monitorId }: MonitorDetailProps) {
-  const { data: monitors = [], isLoading: monitorsLoading } = useUptimeMonitorsQuery();
-  const {
-    data: checks = [],
-    isLoading: checksLoading,
-    isError: checksError,
-    error: checksErrorValue,
-  } = useUptimeMonitorChecksQuery(monitorId);
-  const {
-    data: incidents = [],
-    isLoading: incidentsLoading,
-    isError: incidentsError,
-    error: incidentsErrorValue,
-  } = useUptimeMonitorIncidentsQuery(monitorId);
+function BackToMonitorsButton() {
+  return (
+    <Button
+      asChild
+      size="sm"
+      variant="ghost"
+      className="w-fit"
+    >
+      <Link href="/uptime-monitor">
+        <ArrowLeft data-icon="inline-start" />
+        Back to monitors
+      </Link>
+    </Button>
+  );
+}
 
+export function MonitorDetail({ monitorId }: MonitorDetailProps) {
+  const [range, setRange] = useState<LatencyRange>("24h");
+  const { data: monitors = [], isLoading: monitorsLoading } = useUptimeMonitorsQuery();
   const monitor = monitors.find((m) => m.id === monitorId) ?? null;
+  const {
+    data: detail,
+    isLoading: detailLoading,
+    isError: detailError,
+    error: detailErrorValue,
+  } = useMonitorDetailQuery(monitorId, range, monitor?.intervalMinutes);
+
+  const checks = detail?.checks ?? [];
+  const incidents = detail?.incidents ?? [];
 
   if (!monitorsLoading && !monitor) {
     return (
       <div className="flex h-full flex-col gap-4">
-        <Link
-          href="/uptime-monitor"
-          className="inline-flex w-fit items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          Back to monitors
-        </Link>
+        <BackToMonitorsButton />
         <Alert variant="destructive">
           <AlertTitle>Monitor not found</AlertTitle>
           <AlertDescription>
@@ -70,18 +79,24 @@ export function MonitorDetail({ monitorId }: MonitorDetailProps) {
     );
   }
 
+  if (detailError) {
+    return (
+      <div className="flex h-full flex-col gap-4">
+        <BackToMonitorsButton />
+        <Alert variant="destructive">
+          <AlertTitle>Could not load monitor data</AlertTitle>
+          <AlertDescription>{detailErrorValue.message}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Link
-          href="/uptime-monitor"
-          className="inline-flex w-fit items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          Back to monitors
-        </Link>
+    <div className="flex h-full min-h-0 min-w-0 flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-3">
+        <BackToMonitorsButton />
         {monitor ? (
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <h2 className="text-sm font-medium">{monitor.name}</h2>
             <MonitorStatusBadge status={monitor.status} />
             {!monitor.enabled ? <Badge variant="secondary">Paused</Badge> : null}
@@ -89,34 +104,57 @@ export function MonitorDetail({ monitorId }: MonitorDetailProps) {
               href={monitor.url}
               target="_blank"
               rel="noreferrer"
-              className="truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
+              className="min-w-0 truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
             >
               {monitor.url}
             </a>
           </div>
         ) : (
-          <div className="h-5 w-48 animate-pulse rounded bg-muted/40" />
+          <Skeleton className="h-5 w-48" />
         )}
+
+        <div className="flex flex-wrap gap-4 text-xs">
+          <StatChip
+            label="24h"
+            value={detail?.stats.uptime24h ?? null}
+            loading={detailLoading}
+          />
+          <StatChip
+            label="7d"
+            value={detail?.stats.uptime7d ?? null}
+            loading={detailLoading}
+          />
+          <StatChip
+            label="30d"
+            value={detail?.stats.uptime30d ?? null}
+            loading={detailLoading}
+          />
+        </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+        <LatencyChart
+          buckets={detail?.latencyBuckets ?? []}
+          range={range}
+          onRangeChange={setRange}
+          loading={detailLoading}
+        />
+        <UptimeBarStrip
+          days={detail?.dailyUptime ?? []}
+          loading={detailLoading}
+        />
+      </div>
+
+      <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="flex min-h-0 flex-col gap-1.5">
           <span className="text-xs font-medium text-muted-foreground">Check history</span>
           <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-input/60">
-            {checksError ? (
-              <Alert
-                variant="destructive"
-                className="m-2"
-              >
-                <AlertTitle>Could not load checks</AlertTitle>
-                <AlertDescription>{checksErrorValue.message}</AlertDescription>
-              </Alert>
-            ) : checksLoading ? (
+            {detailLoading ? (
               <div className="flex flex-col gap-2 p-2">
                 {[1, 2, 3].map((index) => (
-                  <div
+                  <Skeleton
                     key={index}
-                    className="h-8 animate-pulse rounded-lg bg-muted/40"
+                    className="h-8 w-full"
                   />
                 ))}
               </div>
@@ -176,20 +214,12 @@ export function MonitorDetail({ monitorId }: MonitorDetailProps) {
         <div className="flex min-h-0 flex-col gap-1.5">
           <span className="text-xs font-medium text-muted-foreground">Recent incidents</span>
           <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-input/60">
-            {incidentsError ? (
-              <Alert
-                variant="destructive"
-                className="m-2"
-              >
-                <AlertTitle>Could not load incidents</AlertTitle>
-                <AlertDescription>{incidentsErrorValue.message}</AlertDescription>
-              </Alert>
-            ) : incidentsLoading ? (
+            {detailLoading ? (
               <div className="flex flex-col gap-2 p-2">
                 {[1, 2].map((index) => (
-                  <div
+                  <Skeleton
                     key={index}
-                    className="h-8 animate-pulse rounded-lg bg-muted/40"
+                    className="h-8 w-full"
                   />
                 ))}
               </div>
@@ -234,6 +264,27 @@ export function MonitorDetail({ monitorId }: MonitorDetailProps) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function StatChip({
+  label,
+  value,
+  loading,
+}: {
+  label: string;
+  value: number | null;
+  loading: boolean;
+}) {
+  return (
+    <div className="flex items-baseline gap-1.5 rounded-lg border border-input/60 px-2.5 py-1.5">
+      <span className="text-muted-foreground">{label}</span>
+      {loading ? (
+        <Skeleton className="h-4 w-10" />
+      ) : (
+        <span className="font-medium tabular-nums">{formatUptimePercentage(value)}</span>
+      )}
     </div>
   );
 }

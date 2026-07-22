@@ -10,17 +10,26 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { UPTIME_UPTIME_WINDOW_HOURS } from "../constants";
 import { useSetUptimeMonitorEnabledMutation } from "../hooks/mutations";
 import { useRecentUptimeChecksQuery } from "../hooks/queries";
-import type { UptimeMonitor } from "../types";
+import type { LatencyBucket, UptimeMonitor } from "../types";
 import { computeUptimePercentage, formatLatency, formatUptimePercentage } from "../utils/stats";
+import { MonitorSparkline } from "./monitor-sparkline";
 import { MonitorStatusBadge } from "./monitor-status-badge";
 
 type MonitorTableRowProps = {
   monitor: UptimeMonitor;
+  sparklineBuckets: LatencyBucket[];
+  sparklinesLoading?: boolean;
   onEdit: (monitor: UptimeMonitor) => void;
   onDelete: (monitor: UptimeMonitor) => void;
 };
 
-export function MonitorTableRow({ monitor, onEdit, onDelete }: MonitorTableRowProps) {
+export function MonitorTableRow({
+  monitor,
+  sparklineBuckets,
+  sparklinesLoading = false,
+  onEdit,
+  onDelete,
+}: MonitorTableRowProps) {
   const [sinceIso] = useState(() =>
     new Date(Date.now() - UPTIME_UPTIME_WINDOW_HOURS * 60 * 60 * 1000).toISOString(),
   );
@@ -46,6 +55,12 @@ export function MonitorTableRow({ monitor, onEdit, onDelete }: MonitorTableRowPr
       </TableCell>
       <TableCell className="text-xs text-muted-foreground">
         {lastCheck ? formatLatency(lastCheck.latencyMs) : "—"}
+      </TableCell>
+      <TableCell>
+        <MonitorSparkline
+          buckets={sparklineBuckets}
+          isLoading={sparklinesLoading}
+        />
       </TableCell>
       <TableCell className="text-xs text-muted-foreground">
         {formatUptimePercentage(uptimePercentage)}

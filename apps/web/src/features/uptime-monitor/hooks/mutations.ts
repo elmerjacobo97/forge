@@ -21,9 +21,11 @@ export const uptimeMonitorKeys = {
   monitors: (userId: string) => [...uptimeMonitorKeys.all, "monitors", userId] as const,
   checks: (userId: string, monitorId: string) =>
     [...uptimeMonitorKeys.all, "checks", userId, monitorId] as const,
-  incidents: (userId: string, monitorId: string) =>
-    [...uptimeMonitorKeys.all, "incidents", userId, monitorId] as const,
+  detail: (userId: string, monitorId: string, range: string) =>
+    [...uptimeMonitorKeys.all, "detail", userId, monitorId, range] as const,
   settings: (userId: string) => [...uptimeMonitorKeys.all, "settings", userId] as const,
+  sparklines: (userId: string, monitorIdsKey: string) =>
+    [...uptimeMonitorKeys.all, "sparklines", userId, monitorIdsKey] as const,
 };
 
 export function useCreateUptimeMonitorMutation() {
@@ -123,7 +125,10 @@ export function useDeleteUptimeMonitorMutation() {
           queryKey: uptimeMonitorKeys.checks(user.id, monitorId),
         });
         queryClient.removeQueries({
-          queryKey: uptimeMonitorKeys.incidents(user.id, monitorId),
+          queryKey: [...uptimeMonitorKeys.all, "detail", user.id, monitorId],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: [...uptimeMonitorKeys.all, "sparklines", user.id],
         });
       }
       toast.success("Monitor deleted.");

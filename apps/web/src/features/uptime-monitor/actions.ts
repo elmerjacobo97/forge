@@ -3,12 +3,14 @@
 import { ZodError } from "zod";
 
 import { getCurrentUser } from "@/features/auth/server";
-import { notificationSettingsSchema } from "./schemas/uptime-monitor-schema";
+import { UPTIME_CHECK_HISTORY_LIMIT } from "./constants";
+import { latencyRangeSchema, notificationSettingsSchema } from "./schemas/uptime-monitor-schema";
 import { sendTelegramMessage } from "./server/telegram";
 import { uptimeMonitorService } from "./services/uptime-monitor-service";
 import type {
+  MonitorDetailData,
+  MonitorSparkline,
   UptimeCheck,
-  UptimeIncident,
   UptimeMonitor,
   UptimeNotificationSettings,
 } from "./types";
@@ -142,24 +144,6 @@ export async function listUptimeChecksAction(
   }
 }
 
-export async function listUptimeIncidentsAction(
-  monitorId: unknown,
-): Promise<UptimeActionResult<UptimeIncident[]>> {
-  const auth = await requireAuthUser();
-  if (!auth.ok) return auth;
-
-  if (typeof monitorId !== "string" || monitorId.length === 0) {
-    return { ok: false, message: "Invalid monitor." };
-  }
-
-  try {
-    const incidents = await uptimeMonitorService.listIncidents(monitorId, auth.userId);
-    return { ok: true, data: incidents };
-  } catch (error) {
-    return actionError(error, "Failed to load incidents.");
-  }
-}
-
 export async function getNotificationSettingsAction(): Promise<
   UptimeActionResult<UptimeNotificationSettings | null>
 > {
@@ -215,4 +199,59 @@ export async function sendTestTelegramMessageAction(): Promise<UptimeActionResul
   );
   if (!result.ok) return { ok: false, message: result.message };
   return { ok: true, data: undefined };
+}
+
+export async function getMonitorDetailAction(
+  monitorId: unknown,
+  range: unknown,
+): Promise<UptimeActionResult<MonitorDetailData>> {
+  const auth = await requireAuthUser();
+  if (!auth.ok) return auth;
+
+  if (typeof monitorId !== "string" || monitorId.length === 0) {
+    return { ok: false, message: "Invalid monitor." };
+  }
+  const parsedRange = latencyRangeSchema.safeParse(range);
+  if (!parsedRange.success) {
+    return { ok: false, message: "Invalid latency range." };
+  }
+
+  try {
+    const [checks, incidents, stats, latencyBuckets, dailyUptime] = await Promise.all([
+      uptimeMonitorService.listChecks(monitorId, auth.userId, {
+        limit: UPTIME_CHECK_HISTORY_LIMIT,
+      }),
+      uptimeMonitorService.listIncidents(monitorId, auth.userId),
+      uptimeMonitorService.getUptimeStats(monitorId, auth.userId),
+      uptimeMonitorService.getLatencyBuckets(monitorId, parsedRange.data, auth.userId),
+      uptimeMonitorService.getDailyUptime(monitorId, auth.userId),
+    ]);
+    return { ok: true, data: { checks, incidents, stats, latencyBuckets, dailyUptime } };
+  } catch (error) {
+    return actionError(error, "Failed to load monitor detail.");
+  }
+}
+
+export async function getSparklinesAction(
+  monitorIds: unknown,
+): Promise<UptimeActionResult<MonitorSparkline[]>> {
+  const auth = await requireAuthUser();
+  if (!auth.ok) return auth;
+
+  if (
+    !Array.isArray(monitorIds) ||
+    monitorIds.some((id) => typeof id !== "string" || id.length === 0)
+  ) {
+    return { ok: false, message: "Invalid monitor list." };
+  }
+
+  try {
+    const sparklines = await uptimeMonitorService.getSparklines(
+      monitorIds as string[],
+      auth.userId,
+    );
+    return { ok: true, data: sparklines };
+  } catch (error) {
+    return actionError(error, "Failed to load sparklines.");
+  }
 }

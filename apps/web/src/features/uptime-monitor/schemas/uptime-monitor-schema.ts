@@ -97,3 +97,22 @@ export const uptimeNotificationSettingsRowSchema = z.object({
   telegram_chat_id: z.string().nullable(),
   updated_at: z.string(),
 });
+
+export const latencyRangeSchema = z.enum(["24h", "7d", "30d"]);
+
+export const latencyBucketRowSchema = z.object({
+  bucket_start: z.string(),
+  avg_latency_ms: z.coerce.number().nullable(),
+  ok_count: z.coerce.number().int(),
+  total_count: z.coerce.number().int(),
+});
+
+export const dailyUptimeRowSchema = z.object({
+  day: z.string(),
+  ok_count: z.coerce.number().int(),
+  total_count: z.coerce.number().int(),
+});
+
+export const sparklineBucketRowSchema = latencyBucketRowSchema.extend({
+  monitor_id: z.uuid(),
+});

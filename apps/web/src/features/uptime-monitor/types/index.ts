@@ -41,3 +41,40 @@ export type UptimeNotificationSettings = {
   telegramChatId: string | null;
   updatedAt: string;
 };
+
+export type LatencyRange = "24h" | "7d" | "30d";
+
+export type LatencyBucket = {
+  bucketStart: string;
+  avgLatencyMs: number | null;
+  okCount: number;
+  totalCount: number;
+};
+
+export type DailyUptime = {
+  date: string;
+  uptimePercentage: number | null;
+  okCount: number;
+  totalCount: number;
+};
+
+export type UptimeStatsSummary = {
+  monitorId: string;
+  uptime24h: number | null;
+  uptime7d: number | null;
+  uptime30d: number | null;
+};
+
+export type MonitorSparkline = {
+  monitorId: string;
+  buckets: LatencyBucket[];
+};
+
+/** Everything the monitor detail page needs, fetched in one round trip. */
+export type MonitorDetailData = {
+  checks: UptimeCheck[];
+  incidents: UptimeIncident[];
+  stats: UptimeStatsSummary;
+  latencyBuckets: LatencyBucket[];
+  dailyUptime: DailyUptime[];
+};

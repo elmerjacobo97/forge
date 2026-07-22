@@ -1,17 +1,23 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { useAuthUser } from "@/features/auth/components/auth-user-provider";
 import {
+  getMonitorDetailAction,
   getNotificationSettingsAction,
+  getSparklinesAction,
   listUptimeChecksAction,
-  listUptimeIncidentsAction,
   listUptimeMonitorsAction,
 } from "../actions";
-import { UPTIME_CHECK_HISTORY_LIMIT, UPTIME_POLL_INTERVAL_MS } from "../constants";
+import { UPTIME_POLL_INTERVAL_MS } from "../constants";
+import type { LatencyRange } from "../types";
 import { uptimeMonitorKeys } from "./mutations";
 import { usePageVisible } from "./use-page-visible";
+
+function sparklinesKey(monitorIds: string[]): string {
+  return [...monitorIds].sort().join(",");
+}
 
 export function useUptimeMonitorsQuery() {
   const user = useAuthUser();
@@ -40,39 +46,30 @@ export function useRecentUptimeChecksQuery(monitorId: string, sinceIso: string) 
   });
 }
 
-export function useUptimeMonitorChecksQuery(monitorId: string | null) {
+/**
+ * All detail-page data (checks, incidents, stats, latency buckets, daily uptime)
+ * in one server round trip. Polls at half the monitor's check interval — the data
+ * only changes when the cron writes a new check.
+ */
+export function useMonitorDetailQuery(
+  monitorId: string,
+  range: LatencyRange,
+  intervalMinutes: number | undefined,
+) {
   const user = useAuthUser();
   const visible = usePageVisible();
 
+  const pollMs = Math.max(UPTIME_POLL_INTERVAL_MS, ((intervalMinutes ?? 1) * 60_000) / 2);
+
   return useQuery({
-    queryKey: uptimeMonitorKeys.checks(user.id, monitorId ?? "none"),
+    queryKey: uptimeMonitorKeys.detail(user.id, monitorId, range),
     queryFn: async () => {
-      if (!monitorId) return [];
-      const result = await listUptimeChecksAction(monitorId, {
-        limit: UPTIME_CHECK_HISTORY_LIMIT,
-      });
+      const result = await getMonitorDetailAction(monitorId, range);
       if (!result.ok) throw new Error(result.message);
       return result.data;
     },
-    enabled: Boolean(monitorId),
-    refetchInterval: monitorId && visible ? UPTIME_POLL_INTERVAL_MS : false,
-  });
-}
-
-export function useUptimeMonitorIncidentsQuery(monitorId: string | null) {
-  const user = useAuthUser();
-  const visible = usePageVisible();
-
-  return useQuery({
-    queryKey: uptimeMonitorKeys.incidents(user.id, monitorId ?? "none"),
-    queryFn: async () => {
-      if (!monitorId) return [];
-      const result = await listUptimeIncidentsAction(monitorId);
-      if (!result.ok) throw new Error(result.message);
-      return result.data;
-    },
-    enabled: Boolean(monitorId),
-    refetchInterval: monitorId && visible ? UPTIME_POLL_INTERVAL_MS : false,
+    refetchInterval: visible ? pollMs : false,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -86,5 +83,20 @@ export function useNotificationSettingsQuery() {
       if (!result.ok) throw new Error(result.message);
       return result.data;
     },
+  });
+}
+
+export function useSparklinesQuery(monitorIds: string[]) {
+  const user = useAuthUser();
+  const monitorIdsKey = sparklinesKey(monitorIds);
+
+  return useQuery({
+    queryKey: uptimeMonitorKeys.sparklines(user.id, monitorIdsKey),
+    queryFn: async () => {
+      const result = await getSparklinesAction(monitorIds);
+      if (!result.ok) throw new Error(result.message);
+      return result.data;
+    },
+    enabled: monitorIds.length > 0,
   });
 }
