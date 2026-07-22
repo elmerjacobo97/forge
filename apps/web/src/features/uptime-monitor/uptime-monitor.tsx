@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Activity, Plus, Send } from "lucide-react";
+import { Activity, Bell, Hash, Plus, Send } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UPTIME_MAX_MONITORS_PER_USER } from "./constants";
 import { MonitorFormDialog } from "./components/monitor-form-dialog";
 import { MonitorTableRow } from "./components/monitor-table-row";
+import { SlackSettingsDialog } from "./components/slack-settings-dialog";
 import { TelegramSettingsDialog } from "./components/telegram-settings-dialog";
 import { useDeleteUptimeMonitorMutation } from "./hooks/mutations";
 import { useSparklinesQuery, useUptimeMonitorsQuery } from "./hooks/queries";
@@ -24,7 +33,8 @@ import type { LatencyBucket, UptimeMonitor } from "./types";
 
 export function UptimeMonitor() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTelegramSettingsOpen, setIsTelegramSettingsOpen] = useState(false);
+  const [isSlackSettingsOpen, setIsSlackSettingsOpen] = useState(false);
   const [editingMonitor, setEditingMonitor] = useState<UptimeMonitor | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<UptimeMonitor | null>(null);
 
@@ -70,14 +80,29 @@ export function UptimeMonitor() {
           </p>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setIsSettingsOpen(true)}
-          >
-            <Send data-icon="inline-start" />
-            Telegram settings
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon-sm"
+                variant="outline"
+                aria-label="Notification settings"
+              >
+                <Bell />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setIsTelegramSettingsOpen(true)}>
+                <Send />
+                Telegram
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsSlackSettingsOpen(true)}>
+                <Hash />
+                Slack
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             size="sm"
             onClick={() => setIsCreateOpen(true)}
@@ -181,8 +206,13 @@ export function UptimeMonitor() {
       ) : null}
 
       <TelegramSettingsDialog
-        isOpen={isSettingsOpen}
-        onOpenChange={setIsSettingsOpen}
+        isOpen={isTelegramSettingsOpen}
+        onOpenChange={setIsTelegramSettingsOpen}
+      />
+
+      <SlackSettingsDialog
+        isOpen={isSlackSettingsOpen}
+        onOpenChange={setIsSlackSettingsOpen}
       />
 
       <Dialog

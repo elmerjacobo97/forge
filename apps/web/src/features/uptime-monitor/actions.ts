@@ -4,12 +4,18 @@ import { ZodError } from "zod";
 
 import { getCurrentUser } from "@/features/auth/server";
 import { UPTIME_CHECK_HISTORY_LIMIT } from "./constants";
-import { latencyRangeSchema, notificationSettingsSchema } from "./schemas/uptime-monitor-schema";
+import {
+  latencyRangeSchema,
+  notificationSettingsSchema,
+  slackNotificationSettingsSchema,
+} from "./schemas/uptime-monitor-schema";
+import { formatSlackTestPayload, sendSlackWebhook } from "./server/slack";
 import { sendTelegramMessage } from "./server/telegram";
 import { uptimeMonitorService } from "./services/uptime-monitor-service";
 import type {
   MonitorDetailData,
   MonitorSparkline,
+  SlackNotificationSettings,
   UptimeCheck,
   UptimeMonitor,
   UptimeNotificationSettings,
@@ -197,6 +203,71 @@ export async function sendTestTelegramMessageAction(): Promise<UptimeActionResul
     settings.telegramChatId,
     "✅ Forge Uptime Monitor: test message. Telegram alerts are configured correctly.",
   );
+  if (!result.ok) return { ok: false, message: result.message };
+  return { ok: true, data: undefined };
+}
+
+export async function getSlackNotificationSettingsAction(): Promise<
+  UptimeActionResult<SlackNotificationSettings | null>
+> {
+  const auth = await requireAuthUser();
+  if (!auth.ok) return auth;
+
+  try {
+    const settings = await uptimeMonitorService.getSlackNotificationSettings(auth.userId);
+    return { ok: true, data: settings };
+  } catch (error) {
+    return actionError(error, "Failed to load Slack notification settings.");
+  }
+}
+
+export async function saveSlackNotificationSettingsAction(
+  input: unknown,
+): Promise<UptimeActionResult<SlackNotificationSettings>> {
+  const auth = await requireAuthUser();
+  if (!auth.ok) return auth;
+
+  const parsed = slackNotificationSettingsSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Invalid Slack notification settings.",
+    };
+  }
+
+  try {
+    const settings = await uptimeMonitorService.saveSlackNotificationSettings(
+      parsed.data,
+      auth.userId,
+    );
+    return { ok: true, data: settings };
+  } catch (error) {
+    return actionError(error, "Failed to save Slack notification settings.");
+  }
+}
+
+export async function clearSlackWebhookAction(): Promise<
+  UptimeActionResult<SlackNotificationSettings>
+> {
+  return saveSlackNotificationSettingsAction({
+    slackEnabled: false,
+    clearSlackWebhook: true,
+  });
+}
+
+export async function sendTestSlackMessageAction(): Promise<UptimeActionResult> {
+  const auth = await requireAuthUser();
+  if (!auth.ok) return auth;
+
+  const settings = await uptimeMonitorService.getSlackNotificationSettingsServerOnly(auth.userId);
+  if (!settings?.slackWebhookUrl) {
+    return {
+      ok: false,
+      message: "Save a Slack Incoming Webhook first.",
+    };
+  }
+
+  const result = await sendSlackWebhook(settings.slackWebhookUrl, formatSlackTestPayload());
   if (!result.ok) return { ok: false, message: result.message };
   return { ok: true, data: undefined };
 }

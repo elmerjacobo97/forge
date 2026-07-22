@@ -6,6 +6,7 @@ import { useAuthUser } from "@/features/auth/components/auth-user-provider";
 import {
   getMonitorDetailAction,
   getNotificationSettingsAction,
+  getSlackNotificationSettingsAction,
   getSparklinesAction,
   listUptimeChecksAction,
   listUptimeMonitorsAction,
@@ -80,6 +81,19 @@ export function useNotificationSettingsQuery() {
     queryKey: uptimeMonitorKeys.settings(user.id),
     queryFn: async () => {
       const result = await getNotificationSettingsAction();
+      if (!result.ok) throw new Error(result.message);
+      return result.data;
+    },
+  });
+}
+
+export function useSlackNotificationSettingsQuery() {
+  const user = useAuthUser();
+
+  return useQuery({
+    queryKey: uptimeMonitorKeys.slackSettings(user.id),
+    queryFn: async () => {
+      const result = await getSlackNotificationSettingsAction();
       if (!result.ok) throw new Error(result.message);
       return result.data;
     },

@@ -5,15 +5,21 @@ import { toast } from "sonner";
 
 import { useAuthUser } from "@/features/auth/components/auth-user-provider";
 import {
+  clearSlackWebhookAction,
   createUptimeMonitorAction,
   deleteUptimeMonitorAction,
   saveNotificationSettingsAction,
+  saveSlackNotificationSettingsAction,
+  sendTestSlackMessageAction,
   sendTestTelegramMessageAction,
   setUptimeMonitorEnabledAction,
   updateUptimeMonitorAction,
 } from "../actions";
-import type { NotificationSettingsInput } from "../schemas/uptime-monitor-schema";
-import type { CreateUptimeMonitorInput } from "../schemas/uptime-monitor-schema";
+import type {
+  CreateUptimeMonitorInput,
+  NotificationSettingsInput,
+  SlackNotificationSettingsInput,
+} from "../schemas/uptime-monitor-schema";
 import type { UptimeMonitor } from "../types";
 
 export const uptimeMonitorKeys = {
@@ -24,6 +30,7 @@ export const uptimeMonitorKeys = {
   detail: (userId: string, monitorId: string, range: string) =>
     [...uptimeMonitorKeys.all, "detail", userId, monitorId, range] as const,
   settings: (userId: string) => [...uptimeMonitorKeys.all, "settings", userId] as const,
+  slackSettings: (userId: string) => [...uptimeMonitorKeys.all, "slack-settings", userId] as const,
   sparklines: (userId: string, monitorIdsKey: string) =>
     [...uptimeMonitorKeys.all, "sparklines", userId, monitorIdsKey] as const,
 };
@@ -167,6 +174,69 @@ export function useSendTestTelegramMessageMutation() {
   return useMutation({
     mutationFn: async () => {
       const result = await sendTestTelegramMessageAction();
+      if (!result.ok) throw new Error(result.message);
+    },
+    onSuccess: () => {
+      toast.success("Test message sent.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to send test message.");
+    },
+  });
+}
+
+export function useSaveSlackNotificationSettingsMutation() {
+  const queryClient = useQueryClient();
+  const user = useAuthUser();
+
+  return useMutation({
+    mutationFn: async (input: SlackNotificationSettingsInput) => {
+      const result = await saveSlackNotificationSettingsAction(input);
+      if (!result.ok) throw new Error(result.message);
+      return result.data;
+    },
+    onSuccess: () => {
+      if (user?.id) {
+        void queryClient.invalidateQueries({
+          queryKey: uptimeMonitorKeys.slackSettings(user.id),
+        });
+      }
+      toast.success("Slack settings saved.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to save Slack settings.");
+    },
+  });
+}
+
+export function useClearSlackWebhookMutation() {
+  const queryClient = useQueryClient();
+  const user = useAuthUser();
+
+  return useMutation({
+    mutationFn: async () => {
+      const result = await clearSlackWebhookAction();
+      if (!result.ok) throw new Error(result.message);
+      return result.data;
+    },
+    onSuccess: () => {
+      if (user?.id) {
+        void queryClient.invalidateQueries({
+          queryKey: uptimeMonitorKeys.slackSettings(user.id),
+        });
+      }
+      toast.success("Slack webhook removed.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to remove Slack webhook.");
+    },
+  });
+}
+
+export function useSendTestSlackMessageMutation() {
+  return useMutation({
+    mutationFn: async () => {
+      const result = await sendTestSlackMessageAction();
       if (!result.ok) throw new Error(result.message);
     },
     onSuccess: () => {
