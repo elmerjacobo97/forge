@@ -4,6 +4,12 @@ import type { InsForgeClient } from "@insforge/sdk";
 
 import { UPTIME_CHECK_RETENTION_DAYS, UPTIME_CHECK_TIMEOUT_MS } from "../constants";
 import type { MonitorMethod, MonitorStatus } from "../types";
+import {
+  dispatchUptimeAlert,
+  type UptimeAlertEvent,
+  type UptimeNotificationChannelSettings,
+} from "./notifications";
+import { sendSlackWebhook } from "./slack";
 import { sendTelegramMessage } from "./telegram";
 
 type AdminDatabase = InsForgeClient["database"];
@@ -25,6 +31,8 @@ type MonitorRow = {
 type NotificationSettingsRow = {
   telegram_bot_token: string | null;
   telegram_chat_id: string | null;
+  slack_webhook_url: string | null;
+  slack_enabled: boolean | null;
 };
 
 type CheckResult = {
@@ -39,12 +47,16 @@ export type RunChecksDeps = {
   now?: () => Date;
   fetchImpl?: typeof fetch;
   sendTelegram?: typeof sendTelegramMessage;
+  sendSlack?: typeof sendSlackWebhook;
 };
 
 export type RunChecksSummary = { checked: number };
 
 const MONITOR_COLUMNS =
   "id,user_id,name,url,method,expected_status,interval_minutes,failure_threshold,status,consecutive_failures,last_checked_at";
+
+const SETTINGS_COLUMNS =
+  "telegram_bot_token,telegram_chat_id,slack_webhook_url,slack_enabled" as const;
 
 function isMonitorDue(monitor: MonitorRow, now: Date): boolean {
   if (!monitor.last_checked_at) return true;
@@ -86,25 +98,49 @@ async function performCheck(monitor: MonitorRow, fetchImpl: typeof fetch): Promi
   }
 }
 
-async function notifyIfConfigured(
+function toChannelSettings(row: NotificationSettingsRow | null): UptimeNotificationChannelSettings {
+  return {
+    telegramBotToken: row?.telegram_bot_token ?? null,
+    telegramChatId: row?.telegram_chat_id ?? null,
+    slackWebhookUrl: row?.slack_webhook_url ?? null,
+    slackEnabled: row?.slack_enabled ?? false,
+  };
+}
+
+function buildAlertEvent(
+  kind: UptimeAlertEvent["kind"],
+  monitor: MonitorRow,
+  result: CheckResult,
+  occurredAt: string,
+): UptimeAlertEvent {
+  return {
+    kind,
+    monitorName: monitor.name,
+    monitorUrl: monitor.url,
+    occurredAt,
+    statusCode: result.statusCode,
+    latencyMs: result.latencyMs,
+    error: result.error,
+  };
+}
+
+async function notifyTransition(
   database: AdminDatabase,
+  monitor: MonitorRow,
+  event: UptimeAlertEvent,
   sendTelegram: typeof sendTelegramMessage,
-  userId: string,
-  text: string,
+  sendSlack: typeof sendSlackWebhook,
 ): Promise<void> {
   const { data: settings } = await database
     .from("uptime_notification_settings")
-    .select("telegram_bot_token,telegram_chat_id")
-    .eq("user_id", userId)
+    .select(SETTINGS_COLUMNS)
+    .eq("user_id", monitor.user_id)
     .maybeSingle();
 
-  const row = settings as NotificationSettingsRow | null;
-  if (!row?.telegram_bot_token || !row.telegram_chat_id) return;
-
-  const result = await sendTelegram(row.telegram_bot_token, row.telegram_chat_id, text);
-  if (!result.ok) {
-    console.error(`[uptime-monitor] Telegram alert failed: ${result.message}`);
-  }
+  await dispatchUptimeAlert(event, toChannelSettings(settings as NotificationSettingsRow | null), {
+    sendTelegram,
+    sendSlack,
+  });
 }
 
 async function closeOpenIncident(
@@ -135,6 +171,7 @@ async function processMonitor(
   now: Date,
   fetchImpl: typeof fetch,
   sendTelegram: typeof sendTelegramMessage,
+  sendSlack: typeof sendSlackWebhook,
 ): Promise<void> {
   const result = await performCheck(monitor, fetchImpl);
   const nowIso = now.toISOString();
@@ -179,19 +216,21 @@ async function processMonitor(
     await database
       .from("uptime_incidents")
       .insert([{ monitor_id: monitor.id, started_at: nowIso }]);
-    await notifyIfConfigured(
+    await notifyTransition(
       database,
+      monitor,
+      buildAlertEvent("down", monitor, result, nowIso),
       sendTelegram,
-      monitor.user_id,
-      `🔴 ${monitor.name} is down (${result.error ?? "check failed"}).\n${monitor.url}`,
+      sendSlack,
     );
   } else if (becameUp) {
     await closeOpenIncident(database, monitor.id, nowIso);
-    await notifyIfConfigured(
+    await notifyTransition(
       database,
+      monitor,
+      buildAlertEvent("recovery", monitor, result, nowIso),
       sendTelegram,
-      monitor.user_id,
-      `🟢 ${monitor.name} recovered.\n${monitor.url}`,
+      sendSlack,
     );
   }
 }
@@ -208,6 +247,7 @@ export async function runUptimeChecks(deps: RunChecksDeps): Promise<RunChecksSum
   const now = (deps.now ?? (() => new Date()))();
   const fetchImpl = deps.fetchImpl ?? fetch;
   const sendTelegram = deps.sendTelegram ?? sendTelegramMessage;
+  const sendSlack = deps.sendSlack ?? sendSlackWebhook;
 
   const { data: monitors, error } = await database
     .from("uptime_monitors")
@@ -220,7 +260,9 @@ export async function runUptimeChecks(deps: RunChecksDeps): Promise<RunChecksSum
   );
 
   await Promise.allSettled(
-    dueMonitors.map((monitor) => processMonitor(database, monitor, now, fetchImpl, sendTelegram)),
+    dueMonitors.map((monitor) =>
+      processMonitor(database, monitor, now, fetchImpl, sendTelegram, sendSlack),
+    ),
   );
 
   await cleanupOldChecks(database, now);

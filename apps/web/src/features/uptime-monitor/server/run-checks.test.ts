@@ -236,19 +236,172 @@ describe("runUptimeChecks", () => {
     expect(sendTelegram).toHaveBeenCalledWith("tok", "chat", expect.stringContaining("recovered"));
   });
 
-  it("records transitions without sending an alert when no Telegram settings are saved", async () => {
+  it("sends exactly one down alert through Telegram and Slack on transition", async () => {
+    const now = new Date("2026-07-22T12:00:00.000Z");
+    const fake = createFakeDatabase({
+      uptime_monitors: [{ ...monitorBase, status: "up", consecutive_failures: 1 }],
+      uptime_notification_settings: [
+        {
+          user_id: "u1",
+          telegram_bot_token: "tok",
+          telegram_chat_id: "chat",
+          slack_webhook_url: "https://hooks.slack.com/services/T/B/secret",
+          slack_enabled: true,
+        },
+      ],
+    });
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 500 }));
+    const sendTelegram = vi.fn().mockResolvedValue({ ok: true });
+    const sendSlack = vi.fn().mockResolvedValue({ ok: true });
+
+    await runUptimeChecks({
+      database: fake as never,
+      now: () => now,
+      fetchImpl,
+      sendTelegram,
+      sendSlack,
+    });
+
+    expect(sendTelegram).toHaveBeenCalledTimes(1);
+    expect(sendTelegram).toHaveBeenCalledWith(
+      "tok",
+      "chat",
+      "🔴 My API is down (Unexpected status 500).\nhttps://example.com/health",
+    );
+    expect(sendSlack).toHaveBeenCalledTimes(1);
+    expect(sendSlack).toHaveBeenCalledWith(
+      "https://hooks.slack.com/services/T/B/secret",
+      expect.objectContaining({
+        text: "🔴 My API is down",
+        blocks: expect.any(Array),
+      }),
+    );
+  });
+
+  it("sends a recovery alert through Slack when only Slack is enabled", async () => {
+    const fake = createFakeDatabase({
+      uptime_monitors: [{ ...monitorBase, status: "down", consecutive_failures: 3 }],
+      uptime_incidents: [{ id: "inc-1", monitor_id: "m1", started_at: "t0", ended_at: null }],
+      uptime_notification_settings: [
+        {
+          user_id: "u1",
+          telegram_bot_token: null,
+          telegram_chat_id: null,
+          slack_webhook_url: "https://hooks.slack.com/services/T/B/secret",
+          slack_enabled: true,
+        },
+      ],
+    });
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+    const sendTelegram = vi.fn().mockResolvedValue({ ok: true });
+    const sendSlack = vi.fn().mockResolvedValue({ ok: true });
+
+    await runUptimeChecks({ database: fake as never, fetchImpl, sendTelegram, sendSlack });
+
+    expect(sendTelegram).not.toHaveBeenCalled();
+    expect(sendSlack).toHaveBeenCalledTimes(1);
+    expect(sendSlack).toHaveBeenCalledWith(
+      "https://hooks.slack.com/services/T/B/secret",
+      expect.objectContaining({ text: "🟢 My API recovered" }),
+    );
+  });
+
+  it("skips Slack when the channel is disabled or not configured", async () => {
+    const sendTelegram = vi.fn().mockResolvedValue({ ok: true });
+    const sendSlack = vi.fn().mockResolvedValue({ ok: true });
+
+    const disabled = createFakeDatabase({
+      uptime_monitors: [{ ...monitorBase, status: "up", consecutive_failures: 1 }],
+      uptime_notification_settings: [
+        {
+          user_id: "u1",
+          telegram_bot_token: "tok",
+          telegram_chat_id: "chat",
+          slack_webhook_url: "https://hooks.slack.com/services/T/B/secret",
+          slack_enabled: false,
+        },
+      ],
+    });
+    await runUptimeChecks({
+      database: disabled as never,
+      fetchImpl: vi.fn().mockResolvedValue(new Response(null, { status: 500 })),
+      sendTelegram,
+      sendSlack,
+    });
+    expect(sendTelegram).toHaveBeenCalledTimes(1);
+    expect(sendSlack).not.toHaveBeenCalled();
+
+    sendTelegram.mockClear();
+    sendSlack.mockClear();
+
+    const missingWebhook = createFakeDatabase({
+      uptime_monitors: [{ ...monitorBase, status: "up", consecutive_failures: 1 }],
+      uptime_notification_settings: [
+        {
+          user_id: "u1",
+          telegram_bot_token: "tok",
+          telegram_chat_id: "chat",
+          slack_webhook_url: null,
+          slack_enabled: true,
+        },
+      ],
+    });
+    await runUptimeChecks({
+      database: missingWebhook as never,
+      fetchImpl: vi.fn().mockResolvedValue(new Response(null, { status: 500 })),
+      sendTelegram,
+      sendSlack,
+    });
+    expect(sendTelegram).toHaveBeenCalledTimes(1);
+    expect(sendSlack).not.toHaveBeenCalled();
+  });
+
+  it("keeps Telegram delivery and completes the run when Slack fails", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const fake = createFakeDatabase({
+      uptime_monitors: [{ ...monitorBase, status: "up", consecutive_failures: 1 }],
+      uptime_notification_settings: [
+        {
+          user_id: "u1",
+          telegram_bot_token: "tok",
+          telegram_chat_id: "chat",
+          slack_webhook_url: "https://hooks.slack.com/services/T/B/secret",
+          slack_enabled: true,
+        },
+      ],
+    });
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 500 }));
+    const sendTelegram = vi.fn().mockResolvedValue({ ok: true });
+    const sendSlack = vi.fn().mockResolvedValue({ ok: false, message: "invalid_token" });
+
+    await expect(
+      runUptimeChecks({ database: fake as never, fetchImpl, sendTelegram, sendSlack }),
+    ).resolves.toEqual({ checked: 1 });
+
+    expect(fake.tables.uptime_monitors[0].status).toBe("down");
+    expect(sendTelegram).toHaveBeenCalledTimes(1);
+    expect(sendSlack).toHaveBeenCalledTimes(1);
+    expect(errorSpy).toHaveBeenCalledWith(
+      "[uptime-monitor] slack alert failed for My API: invalid_token",
+    );
+    errorSpy.mockRestore();
+  });
+
+  it("records transitions without sending an alert when no notification settings are saved", async () => {
     const fake = createFakeDatabase({
       uptime_monitors: [{ ...monitorBase, status: "up", consecutive_failures: 1 }],
     });
     const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 500 }));
     const sendTelegram = vi.fn().mockResolvedValue({ ok: true });
+    const sendSlack = vi.fn().mockResolvedValue({ ok: true });
 
     await expect(
-      runUptimeChecks({ database: fake as never, fetchImpl, sendTelegram }),
+      runUptimeChecks({ database: fake as never, fetchImpl, sendTelegram, sendSlack }),
     ).resolves.toEqual({ checked: 1 });
 
     expect(fake.tables.uptime_monitors[0].status).toBe("down");
     expect(sendTelegram).not.toHaveBeenCalled();
+    expect(sendSlack).not.toHaveBeenCalled();
   });
 
   it("records a failed check with a descriptive error on network failure", async () => {
