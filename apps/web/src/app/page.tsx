@@ -18,7 +18,7 @@ async function HomeContent() {
 function LandingFallback() {
   return (
     <div
-      className="min-h-screen bg-background"
+      className="min-h-dvh bg-background"
       aria-hidden
     />
   );

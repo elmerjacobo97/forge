@@ -11,7 +11,7 @@ interface LandingPageProps {
 
 export function LandingPage({ isAuthenticated }: LandingPageProps) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <LandingNav isAuthenticated={isAuthenticated} />
       <main className="flex-1">
         <LandingHero isAuthenticated={isAuthenticated} />

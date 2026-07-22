@@ -51,7 +51,7 @@ export function LandingPillars() {
               className="group relative bg-background/80 p-8 transition-colors hover:bg-background"
             >
               <span className="landing-pillar-index absolute top-6 right-6">{pillar.index}</span>
-              <div className="mb-5 flex size-11 items-center justify-center rounded-xl border border-border/60 bg-muted/40 text-primary transition-all duration-300 group-hover:border-primary/35 group-hover:bg-primary/10 group-hover:shadow-[0_0_24px_-4px_color-mix(in_oklch,var(--primary)_35%,transparent)]">
+              <div className="mb-5 flex size-11 items-center justify-center rounded-xl border border-border/60 bg-muted/40 text-primary transition-[border-color,background-color,box-shadow] duration-300 group-hover:border-primary/35 group-hover:bg-primary/10 group-hover:shadow-[0_0_24px_-4px_color-mix(in_oklch,var(--primary)_35%,transparent)]">
                 <pillar.icon className="size-5" />
               </div>
               <h3 className="font-heading text-lg font-semibold tracking-tight">{pillar.title}</h3>
@@ -60,7 +60,7 @@ export function LandingPillars() {
               </p>
               <div
                 aria-hidden
-                className="absolute bottom-0 left-8 h-px w-0 bg-primary/60 transition-all duration-500 group-hover:w-[calc(100%-4rem)]"
+                className="absolute bottom-0 left-8 h-px w-[calc(100%-4rem)] bg-primary/60 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
               />
             </article>
           ))}

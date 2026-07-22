@@ -37,10 +37,6 @@ export const createUptimeMonitorSchema = z.object({
 
 export type CreateUptimeMonitorInput = z.infer<typeof createUptimeMonitorSchema>;
 
-export const updateUptimeMonitorSchema = createUptimeMonitorSchema;
-
-export type UpdateUptimeMonitorInput = z.infer<typeof updateUptimeMonitorSchema>;
-
 export const notificationSettingsSchema = z.object({
   telegramBotToken: z
     .string()

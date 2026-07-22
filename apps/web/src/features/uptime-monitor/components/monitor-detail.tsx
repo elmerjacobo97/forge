@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -27,9 +28,13 @@ import {
 import { useMonitorDetailQuery, useUptimeMonitorsQuery } from "../hooks/queries";
 import type { LatencyRange } from "../types";
 import { formatIncidentDuration, formatLatency, formatUptimePercentage } from "../utils/stats";
-import { LatencyChart } from "./latency-chart";
 import { MonitorStatusBadge } from "./monitor-status-badge";
 import { UptimeBarStrip } from "./uptime-bar-strip";
+
+const LatencyChart = dynamic(
+  () => import("./latency-chart").then((mod) => mod.LatencyChart),
+  { ssr: false, loading: () => <Skeleton className="h-50 w-full" /> },
+);
 
 type MonitorDetailProps = {
   monitorId: string;

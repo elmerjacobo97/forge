@@ -32,9 +32,3 @@ export const webhookEventRowSchema = z.object({
   user_agent: z.string().max(1024).nullable(),
   received_at: z.string(),
 });
-
-export const webhookRateLimitRowSchema = z.object({
-  token: z.string().min(32).max(128),
-  window_start: z.string(),
-  request_count: z.number().int().nonnegative(),
-});

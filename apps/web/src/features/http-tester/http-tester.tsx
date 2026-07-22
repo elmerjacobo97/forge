@@ -36,21 +36,24 @@ export function HttpTester() {
     setError(null);
     setResponse(null);
 
-    const result = await executeRequest(config);
+    try {
+      const result = await executeRequest(config);
 
-    if (result.error) {
-      setError(result.error);
-    } else if (result.response) {
-      setResponse(result.response);
-      setHistory(
-        addHistoryEntry(history, config, {
-          status: result.response.status,
-          durationMs: result.response.durationMs,
-          size: result.response.size,
-        }),
-      );
+      if (result.error) {
+        setError(result.error);
+      } else if (result.response) {
+        setResponse(result.response);
+        setHistory(
+          addHistoryEntry(history, config, {
+            status: result.response.status,
+            durationMs: result.response.durationMs,
+            size: result.response.size,
+          }),
+        );
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   function loadFromHistory(entry: HistoryEntry) {

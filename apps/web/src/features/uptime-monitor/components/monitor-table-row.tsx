@@ -1,10 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { UPTIME_UPTIME_WINDOW_HOURS } from "../constants";
@@ -12,8 +14,12 @@ import { useSetUptimeMonitorEnabledMutation } from "../hooks/mutations";
 import { useRecentUptimeChecksQuery } from "../hooks/queries";
 import type { LatencyBucket, UptimeMonitor } from "../types";
 import { computeUptimePercentage, formatLatency, formatUptimePercentage } from "../utils/stats";
-import { MonitorSparkline } from "./monitor-sparkline";
 import { MonitorStatusBadge } from "./monitor-status-badge";
+
+const MonitorSparkline = dynamic(
+  () => import("./monitor-sparkline").then((mod) => mod.MonitorSparkline),
+  { ssr: false, loading: () => <Skeleton className="h-8 w-24" /> },
+);
 
 type MonitorTableRowProps = {
   monitor: UptimeMonitor;

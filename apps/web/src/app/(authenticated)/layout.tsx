@@ -12,7 +12,7 @@ async function AuthenticatedContent({ children }: { children: React.ReactNode })
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+    <Suspense fallback={<div className="min-h-dvh bg-background" />}>
       <AuthenticatedContent>{children}</AuthenticatedContent>
     </Suspense>
   );

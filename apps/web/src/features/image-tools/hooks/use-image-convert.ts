@@ -35,7 +35,10 @@ export function useImageConvert(
   const targetHeight = sizeOverride?.height ?? source?.height ?? 0
 
   const isLossy = LOSSY.includes(format)
-  const currentMime = useMemo(() => FORMATS.find((f) => f.id === format)!.mime, [format])
+  const currentMime = useMemo(
+    () => FORMATS.find((f) => f.id === format)?.mime ?? "image/png",
+    [format],
+  )
 
   const sizeDelta = useMemo(() => {
     if (!source || !output) return null

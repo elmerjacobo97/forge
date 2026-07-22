@@ -113,8 +113,16 @@ function createGroqClient(): CompletionClient {
         headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
         body: JSON.stringify(request),
       });
+      if (!response.ok) {
+        let errorBody: unknown = null;
+        try {
+          errorBody = await response.json();
+        } catch {
+          // Provider may return a non-JSON error body; status is enough to fail.
+        }
+        throw new GroqHttpError(response.status, errorBody);
+      }
       const body: unknown = await response.json();
-      if (!response.ok) throw new GroqHttpError(response.status, body);
       const parsed = groqSuccessSchema.safeParse(body);
       if (!parsed.success) {
         throw new GenerationError("INVALID_RESPONSE", "AI provider returned an invalid response.");

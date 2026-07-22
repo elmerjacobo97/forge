@@ -93,26 +93,38 @@ export async function executeRequest(
   try {
     const res = await fetch(finalUrl, init);
     const durationMs = Math.round(performance.now() - startTime);
-    const text = await res.text();
-    const size = new Blob([text]).size;
-
     const responseHeaders: Record<string, string> = {};
     res.headers.forEach((value, key) => {
       responseHeaders[key] = value;
     });
-
     const contentType = res.headers.get("content-type") ?? "";
-    const formattedBody = contentType.includes("json")
-      ? tryPrettyJson(text)
-      : text;
 
+    // HTTP Tester deliberately surfaces every status (including 4xx/5xx).
+    // Read the body only after branching on `ok` so error payloads are explicit.
+    if (!res.ok) {
+      const text = await res.text();
+      return {
+        response: {
+          status: res.status,
+          statusText: res.statusText,
+          headers: responseHeaders,
+          body: contentType.includes("json") ? tryPrettyJson(text) : text,
+          size: new Blob([text]).size,
+          durationMs,
+          contentType,
+        },
+        error: null,
+      };
+    }
+
+    const text = await res.text();
     return {
       response: {
         status: res.status,
         statusText: res.statusText,
         headers: responseHeaders,
-        body: formattedBody,
-        size,
+        body: contentType.includes("json") ? tryPrettyJson(text) : text,
+        size: new Blob([text]).size,
         durationMs,
         contentType,
       },

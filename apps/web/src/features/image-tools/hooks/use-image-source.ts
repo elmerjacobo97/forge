@@ -2,19 +2,68 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { SourceImage } from "@/features/image-tools/utils/format";
 
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") resolve(reader.result);
+      else reject(new Error("Failed to read file"));
+    };
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function useImageSource() {
   const [source, setSource] = useState<SourceImage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0);
 
   useEffect(() => {
+    if (!pendingFile) return;
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const url = await readFileAsDataUrl(pendingFile);
+        if (cancelled) return;
+
+        const img = document.createElement("img");
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error("Failed to decode image"));
+          img.src = url;
+        });
+        if (cancelled) return;
+
+        setError(null);
+        setSource({
+          name: pendingFile.name,
+          url,
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+          size: pendingFile.size,
+          type: pendingFile.type || "image/*",
+        });
+      } catch {
+        if (cancelled) return;
+        setError("Failed to decode image");
+        toast.error("Failed to decode image", {
+          description: "Not a valid image or unsupported format",
+        });
+      } finally {
+        if (!cancelled) setPendingFile(null);
+      }
+    })();
+
     return () => {
-      if (source) URL.revokeObjectURL(source.url);
+      cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [pendingFile]);
 
   function loadFromFile(file: File) {
     if (file.size === 0) {
@@ -22,34 +71,12 @@ export function useImageSource() {
       toast.error("Empty file");
       return;
     }
-    const url = URL.createObjectURL(file);
-    const img = document.createElement("img");
-    img.onload = () => {
-      if (source) URL.revokeObjectURL(source.url);
-      setError(null);
-      setSource({
-        name: file.name,
-        url,
-        width: img.naturalWidth,
-        height: img.naturalHeight,
-        size: file.size,
-        type: file.type || "image/*",
-      });
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      setError("Failed to decode image");
-      toast.error("Failed to decode image", {
-        description: "Not a valid image or unsupported format",
-      });
-    };
-    img.src = url;
+    setPendingFile(file);
   }
 
   const handleFileSelected = useCallback((next: File | null) => {
     if (!next) return;
     loadFromFile(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleInputChange = useCallback(
@@ -99,10 +126,10 @@ export function useImageSource() {
   }, []);
 
   const clearSource = useCallback(() => {
-    if (source) URL.revokeObjectURL(source.url);
     setSource(null);
+    setPendingFile(null);
     setError(null);
-  }, [source]);
+  }, []);
 
   // Prevent browser from navigating on drop
   useEffect(() => {
