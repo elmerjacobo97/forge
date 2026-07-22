@@ -24,6 +24,7 @@ import {
   Columns3,
   Dices,
   Webhook,
+  Activity,
 } from "lucide-react";
 
 export interface ToolDef {
@@ -83,6 +84,14 @@ export const tools: ToolDef[] = [
     name: "Webhook Inspector",
     description: "Create temporary URLs that capture and inspect incoming HTTP requests",
     icon: Webhook,
+    category: "Network",
+  },
+  {
+    id: "uptime-monitor",
+    path: "/uptime-monitor",
+    name: "Uptime Monitor",
+    description: "Monitor your URLs with scheduled HTTP checks and Telegram alerts",
+    icon: Activity,
     category: "Network",
   },
   {
