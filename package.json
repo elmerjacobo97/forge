@@ -1,26 +1,31 @@
 {
-  "name": "forge",
+  "name": "forge-workspace",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "tauri": "tauri"
-  },
-  "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2"
+    "dev": "pnpm --filter @forge/web dev",
+    "build": "pnpm run build:web && pnpm run build:cli",
+    "build:web": "pnpm --filter @forge/web build",
+    "build:cli": "pnpm --filter ./apps/cli build",
+    "start": "pnpm --filter @forge/web start",
+    "test": "pnpm run test:web && pnpm run test:cli",
+    "test:web": "pnpm --filter @forge/web test",
+    "test:cli": "pnpm --filter ./apps/cli test",
+    "check-cli-release-tag": "pnpm --filter ./apps/cli check-release-tag",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "doctor": "pnpm --filter @forge/web doctor"
   },
   "devDependencies": {
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
-    "@vitejs/plugin-react": "^4.6.0",
-    "typescript": "~5.8.3",
-    "vite": "^7.0.4",
-    "@tauri-apps/cli": "^2"
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.2.10",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.5",
+    "typescript-eslint": "^8.64.0"
   }
 }

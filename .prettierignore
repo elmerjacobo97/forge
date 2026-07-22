@@ -1,0 +1,25 @@
+# deps & caches
+node_modules
+.pnpm-store
+.pnpm
+
+# builds
+.next
+dist
+out
+build
+coverage
+*.tsbuildinfo
+
+# generated / lockfiles
+pnpm-lock.yaml
+apps/web/next-env.d.ts
+apps/web/.tanstack
+
+# local / tooling
+.insforge
+.codegraph
+.playwright-cli
+.serena
+.env
+.env.*
