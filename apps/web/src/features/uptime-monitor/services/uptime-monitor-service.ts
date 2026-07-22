@@ -4,6 +4,7 @@ import { createInsForgeServerClient } from "@/lib/insforge/server";
 import type {
   CreateUptimeMonitorInput,
   NotificationSettingsInput,
+  SlackNotificationSettingsInput,
 } from "../schemas/uptime-monitor-schema";
 import {
   createUptimeMonitorSchema,
@@ -11,6 +12,7 @@ import {
   latencyBucketRowSchema,
   latencyRangeSchema,
   notificationSettingsSchema,
+  slackNotificationSettingsSchema,
   sparklineBucketRowSchema,
   uptimeCheckRowSchema,
   uptimeIncidentRowSchema,
@@ -22,6 +24,7 @@ import type {
   LatencyBucket,
   LatencyRange,
   MonitorSparkline,
+  SlackNotificationSettings,
   UptimeCheck,
   UptimeIncident,
   UptimeMonitor,
@@ -35,6 +38,8 @@ const MONITOR_COLUMNS =
 const CHECK_COLUMNS = "id,monitor_id,ok,status_code,latency_ms,error,checked_at" as const;
 const INCIDENT_COLUMNS = "id,monitor_id,started_at,ended_at" as const;
 const SETTINGS_COLUMNS = "user_id,telegram_bot_token,telegram_chat_id,updated_at" as const;
+const SLACK_SETTINGS_COLUMNS =
+  "user_id,slack_webhook_url,slack_enabled,updated_at" as const;
 
 function requireUser(userId?: string): asserts userId is string {
   if (!userId) throw new Error("Sign in to use Uptime Monitor.");
@@ -93,6 +98,36 @@ function toSettings(value: unknown): UptimeNotificationSettings {
     telegramBotToken: row.telegram_bot_token,
     telegramChatId: row.telegram_chat_id,
     updatedAt: row.updated_at,
+  };
+}
+
+const slackSettingsRowSchema = uptimeNotificationSettingsRowSchema.pick({
+  user_id: true,
+  slack_webhook_url: true,
+  slack_enabled: true,
+  updated_at: true,
+});
+
+type SlackNotificationSettingsServer = {
+  slackWebhookUrl: string | null;
+  slackEnabled: boolean;
+};
+
+function toSlackSettings(value: unknown): SlackNotificationSettings {
+  const row = slackSettingsRowSchema.parse(value);
+  return {
+    userId: row.user_id,
+    slackConfigured: Boolean(row.slack_webhook_url),
+    slackEnabled: row.slack_enabled,
+    updatedAt: row.updated_at,
+  };
+}
+
+function toSlackSettingsServer(value: unknown): SlackNotificationSettingsServer {
+  const row = slackSettingsRowSchema.parse(value);
+  return {
+    slackWebhookUrl: row.slack_webhook_url ?? null,
+    slackEnabled: row.slack_enabled,
   };
 }
 
@@ -284,6 +319,84 @@ export const uptimeMonitorService = {
       .maybeSingle();
     if (error) throw failure(error, "Failed to load notification settings.");
     return data ? toSettings(data) : null;
+  },
+
+  async getSlackNotificationSettings(userId?: string): Promise<SlackNotificationSettings | null> {
+    requireUser(userId);
+    const insforge = await createInsForgeServerClient();
+    const { data, error } = await insforge.database
+      .from("uptime_notification_settings")
+      .select(SLACK_SETTINGS_COLUMNS)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw failure(error, "Failed to load Slack notification settings.");
+    return data ? toSlackSettings(data) : null;
+  },
+
+  async getSlackNotificationSettingsServerOnly(
+    userId?: string,
+  ): Promise<SlackNotificationSettingsServer | null> {
+    requireUser(userId);
+    const insforge = await createInsForgeServerClient();
+    const { data, error } = await insforge.database
+      .from("uptime_notification_settings")
+      .select(SLACK_SETTINGS_COLUMNS)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw failure(error, "Failed to load Slack notification settings.");
+    return data ? toSlackSettingsServer(data) : null;
+  },
+
+  async saveSlackNotificationSettings(
+    input: SlackNotificationSettingsInput | unknown,
+    userId?: string,
+  ): Promise<SlackNotificationSettings> {
+    requireUser(userId);
+    const parsed = slackNotificationSettingsSchema.parse(input);
+    const insforge = await createInsForgeServerClient();
+
+    const { data: existingData, error: selectError } = await insforge.database
+      .from("uptime_notification_settings")
+      .select(SLACK_SETTINGS_COLUMNS)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (selectError) {
+      throw failure(selectError, "Failed to load Slack notification settings.");
+    }
+
+    const existing = existingData ? slackSettingsRowSchema.parse(existingData) : null;
+    const slackWebhookUrl = parsed.clearSlackWebhook
+      ? null
+      : (parsed.slackWebhookUrl ?? existing?.slack_webhook_url ?? null);
+    const slackEnabled = parsed.clearSlackWebhook ? false : parsed.slackEnabled;
+
+    if (slackEnabled && !slackWebhookUrl) {
+      throw new Error("Save a Slack webhook before enabling Slack notifications.");
+    }
+
+    const payload = {
+      slack_webhook_url: slackWebhookUrl,
+      slack_enabled: slackEnabled,
+    };
+
+    if (existing) {
+      const { data, error } = await insforge.database
+        .from("uptime_notification_settings")
+        .update(payload)
+        .eq("user_id", userId)
+        .select(SLACK_SETTINGS_COLUMNS)
+        .single();
+      if (error) throw failure(error, "Failed to save Slack notification settings.");
+      return toSlackSettings(data);
+    }
+
+    const { data, error } = await insforge.database
+      .from("uptime_notification_settings")
+      .insert([{ user_id: userId, ...payload }])
+      .select(SLACK_SETTINGS_COLUMNS)
+      .single();
+    if (error) throw failure(error, "Failed to save Slack notification settings.");
+    return toSlackSettings(data);
   },
 
   async saveNotificationSettings(
