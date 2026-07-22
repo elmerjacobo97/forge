@@ -6,7 +6,7 @@
 
 El workspace ya tiene tres paquetes reales, no solo `apps/web`:
 - `apps/web` (`@forge/web`) — la app browser, herramientas en `apps/web/src/lib/tools.ts`.
-- `apps/cli` (`@forge/cli`, binario `forge-cli`) — CRUD de bookmarks/proyectos/tickets sobre las mismas tablas Appwrite que usa la web.
+- `apps/cli` (`@codigoconelmer/forge-cli`, binario `forge-cli`) — CRUD de bookmarks/proyectos/tickets sobre las mismas tablas InsForge que usa la web.
 - `functions/ai-content-generator` (`@forge/ai-content-generator`) — Appwrite Function (Groq) que genera contenido; consumida hoy por `features/ai-generation`.
 
 Las herramientas de `apps/web` tienen dos niveles de madurez:

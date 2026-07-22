@@ -8,7 +8,7 @@ description: Manage Forge Dev Board tickets via the forge-cli binary (create, li
 Use the monorepo CLI binary **`forge-cli`** (not Laravel Forge’s `forge`). Prefer the global bin after `pnpm link --global` from `apps/cli`, or:
 
 ```bash
-pnpm --filter @forge/cli forge-cli -- <command>
+pnpm --filter ./apps/cli forge-cli -- <command>
 ```
 
 Tickets sync to the same InsForge tables and transactional RPCs as the web app. Auth is per-user; there is no offline mode. Every ticket belongs to a **project** (`--project-id`).

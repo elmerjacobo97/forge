@@ -8,7 +8,7 @@ description: Manage Forge bookmarks via the forge-cli binary (create, list, get,
 Use the monorepo CLI binary **`forge-cli`** (not Laravel Forge’s `forge`). Prefer the global bin after `pnpm link --global` from `apps/cli`, or:
 
 ```bash
-pnpm --filter @forge/cli forge-cli -- <command>
+pnpm --filter ./apps/cli forge-cli -- <command>
 ```
 
 Bookmarks sync to the same InsForge table and RLS policies as the web app. Auth is per-user; there is no offline mode.

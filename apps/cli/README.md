@@ -1,15 +1,24 @@
-# `@forge/cli` (`forge-cli`)
+# `@codigoconelmer/forge-cli` (`forge-cli`)
 
 Node CLI for Forge bookmarks, resources, Dev Board projects, and tickets against the linked Forge InsForge backend.
 
-Binary name is **`forge-cli`** (not `forge`) to avoid clashing with Laravel Forge CLI / Herd.
+npm package: **`@codigoconelmer/forge-cli`**. Binary name is **`forge-cli`** (not `forge`) to avoid clashing with Laravel Forge CLI / Herd.
 
-## Setup
+## Install (npm)
+
+```bash
+npm install -g @codigoconelmer/forge-cli
+forge-cli --help
+```
+
+Package page: https://www.npmjs.com/package/@codigoconelmer/forge-cli
+
+## Setup (from this monorepo)
 
 ```bash
 # from repo root
 pnpm install
-pnpm --filter @forge/cli build
+pnpm --filter ./apps/cli build
 
 # optional: put forge-cli on your PATH
 cd apps/cli && pnpm link --global
@@ -18,7 +27,60 @@ cd apps/cli && pnpm link --global
 Or run without a global link:
 
 ```bash
-pnpm --filter @forge/cli forge-cli -- --help
+pnpm --filter ./apps/cli forge-cli -- --help
+```
+
+## npm Trusted Publishing (one-time setup)
+
+Releases publish `@codigoconelmer/forge-cli` from GitHub Actions via
+[Trusted Publishing](https://docs.npmjs.com/trusted-publishers) (OIDC). No
+long-lived `NPM_TOKEN` is required for the happy path.
+
+Configure once on npm (package or scope settings → **Trusted Publisher**):
+
+| Field | Value |
+| --- | --- |
+| Provider | GitHub Actions |
+| Organization or user | `elmerjacobo97` |
+| Repository | `forge` |
+| Workflow filename | `publish-cli.yml` |
+| Environment name | _(leave empty)_ |
+
+The workflow file must remain `.github/workflows/publish-cli.yml` (filename
+match is required). After this is saved on npm, pushing a tag `vX.Y.Z` whose
+commit is on `main` and whose version matches `apps/cli/package.json` runs
+build, test, and `npm publish` with provenance.
+
+## Release flow
+
+Publish only from **`main`**. Do **not** create release tags from `development`
+or other feature branches — the workflow rejects tags whose commit is not on
+`origin/main`.
+
+1. Merge the release work into `main`.
+2. On `main`, bump `version` in `apps/cli/package.json` (e.g. `0.1.0`) and
+   commit that change on `main`.
+3. Create the matching tag on that same `main` commit:
+   ```bash
+   git checkout main
+   git pull origin main
+   # version in apps/cli/package.json must already be X.Y.Z
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   ```
+4. GitHub Actions (`.github/workflows/publish-cli.yml`) verifies the tag
+   matches `version`, builds and tests the CLI, then publishes to npm with
+   provenance.
+5. Confirm with:
+   ```bash
+   npm install -g @codigoconelmer/forge-cli
+   forge-cli --help
+   ```
+
+Local check before tagging:
+
+```bash
+pnpm check-cli-release-tag -- vX.Y.Z
 ```
 
 ## Configure and sign in
@@ -128,7 +190,7 @@ timers, events, and time entries remain atomic. `--json` applies to
 ## Tests
 
 ```bash
-pnpm --filter @forge/cli test
+pnpm --filter ./apps/cli test
 ```
 
 Unit tests validate command inputs, stable formatting, and untrusted InsForge

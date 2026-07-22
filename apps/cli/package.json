@@ -1,7 +1,8 @@
 {
-  "name": "@forge/cli",
-  "private": true,
+  "name": "@codigoconelmer/forge-cli",
   "version": "0.1.0",
+  "description": "CLI for Forge bookmarks, resources, and Dev Board against InsForge",
+  "license": "MIT",
   "type": "module",
   "bin": {
     "forge-cli": "./bin/forge-cli.js"
@@ -10,8 +11,24 @@
     "bin",
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elmerjacobo97/forge.git",
+    "directory": "apps/cli"
+  },
+  "homepage": "https://github.com/elmerjacobo97/forge/tree/main/apps/cli#readme",
+  "bugs": {
+    "url": "https://github.com/elmerjacobo97/forge/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsc",
+    "check-release-tag": "node ./scripts/check-release-tag.mjs",
     "forge-cli": "node ./bin/forge-cli.js",
     "test": "vitest run src"
   },

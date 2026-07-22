@@ -31,7 +31,7 @@ export default defineConfig([
     },
   },
 
-  // CLI (@forge/cli) — Node/TypeScript, no React
+  // CLI (@codigoconelmer/forge-cli) — Node/TypeScript, no React
   {
     files: ["apps/cli/**/*.{js,mjs,cjs,ts}"],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],

@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Scope
-- This pnpm workspace contains the Next.js app at `apps/web` (`@forge/web`) and Node CLI at `apps/cli` (`@forge/cli`, binary `forge-cli`).
+- This pnpm workspace contains the Next.js app at `apps/web` (`@forge/web`) and Node CLI at `apps/cli` (`@codigoconelmer/forge-cli`, binary `forge-cli`).
 - Keep secrets, provider calls, and remote page fetching in Server Components, Server Actions, or Route Handlers. Do not add Tauri, Rust, native IPC, or desktop-only dependencies.
 - Do not create speculative workspace packages; `packages/*` is only a reserved workspace glob.
 
@@ -9,7 +9,7 @@
 - Run commands from the repository root: `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm format`, `pnpm doctor`.
 - `pnpm build` and `pnpm test` verify web and CLI. Use `pnpm build:web`, `pnpm build:cli`, `pnpm test:web`, or `pnpm test:cli` for one package.
 - Lint/format: ESLint 9 flat config (`eslint.config.mjs`) + Prettier (`.prettierrc`). `pnpm lint` / `pnpm lint:fix` for ESLint; `pnpm format` / `pnpm format:check` for Prettier. Do not use Biome.
-- Run one web test with `pnpm --filter @forge/web exec vitest run <path>`, one Function test with `pnpm --filter @forge/ai-content-generator exec vitest run <path>`, or one CLI test with `pnpm --filter @forge/cli exec vitest run <path>`; omit `run` for watch mode.
+- Run one web test with `pnpm --filter @forge/web exec vitest run <path>`, one Function test with `pnpm --filter @forge/ai-content-generator exec vitest run <path>`, or one CLI test with `pnpm --filter ./apps/cli exec vitest run <path>`; omit `run` for watch mode.
 - Vitest defaults to `environment: "node"` with globals enabled. Tests are `*.test.ts`; DOM APIs are unavailable unless a test opts into another environment.
 - Dependency installs enforce a 24-hour minimum package age and a no-downgrade trust policy in `pnpm-workspace.yaml`.
 
@@ -23,7 +23,7 @@
 
 ## CLI (`forge-cli`)
 - Binary name is `forge-cli` (not `forge`) to avoid clashing with Laravel Forge CLI / Herd.
-- Build/link: `pnpm --filter @forge/cli build`, then `cd apps/cli && pnpm link --global`, or run `pnpm --filter @forge/cli forge-cli -- <args>`.
+- Build/link: `pnpm --filter ./apps/cli build`, then `cd apps/cli && pnpm link --global`, or run `pnpm --filter ./apps/cli forge-cli -- <args>`.
 - Config/session: `~/.forge/config.json` and `~/.forge/session.json` after `forge-cli init` and `forge-cli login`. Files must remain mode `0600`.
 - Bookmarks CRUD talks to the same InsForge tables and RLS policies as web (`forge-cli bookmark create|list|get|update|delete`). Use `--json` for machine-readable output on create/list/get/update.
 - Resources CRUD talks to the same InsForge `resources` table and RLS policies as web `/resources` (`forge-cli resource create|list|get|update|delete`). Use `--json` on create/list/get/update.

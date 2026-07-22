@@ -8,7 +8,7 @@ description: Manage Forge resources via the forge-cli binary (create, list, get,
 Use the monorepo CLI binary **`forge-cli`** (not Laravel Forge’s `forge`). Prefer the global bin after `pnpm link --global` from `apps/cli`, or:
 
 ```bash
-pnpm --filter @forge/cli forge-cli -- <command>
+pnpm --filter ./apps/cli forge-cli -- <command>
 ```
 
 Resources sync to the InsForge `resources` table and RLS policies used by the web `/resources` tool. Auth is per-user; there is no offline mode.

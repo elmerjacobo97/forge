@@ -10,7 +10,7 @@ const entry = join(root, "dist", "main.js")
 
 if (!existsSync(entry)) {
   process.stderr.write(
-    "forge-cli: dist/main.js missing. Run: pnpm --filter @forge/cli build\n",
+    "forge-cli: dist/main.js missing. Run: pnpm --filter ./apps/cli build\n",
   )
   process.exit(1)
 }
