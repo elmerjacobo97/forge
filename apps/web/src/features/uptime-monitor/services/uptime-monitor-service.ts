@@ -24,6 +24,8 @@ import type {
   LatencyBucket,
   LatencyRange,
   MonitorSparkline,
+  PersistedRequestHeader,
+  RequestHeaderInput,
   SlackNotificationSettings,
   UptimeCheck,
   UptimeIncident,
@@ -34,12 +36,11 @@ import type {
 import { assertCanCreateMonitor } from "../utils/limits";
 
 const MONITOR_COLUMNS =
-  "id,user_id,name,url,method,expected_status,interval_minutes,failure_threshold,enabled,status,consecutive_failures,last_checked_at,created_at" as const;
+  "id,user_id,name,url,method,expected_status,interval_minutes,failure_threshold,enabled,status,consecutive_failures,last_checked_at,created_at,request_headers" as const;
 const CHECK_COLUMNS = "id,monitor_id,ok,status_code,latency_ms,error,checked_at" as const;
 const INCIDENT_COLUMNS = "id,monitor_id,started_at,ended_at" as const;
 const SETTINGS_COLUMNS = "user_id,telegram_bot_token,telegram_chat_id,updated_at" as const;
-const SLACK_SETTINGS_COLUMNS =
-  "user_id,slack_webhook_url,slack_enabled,updated_at" as const;
+const SLACK_SETTINGS_COLUMNS = "user_id,slack_webhook_url,slack_enabled,updated_at" as const;
 
 function requireUser(userId?: string): asserts userId is string {
   if (!userId) throw new Error("Sign in to use Uptime Monitor.");
@@ -65,6 +66,10 @@ function toMonitor(value: unknown): UptimeMonitor {
     consecutiveFailures: row.consecutive_failures,
     lastCheckedAt: row.last_checked_at,
     createdAt: row.created_at,
+    requestHeaders: row.request_headers.map((header) => ({
+      name: header.name,
+      configured: true,
+    })),
   };
 }
 
@@ -163,9 +168,7 @@ function uptimeFromBuckets(buckets: LatencyBucket[]): number | null {
 }
 
 function groupSparklineRows(monitorIds: string[], rows: unknown[]): MonitorSparkline[] {
-  const bucketsByMonitor = new Map<string, LatencyBucket[]>(
-    monitorIds.map((id) => [id, []]),
-  );
+  const bucketsByMonitor = new Map<string, LatencyBucket[]>(monitorIds.map((id) => [id, []]));
   for (const value of rows) {
     const row = sparklineBucketRowSchema.parse(value);
     const list = bucketsByMonitor.get(row.monitor_id);
@@ -183,7 +186,36 @@ function groupSparklineRows(monitorIds: string[], rows: unknown[]): MonitorSpark
   }));
 }
 
-function toMonitorPayload(input: CreateUptimeMonitorInput) {
+function resolveCreateRequestHeaders(input: RequestHeaderInput[]): PersistedRequestHeader[] {
+  return input.map((header) => {
+    if (header.value === null) {
+      throw new Error("New monitor headers require a value.");
+    }
+    return { name: header.name, value: header.value };
+  });
+}
+
+function resolveUpdateRequestHeaders(
+  input: RequestHeaderInput[],
+  existing: PersistedRequestHeader[],
+): PersistedRequestHeader[] {
+  const existingByName = new Map(existing.map((header) => [header.name.toLowerCase(), header]));
+
+  return input.map((header) => {
+    if (header.value !== null) return { name: header.name, value: header.value };
+
+    const persisted = existingByName.get(header.name.toLowerCase());
+    if (!persisted) {
+      throw new Error(`Cannot preserve unconfigured header "${header.name}".`);
+    }
+    return persisted;
+  });
+}
+
+function toMonitorPayload(
+  input: CreateUptimeMonitorInput,
+  requestHeaders: PersistedRequestHeader[],
+) {
   return {
     name: input.name,
     url: input.url,
@@ -191,6 +223,7 @@ function toMonitorPayload(input: CreateUptimeMonitorInput) {
     expected_status: input.expectedStatus,
     interval_minutes: input.intervalMinutes,
     failure_threshold: input.failureThreshold,
+    request_headers: requestHeaders,
   };
 }
 
@@ -222,6 +255,7 @@ export const uptimeMonitorService = {
   ): Promise<UptimeMonitor> {
     requireUser(userId);
     const parsed = createUptimeMonitorSchema.parse(input);
+    const requestHeaders = resolveCreateRequestHeaders(parsed.requestHeaders);
     const insforge = await createInsForgeServerClient();
 
     const existingCount = await countMonitors(insforge.database);
@@ -229,7 +263,12 @@ export const uptimeMonitorService = {
 
     const { data, error } = await insforge.database
       .from("uptime_monitors")
-      .insert([{ user_id: userId, ...toMonitorPayload(parsed) }])
+      .insert([
+        {
+          user_id: userId,
+          ...toMonitorPayload(parsed, requestHeaders),
+        },
+      ])
       .select(MONITOR_COLUMNS)
       .single();
     if (error) throw failure(error, "Failed to create monitor.");
@@ -244,9 +283,20 @@ export const uptimeMonitorService = {
     requireUser(userId);
     const parsed = createUptimeMonitorSchema.parse(input);
     const insforge = await createInsForgeServerClient();
+    const { data: existingData, error: existingError } = await insforge.database
+      .from("uptime_monitors")
+      .select("request_headers")
+      .eq("id", monitorId)
+      .single();
+    if (existingError) throw failure(existingError, "Failed to load monitor headers.");
+
+    const existing = uptimeMonitorRowSchema
+      .pick({ request_headers: true })
+      .parse(existingData).request_headers;
+    const requestHeaders = resolveUpdateRequestHeaders(parsed.requestHeaders, existing);
     const { data, error } = await insforge.database
       .from("uptime_monitors")
-      .update(toMonitorPayload(parsed))
+      .update(toMonitorPayload(parsed, requestHeaders))
       .eq("id", monitorId)
       .select(MONITOR_COLUMNS)
       .single();
@@ -453,7 +503,10 @@ export const uptimeMonitorService = {
       p_range: parsedRange,
     });
     if (error) throw failure(error, "Failed to load latency buckets.");
-    return latencyBucketRowSchema.array().parse(data ?? []).map(toLatencyBucket);
+    return latencyBucketRowSchema
+      .array()
+      .parse(data ?? [])
+      .map(toLatencyBucket);
   },
 
   async getDailyUptime(monitorId: string, userId?: string): Promise<DailyUptime[]> {
@@ -463,7 +516,10 @@ export const uptimeMonitorService = {
       p_monitor_id: monitorId,
     });
     if (error) throw failure(error, "Failed to load daily uptime.");
-    return dailyUptimeRowSchema.array().parse(data ?? []).map(toDailyUptime);
+    return dailyUptimeRowSchema
+      .array()
+      .parse(data ?? [])
+      .map(toDailyUptime);
   },
 
   async getSparklines(monitorIds: string[], userId?: string): Promise<MonitorSparkline[]> {

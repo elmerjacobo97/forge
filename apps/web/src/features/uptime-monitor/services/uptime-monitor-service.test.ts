@@ -29,6 +29,7 @@ const monitorRow = {
   consecutive_failures: 0,
   last_checked_at: null,
   created_at: "2026-07-20T00:00:00.000Z",
+  request_headers: [{ name: "Authorization", value: "Bearer persisted-secret" }],
 };
 
 const createInput = {
@@ -38,6 +39,7 @@ const createInput = {
   expectedStatus: 200,
   intervalMinutes: 5 as const,
   failureThreshold: 2,
+  requestHeaders: [{ name: "Authorization", value: "Bearer persisted-secret" }],
 };
 
 describe("uptimeMonitorService", () => {
@@ -67,7 +69,9 @@ describe("uptimeMonitorService", () => {
       select: vi.fn(() => ({ order })),
     });
 
-    await expect(uptimeMonitorService.listMonitors(userId)).resolves.toEqual([
+    const result = await uptimeMonitorService.listMonitors(userId);
+
+    expect(result).toEqual([
       {
         id: monitorId,
         userId,
@@ -82,8 +86,10 @@ describe("uptimeMonitorService", () => {
         consecutiveFailures: 0,
         lastCheckedAt: null,
         createdAt: monitorRow.created_at,
+        requestHeaders: [{ name: "Authorization", configured: true }],
       },
     ]);
+    expect(JSON.stringify(result)).not.toContain("Bearer persisted-secret");
   });
 
   it("rejects create when the user already has 10 monitors", async () => {
@@ -112,14 +118,100 @@ describe("uptimeMonitorService", () => {
       })
       .mockReturnValueOnce({ insert });
 
-    await expect(uptimeMonitorService.createMonitor(createInput, userId)).resolves.toMatchObject({
+    const result = await uptimeMonitorService.createMonitor(createInput, userId);
+
+    expect(result).toMatchObject({
       id: monitorId,
       name: "My API",
     });
+    expect(JSON.stringify(result)).not.toContain("Bearer persisted-secret");
 
     expect(insert).toHaveBeenCalledWith([
-      expect.objectContaining({ user_id: userId, name: "My API" }),
+      expect.objectContaining({
+        user_id: userId,
+        name: "My API",
+        request_headers: [{ name: "Authorization", value: "Bearer persisted-secret" }],
+      }),
     ]);
+  });
+
+  it("rejects null header values when creating a monitor", async () => {
+    await expect(
+      uptimeMonitorService.createMonitor(
+        { ...createInput, requestHeaders: [{ name: "Authorization", value: null }] },
+        userId,
+      ),
+    ).rejects.toThrow("require a value");
+    expect(database.from).not.toHaveBeenCalled();
+  });
+
+  it("preserves, replaces, adds, and deletes headers during update", async () => {
+    const existingHeaders = [
+      { name: "Authorization", value: "Bearer preserved-secret" },
+      { name: "X-Replace", value: "old-secret" },
+      { name: "X-Delete", value: "deleted-secret" },
+    ];
+    const resolvedHeaders = [
+      existingHeaders[0],
+      { name: "X-Replace", value: "new-secret" },
+      { name: "X-New", value: "added-secret" },
+    ];
+    const existingSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { request_headers: existingHeaders }, error: null });
+    const existingEq = vi.fn(() => ({ single: existingSingle }));
+    const updateSingle = vi.fn().mockResolvedValue({
+      data: { ...monitorRow, request_headers: resolvedHeaders },
+      error: null,
+    });
+    const updateSelect = vi.fn(() => ({ single: updateSingle }));
+    const updateEq = vi.fn(() => ({ select: updateSelect }));
+    const update = vi.fn(() => ({ eq: updateEq }));
+
+    database.from
+      .mockReturnValueOnce({ select: vi.fn(() => ({ eq: existingEq })) })
+      .mockReturnValueOnce({ update });
+
+    const result = await uptimeMonitorService.updateMonitor(
+      monitorId,
+      {
+        ...createInput,
+        requestHeaders: [
+          { name: "authorization", value: null },
+          { name: "X-Replace", value: "new-secret" },
+          { name: "X-New", value: "added-secret" },
+        ],
+      },
+      userId,
+    );
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ request_headers: resolvedHeaders }),
+    );
+    expect(result.requestHeaders).toEqual([
+      { name: "Authorization", configured: true },
+      { name: "X-Replace", configured: true },
+      { name: "X-New", configured: true },
+    ]);
+    expect(JSON.stringify(result)).not.toContain("secret");
+  });
+
+  it("rejects preserving a header without a persisted match", async () => {
+    const existingSingle = vi.fn().mockResolvedValue({
+      data: { request_headers: monitorRow.request_headers },
+      error: null,
+    });
+    const existingEq = vi.fn(() => ({ single: existingSingle }));
+    database.from.mockReturnValueOnce({ select: vi.fn(() => ({ eq: existingEq })) });
+
+    await expect(
+      uptimeMonitorService.updateMonitor(
+        monitorId,
+        { ...createInput, requestHeaders: [{ name: "X-Unknown", value: null }] },
+        userId,
+      ),
+    ).rejects.toThrow('Cannot preserve unconfigured header "X-Unknown"');
+    expect(database.from).toHaveBeenCalledTimes(1);
   });
 
   it("deletes a monitor by id", async () => {
@@ -217,16 +309,16 @@ describe("uptimeMonitorService", () => {
       error: null,
     });
 
-    await expect(
-      uptimeMonitorService.getLatencyBuckets(monitorId, "24h", userId),
-    ).resolves.toEqual([
-      {
-        bucketStart: "2026-07-22T10:00:00.000Z",
-        avgLatencyMs: 142.5,
-        okCount: 9,
-        totalCount: 10,
-      },
-    ]);
+    await expect(uptimeMonitorService.getLatencyBuckets(monitorId, "24h", userId)).resolves.toEqual(
+      [
+        {
+          bucketStart: "2026-07-22T10:00:00.000Z",
+          avgLatencyMs: 142.5,
+          okCount: 9,
+          totalCount: 10,
+        },
+      ],
+    );
     expect(database.rpc).toHaveBeenCalledWith("uptime_latency_buckets", {
       p_monitor_id: monitorId,
       p_range: "24h",

@@ -185,6 +185,7 @@ export const uptimeMonitorRowSchema = z.object({
   consecutive_failures: z.number().int(),
   last_checked_at: z.string().nullable(),
   created_at: z.string(),
+  request_headers: z.array(persistedRequestHeaderSchema),
 });
 
 export const uptimeCheckRowSchema = z.object({
