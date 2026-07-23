@@ -1,0 +1,11 @@
+.codegraph/
+.git/
+.insforge/
+.playwright-cli/
+.vercel/
+**/.env
+**/.env.*
+**/.next/
+**/node_modules/
+**/*.log
+**/*.tsbuildinfo
