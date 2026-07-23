@@ -1,11 +1,17 @@
 import Link from "next/link";
+import { ArrowRight, SquareTerminal } from "lucide-react";
 
 import { tools } from "@/lib/tools";
 
-const featuredIds = new Set(["dev-board", "bookmarks", "resources"]);
+const workspaceIds = new Set(["dev-board", "bookmarks", "resources"]);
+const spotlightIds = new Set([
+  ...workspaceIds,
+  "http-tester",
+  "webhook-inspector",
+  "uptime-monitor",
+]);
 const utilityIds = new Set([
   "json-formatter",
-  "http-tester",
   "jwt-decoder",
   "regex-tester",
   "base64",
@@ -13,136 +19,138 @@ const utilityIds = new Set([
   "uuid-generator",
   "diff-tool",
   "format-converter",
+  "json-to-typescript",
+  "mock-data-generator",
   "qr-generator",
+  "image-tools",
 ]);
 
-const featuredTools = tools.filter((tool) => featuredIds.has(tool.id));
+const spotlightTools = tools.filter((tool) => spotlightIds.has(tool.id));
 const utilityTools = tools.filter((tool) => utilityIds.has(tool.id));
-const remainingCount = tools.length - featuredTools.length - utilityTools.length;
+const remainingCount = tools.length - spotlightTools.length - utilityTools.length;
+const categoryCount = new Set(tools.map((tool) => tool.category)).size;
 
 export function LandingTools({ isAuthenticated }: { isAuthenticated: boolean }) {
-  const [devBoard, ...otherFeatured] = featuredTools;
-
   return (
-    <section className="border-t border-border/60">
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
+    <section
+      id="toolkit"
+      className="scroll-mt-20 border-t border-border/60"
+    >
+      <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28">
         <div className="mb-14 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-xl">
-            <p className="landing-section-label">Toolkit</p>
-            <h2 className="mt-3 font-heading text-[clamp(1.75rem,4vw,2.5rem)] font-semibold leading-tight tracking-tight">
-              Productivity features and dev utilities, unified.
+          <div className="max-w-2xl">
+            <p className="landing-section-label">The workspace</p>
+            <h2 className="mt-3 font-heading text-[clamp(2rem,5vw,3.5rem)] font-semibold leading-[1.02] tracking-tight text-balance">
+              Serious workflows up front. Fast utilities one command away.
             </h2>
           </div>
           <p className="font-mono text-sm text-muted-foreground">
-            <span className="text-primary">{tools.length}</span> tools · 12 categories
+            <span className="text-primary">{tools.length}</span> tools · {categoryCount} categories
           </p>
         </div>
 
-        <div className="mb-6 grid gap-4 lg:grid-cols-2">
-          {devBoard ? (
-            <div className="landing-tool-card landing-metal-panel relative overflow-hidden rounded-2xl p-7 lg:row-span-2">
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -top-12 -right-12 size-40 rounded-full bg-primary/10 blur-2xl"
-              />
-              <div className="relative">
-                <div className="mb-4 flex items-center gap-3">
-                  <span className="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/20">
-                    <devBoard.icon className="size-5" />
-                  </span>
-                  <span className="landing-eyebrow border-primary/20 bg-primary/5 py-0.5">
-                    {devBoard.category}
-                  </span>
-                </div>
-                <h3 className="font-heading text-2xl font-semibold tracking-tight">
-                  {devBoard.name}
-                </h3>
-                <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                  {devBoard.description}
-                </p>
-                <div className="mt-8 grid grid-cols-3 gap-2 font-mono text-[10px] text-muted-foreground">
-                  <div className="rounded-md border border-border/50 bg-background/50 px-2 py-2">
-                    <span className="block text-primary">todo</span>4
-                  </div>
-                  <div className="rounded-md border border-primary/30 bg-primary/5 px-2 py-2">
-                    <span className="block text-primary">active</span>2
-                  </div>
-                  <div className="rounded-md border border-border/50 bg-background/50 px-2 py-2">
-                    <span className="block text-primary">done</span>6
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : null}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {spotlightTools.map((tool) => {
+            const isWorkspaceTool = workspaceIds.has(tool.id);
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-            {otherFeatured.map((tool) => (
-              <div
+            return (
+              <article
                 key={tool.id}
-                className="landing-tool-card rounded-2xl border border-primary/20 bg-linear-to-br from-primary/8 to-transparent p-6"
+                className={`landing-tool-card relative overflow-hidden rounded-2xl border p-6 ${
+                  isWorkspaceTool
+                    ? "landing-metal-panel border-primary/20"
+                    : "border-border/60 bg-card/45"
+                }`}
               >
-                <div className="mb-3 flex items-center gap-2.5">
-                  <span className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                    <tool.icon className="size-4" />
-                  </span>
-                  <span className="text-[10px] font-medium tracking-[0.16em] text-primary uppercase">
-                    {tool.category}
-                  </span>
+                {isWorkspaceTool ? (
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute -top-12 -right-12 size-36 rounded-full bg-primary/10 blur-2xl"
+                  />
+                ) : null}
+                <div className="relative">
+                  <div className="mb-5 flex items-center justify-between gap-3">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/15">
+                      <tool.icon className="size-5" />
+                    </span>
+                    <span className="font-mono text-[9px] tracking-[0.16em] text-muted-foreground uppercase">
+                      {isWorkspaceTool ? "Synced workspace" : tool.category}
+                    </span>
+                  </div>
+                  <h3 className="font-heading text-xl font-semibold tracking-tight">{tool.name}</h3>
+                  <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
+                    {tool.description}
+                  </p>
                 </div>
-                <h3 className="font-heading text-lg font-semibold">{tool.name}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {tool.description}
-                </p>
-              </div>
-            ))}
-          </div>
+              </article>
+            );
+          })}
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-          {utilityTools.map((tool, index) => (
-            <div
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {utilityTools.map((tool) => (
+            <article
               key={tool.id}
-              className="landing-tool-card group flex items-start gap-3 rounded-xl border border-border/50 bg-card/40 px-3.5 py-3 transition-colors hover:border-primary/25 hover:bg-card/80"
-              style={{ animationDelay: `${index * 40}ms` }}
+              className="landing-tool-card group flex min-h-24 items-start gap-3 rounded-xl border border-border/50 bg-card/35 px-4 py-3.5 transition-colors hover:border-primary/25 hover:bg-card/75"
             >
-              <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md bg-muted/80 text-muted-foreground transition-colors group-hover:bg-primary/15 group-hover:text-primary">
-                <tool.icon className="size-3.5" />
+              <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted/80 text-muted-foreground transition-colors group-hover:bg-primary/15 group-hover:text-primary">
+                <tool.icon className="size-4" />
               </span>
               <div className="min-w-0">
                 <p className="truncate font-mono text-xs font-medium">{tool.name}</p>
-                <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+                <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
                   {tool.description}
                 </p>
               </div>
-            </div>
+            </article>
           ))}
         </div>
 
-        <p className="mt-10 text-center text-sm text-muted-foreground">
-          {isAuthenticated ? (
-            <>
-              Plus {remainingCount} more tools in your{" "}
-              <Link
-                href="/dev-board"
-                className="text-primary underline-offset-4 hover:underline"
-              >
-                dashboard
-              </Link>
-              .
-            </>
-          ) : (
-            <>
-              Plus {remainingCount} more tools after you{" "}
-              <Link
-                href="/register"
-                className="text-primary underline-offset-4 hover:underline"
-              >
-                create an account
-              </Link>
-              .
-            </>
-          )}
-        </p>
+        <div className="landing-metal-panel mt-6 grid overflow-hidden rounded-2xl lg:grid-cols-[0.8fr_1.2fr]">
+          <div className="border-b border-border/50 p-6 lg:border-r lg:border-b-0 lg:p-8">
+            <div className="flex items-center gap-3">
+              <span className="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <SquareTerminal className="size-5" />
+              </span>
+              <div>
+                <p className="font-heading text-lg font-semibold">Same work, from your terminal.</p>
+                <p className="text-xs text-muted-foreground">Dev Board, bookmarks, and resources</p>
+              </div>
+            </div>
+            <p className="mt-5 max-w-md text-sm leading-relaxed text-muted-foreground">
+              Forge CLI keeps core workflows available where development already happens, backed by
+              the same account and data as the web workspace.
+            </p>
+          </div>
+
+          <div className="bg-background/45 p-6 font-mono text-[11px] leading-relaxed sm:p-8">
+            <p className="text-muted-foreground">
+              <span className="text-primary">$</span> forge-cli project list
+            </p>
+            <p className="mt-1 text-foreground/80">Forge Web · API Reliability</p>
+            <p className="mt-4 text-muted-foreground">
+              <span className="text-primary">$</span> forge-cli bookmark list --json
+            </p>
+            <p className="mt-1 text-foreground/80">
+              [{`{ "title": "InsForge SDK", "category": "docs" }`}]
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-9 flex flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground sm:flex-row">
+          <span>
+            {remainingCount > 0
+              ? `${remainingCount} more focused tools are ready inside Forge.`
+              : "Your full toolkit is ready inside Forge."}
+          </span>
+          <Link
+            href={isAuthenticated ? "/dev-board" : "/register"}
+            className="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline"
+          >
+            {isAuthenticated ? "Open workspace" : "Create your workspace"}
+            <ArrowRight className="size-3.5" />
+          </Link>
+        </div>
       </div>
     </section>
   );

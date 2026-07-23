@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Forge developer toolkit and workflow workspace";
+export const alt = "Forge developer workspace for planning, debugging, and shipping";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -114,7 +114,7 @@ export default function OpenGraphImage() {
                 textTransform: "uppercase",
               }}
             >
-              Developer workshop
+              Developer workspace
             </span>
           </div>
         </div>
@@ -129,7 +129,7 @@ export default function OpenGraphImage() {
               letterSpacing: -3.5,
             }}
           >
-            Everything a developer needs, in one tab.
+            Ship work, not context switches.
           </div>
           <div
             style={{
@@ -140,8 +140,7 @@ export default function OpenGraphImage() {
               lineHeight: 1.35,
             }}
           >
-            Browser-native utilities, Kanban time tracking, bookmarks, resources, webhooks, and
-            uptime monitoring.
+            Plan, inspect, monitor, and keep reusable knowledge connected across web and CLI.
           </div>
         </div>
 

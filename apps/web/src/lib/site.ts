@@ -1,6 +1,6 @@
 export const siteName = "Forge";
-export const siteTitle = "Forge - Developer toolkit and workflow workspace";
+export const siteTitle = "Forge - Developer workspace for planning, debugging, and shipping";
 export const siteDescription =
-  "Developer workspace with browser-native utilities, Kanban time tracking, bookmarks, reusable resources, webhook inspection, and uptime monitoring.";
+  "Plan development with automatic time tracking, inspect HTTP and webhooks, monitor uptime, save reusable knowledge, and run synced workflows from web or CLI.";
 
 export const siteUrl = new URL("https://forge.elmerjacobo.dev");
