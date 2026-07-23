@@ -29,6 +29,26 @@ export const UPTIME_NAME_MAX_LENGTH = 80;
 /** Monitor URL length bounds. */
 export const UPTIME_URL_MAX_LENGTH = 2048;
 
+/** Per-monitor custom request header limits. */
+export const UPTIME_REQUEST_HEADERS_MAX = 20;
+export const UPTIME_REQUEST_HEADER_NAME_MAX_LENGTH = 100;
+export const UPTIME_REQUEST_HEADER_VALUE_MAX_LENGTH = 2000;
+
+/** Headers managed by the HTTP runtime rather than individual monitors. */
+export const UPTIME_REQUEST_HEADER_DENYLIST = [
+  "host",
+  "content-length",
+  "connection",
+  "keep-alive",
+  "te",
+  "trailer",
+  "transfer-encoding",
+  "upgrade",
+] as const;
+
+/** Max same-origin redirects followed when custom headers are configured. */
+export const UPTIME_REQUEST_HEADERS_MAX_REDIRECTS = 5;
+
 /** UI detail-view poll interval when the tab is visible. */
 export const UPTIME_POLL_INTERVAL_MS = 30_000;
 

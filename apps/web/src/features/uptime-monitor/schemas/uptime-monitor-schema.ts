@@ -5,8 +5,13 @@ import {
   UPTIME_FAILURE_THRESHOLD_MIN,
   UPTIME_INTERVALS_MINUTES,
   UPTIME_NAME_MAX_LENGTH,
+  UPTIME_REQUEST_HEADER_DENYLIST,
+  UPTIME_REQUEST_HEADER_NAME_MAX_LENGTH,
+  UPTIME_REQUEST_HEADER_VALUE_MAX_LENGTH,
+  UPTIME_REQUEST_HEADERS_MAX,
   UPTIME_URL_MAX_LENGTH,
 } from "../constants";
+import type { PersistedRequestHeader, RequestHeaderInput, RequestHeaderMetadata } from "../types";
 import { isValidMonitorUrl } from "../utils/url";
 
 export const SLACK_WEBHOOK_HOST = "hooks.slack.com";
@@ -24,18 +29,94 @@ const monitorNameSchema = z
   .min(1, "Name is required.")
   .max(UPTIME_NAME_MAX_LENGTH, `Name must be at most ${UPTIME_NAME_MAX_LENGTH} characters.`);
 
-export const createUptimeMonitorSchema = z.object({
-  name: monitorNameSchema,
-  url: monitorUrlSchema,
-  method: z.enum(["GET", "HEAD"]),
-  expectedStatus: z.number().int().min(100).max(599),
-  intervalMinutes: z.literal(UPTIME_INTERVALS_MINUTES),
-  failureThreshold: z
-    .number()
-    .int()
-    .min(UPTIME_FAILURE_THRESHOLD_MIN)
-    .max(UPTIME_FAILURE_THRESHOLD_MAX),
+const HTTP_TOKEN_PATTERN = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
+const REQUEST_HEADER_CONTROL_PATTERN = /[\r\n\0]/;
+const requestHeaderDenylist = new Set<string>(UPTIME_REQUEST_HEADER_DENYLIST);
+
+const requestHeaderNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Header name is required.")
+  .max(
+    UPTIME_REQUEST_HEADER_NAME_MAX_LENGTH,
+    `Header name must be at most ${UPTIME_REQUEST_HEADER_NAME_MAX_LENGTH} characters.`,
+  )
+  .regex(HTTP_TOKEN_PATTERN, "Header name must use valid HTTP token characters.")
+  .refine((name) => {
+    const normalized = name.toLowerCase();
+    return !requestHeaderDenylist.has(normalized) && !normalized.startsWith("proxy-");
+  }, "This header is managed by the HTTP runtime and cannot be configured.");
+
+const requestHeaderValueSchema = z
+  .string()
+  .min(1, "Header value is required.")
+  .max(
+    UPTIME_REQUEST_HEADER_VALUE_MAX_LENGTH,
+    `Header value must be at most ${UPTIME_REQUEST_HEADER_VALUE_MAX_LENGTH} characters.`,
+  )
+  .refine(
+    (value) => !REQUEST_HEADER_CONTROL_PATTERN.test(value),
+    "Header value cannot contain CR, LF, or NUL characters.",
+  );
+
+export const persistedRequestHeaderSchema: z.ZodType<PersistedRequestHeader> = z.object({
+  name: requestHeaderNameSchema,
+  value: requestHeaderValueSchema,
 });
+
+export const requestHeaderMetadataSchema: z.ZodType<RequestHeaderMetadata> = z.object({
+  name: requestHeaderNameSchema,
+  configured: z.literal(true),
+});
+
+export const requestHeaderInputSchema: z.ZodType<RequestHeaderInput> = z.object({
+  name: requestHeaderNameSchema,
+  value: requestHeaderValueSchema.nullable(),
+});
+
+export const createUptimeMonitorSchema = z
+  .object({
+    name: monitorNameSchema,
+    url: monitorUrlSchema,
+    method: z.enum(["GET", "HEAD"]),
+    expectedStatus: z.number().int().min(100).max(599),
+    intervalMinutes: z.literal(UPTIME_INTERVALS_MINUTES),
+    failureThreshold: z
+      .number()
+      .int()
+      .min(UPTIME_FAILURE_THRESHOLD_MIN)
+      .max(UPTIME_FAILURE_THRESHOLD_MAX),
+    requestHeaders: z.array(requestHeaderInputSchema).max(UPTIME_REQUEST_HEADERS_MAX),
+  })
+  .superRefine((input, context) => {
+    const seenNames = new Set<string>();
+
+    input.requestHeaders.forEach((header, index) => {
+      const normalized = header.name.toLowerCase();
+      if (seenNames.has(normalized)) {
+        context.addIssue({
+          code: "custom",
+          message: "Header names must be unique.",
+          path: ["requestHeaders", index, "name"],
+        });
+      }
+      seenNames.add(normalized);
+    });
+
+    if (input.requestHeaders.length > 0) {
+      try {
+        if (new URL(input.url).protocol !== "https:") {
+          context.addIssue({
+            code: "custom",
+            message: "Monitors with custom headers must use HTTPS.",
+            path: ["url"],
+          });
+        }
+      } catch {
+        // monitorUrlSchema reports the invalid URL.
+      }
+    }
+  });
 
 export type CreateUptimeMonitorInput = z.infer<typeof createUptimeMonitorSchema>;
 
@@ -60,9 +141,7 @@ export function isValidSlackWebhookUrl(value: string): boolean {
   try {
     const parsed = new URL(value);
     return (
-      parsed.protocol === "https:" &&
-      parsed.hostname === SLACK_WEBHOOK_HOST &&
-      parsed.port === ""
+      parsed.protocol === "https:" && parsed.hostname === SLACK_WEBHOOK_HOST && parsed.port === ""
     );
   } catch {
     return false;
@@ -90,9 +169,7 @@ export const slackNotificationSettingsSchema = z
     slackEnabled: value.clearSlackWebhook ? false : value.slackEnabled,
   }));
 
-export type SlackNotificationSettingsInput = z.infer<
-  typeof slackNotificationSettingsSchema
->;
+export type SlackNotificationSettingsInput = z.infer<typeof slackNotificationSettingsSchema>;
 
 export const uptimeMonitorRowSchema = z.object({
   id: z.uuid(),

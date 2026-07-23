@@ -2,6 +2,21 @@ export type MonitorMethod = "GET" | "HEAD";
 export type MonitorStatus = "pending" | "up" | "down";
 export type MonitorInterval = 1 | 5 | 15 | 30;
 
+export type PersistedRequestHeader = {
+  name: string;
+  value: string;
+};
+
+export type RequestHeaderMetadata = {
+  name: string;
+  configured: true;
+};
+
+export type RequestHeaderInput = {
+  name: string;
+  value: string | null;
+};
+
 export type UptimeMonitor = {
   id: string;
   userId: string;
@@ -16,6 +31,7 @@ export type UptimeMonitor = {
   consecutiveFailures: number;
   lastCheckedAt: string | null;
   createdAt: string;
+  requestHeaders: RequestHeaderMetadata[];
 };
 
 export type UptimeCheck = {
