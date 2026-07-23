@@ -6,11 +6,13 @@ import { runProject } from "./commands/project.js"
 import { runResource } from "./commands/resource.js"
 import { runTicket } from "./commands/ticket.js"
 import { runWhoami } from "./commands/whoami.js"
+import { getCliVersion } from "./version.js"
 
 const HELP = `forge-cli — Forge CLI
 
 Usage:
   forge-cli --help
+  forge-cli --version
   forge-cli <command>
 
 Commands:
@@ -24,7 +26,8 @@ Commands:
   ticket    Manage Dev Board tickets (create|list|get|update|delete|move)
 
 Options:
-  --help    Show this help
+  -h, --help       Show this help
+  -v, --version    Show CLI version
 `
 
 async function main(argv: string[]): Promise<void> {
@@ -34,6 +37,11 @@ async function main(argv: string[]): Promise<void> {
 
   if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
     process.stdout.write(`${HELP}\n`)
+    return
+  }
+
+  if (args[0] === "--version" || args[0] === "-v") {
+    process.stdout.write(`${getCliVersion()}\n`)
     return
   }
 

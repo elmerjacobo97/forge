@@ -8,6 +8,7 @@ npm package: **`@codigoconelmer/forge-cli`**. Binary name is **`forge-cli`** (no
 
 ```bash
 npm install -g @codigoconelmer/forge-cli
+forge-cli --version
 forge-cli --help
 ```
 
@@ -74,6 +75,7 @@ or other feature branches — the workflow rejects tags whose commit is not on
 5. Confirm with:
    ```bash
    npm install -g @codigoconelmer/forge-cli
+   forge-cli --version
    forge-cli --help
    ```
 
