@@ -137,6 +137,7 @@ const monitorBase = {
   status: "pending",
   consecutive_failures: 0,
   last_checked_at: null,
+  request_headers: [],
 };
 
 describe("runUptimeChecks", () => {
@@ -162,6 +163,188 @@ describe("runUptimeChecks", () => {
 
     expect(summary).toEqual({ checked: 1 });
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      monitorBase.url,
+      expect.not.objectContaining({ headers: expect.anything(), redirect: expect.anything() }),
+    );
+  });
+
+  it.each(["GET", "HEAD"] as const)("sends configured headers with %s checks", async (method) => {
+    const fake = createFakeDatabase({
+      uptime_monitors: [
+        {
+          ...monitorBase,
+          method,
+          request_headers: [
+            { name: "Authorization", value: "Bearer check-secret" },
+            { name: "X-Custom", value: "configured" },
+          ],
+        },
+      ],
+    });
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+
+    await runUptimeChecks({ database: fake as never, fetchImpl });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    const headers = new Headers(init.headers);
+    expect(url.href).toBe(monitorBase.url);
+    expect(init).toMatchObject({ method, redirect: "manual" });
+    expect(headers.get("authorization")).toBe("Bearer check-secret");
+    expect(headers.get("x-custom")).toBe("configured");
+  });
+
+  it.each([301, 302, 303, 307, 308])(
+    "follows same-origin %s redirects and resends headers",
+    async (status) => {
+      const fake = createFakeDatabase({
+        uptime_monitors: [
+          {
+            ...monitorBase,
+            request_headers: [{ name: "Authorization", value: "Bearer redirect-secret" }],
+          },
+        ],
+      });
+      const fetchImpl = vi
+        .fn()
+        .mockResolvedValueOnce(new Response(null, { status, headers: { location: "/redirected" } }))
+        .mockResolvedValueOnce(new Response(null, { status: 200 }));
+
+      await runUptimeChecks({ database: fake as never, fetchImpl });
+
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+      expect((fetchImpl.mock.calls[1][0] as URL).href).toBe("https://example.com/redirected");
+      for (const [, init] of fetchImpl.mock.calls as unknown as [URL, RequestInit][]) {
+        expect(new Headers(init.headers).get("authorization")).toBe("Bearer redirect-secret");
+      }
+      expect(fake.tables.uptime_checks[0].ok).toBe(true);
+    },
+  );
+
+  it("follows an absolute same-origin redirect", async () => {
+    const fake = createFakeDatabase({
+      uptime_monitors: [
+        {
+          ...monitorBase,
+          request_headers: [{ name: "X-Api-Key", value: "redirect-secret" }],
+        },
+      ],
+    });
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(null, {
+          status: 302,
+          headers: { location: "https://example.com/final" },
+        }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 200 }));
+
+    await runUptimeChecks({ database: fake as never, fetchImpl });
+
+    expect((fetchImpl.mock.calls[1][0] as URL).href).toBe("https://example.com/final");
+    expect(fake.tables.uptime_checks[0].ok).toBe(true);
+  });
+
+  it("blocks cross-origin redirects before requesting the destination", async () => {
+    const fake = createFakeDatabase({
+      uptime_monitors: [
+        {
+          ...monitorBase,
+          request_headers: [{ name: "Authorization", value: "Bearer redirect-secret" }],
+        },
+      ],
+    });
+    const fetchImpl = vi.fn().mockResolvedValue(
+      new Response(null, {
+        status: 302,
+        headers: { location: "https://attacker.example/collect" },
+      }),
+    );
+
+    await runUptimeChecks({ database: fake as never, fetchImpl });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fake.tables.uptime_checks[0]).toMatchObject({
+      ok: false,
+      status_code: 302,
+      error: "Cross-origin redirect blocked",
+    });
+  });
+
+  it("follows at most five redirects and does not request a sixth destination", async () => {
+    const fake = createFakeDatabase({
+      uptime_monitors: [
+        {
+          ...monitorBase,
+          request_headers: [{ name: "X-Api-Key", value: "redirect-secret" }],
+        },
+      ],
+    });
+    const fetchImpl = vi.fn(async (_url: URL, _init: RequestInit) => {
+      const redirectNumber = fetchImpl.mock.calls.length;
+      return new Response(null, {
+        status: 302,
+        headers: { location: `/redirect-${redirectNumber}` },
+      });
+    });
+
+    await runUptimeChecks({ database: fake as never, fetchImpl: fetchImpl as typeof fetch });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(6);
+    expect(fake.tables.uptime_checks[0]).toMatchObject({
+      ok: false,
+      status_code: 302,
+      error: "Too many redirects",
+    });
+  });
+
+  it("records a sanitized failure when persisted header values are absent", async () => {
+    const fake = createFakeDatabase({
+      uptime_monitors: [
+        {
+          ...monitorBase,
+          request_headers: [{ name: "Authorization" }],
+        },
+      ],
+    });
+    const fetchImpl = vi.fn();
+
+    await runUptimeChecks({ database: fake as never, fetchImpl });
+
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(fake.tables.uptime_checks[0]).toMatchObject({
+      ok: false,
+      status_code: null,
+      error: "Invalid custom request headers",
+    });
+  });
+
+  it("does not include header secrets in check errors or notifications", async () => {
+    const secret = "never-leak-this-secret";
+    const fake = createFakeDatabase({
+      uptime_monitors: [
+        {
+          ...monitorBase,
+          status: "up",
+          consecutive_failures: 1,
+          request_headers: [{ name: "Authorization", value: secret }],
+        },
+      ],
+      uptime_notification_settings: [
+        { user_id: "u1", telegram_bot_token: "tok", telegram_chat_id: "chat" },
+      ],
+    });
+    const fetchImpl = vi.fn().mockRejectedValue(new Error(`Request failed for ${secret}`));
+    const sendTelegram = vi.fn().mockResolvedValue({ ok: true });
+
+    await runUptimeChecks({ database: fake as never, fetchImpl, sendTelegram });
+
+    expect(fake.tables.uptime_checks[0].error).toBe("Network error");
+    expect(JSON.stringify(fake.tables.uptime_checks)).not.toContain(secret);
+    expect(JSON.stringify(fake.tables.uptime_incidents)).not.toContain(secret);
+    expect(JSON.stringify(sendTelegram.mock.calls)).not.toContain(secret);
   });
 
   it("does not flip status to down on the first failure below threshold", async () => {

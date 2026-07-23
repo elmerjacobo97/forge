@@ -2,8 +2,13 @@ import "server-only";
 
 import type { InsForgeClient } from "@insforge/sdk";
 
-import { UPTIME_CHECK_RETENTION_DAYS, UPTIME_CHECK_TIMEOUT_MS } from "../constants";
-import type { MonitorMethod, MonitorStatus } from "../types";
+import {
+  UPTIME_CHECK_RETENTION_DAYS,
+  UPTIME_CHECK_TIMEOUT_MS,
+  UPTIME_REQUEST_HEADERS_MAX_REDIRECTS,
+} from "../constants";
+import { persistedRequestHeadersSchema } from "../schemas/uptime-monitor-schema";
+import type { MonitorMethod, MonitorStatus, PersistedRequestHeader } from "../types";
 import {
   dispatchUptimeAlert,
   type UptimeAlertEvent,
@@ -26,6 +31,7 @@ type MonitorRow = {
   status: MonitorStatus;
   consecutive_failures: number;
   last_checked_at: string | null;
+  request_headers: PersistedRequestHeader[];
 };
 
 type NotificationSettingsRow = {
@@ -53,7 +59,7 @@ export type RunChecksDeps = {
 export type RunChecksSummary = { checked: number };
 
 const MONITOR_COLUMNS =
-  "id,user_id,name,url,method,expected_status,interval_minutes,failure_threshold,status,consecutive_failures,last_checked_at";
+  "id,user_id,name,url,method,expected_status,interval_minutes,failure_threshold,status,consecutive_failures,last_checked_at,request_headers";
 
 const SETTINGS_COLUMNS =
   "telegram_bot_token,telegram_chat_id,slack_webhook_url,slack_enabled" as const;
@@ -64,37 +70,109 @@ function isMonitorDue(monitor: MonitorRow, now: Date): boolean {
   return elapsedMs >= monitor.interval_minutes * 60_000;
 }
 
+const REDIRECT_STATUS_CODES = new Set([301, 302, 303, 307, 308]);
+
+function resultFromResponse(response: Response, expectedStatus: number, startedAt: number) {
+  const ok = response.status === expectedStatus;
+  return {
+    ok,
+    statusCode: response.status,
+    latencyMs: Date.now() - startedAt,
+    error: ok ? null : `Unexpected status ${response.status}`,
+  };
+}
+
+function failedResult(startedAt: number, error: string, statusCode: number | null = null) {
+  return {
+    ok: false,
+    statusCode,
+    latencyMs: Date.now() - startedAt,
+    error,
+  };
+}
+
+function discardResponse(response: Response): void {
+  void response.body?.cancel().catch(() => {});
+}
+
 async function performCheck(monitor: MonitorRow, fetchImpl: typeof fetch): Promise<CheckResult> {
   const startedAt = Date.now();
+  const parsedHeaders = persistedRequestHeadersSchema.safeParse(monitor.request_headers);
+  if (!parsedHeaders.success) {
+    return failedResult(startedAt, "Invalid custom request headers");
+  }
+
+  const requestHeaders = parsedHeaders.data;
   try {
-    const response = await fetchImpl(monitor.url, {
-      method: monitor.method,
-      signal: AbortSignal.timeout(UPTIME_CHECK_TIMEOUT_MS),
-    });
-    const latencyMs = Date.now() - startedAt;
-    void response.body?.cancel().catch(() => {});
-    const ok = response.status === monitor.expected_status;
-    return {
-      ok,
-      statusCode: response.status,
-      latencyMs,
-      error: ok ? null : `Unexpected status ${response.status}`,
-    };
+    const signal = AbortSignal.timeout(UPTIME_CHECK_TIMEOUT_MS);
+
+    if (requestHeaders.length === 0) {
+      const response = await fetchImpl(monitor.url, {
+        method: monitor.method,
+        signal,
+      });
+      discardResponse(response);
+      return resultFromResponse(response, monitor.expected_status, startedAt);
+    }
+
+    const initialUrl = new URL(monitor.url);
+    if (initialUrl.protocol !== "https:") {
+      return failedResult(startedAt, "Custom request headers require HTTPS");
+    }
+
+    const headers = new Headers();
+    for (const header of requestHeaders) headers.set(header.name, header.value);
+
+    let currentUrl = initialUrl;
+    let followedRedirects = 0;
+
+    while (true) {
+      const response = await fetchImpl(currentUrl, {
+        method: monitor.method,
+        signal,
+        headers,
+        redirect: "manual",
+      });
+      const location = response.headers.get("location");
+
+      if (!REDIRECT_STATUS_CODES.has(response.status) || !location) {
+        discardResponse(response);
+        return resultFromResponse(response, monitor.expected_status, startedAt);
+      }
+
+      if (followedRedirects >= UPTIME_REQUEST_HEADERS_MAX_REDIRECTS) {
+        discardResponse(response);
+        return failedResult(startedAt, "Too many redirects", response.status);
+      }
+
+      let redirectUrl: URL;
+      try {
+        redirectUrl = new URL(location, currentUrl);
+      } catch {
+        discardResponse(response);
+        return failedResult(startedAt, "Invalid redirect location", response.status);
+      }
+
+      if (redirectUrl.origin !== initialUrl.origin) {
+        discardResponse(response);
+        return failedResult(startedAt, "Cross-origin redirect blocked", response.status);
+      }
+
+      discardResponse(response);
+      currentUrl = redirectUrl;
+      followedRedirects += 1;
+    }
   } catch (error) {
-    const latencyMs = Date.now() - startedAt;
     const name = error instanceof Error ? error.name : "";
     const isTimeout = name === "TimeoutError" || name === "AbortError";
-    return {
-      ok: false,
-      statusCode: null,
-      latencyMs,
-      error: (isTimeout
-        ? "timeout"
+    const message = isTimeout
+      ? "timeout"
+      : requestHeaders.length > 0
+        ? "Network error"
         : error instanceof Error
           ? error.message
-          : "Network error"
-      ).slice(0, 500),
-    };
+          : "Network error";
+    return failedResult(startedAt, message.slice(0, 500));
   }
 }
 

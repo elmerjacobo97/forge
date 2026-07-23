@@ -64,6 +64,15 @@ export const persistedRequestHeaderSchema: z.ZodType<PersistedRequestHeader> = z
   value: requestHeaderValueSchema,
 });
 
+export const persistedRequestHeadersSchema = z
+  .array(persistedRequestHeaderSchema)
+  .max(UPTIME_REQUEST_HEADERS_MAX)
+  .refine(
+    (headers) =>
+      new Set(headers.map((header) => header.name.toLowerCase())).size === headers.length,
+    "Header names must be unique.",
+  );
+
 export const requestHeaderMetadataSchema: z.ZodType<RequestHeaderMetadata> = z.object({
   name: requestHeaderNameSchema,
   configured: z.literal(true),
