@@ -1,12 +1,43 @@
 import { NextResponse, type NextRequest } from "next/server";
-import {
-  updateSession,
-  type CookieOptions,
-  type CookieStore,
-} from "@insforge/sdk/ssr/middleware";
+import { updateSession, type CookieOptions, type CookieStore } from "@insforge/sdk/ssr/middleware";
 
 type CookieInput = { name: string; value: string } & CookieOptions;
 type CookieDeleteInput = { name: string } & CookieOptions;
+
+const protectedPathPrefixes = [
+  "/base64",
+  "/bookmarks",
+  "/color-converter",
+  "/dev-board",
+  "/diff-tool",
+  "/file-validator",
+  "/format-converter",
+  "/hash-generator",
+  "/html-entities",
+  "/http-tester",
+  "/image-tools",
+  "/json-formatter",
+  "/json-to-typescript",
+  "/jwt-decoder",
+  "/lorem-ipsum",
+  "/mock-data-generator",
+  "/qr-generator",
+  "/regex-tester",
+  "/resources",
+  "/settings",
+  "/text-manipulator",
+  "/timestamp-converter",
+  "/uptime-monitor",
+  "/url-encoder",
+  "/uuid-generator",
+  "/webhook-inspector",
+] as const;
+
+function isProtectedPath(pathname: string): boolean {
+  return protectedPathPrefixes.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
 
 function requestCookieAdapter(request: NextRequest): CookieStore {
   return {
@@ -41,20 +72,11 @@ function responseCookieAdapter(response: NextResponse): CookieStore {
 
 export async function proxy(request: NextRequest) {
   const hasSession =
-    request.cookies.has("insforge_access_token") ||
-    request.cookies.has("insforge_refresh_token");
-  const isPublicPath =
-    request.nextUrl.pathname === "/" ||
-    request.nextUrl.pathname === "/login" ||
-    request.nextUrl.pathname === "/register" ||
-    request.nextUrl.pathname === "/verify-email" ||
-    request.nextUrl.pathname.startsWith("/api/");
+    request.cookies.has("insforge_access_token") || request.cookies.has("insforge_refresh_token");
 
-  if (!hasSession && !isPublicPath) {
+  if (!hasSession && isProtectedPath(request.nextUrl.pathname)) {
     const loginUrl = new URL("/login", request.url);
-    if (request.nextUrl.pathname !== "/") {
-      loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
-    }
+    loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 
