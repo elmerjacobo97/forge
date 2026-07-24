@@ -2,6 +2,7 @@
 
 import { useForm } from "@tanstack/react-form";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -34,6 +35,7 @@ import {
   type CreateUptimeMonitorInput,
 } from "../schemas/uptime-monitor-schema";
 import type { UptimeMonitor } from "../types";
+import { MonitorHeadersEditor } from "./monitor-headers-editor";
 
 type MonitorFormDialogProps = {
   isOpen: boolean;
@@ -51,6 +53,7 @@ function defaultsFor(monitor?: UptimeMonitor | null): CreateUptimeMonitorInput {
       expectedStatus: UPTIME_DEFAULT_EXPECTED_STATUS,
       intervalMinutes: UPTIME_DEFAULT_INTERVAL_MINUTES,
       failureThreshold: UPTIME_DEFAULT_FAILURE_THRESHOLD,
+      requestHeaders: [],
     };
   }
   return {
@@ -60,6 +63,7 @@ function defaultsFor(monitor?: UptimeMonitor | null): CreateUptimeMonitorInput {
     expectedStatus: monitor.expectedStatus,
     intervalMinutes: monitor.intervalMinutes,
     failureThreshold: monitor.failureThreshold,
+    requestHeaders: monitor.requestHeaders.map((header) => ({ name: header.name, value: null })),
   };
 }
 
@@ -73,6 +77,7 @@ export function MonitorFormDialog({
   const updateMutation = useUpdateUptimeMonitorMutation();
   const isEditing = monitor !== null;
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const mutationError = isEditing ? updateMutation.error : createMutation.error;
 
   const form = useForm({
     defaultValues: defaultsFor(monitor),
@@ -97,7 +102,7 @@ export function MonitorFormDialog({
       open={isOpen}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit monitor" : "Create monitor"}</DialogTitle>
           <DialogDescription>
@@ -106,7 +111,7 @@ export function MonitorFormDialog({
         </DialogHeader>
 
         <form
-          className="space-y-4"
+          className="flex flex-col gap-4"
           onSubmit={(event) => {
             event.preventDefault();
             void form.handleSubmit();
@@ -158,7 +163,7 @@ export function MonitorFormDialog({
               }}
             </form.Field>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <form.Field name="method">
                 {(field) => (
                   <Field>
@@ -202,7 +207,7 @@ export function MonitorFormDialog({
               </form.Field>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <form.Field name="intervalMinutes">
                 {(field) => (
                   <Field>
@@ -257,7 +262,24 @@ export function MonitorFormDialog({
                 }}
               </form.Field>
             </div>
+
+            <form.Field name="requestHeaders">
+              {(field) => (
+                <MonitorHeadersEditor
+                  value={field.state.value}
+                  persistedHeaders={monitor?.requestHeaders ?? []}
+                  onChange={field.handleChange}
+                  disabled={disabled || isPending}
+                />
+              )}
+            </form.Field>
           </FieldGroup>
+
+          {mutationError ? (
+            <Alert variant="destructive">
+              <AlertDescription>{mutationError.message}</AlertDescription>
+            </Alert>
+          ) : null}
 
           <DialogFooter>
             <Button

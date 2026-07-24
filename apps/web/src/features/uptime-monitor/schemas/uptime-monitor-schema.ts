@@ -59,10 +59,10 @@ const requestHeaderValueSchema = z
     "Header value cannot contain CR, LF, or NUL characters.",
   );
 
-export const persistedRequestHeaderSchema: z.ZodType<PersistedRequestHeader> = z.object({
+export const persistedRequestHeaderSchema = z.object({
   name: requestHeaderNameSchema,
   value: requestHeaderValueSchema,
-});
+}) satisfies z.ZodType<PersistedRequestHeader>;
 
 export const persistedRequestHeadersSchema = z
   .array(persistedRequestHeaderSchema)
@@ -73,15 +73,15 @@ export const persistedRequestHeadersSchema = z
     "Header names must be unique.",
   );
 
-export const requestHeaderMetadataSchema: z.ZodType<RequestHeaderMetadata> = z.object({
+export const requestHeaderMetadataSchema = z.object({
   name: requestHeaderNameSchema,
   configured: z.literal(true),
-});
+}) satisfies z.ZodType<RequestHeaderMetadata>;
 
-export const requestHeaderInputSchema: z.ZodType<RequestHeaderInput> = z.object({
+export const requestHeaderInputSchema = z.object({
   name: requestHeaderNameSchema,
   value: requestHeaderValueSchema.nullable(),
-});
+}) satisfies z.ZodType<RequestHeaderInput>;
 
 export const createUptimeMonitorSchema = z
   .object({
