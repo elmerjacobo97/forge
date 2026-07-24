@@ -1,6 +1,6 @@
 # SPEC 13 — Headers HTTP personalizados en Uptime Monitor
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 09 (Uptime Monitor)
 > **Fecha:** 2026-07-23
 > **Objetivo:** Permitir configurar headers HTTP personalizados por monitor, mantener sus valores ocultos en el cliente y enviarlos de forma segura en cada check programado.
