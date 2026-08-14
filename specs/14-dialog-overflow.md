@@ -1,6 +1,6 @@
 # SPEC 14 — Control de overflow en dialogs
 
-> **Estado:** Draft
+> **Estado:** Implementado
 > **Fecha:** 2026-08-14
 > **Objetivo:** Evitar que el contenido largo de los dialogs de la aplicación web supere `90vh`, manteniendo header y footer accesibles mediante scroll interno del cuerpo.
 
