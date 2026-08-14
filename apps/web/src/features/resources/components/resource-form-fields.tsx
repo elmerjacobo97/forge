@@ -208,7 +208,7 @@ export function ResourceFormFields({
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="How or where this configuration is used (optional)"
                     rows={3}
-                    className="min-h-20"
+                    className="min-h-20 max-h-48 resize-y overflow-y-auto"
                   />
                 </InputGroup>
               </Field>

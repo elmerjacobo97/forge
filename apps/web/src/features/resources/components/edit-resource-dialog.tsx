@@ -124,7 +124,7 @@ export function EditResourceDialog({ resource, isOpen, onOpenChange }: EditResou
       onOpenChange={onOpenChange}
     >
       <DialogContent
-        className="max-w-md"
+        className="max-h-[90vh] max-w-md grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden"
         style={{ pointerEvents: "auto" }}
         onPointerDownOutside={(event) => {
           if (isSelectContentTarget(event.target)) event.preventDefault();
@@ -138,7 +138,7 @@ export function EditResourceDialog({ resource, isOpen, onOpenChange }: EditResou
           <DialogDescription>Update this resource. Changes save to your library.</DialogDescription>
         </DialogHeader>
 
-        <div className="-mx-4 no-scrollbar max-h-[50vh] overflow-y-auto px-4">
+        <div className="-mx-4 min-h-0 max-h-[50vh] overflow-y-auto px-4 py-1">
           <form
             id="form-edit-resource"
             onSubmit={(event) => {

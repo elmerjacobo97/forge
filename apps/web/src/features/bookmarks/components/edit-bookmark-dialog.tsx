@@ -137,7 +137,7 @@ export function EditBookmarkDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[90vh] max-w-md grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Edit Bookmark</DialogTitle>
           <DialogDescription>
@@ -146,6 +146,7 @@ export function EditBookmarkDialog({
         </DialogHeader>
 
         <form
+          className="-m-1 min-h-0 overflow-y-auto p-1"
           id="form-edit-bookmark"
           onSubmit={(e) => {
             e.preventDefault();
@@ -267,7 +268,7 @@ export function EditBookmarkDialog({
                         onChange={(e) => field.handleChange(e.target.value)}
                         placeholder="What is this link about?"
                         rows={2}
-                        className="resize-none"
+                        className="max-h-48 resize-y overflow-y-auto"
                         aria-invalid={isInvalid}
                       />
                       <InputGroupAddon align="block-end" className="justify-between">

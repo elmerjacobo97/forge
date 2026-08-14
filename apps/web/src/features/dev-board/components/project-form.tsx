@@ -72,7 +72,7 @@ export function ProjectForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[90vh] max-w-md grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit project" : "New project"}</DialogTitle>
           <DialogDescription>
@@ -83,6 +83,7 @@ export function ProjectForm({
         </DialogHeader>
 
         <form
+          className="-m-1 min-h-0 overflow-y-auto p-1"
           id="project-form"
           onSubmit={(e) => {
             e.preventDefault();
@@ -132,6 +133,7 @@ export function ProjectForm({
                       placeholder="Optional context for this project…"
                       rows={3}
                       spellCheck={false}
+                      className="max-h-48 resize-y overflow-y-auto"
                       aria-invalid={isInvalid}
                     />
                     {isInvalid && (

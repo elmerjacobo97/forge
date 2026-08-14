@@ -102,7 +102,7 @@ export function MonitorFormDialog({
       open={isOpen}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit monitor" : "Create monitor"}</DialogTitle>
           <DialogDescription>
@@ -111,13 +111,13 @@ export function MonitorFormDialog({
         </DialogHeader>
 
         <form
-          className="flex flex-col gap-4"
+          className="min-h-0 flex flex-col gap-4 overflow-hidden"
           onSubmit={(event) => {
             event.preventDefault();
             void form.handleSubmit();
           }}
         >
-          <FieldGroup>
+          <FieldGroup className="min-h-0 flex-1 overflow-y-auto p-1">
             <form.Field name="name">
               {(field) => {
                 const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;

@@ -33,7 +33,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       onOpenChange={onOpenChange}
       title="Command palette"
       description="Search for a tool to open"
-      className="max-w-xl"
+      className="max-h-[90vh] max-w-xl"
     >
       <Command>
         <CommandInput placeholder="Search tools..." />
