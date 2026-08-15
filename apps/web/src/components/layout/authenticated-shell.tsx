@@ -16,9 +16,11 @@ import { getToolByPath, tools } from "@/lib/tools";
 export function AuthenticatedShell({
   children,
   user,
+  version,
 }: {
   children: React.ReactNode;
   user: AuthUser;
+  version: string;
 }) {
   const pathname = usePathname();
   const queryClient = useQueryClient();
@@ -51,13 +53,26 @@ export function AuthenticatedShell({
   return (
     <AuthUserProvider user={user}>
       <SidebarProvider>
-        <AppSidebar activePath={pathname} user={user} />
+        <AppSidebar
+          activePath={pathname}
+          user={user}
+          version={version}
+        />
         <SidebarInset className="min-w-0 bg-background text-foreground">
-          <Header tool={tool} onOpenPalette={() => setPaletteOpen(true)} />
+          <Header
+            tool={tool}
+            onOpenPalette={() => setPaletteOpen(true)}
+          />
           <main className="min-h-0 flex-1 p-4 md:p-5">{children}</main>
         </SidebarInset>
-        <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
-        <KeyboardShortcuts open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+        <CommandPalette
+          open={paletteOpen}
+          onOpenChange={setPaletteOpen}
+        />
+        <KeyboardShortcuts
+          open={shortcutsOpen}
+          onOpenChange={setShortcutsOpen}
+        />
       </SidebarProvider>
     </AuthUserProvider>
   );

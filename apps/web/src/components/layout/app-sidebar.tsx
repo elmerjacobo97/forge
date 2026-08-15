@@ -33,9 +33,10 @@ import { useDebounce } from "@/lib/hooks/use-debounce";
 interface AppSidebarProps {
   activePath: string;
   user: AuthUser;
+  version: string;
 }
 
-export function AppSidebar({ activePath, user }: AppSidebarProps) {
+export function AppSidebar({ activePath, user, version }: AppSidebarProps) {
   const [query, setQuery] = useState("");
   const [isSigningOut, startSignOut] = useTransition();
   const debouncedQuery = useDebounce(query, 200);
@@ -151,6 +152,9 @@ export function AppSidebar({ activePath, user }: AppSidebarProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <span className="w-full px-2 text-center text-[10px] font-medium text-muted-foreground group-data-[collapsible=icon]:hidden">
+          Forge v{version}
+        </span>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

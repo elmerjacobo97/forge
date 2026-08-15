@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { AuthenticatedShell } from "@/components/layout/authenticated-shell";
 import { getCurrentUser } from "@/features/auth/server";
+import { appVersion } from "@/lib/app-version";
 
 export const metadata: Metadata = {
   robots: {
@@ -16,7 +17,14 @@ export const metadata: Metadata = {
 async function AuthenticatedContent({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  return <AuthenticatedShell user={user}>{children}</AuthenticatedShell>;
+  return (
+    <AuthenticatedShell
+      user={user}
+      version={appVersion}
+    >
+      {children}
+    </AuthenticatedShell>
+  );
 }
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
