@@ -223,6 +223,14 @@ export const tools: ToolDef[] = [
     category: "Generators",
   },
   {
+    id: "password-generator",
+    path: "/password-generator",
+    name: "Password Generator",
+    description: "Generate secure passwords locally in your browser",
+    icon: KeyRound,
+    category: "Generators",
+  },
+  {
     id: "file-validator",
     path: "/file-validator",
     name: "File Validator",

@@ -21,6 +21,15 @@ describe("proxy", () => {
     expect(updateSession).not.toHaveBeenCalled();
   });
 
+  it("protects the password generator route", async () => {
+    const response = await proxy(new NextRequest("http://localhost/password-generator"));
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/login?redirect=%2Fpassword-generator",
+    );
+    expect(updateSession).not.toHaveBeenCalled();
+  });
+
   it.each(["/robots.txt", "/sitemap.xml", "/opengraph-image", "/missing-page"])(
     "allows public and unknown paths: %s",
     async (pathname) => {

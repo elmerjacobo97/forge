@@ -21,6 +21,7 @@ const protectedPathPrefixes = [
   "/jwt-decoder",
   "/lorem-ipsum",
   "/mock-data-generator",
+  "/password-generator",
   "/qr-generator",
   "/regex-tester",
   "/resources",

@@ -22,6 +22,7 @@ const utilityIds = new Set([
   "json-to-typescript",
   "mock-data-generator",
   "qr-generator",
+  "password-generator",
   "image-tools",
 ]);
 
