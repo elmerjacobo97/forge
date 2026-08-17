@@ -1,6 +1,6 @@
 # SPEC 15 — Generador de contraseñas
 
-> **Estado:** Approved
+> **Estado:** Implementado
 > **Depende de:** Ninguna
 > **Fecha:** 2026-08-17
 > **Objetivo:** Añadir una herramienta autenticada que genere en el navegador una contraseña criptográficamente aleatoria y configurable, permita regenerarla o copiarla y no persista su valor.
