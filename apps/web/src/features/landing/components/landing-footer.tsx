@@ -24,23 +24,26 @@ export function LandingFooter({ isAuthenticated }: LandingFooterProps) {
             {tools.length} web tools · core workflows on CLI
           </p>
         </div>
-        <div className="flex items-center gap-4 text-sm">
+        <nav
+          aria-label="Landing footer"
+          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm sm:justify-end"
+        >
           <LandingScrollButton
             targetId="workflow"
-            className="hidden text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline sm:inline"
+            className="text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
           >
             Workflow
           </LandingScrollButton>
           <LandingScrollButton
             targetId="toolkit"
-            className="hidden text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline sm:inline"
+            className="text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
           >
             Toolkit
           </LandingScrollButton>
           {isAuthenticated ? (
             <Link
               href="/dev-board"
-              className="text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline"
+              className="text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
             >
               Open workspace
             </Link>
@@ -48,19 +51,19 @@ export function LandingFooter({ isAuthenticated }: LandingFooterProps) {
             <>
               <Link
                 href="/login"
-                className="text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+                className="text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
                 Sign in
               </Link>
               <Link
                 href="/register"
-                className="text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline"
+                className="text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
                 Create workspace
               </Link>
             </>
           )}
-        </div>
+        </nav>
       </div>
     </footer>
   );

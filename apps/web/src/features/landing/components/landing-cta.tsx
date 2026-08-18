@@ -1,8 +1,14 @@
 import Link from "next/link";
-import { ArrowRight, Hammer, LayoutDashboard } from "lucide-react";
+import { ArrowRight, Columns3, LayoutDashboard, NotebookText, Webhook } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { tools } from "@/lib/tools";
+
+const ctaSignals = [
+  { icon: Columns3, title: "Plan", description: "Tickets, timers, and analytics" },
+  { icon: Webhook, title: "Inspect", description: "Requests, webhooks, and payloads" },
+  { icon: NotebookText, title: "Keep", description: "Bookmarks, resources, and CLI" },
+] as const;
 
 interface LandingCtaProps {
   isAuthenticated: boolean;
@@ -12,27 +18,21 @@ export function LandingCta({ isAuthenticated }: LandingCtaProps) {
   return (
     <section className="border-t border-border/60">
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28">
-        <div className="landing-metal-panel relative overflow-hidden rounded-3xl px-6 py-14 sm:px-10 sm:py-16 lg:px-14">
+        <div className="landing-metal-panel relative overflow-hidden rounded-3xl px-6 py-12 sm:px-10 sm:py-14 lg:px-14">
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_120%_at_100%_0%,color-mix(in_oklch,var(--primary)_22%,transparent),transparent_55%)]"
-          />
-          <Hammer
-            aria-hidden
-            className="pointer-events-none absolute -right-6 -bottom-8 size-48 text-primary/[0.06] sm:size-64"
+            className="pointer-events-none absolute inset-y-0 right-0 w-2/5 bg-primary/5"
           />
 
-          <div className="relative grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div className="relative grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16">
             <div>
-              <p className="landing-section-label">
-                {isAuthenticated ? "Workspace ready" : "Start with the next task"}
-              </p>
-              <h2 className="mt-3 max-w-2xl font-heading text-[clamp(2rem,5vw,3.5rem)] font-semibold leading-[1.02] tracking-tight text-balance">
+              <h2 className="landing-display max-w-2xl font-heading text-[clamp(2rem,5vw,3.5rem)] font-semibold leading-[1.02] tracking-tight text-balance">
                 Put your development workflow back in one place.
               </h2>
               <p className="mt-5 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
                 From tracked tickets to captured requests and reusable snippets, Forge keeps the
-                work around your code connected and ready.
+                work around your code connected and ready. {tools.length} browser tools stay close
+                to the surfaces that give them context.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Button
@@ -59,18 +59,26 @@ export function LandingCta({ isAuthenticated }: LandingCtaProps) {
               </div>
             </div>
 
-            <div
-              aria-hidden
-              className="rounded-xl border border-border/50 bg-background/55 p-5 font-mono text-[11px] leading-relaxed text-muted-foreground sm:p-6"
-            >
-              <p className="text-primary">forge.workspace</p>
-              <p className="mt-4">tools = {tools.length}</p>
-              <p>web = connected</p>
-              <p>cli = synced</p>
-              <p>setup = minimal</p>
-              <p className="mt-4 text-foreground/80">
-                <span className="text-primary">→</span> ready for the next task
+            <div className="border-t border-border/60 pt-5 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
+              <p className="font-mono text-[10px] tracking-[0.16em] text-primary uppercase">
+                One account, fewer handoffs
               </p>
+              <div className="mt-5 divide-y divide-border/60 border-y border-border/60">
+                {ctaSignals.map((signal) => (
+                  <div
+                    key={signal.title}
+                    className="flex items-center gap-4 py-4"
+                  >
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <signal.icon className="size-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-heading text-sm font-semibold">{signal.title}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{signal.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

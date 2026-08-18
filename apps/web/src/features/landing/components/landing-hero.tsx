@@ -3,7 +3,6 @@ import {
   Activity,
   ArrowRight,
   CheckCircle2,
-  Hammer,
   LayoutDashboard,
   SquareTerminal,
   Webhook,
@@ -12,10 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { tools } from "@/lib/tools";
 
-const heroStats = [
-  { value: tools.length.toString(), label: "focused tools" },
-  { value: "3", label: "CLI workflows" },
-  { value: "1", label: "shared workspace" },
+const heroSignals = [
+  { value: tools.length.toString(), label: "browser tools" },
+  { value: "Web + CLI", label: "one workspace" },
+  { value: "Local-first", label: "for core utilities" },
 ] as const;
 
 const workflowSteps = ["Plan", "Inspect", "Ship", "Remember"] as const;
@@ -26,29 +25,22 @@ interface LandingHeroProps {
 
 export function LandingHero({ isAuthenticated }: LandingHeroProps) {
   return (
-    <section className="landing-grain relative overflow-hidden">
+    <section className="relative overflow-hidden border-b border-border/60">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-48 left-[58%] h-[680px] w-[min(980px,130vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,color-mix(in_oklch,var(--primary)_20%,transparent),transparent_66%)]"
+        className="pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] border-l border-border/45 bg-muted/20 lg:block"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.24] [background-image:linear-gradient(color-mix(in_oklch,var(--foreground)_5%,transparent)_1px,transparent_1px),linear-gradient(90deg,color-mix(in_oklch,var(--foreground)_5%,transparent)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:linear-gradient(to_bottom,black,transparent_88%)]"
+        className="pointer-events-none absolute top-0 right-0 h-px w-1/3 bg-primary/70"
       />
 
-      <div className="relative z-10 mx-auto grid max-w-7xl gap-14 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-14 lg:py-28">
-        <div className="flex flex-col gap-7">
-          <div className="landing-fade-up">
-            <span className="landing-eyebrow">
-              <span className="size-1.5 rounded-full bg-primary [animation:landing-ember-pulse_2s_ease-in-out_infinite]" />
-              Developer workspace · Web + CLI
-            </span>
-          </div>
-
-          <div className="landing-fade-up landing-delay-1 space-y-5">
-            <h1 className="max-w-2xl font-heading text-[clamp(3.25rem,8vw,6.5rem)] font-bold leading-[0.88] tracking-[-0.055em] text-balance">
+      <div className="relative z-10 mx-auto grid max-w-7xl gap-14 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:py-28">
+        <div className="flex flex-col gap-8 lg:pr-8">
+          <div className="landing-fade-up space-y-6">
+            <h1 className="landing-display max-w-2xl font-heading text-[clamp(3.25rem,8vw,6rem)] font-bold leading-[0.88] tracking-[-0.045em] text-balance">
               Ship work,
-              <span className="landing-copper-text block">not context switches.</span>
+              <span className="block text-primary">not context switches.</span>
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
               Plan development with automatic time tracking, inspect requests, monitor endpoints,
@@ -57,7 +49,7 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
             </p>
           </div>
 
-          <div className="landing-fade-up landing-delay-2 flex flex-wrap items-center gap-3">
+          <div className="landing-fade-up landing-delay-1 flex flex-wrap items-center gap-3">
             {isAuthenticated ? (
               <Button
                 size="lg"
@@ -94,47 +86,55 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
             )}
           </div>
 
-          <dl className="landing-fade-up landing-delay-3 grid max-w-lg grid-cols-3 gap-3 border-t border-border/60 pt-6">
-            {heroStats.map((stat) => (
-              <div key={stat.label}>
-                <dt className="sr-only">{stat.label}</dt>
-                <dd className="font-mono text-xl font-semibold tracking-tight text-primary sm:text-2xl">
-                  {stat.value}
-                </dd>
-                <dd className="mt-1 text-[10px] leading-tight tracking-[0.12em] text-muted-foreground uppercase sm:text-[11px]">
-                  {stat.label}
+          <dl className="landing-fade-up landing-delay-2 grid max-w-lg grid-cols-3 gap-4 border-t border-border/60 pt-5">
+            {heroSignals.map((signal) => (
+              <div
+                key={signal.label}
+                className="flex flex-col gap-1"
+              >
+                <dt className="order-2 text-[10px] leading-tight tracking-[0.12em] text-muted-foreground uppercase sm:text-[11px]">
+                  {signal.label}
+                </dt>
+                <dd className="font-mono text-sm font-semibold tracking-tight text-primary sm:text-base">
+                  {signal.value}
                 </dd>
               </div>
             ))}
           </dl>
         </div>
 
-        <div className="landing-fade-up landing-delay-4 relative lg:translate-x-2">
+        <div className="landing-fade-up landing-delay-3 relative lg:translate-x-4">
           <div
             aria-hidden
             className="absolute -inset-8 rounded-[2.5rem] bg-linear-to-br from-primary/15 via-transparent to-primary/5 blur-3xl"
           />
 
-          <div className="landing-metal-panel relative overflow-hidden rounded-2xl">
-            <div className="flex items-center gap-2 border-b border-border/50 px-4 py-3">
-              <span className="size-2.5 rounded-full bg-primary/70" />
-              <span className="size-2.5 rounded-full bg-muted-foreground/25" />
-              <span className="size-2.5 rounded-full bg-muted-foreground/25" />
-              <span className="ml-2 font-mono text-[11px] text-muted-foreground">
-                forge / today
+          <div
+            aria-hidden
+            className="landing-metal-panel relative overflow-hidden rounded-2xl"
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-border/50 px-4 py-4 sm:px-5">
+              <div>
+                <p className="font-heading text-sm font-semibold">Today at a glance</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Work stays connected across surfaces.
+                </p>
+              </div>
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/25 bg-primary/8 px-2 py-1 font-mono text-[9px] tracking-[0.12em] text-primary uppercase">
+                <span className="landing-ember-pulse size-1.5 rounded-full bg-primary" />
+                live
               </span>
-              <Hammer className="ml-auto size-3.5 text-primary/55" />
             </div>
 
-            <div className="border-b border-border/50 px-4 py-3 sm:px-5">
-              <ol className="grid grid-cols-4 gap-2">
+            <div className="border-b border-border/50 p-4 sm:px-5">
+              <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {workflowSteps.map((step, index) => (
                   <li
                     key={step}
-                    className="flex items-center gap-2 font-mono text-[9px] tracking-wide text-muted-foreground uppercase sm:text-[10px]"
+                    className="flex items-center gap-2 rounded-lg border border-border/50 bg-background/35 px-2 py-2 font-mono text-[9px] tracking-wide text-muted-foreground uppercase sm:text-[10px]"
                   >
                     <span
-                      className={`flex size-5 shrink-0 items-center justify-center rounded-full border ${
+                      className={`flex size-5 shrink-0 items-center justify-center rounded-md border ${
                         index < 2
                           ? "border-primary/35 bg-primary/10 text-primary"
                           : "border-border/70 bg-background/50"
@@ -165,7 +165,7 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
                   </p>
                   <div className="mt-5 flex items-center justify-between border-t border-border/50 pt-3">
                     <span className="flex items-center gap-1.5 font-mono text-[10px] text-primary">
-                      <span className="size-1.5 rounded-full bg-primary [animation:landing-ember-pulse_2s_ease-in-out_infinite]" />
+                      <span className="landing-ember-pulse size-1.5 rounded-full bg-primary" />
                       00:42:18
                     </span>
                     <span className="font-mono text-[9px] text-muted-foreground">auto-tracked</span>
@@ -203,7 +203,7 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
                 </div>
               </div>
               <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
+                <span className="flex size-8 items-center justify-center rounded-lg bg-chart-3/10 text-chart-3">
                   <Activity className="size-4" />
                 </span>
                 <div className="min-w-0">
