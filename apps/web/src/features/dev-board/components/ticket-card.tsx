@@ -2,7 +2,19 @@
 import { useEffect, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Clock, GripVertical, MessageSquare, MoreHorizontal, Pencil, Pause, Play, Trash2 } from "lucide-react";
+import {
+  Clock,
+  Copy,
+  Check,
+  GripVertical,
+  MessageSquare,
+  MoreHorizontal,
+  Pencil,
+  Pause,
+  Play,
+  Trash2,
+} from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useCopy } from "@/lib/hooks/use-copy";
 
 import {
   type ColumnId,
@@ -48,6 +61,8 @@ export function TicketCard({
   const sortable = useSortable({
     id: ticket.id,
   });
+
+  const { copied, copy } = useCopy();
 
   const style = {
     transform: CSS.Translate.toString(sortable.transform),
@@ -158,6 +173,15 @@ export function TicketCard({
                   {ticket.commentCount}
                 </span>
               )}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                copy(ticket.id);
+                toast.success("Ticket ID copied.");
+              }}
+            >
+              {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+              Copy ID
             </DropdownMenuItem>
             {inProgress && (
               <DropdownMenuItem
