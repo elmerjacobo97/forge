@@ -83,7 +83,7 @@ export function CreateEndpointDialog({
               {(field) => {
                 const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
-                  <Field data-invalid={isInvalid || undefined}>
+                  <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Name (optional)</FieldLabel>
                     <Input
                       id={field.name}
@@ -94,9 +94,9 @@ export function CreateEndpointDialog({
                       placeholder="Stripe webhooks"
                       maxLength={80}
                       disabled={disabled || isPending}
-                      aria-invalid={isInvalid || undefined}
+                      aria-invalid={isInvalid}
                     />
-                    {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}

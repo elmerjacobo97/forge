@@ -14,7 +14,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -143,60 +150,72 @@ function SlackSettingsForm({ slackConfigured, slackEnabled, onSaved }: SlackSett
 
       <FieldGroup>
         <form.Field name="slackWebhookUrl">
-          {(webhookField) => (
-            <>
-              <form.Field name="slackEnabled">
-                {(field) => {
-                  const canEnable = slackConfigured || Boolean(webhookField.state.value.trim());
-                  return (
-                    <Field orientation="horizontal">
-                      <div className="flex flex-1 flex-col gap-1">
-                        <FieldLabel htmlFor={field.name}>Enable Slack alerts</FieldLabel>
-                        <FieldDescription>
-                          Requires a saved webhook or a new HTTPS hooks.slack.com URL in this form.
-                        </FieldDescription>
-                      </div>
-                      <Switch
-                        id={field.name}
-                        checked={field.state.value}
-                        disabled={!canEnable && !field.state.value}
-                        onCheckedChange={(enabled) => {
-                          if (enabled && !canEnable) return;
-                          field.handleChange(enabled);
-                        }}
-                        aria-label="Enable Slack alerts"
-                      />
-                    </Field>
-                  );
-                }}
-              </form.Field>
+          {(webhookField) => {
+            const isInvalid = webhookField.state.meta.isTouched && !webhookField.state.meta.isValid;
+            return (
+              <>
+                <form.Field name="slackEnabled">
+                  {(field) => {
+                    const isSwitchInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                    const canEnable = slackConfigured || Boolean(webhookField.state.value.trim());
+                    return (
+                      <Field
+                        orientation="horizontal"
+                        data-invalid={isSwitchInvalid}
+                      >
+                        <FieldContent>
+                          <FieldLabel htmlFor={field.name}>Enable Slack alerts</FieldLabel>
+                          <FieldDescription>
+                            Requires a saved webhook or a new HTTPS hooks.slack.com URL in this
+                            form.
+                          </FieldDescription>
+                          {isSwitchInvalid && <FieldError errors={field.state.meta.errors} />}
+                        </FieldContent>
+                        <Switch
+                          id={field.name}
+                          checked={field.state.value}
+                          disabled={!canEnable && !field.state.value}
+                          onCheckedChange={(enabled) => {
+                            if (enabled && !canEnable) return;
+                            field.handleChange(enabled);
+                          }}
+                          aria-label="Enable Slack alerts"
+                          aria-invalid={isSwitchInvalid}
+                        />
+                      </Field>
+                    );
+                  }}
+                </form.Field>
 
-              <Field>
-                <FieldLabel htmlFor={webhookField.name}>
-                  {slackConfigured ? "Replace webhook URL" : "Webhook URL"}
-                </FieldLabel>
-                <Input
-                  id={webhookField.name}
-                  name={webhookField.name}
-                  type="url"
-                  value={webhookField.state.value}
-                  onBlur={webhookField.handleBlur}
-                  onChange={(event) => webhookField.handleChange(event.target.value)}
-                  placeholder={
-                    slackConfigured
-                      ? "Leave blank to keep the current webhook"
-                      : "https://hooks.slack.com/services/..."
-                  }
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-                <FieldDescription>
-                  Only HTTPS URLs on hooks.slack.com are accepted. The previous value is never
-                  displayed.
-                </FieldDescription>
-              </Field>
-            </>
-          )}
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={webhookField.name}>
+                    {slackConfigured ? "Replace webhook URL" : "Webhook URL"}
+                  </FieldLabel>
+                  <Input
+                    id={webhookField.name}
+                    name={webhookField.name}
+                    type="url"
+                    value={webhookField.state.value}
+                    onBlur={webhookField.handleBlur}
+                    onChange={(event) => webhookField.handleChange(event.target.value)}
+                    placeholder={
+                      slackConfigured
+                        ? "Leave blank to keep the current webhook"
+                        : "https://hooks.slack.com/services/..."
+                    }
+                    autoComplete="off"
+                    spellCheck={false}
+                    aria-invalid={isInvalid}
+                  />
+                  <FieldDescription>
+                    Only HTTPS URLs on hooks.slack.com are accepted. The previous value is never
+                    displayed.
+                  </FieldDescription>
+                  {isInvalid && <FieldError errors={webhookField.state.meta.errors} />}
+                </Field>
+              </>
+            );
+          }}
         </form.Field>
       </FieldGroup>
 

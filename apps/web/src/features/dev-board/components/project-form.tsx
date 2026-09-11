@@ -10,14 +10,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  InputGroupTextarea,
+} from "@/components/ui/input-group";
 
 import { type ProjectFormValues, projectSchema } from "../schemas/project";
 import type { Project } from "../types/project";
@@ -28,15 +28,6 @@ interface ProjectFormProps {
   editProject: Project | null;
   onSubmit: (values: ProjectFormValues) => void;
 }
-
-const formatErrors = (errors: unknown[]) =>
-  errors.map((error) => {
-    if (typeof error === "string") return { message: error };
-    if (error && typeof error === "object" && "message" in error) {
-      return { message: String(error.message) };
-    }
-    return { message: error?.toString() || "Invalid value" };
-  });
 
 export function ProjectForm({
   open,
@@ -71,7 +62,10 @@ export function ProjectForm({
   }, [open, editProject, form]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
       <DialogContent className="max-h-[90vh] max-w-md grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit project" : "New project"}</DialogTitle>
@@ -94,8 +88,7 @@ export function ProjectForm({
           <FieldGroup>
             <form.Field name="name">
               {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !!field.state.meta.errors.length;
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Name</FieldLabel>
@@ -109,9 +102,7 @@ export function ProjectForm({
                       autoComplete="off"
                       aria-invalid={isInvalid}
                     />
-                    {isInvalid && (
-                      <FieldError errors={formatErrors(field.state.meta.errors)} />
-                    )}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
@@ -119,26 +110,30 @@ export function ProjectForm({
 
             <form.Field name="description">
               {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !!field.state.meta.errors.length;
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Description</FieldLabel>
-                    <Textarea
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="Optional context for this project…"
-                      rows={3}
-                      spellCheck={false}
-                      className="max-h-48 resize-y overflow-y-auto"
-                      aria-invalid={isInvalid}
-                    />
-                    {isInvalid && (
-                      <FieldError errors={formatErrors(field.state.meta.errors)} />
-                    )}
+                    <InputGroup>
+                      <InputGroupTextarea
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="Optional context for this project…"
+                        rows={3}
+                        spellCheck={false}
+                        className="max-h-48 resize-y overflow-y-auto"
+                        aria-invalid={isInvalid}
+                      />
+                      <InputGroupAddon align="block-end">
+                        <InputGroupText className="tabular-nums">
+                          {field.state.value.length}/2000 characters
+                        </InputGroupText>
+                      </InputGroupAddon>
+                    </InputGroup>
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
@@ -147,10 +142,16 @@ export function ProjectForm({
         </form>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
-          <Button type="submit" form="project-form">
+          <Button
+            type="submit"
+            form="project-form"
+          >
             {isEdit ? "Save changes" : "Create project"}
           </Button>
         </DialogFooter>

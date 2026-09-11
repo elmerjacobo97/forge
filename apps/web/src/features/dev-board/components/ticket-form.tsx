@@ -10,14 +10,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  InputGroupTextarea,
+} from "@/components/ui/input-group";
 import {
   Select,
   SelectContent,
@@ -84,7 +84,10 @@ export function TicketForm({
   }, [open, editTicket, form]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
       <DialogContent className="max-h-[90vh] max-w-md grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Ticket" : "New Ticket"}</DialogTitle>
@@ -105,12 +108,9 @@ export function TicketForm({
           }}
         >
           <FieldGroup>
-            <form.Field
-              name="title"
-            >
+            <form.Field name="title">
               {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Title</FieldLabel>
@@ -130,60 +130,76 @@ export function TicketForm({
               }}
             </form.Field>
 
-            <form.Field
-              name="description"
-            >
-              {(field) => (
-                <Field>
-                  <FieldLabel htmlFor={field.name}>Description</FieldLabel>
-                  <Textarea
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Optional context, reproduction steps, or acceptance criteria…"
-                    rows={3}
-                    spellCheck={false}
-                    className="max-h-48 resize-y overflow-y-auto"
-                  />
-                </Field>
-              )}
+            <form.Field name="description">
+              {(field) => {
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+                    <InputGroup>
+                      <InputGroupTextarea
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="Optional context, reproduction steps, or acceptance criteria…"
+                        rows={3}
+                        spellCheck={false}
+                        className="max-h-48 resize-y overflow-y-auto"
+                        aria-invalid={isInvalid}
+                      />
+                      <InputGroupAddon align="block-end">
+                        <InputGroupText className="tabular-nums">
+                          {field.state.value.length}/2000 characters
+                        </InputGroupText>
+                      </InputGroupAddon>
+                    </InputGroup>
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                );
+              }}
             </form.Field>
 
-            <form.Field
-              name="priority"
-            >
-              {(field) => (
-                <Field>
-                  <FieldLabel>Priority</FieldLabel>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={(val) => field.handleChange(val as Priority)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PRIORITIES.map((p) => (
-                        <SelectItem key={p} value={p}>
-                          {PRIORITY_LABELS[p]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-              )}
+            <form.Field name="priority">
+              {(field) => {
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name}>Priority</FieldLabel>
+                    <Select
+                      value={field.state.value}
+                      onValueChange={(val) => field.handleChange(val as Priority)}
+                    >
+                      <SelectTrigger
+                        id={field.name}
+                        className="w-full"
+                        aria-invalid={isInvalid}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PRIORITIES.map((p) => (
+                          <SelectItem
+                            key={p}
+                            value={p}
+                          >
+                            {PRIORITY_LABELS[p]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                );
+              }}
             </form.Field>
 
             {isEdit && (
               <>
-                <form.Field
-                  name="branch"
-                >
+                <form.Field name="branch">
                   {(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
+                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                     return (
                       <Field data-invalid={isInvalid}>
                         <FieldLabel htmlFor={field.name}>Branch</FieldLabel>
@@ -203,12 +219,9 @@ export function TicketForm({
                   }}
                 </form.Field>
 
-                <form.Field
-                  name="prUrl"
-                >
+                <form.Field name="prUrl">
                   {(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
+                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                     return (
                       <Field data-invalid={isInvalid}>
                         <FieldLabel htmlFor={field.name}>PR URL</FieldLabel>
@@ -233,10 +246,16 @@ export function TicketForm({
         </form>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
-          <Button type="submit" form="ticket-form">
+          <Button
+            type="submit"
+            form="ticket-form"
+          >
             {isEdit ? "Save changes" : "Create ticket"}
           </Button>
         </DialogFooter>

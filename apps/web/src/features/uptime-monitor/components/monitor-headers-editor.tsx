@@ -100,7 +100,7 @@ export function MonitorHeadersEditor({
                 key={index}
                 className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-lg border p-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_auto]"
               >
-                <Field data-invalid={nameInvalid || undefined}>
+                <Field data-invalid={nameInvalid}>
                   <FieldLabel htmlFor={nameId}>Name</FieldLabel>
                   <Input
                     id={nameId}
@@ -113,7 +113,7 @@ export function MonitorHeadersEditor({
                     readOnly={isPersisted}
                     disabled={disabled}
                     autoComplete="off"
-                    aria-invalid={nameInvalid || undefined}
+                    aria-invalid={nameInvalid}
                     aria-readonly={isPersisted || undefined}
                   />
                   {nameInvalid ? <FieldError errors={nameErrors} /> : null}
@@ -121,7 +121,7 @@ export function MonitorHeadersEditor({
 
                 <Field
                   className="col-span-2 sm:col-span-1"
-                  data-invalid={valueInvalid || undefined}
+                  data-invalid={valueInvalid}
                 >
                   <FieldLabel htmlFor={valueId}>
                     {isPersisted ? "Replacement value" : "Value"}
@@ -141,7 +141,7 @@ export function MonitorHeadersEditor({
                     maxLength={UPTIME_REQUEST_HEADER_VALUE_MAX_LENGTH}
                     disabled={disabled}
                     autoComplete="new-password"
-                    aria-invalid={valueInvalid || undefined}
+                    aria-invalid={valueInvalid}
                   />
                   {valueInvalid ? <FieldError errors={valueErrors} /> : null}
                 </Field>

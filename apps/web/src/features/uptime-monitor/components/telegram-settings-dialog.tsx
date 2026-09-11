@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { saveNotificationSettingsAction, sendTestTelegramMessageAction } from "../actions";
 import type { UptimeNotificationSettings } from "../types";
@@ -114,37 +114,47 @@ function TelegramSettingsForm({
     >
       <FieldGroup>
         <form.Field name="telegramBotToken">
-          {(field) => (
-            <Field>
-              <FieldLabel htmlFor={field.name}>Bot token</FieldLabel>
-              <Input
-                id={field.name}
-                name={field.name}
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(event) => field.handleChange(event.target.value)}
-                placeholder="123456:ABC-DEF..."
-                autoComplete="off"
-              />
-            </Field>
-          )}
+          {(field) => {
+            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor={field.name}>Bot token</FieldLabel>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  placeholder="123456:ABC-DEF..."
+                  autoComplete="off"
+                  aria-invalid={isInvalid}
+                />
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </Field>
+            );
+          }}
         </form.Field>
 
         <form.Field name="telegramChatId">
-          {(field) => (
-            <Field>
-              <FieldLabel htmlFor={field.name}>Chat ID</FieldLabel>
-              <Input
-                id={field.name}
-                name={field.name}
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(event) => field.handleChange(event.target.value)}
-                placeholder="123456789"
-                autoComplete="off"
-              />
-            </Field>
-          )}
+          {(field) => {
+            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor={field.name}>Chat ID</FieldLabel>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  placeholder="123456789"
+                  autoComplete="off"
+                  aria-invalid={isInvalid}
+                />
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </Field>
+            );
+          }}
         </form.Field>
       </FieldGroup>
 

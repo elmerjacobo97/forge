@@ -16,7 +16,7 @@ type ResourceFormFieldApi = {
   name: string;
   state: {
     value: string;
-    meta: { isTouched: boolean; errors: Array<{ message?: string } | undefined> };
+    meta: { isTouched: boolean; isValid: boolean; errors: Array<{ message?: string } | undefined> };
   };
   handleBlur: () => void;
   handleChange: (value: string) => void;
@@ -50,7 +50,7 @@ export function ResourceFormFields({
     <FieldGroup>
       <form.Field name="title">
         {(field) => {
-          const isInvalid = field.state.meta.isTouched && !!field.state.meta.errors.length;
+          const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
           return (
             <Field data-invalid={isInvalid}>
               <FieldLabel htmlFor={field.name}>Title</FieldLabel>
@@ -72,51 +72,65 @@ export function ResourceFormFields({
 
       <div className="grid grid-cols-2 gap-4">
         <form.Field name="kind">
-          {(field) => (
-            <Field>
-              <FieldLabel>Kind</FieldLabel>
-              <Select
-                onValueChange={(val) => field.handleChange(val as ResourceSchema["kind"])}
-                value={field.state.value}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="note">Note</SelectItem>
-                  <SelectItem value="prompt">Prompt</SelectItem>
-                  <SelectItem value="config">Config</SelectItem>
-                  <SelectItem value="code">Code</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
-          )}
+          {(field) => {
+            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor={field.name}>Kind</FieldLabel>
+                <Select
+                  value={field.state.value}
+                  onValueChange={(val) => field.handleChange(val as ResourceSchema["kind"])}
+                >
+                  <SelectTrigger
+                    id={field.name}
+                    aria-invalid={isInvalid}
+                  >
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="note">Note</SelectItem>
+                    <SelectItem value="prompt">Prompt</SelectItem>
+                    <SelectItem value="config">Config</SelectItem>
+                    <SelectItem value="code">Code</SelectItem>
+                  </SelectContent>
+                </Select>
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </Field>
+            );
+          }}
         </form.Field>
 
         <form.Field name="language">
-          {(field) => (
-            <Field>
-              <FieldLabel>Format</FieldLabel>
-              <Select
-                onValueChange={(value) => field.handleChange(value)}
-                value={field.state.value || undefined}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select format" />
-                </SelectTrigger>
-                <SelectContent>
-                  {FORMATS.map((format) => (
-                    <SelectItem
-                      key={format.value}
-                      value={format.value}
-                    >
-                      {format.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          )}
+          {(field) => {
+            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor={field.name}>Format</FieldLabel>
+                <Select
+                  value={field.state.value || undefined}
+                  onValueChange={(value) => field.handleChange(value)}
+                >
+                  <SelectTrigger
+                    id={field.name}
+                    aria-invalid={isInvalid}
+                  >
+                    <SelectValue placeholder="Select format" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FORMATS.map((format) => (
+                      <SelectItem
+                        key={format.value}
+                        value={format.value}
+                      >
+                        {format.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </Field>
+            );
+          }}
         </form.Field>
       </div>
 
@@ -125,17 +139,18 @@ export function ResourceFormFields({
           <div className="grid grid-cols-2 gap-4">
             <form.Field name="tool">
               {(field) => {
-                const isInvalid = field.state.meta.isTouched && !!field.state.meta.errors.length;
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
-                    <FieldLabel>Tool</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>Tool</FieldLabel>
                     <Select
-                      onValueChange={(value) =>
-                        field.handleChange(value as ResourceSchema["tool"])
-                      }
                       value={field.state.value || undefined}
+                      onValueChange={(value) => field.handleChange(value as ResourceSchema["tool"])}
                     >
-                      <SelectTrigger aria-invalid={isInvalid}>
+                      <SelectTrigger
+                        id={field.name}
+                        aria-invalid={isInvalid}
+                      >
                         <SelectValue placeholder="Select tool" />
                       </SelectTrigger>
                       <SelectContent>
@@ -156,26 +171,31 @@ export function ResourceFormFields({
             </form.Field>
 
             <form.Field name="version">
-              {(field) => (
-                <Field>
-                  <FieldLabel htmlFor={field.name}>Version</FieldLabel>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value ?? ""}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="e.g. 0.75 (optional)"
-                  />
-                </Field>
-              )}
+              {(field) => {
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name}>Version</FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value ?? ""}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="e.g. 0.75 (optional)"
+                      aria-invalid={isInvalid}
+                    />
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                );
+              }}
             </form.Field>
           </div>
 
           {selectedTool === "other" ? (
             <form.Field name="customTool">
               {(field) => {
-                const isInvalid = field.state.meta.isTouched && !!field.state.meta.errors.length;
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Custom tool name</FieldLabel>
@@ -196,30 +216,35 @@ export function ResourceFormFields({
           ) : null}
 
           <form.Field name="context">
-            {(field) => (
-              <Field>
-                <FieldLabel htmlFor={field.name}>Context</FieldLabel>
-                <InputGroup>
-                  <InputGroupTextarea
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value ?? ""}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="How or where this configuration is used (optional)"
-                    rows={3}
-                    className="min-h-20 max-h-48 resize-y overflow-y-auto"
-                  />
-                </InputGroup>
-              </Field>
-            )}
+            {(field) => {
+              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={field.name}>Context</FieldLabel>
+                  <InputGroup>
+                    <InputGroupTextarea
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value ?? ""}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="How or where this configuration is used (optional)"
+                      rows={3}
+                      className="min-h-20 max-h-48 resize-y overflow-y-auto"
+                      aria-invalid={isInvalid}
+                    />
+                  </InputGroup>
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              );
+            }}
           </form.Field>
         </>
       ) : null}
 
       <form.Field name="content">
         {(field) => {
-          const isInvalid = field.state.meta.isTouched && !!field.state.meta.errors.length;
+          const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
           return (
             <Field data-invalid={isInvalid}>
               <FieldLabel htmlFor={field.name}>Content</FieldLabel>
@@ -254,19 +279,24 @@ export function ResourceFormFields({
       </form.Field>
 
       <form.Field name="tagsString">
-        {(field) => (
-          <Field>
-            <FieldLabel htmlFor={field.name}>Tags</FieldLabel>
-            <Input
-              id={field.name}
-              name={field.name}
-              value={field.state.value}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-              placeholder="prompt, review, yaml"
-            />
-          </Field>
-        )}
+        {(field) => {
+          const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+          return (
+            <Field data-invalid={isInvalid}>
+              <FieldLabel htmlFor={field.name}>Tags</FieldLabel>
+              <Input
+                id={field.name}
+                name={field.name}
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+                placeholder="prompt, review, yaml"
+                aria-invalid={isInvalid}
+              />
+              {isInvalid && <FieldError errors={field.state.meta.errors} />}
+            </Field>
+          );
+        }}
       </form.Field>
     </FieldGroup>
   );

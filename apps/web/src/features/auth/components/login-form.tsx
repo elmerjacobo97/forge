@@ -147,15 +147,17 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
           </FieldGroup>
         </form>
       </CardContent>
-      <CardFooter className="flex-col gap-4">
-        <Button
-          type="submit"
-          form="login-form"
-          className="w-full"
-          disabled={isPending}
-        >
-          {isPending ? "Signing in..." : "Sign in"}
-        </Button>
+      <CardFooter>
+        <Field orientation="horizontal">
+          <Button
+            type="submit"
+            form="login-form"
+            className="w-full"
+            disabled={isPending}
+          >
+            {isPending ? "Signing in..." : "Sign in"}
+          </Button>
+        </Field>
       </CardFooter>
     </Card>
   );

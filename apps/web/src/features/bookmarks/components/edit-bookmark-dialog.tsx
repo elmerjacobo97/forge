@@ -143,7 +143,7 @@ export function EditBookmarkDialog({ bookmark, isOpen, onOpenChange }: EditBookm
           <FieldGroup>
             <form.Field name="title">
               {(field) => {
-                const isInvalid = field.state.meta.isTouched && !!field.state.meta.errors.length;
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Title</FieldLabel>
@@ -165,7 +165,7 @@ export function EditBookmarkDialog({ bookmark, isOpen, onOpenChange }: EditBookm
 
             <form.Field name="url">
               {(field) => {
-                const isInvalid = field.state.meta.isTouched && !!field.state.meta.errors.length;
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>URL</FieldLabel>
@@ -188,50 +188,62 @@ export function EditBookmarkDialog({ bookmark, isOpen, onOpenChange }: EditBookm
 
             <div className="grid grid-cols-2 gap-4">
               <form.Field name="category">
-                {(field) => (
-                  <Field>
-                    <FieldLabel>Category</FieldLabel>
-                    <Select
-                      onValueChange={(val) =>
-                        field.handleChange(val as BookmarksSchema["category"])
-                      }
-                      value={field.state.value}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="docs">Docs</SelectItem>
-                        <SelectItem value="git">Git Repo</SelectItem>
-                        <SelectItem value="tool">Tool</SelectItem>
-                        <SelectItem value="article">Article</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                )}
+                {(field) => {
+                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>Category</FieldLabel>
+                      <Select
+                        value={field.state.value}
+                        onValueChange={(val) =>
+                          field.handleChange(val as BookmarksSchema["category"])
+                        }
+                      >
+                        <SelectTrigger
+                          id={field.name}
+                          aria-invalid={isInvalid}
+                        >
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="docs">Docs</SelectItem>
+                          <SelectItem value="git">Git Repo</SelectItem>
+                          <SelectItem value="tool">Tool</SelectItem>
+                          <SelectItem value="article">Article</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                    </Field>
+                  );
+                }}
               </form.Field>
 
               <form.Field name="tagsString">
-                {(field) => (
-                  <Field>
-                    <FieldLabel htmlFor={field.name}>Tags</FieldLabel>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="css, react, web"
-                    />
-                  </Field>
-                )}
+                {(field) => {
+                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>Tags</FieldLabel>
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="css, react, web"
+                        aria-invalid={isInvalid}
+                      />
+                      {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                    </Field>
+                  );
+                }}
               </form.Field>
             </div>
 
             <form.Field name="description">
               {(field) => {
-                const isInvalid = field.state.meta.isTouched && !!field.state.meta.errors.length;
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Description</FieldLabel>
@@ -252,7 +264,7 @@ export function EditBookmarkDialog({ bookmark, isOpen, onOpenChange }: EditBookm
                         className="justify-between"
                       >
                         <InputGroupText className="tabular-nums text-xs">
-                          {field.state.value.length}/200
+                          {field.state.value.length}/200 characters
                         </InputGroupText>
                         <AiGenerationButton
                           label="Generate bookmark details with AI"

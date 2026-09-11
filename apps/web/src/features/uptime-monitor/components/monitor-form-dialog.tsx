@@ -133,7 +133,7 @@ export function MonitorFormDialog({
               {(field) => {
                 const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
-                  <Field data-invalid={isInvalid || undefined}>
+                  <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Name</FieldLabel>
                     <Input
                       id={field.name}
@@ -144,9 +144,9 @@ export function MonitorFormDialog({
                       placeholder="Marketing site"
                       maxLength={80}
                       disabled={disabled || isPending}
-                      aria-invalid={isInvalid || undefined}
+                      aria-invalid={isInvalid}
                     />
-                    {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
@@ -156,7 +156,7 @@ export function MonitorFormDialog({
               {(field) => {
                 const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
-                  <Field data-invalid={isInvalid || undefined}>
+                  <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>URL</FieldLabel>
                     <Input
                       id={field.name}
@@ -166,9 +166,9 @@ export function MonitorFormDialog({
                       onChange={(event) => field.handleChange(event.target.value)}
                       placeholder="https://example.com/health"
                       disabled={disabled || isPending}
-                      aria-invalid={isInvalid || undefined}
+                      aria-invalid={isInvalid}
                     />
-                    {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
@@ -176,30 +176,38 @@ export function MonitorFormDialog({
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <form.Field name="method">
-                {(field) => (
-                  <Field>
-                    <FieldLabel>Method</FieldLabel>
-                    <Select
-                      value={field.state.value}
-                      onValueChange={(value) => field.handleChange(value as "GET" | "HEAD")}
-                    >
-                      <SelectTrigger disabled={disabled || isPending}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="GET">GET</SelectItem>
-                        <SelectItem value="HEAD">HEAD</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                )}
+                {(field) => {
+                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>Method</FieldLabel>
+                      <Select
+                        value={field.state.value}
+                        onValueChange={(value) => field.handleChange(value as "GET" | "HEAD")}
+                      >
+                        <SelectTrigger
+                          id={field.name}
+                          disabled={disabled || isPending}
+                          aria-invalid={isInvalid}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="GET">GET</SelectItem>
+                          <SelectItem value="HEAD">HEAD</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                    </Field>
+                  );
+                }}
               </form.Field>
 
               <form.Field name="expectedStatus">
                 {(field) => {
                   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                   return (
-                    <Field data-invalid={isInvalid || undefined}>
+                    <Field data-invalid={isInvalid}>
                       <FieldLabel htmlFor={field.name}>Expected status</FieldLabel>
                       <Input
                         id={field.name}
@@ -209,9 +217,9 @@ export function MonitorFormDialog({
                         onBlur={field.handleBlur}
                         onChange={(event) => field.handleChange(Number(event.target.value))}
                         disabled={disabled || isPending}
-                        aria-invalid={isInvalid || undefined}
+                        aria-invalid={isInvalid}
                       />
-                      {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
+                      {isInvalid && <FieldError errors={field.state.meta.errors} />}
                     </Field>
                   );
                 }}
@@ -220,40 +228,48 @@ export function MonitorFormDialog({
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <form.Field name="intervalMinutes">
-                {(field) => (
-                  <Field>
-                    <FieldLabel>Check interval</FieldLabel>
-                    <Select
-                      value={String(field.state.value)}
-                      onValueChange={(value) =>
-                        field.handleChange(
-                          Number(value) as (typeof UPTIME_INTERVALS_MINUTES)[number],
-                        )
-                      }
-                    >
-                      <SelectTrigger disabled={disabled || isPending}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {UPTIME_INTERVALS_MINUTES.map((minutes) => (
-                          <SelectItem
-                            key={minutes}
-                            value={String(minutes)}
-                          >
-                            Every {minutes} min
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                )}
+                {(field) => {
+                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>Check interval</FieldLabel>
+                      <Select
+                        value={String(field.state.value)}
+                        onValueChange={(value) =>
+                          field.handleChange(
+                            Number(value) as (typeof UPTIME_INTERVALS_MINUTES)[number],
+                          )
+                        }
+                      >
+                        <SelectTrigger
+                          id={field.name}
+                          disabled={disabled || isPending}
+                          aria-invalid={isInvalid}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {UPTIME_INTERVALS_MINUTES.map((minutes) => (
+                            <SelectItem
+                              key={minutes}
+                              value={String(minutes)}
+                            >
+                              Every {minutes} min
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                    </Field>
+                  );
+                }}
               </form.Field>
 
               <form.Field name="failureThreshold">
                 {(field) => {
                   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                   return (
-                    <Field data-invalid={isInvalid || undefined}>
+                    <Field data-invalid={isInvalid}>
                       <FieldLabel htmlFor={field.name}>Failure threshold</FieldLabel>
                       <Input
                         id={field.name}
@@ -265,9 +281,9 @@ export function MonitorFormDialog({
                         onBlur={field.handleBlur}
                         onChange={(event) => field.handleChange(Number(event.target.value))}
                         disabled={disabled || isPending}
-                        aria-invalid={isInvalid || undefined}
+                        aria-invalid={isInvalid}
                       />
-                      {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
+                      {isInvalid && <FieldError errors={field.state.meta.errors} />}
                     </Field>
                   );
                 }}
