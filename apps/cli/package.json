@@ -30,7 +30,9 @@
     "build": "tsc",
     "check-release-tag": "node ./scripts/check-release-tag.mjs",
     "forge-cli": "node ./bin/forge-cli.js",
-    "test": "vitest run src"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@insforge/sdk": "1.4.5",
@@ -38,6 +40,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.9.3",
+    "@vitest/coverage-v8": "^4.1.11",
     "typescript": "~5.8.3",
     "vitest": "^4.1.10"
   }

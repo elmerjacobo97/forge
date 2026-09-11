@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Ticket } from "../types/board";
-import { computeElapsed, pauseTimer, resumeTimer, startTimer, stopTimer } from "../utils/timer";
+import { computeElapsed, pauseTimer, resumeTimer, startTimer, stopTimer } from "./timer";
 
 function createTicket(overrides: Partial<Ticket> = {}): Ticket {
   return {

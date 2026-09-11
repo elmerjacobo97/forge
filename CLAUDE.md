@@ -11,12 +11,14 @@ Run from the repo root (pnpm workspace, one app: `@forge/web` in `apps/web`).
 - `pnpm install` — install all workspace dependencies
 - `pnpm dev` — start the Next.js development server
 - `pnpm build` — build Next.js and the CLI
-- `pnpm test` — run the web test suite (Vitest) once
+- `pnpm test` — run the web and CLI test suites (Vitest) once
+- `pnpm test:watch` — run both suites in watch mode (parallel)
+- `pnpm test:coverage` — run both suites with V8 coverage
 - `pnpm lint` / `pnpm lint:fix` — ESLint (flat config at repo root)
 - `pnpm format` / `pnpm format:check` — Prettier (`.prettierrc`)
 - `pnpm doctor` — run React Doctor against the web app
 
-Single test file: `pnpm --filter @forge/web exec vitest run <path>` (or omit `run` to watch). Vitest configuration lives in `apps/web/vitest.config.ts`.
+Single test file: `pnpm --filter @forge/web exec vitest run --config tests.config.ts <path>` (or omit `run` to watch). Web Vitest configuration lives in `apps/web/tests.config.ts`; CLI configuration lives in `apps/cli/vitest.config.ts`.
 
 Linting uses ESLint + Prettier (not Biome). Config lives at the workspace root for the monorepo.
 
@@ -25,6 +27,8 @@ Linting uses ESLint + Prettier (not Biome). Config lives at the workspace root f
 **Workspace**: pnpm workspace with `apps/web` (Next.js 16) and `apps/cli` (`forge-cli`). Both use the same InsForge backend. `packages/*` remains reserved; do not create packages speculatively.
 
 **Feature-first structure**: `apps/web/src/features/<feature>/` owns everything for that feature — `components/`, `hooks/`, `services/`, `schemas/`, `types/`, `utils/`. There are ~25 features, mostly standalone dev-utility tools (JSON formatter, JWT decoder, hash generator, etc.) plus larger stateful features (`dev-board`, `bookmarks`, `resources`, `auth`, `settings`). Keep feature logic inside its feature folder unless it's genuinely shared.
+
+**Tests**: web tests are colocated with the module they cover (`<module>.test.ts(x)`), with shared setup in `apps/web/src/test/setup.ts`. CLI tests live in `apps/cli/tests/` grouped by kind (`schemas/`, `services/`, `lib/`, `commands/`), with shared mocks in `apps/cli/tests/helpers/`.
 
 **Routing**: Next.js App Router under `apps/web/src/app/`. `(auth)` holds login/register and `(authenticated)` performs the server-side session guard. Keep pages thin.
 

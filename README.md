@@ -19,7 +19,7 @@ docs            Producto, roadmap e ideas
 specs           Especificaciones por feature
 ```
 
-Cada feature de `apps/web/src/features/<feature>` es dueña de sus `components/`, `hooks/`, `schemas/`, `services/`, `types/`, `utils/` y `actions.ts` (Server Actions). Las rutas en `src/app` son delgadas y solo componen features.
+Cada feature de `apps/web/src/features/<feature>` es dueña de sus `components/`, `hooks/`, `schemas/`, `services/`, `types/`, `utils/` y `actions.ts` (Server Actions). Las rutas en `src/app` son delgadas y solo componen features. Los tests web viven junto al módulo que cubren; los del CLI se agrupan en `apps/cli/tests/` por tipo (`schemas`, `services`, `lib`, `commands`).
 
 ## Comandos
 
@@ -28,12 +28,14 @@ pnpm install      # Instalar dependencias
 pnpm dev          # Web en desarrollo
 pnpm build        # Build web + CLI (incluye typecheck)
 pnpm test         # Tests web + CLI (Vitest)
+pnpm test:watch   # Tests en modo watch (ambos, en paralelo)
+pnpm test:coverage # Tests con cobertura V8 (ambos)
 pnpm lint         # ESLint
 pnpm format       # Prettier
 pnpm doctor       # React Doctor (web)
 ```
 
-Para un solo test: `pnpm --filter @forge/web exec vitest run <ruta>`.
+Para un solo test web: `pnpm --filter @forge/web exec vitest run --config tests.config.ts <ruta>`. Para el CLI: `pnpm --filter ./apps/cli exec vitest run tests/<grupo>/<archivo>.test.ts`. Los reportes de cobertura quedan en `apps/web/coverage/` y `apps/cli/coverage/`.
 
 ## Herramientas web
 

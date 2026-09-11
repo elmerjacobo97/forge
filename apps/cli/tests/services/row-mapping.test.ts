@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { mapRowToTicket } from "./dev-board-service.js"
-import { mapRowToProject } from "./projects-service.js"
+import { mapRowToTicket } from "../../src/dev-board-service.js"
+import { mapRowToProject } from "../../src/projects-service.js"
 
 describe("InsForge row mapping", () => {
   it("maps project snake_case fields to stable CLI fields", () => {

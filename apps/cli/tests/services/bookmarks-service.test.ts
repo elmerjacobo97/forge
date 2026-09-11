@@ -1,16 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
-import type { InsForgeClient } from "@insforge/sdk";
-import { createBookmarksService, mapRowToBookmark } from "./bookmarks-service.js";
-
-function createListClient(data: unknown) {
-  const response = { data, error: null };
-  const range = vi.fn().mockResolvedValue(response);
-  const ordered = Object.assign(Promise.resolve(response), { range });
-  const order = vi.fn(() => ordered);
-  const select = vi.fn(() => ({ order }));
-  const from = vi.fn(() => ({ select }));
-  return { client: { database: { from } } as unknown as InsForgeClient, range };
-}
+import { describe, expect, it } from "vitest";
+import { createBookmarksService, mapRowToBookmark } from "../../src/bookmarks-service.js";
+import { createListClient } from "../helpers/insforge-client.js";
 
 describe("mapRowToBookmark", () => {
   const row = {

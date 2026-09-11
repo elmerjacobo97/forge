@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { projectSchema } from "../schemas/project";
+import { projectSchema } from "./project";
 
 describe("projectSchema", () => {
   it("accepts a valid name and optional description", () => {

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   parseResourceCreateInput,
   parseResourceUpdateInput,
-} from "./resource-schema.js"
+} from "../../src/resource-schema.js"
 
 describe("parseResourceCreateInput", () => {
   it("accepts a valid note payload", () => {

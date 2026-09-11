@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { AnalyticsData, AnalyticsRange } from "../types/analytics";
-import { analyticsCsv, buildAnalytics } from "../utils/analytics";
+import { analyticsCsv, buildAnalytics } from "./analytics";
 
 const range: AnalyticsRange = {
   from: "2026-07-01T00:00:00.000Z",

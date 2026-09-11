@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   assertProjectHasNoTickets,
   PROJECT_HAS_TICKETS_MESSAGE,
-} from "../utils/project-delete";
+} from "./project-delete";
 
 describe("assertProjectHasNoTickets", () => {
   it("allows delete when there are no tickets", () => {

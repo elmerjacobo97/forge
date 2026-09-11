@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   parseBookmarkCreateInput,
   parseBookmarkUpdateInput,
-} from "./bookmark-schema.js"
+} from "../../src/bookmark-schema.js"
 
 describe("parseBookmarkCreateInput", () => {
   it("accepts a valid bookmark payload", () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { parseConfig } from "./config.js"
-import { parseSession } from "./session.js"
+import { parseConfig } from "../../src/config.js"
+import { parseSession } from "../../src/session.js"
 
 describe("InsForge config and session parsing", () => {
   it("normalizes the backend URL", () => {

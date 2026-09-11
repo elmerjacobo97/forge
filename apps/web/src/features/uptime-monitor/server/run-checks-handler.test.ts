@@ -1,7 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("server-only", () => ({}));
-
 const runUptimeChecks = vi.hoisted(() => vi.fn());
 vi.mock("./run-checks", () => ({ runUptimeChecks }));
 

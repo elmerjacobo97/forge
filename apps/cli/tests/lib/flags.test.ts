@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getFlagValue, getPositionals, hasFlag, parseListOptions, parseTagsFlag } from "./flags.js";
+import { getFlagValue, getPositionals, hasFlag, parseListOptions, parseTagsFlag } from "../../src/flags.js";
 
 describe("getFlagValue", () => {
   it("reads a value flag", () => {
