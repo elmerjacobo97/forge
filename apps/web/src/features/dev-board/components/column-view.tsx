@@ -17,6 +17,7 @@ interface ColumnViewProps {
   tickets: Ticket[];
   isHighlighted: boolean;
   onEdit: (ticket: Ticket) => void;
+  onComments: (ticket: Ticket) => void;
   onUpdate: (ticket: Ticket) => void;
   onDelete: (ticket: Ticket) => void;
   onMoveToColumn: (id: string, column: ColumnId) => void;
@@ -40,6 +41,7 @@ export function ColumnView({
   tickets,
   isHighlighted,
   onEdit,
+  onComments,
   onUpdate,
   onDelete,
   onMoveToColumn,
@@ -99,6 +101,7 @@ export function ColumnView({
                 key={ticket.id}
                 ticket={ticket}
                 onEdit={onEdit}
+                onComments={onComments}
                 onUpdate={onUpdate}
                 onDelete={onDelete}
                 onMoveToColumn={onMoveToColumn}

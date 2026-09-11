@@ -5,14 +5,21 @@ import { Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  InputGroupTextarea,
+} from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
 
 import { createTicketCommentAction } from "../actions";
 import { useTicketComments } from "../hooks/use-ticket-comments";
+import type { TicketComment } from "../types/board";
 
 interface TicketCommentsProps {
   ticketId: string;
+  onCommentCreated?: (comment: TicketComment) => void;
 }
 
 function formatCommentDate(value: string): string {
@@ -21,7 +28,7 @@ function formatCommentDate(value: string): string {
   return date.toLocaleString();
 }
 
-export function TicketComments({ ticketId }: TicketCommentsProps) {
+export function TicketComments({ ticketId, onCommentCreated }: TicketCommentsProps) {
   const { comments, isLoading, error, appendComment } = useTicketComments(ticketId);
   const [body, setBody] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,6 +46,7 @@ export function TicketComments({ ticketId }: TicketCommentsProps) {
       }
 
       appendComment(result.data);
+      onCommentCreated?.(result.data);
       setBody("");
     } finally {
       setIsSubmitting(false);
@@ -47,8 +55,6 @@ export function TicketComments({ ticketId }: TicketCommentsProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs font-medium text-muted-foreground">Comments</p>
-
       {isLoading && (
         <p className="text-[11px] text-muted-foreground">Loading comments…</p>
       )}
@@ -85,19 +91,25 @@ export function TicketComments({ ticketId }: TicketCommentsProps) {
         </ul>
       )}
 
-      <div className="flex flex-col gap-2">
-        <Textarea
+      <InputGroup>
+        <InputGroupTextarea
+          id="ticket-comment-body"
           value={body}
           onChange={(event) => setBody(event.target.value)}
           placeholder="Add a comment…"
-          rows={2}
-          className="max-h-32 resize-y overflow-y-auto text-[11px]"
+          rows={3}
+          className="min-h-20 max-h-32 resize-y overflow-y-auto"
         />
-        <div className="flex justify-end">
+        <InputGroupAddon
+          align="block-end"
+          className="justify-between"
+        >
+          <InputGroupText className="tabular-nums text-xs">
+            {body.length}/5000
+          </InputGroupText>
           <Button
             type="button"
             size="sm"
-            variant="outline"
             className="gap-1.5"
             onClick={() => void handleSubmit()}
             disabled={isSubmitting || body.trim().length === 0}
@@ -105,8 +117,8 @@ export function TicketComments({ ticketId }: TicketCommentsProps) {
             <Send className="size-3" />
             Comment
           </Button>
-        </div>
-      </div>
+        </InputGroupAddon>
+      </InputGroup>
     </div>
   );
 }

@@ -16,7 +16,7 @@
 - CLI `ticket update` y `ticket move` aceptan `--branch`, `--pr-url`, `--clear-branch`, `--clear-pr-url`.
 - Errores JSON en todos los comandos del CLI: `{"error":{"message":"..."}}` en stderr con exit code 1 cuando `--json` está activo.
 - `--json` en los subcomandos `delete` de bookmark, resource, project y ticket.
-- Web: hilo de comentarios dentro del dialog de edición del ticket, campos `branch`/`pr_url` en modo edición y badge de contador de comentarios en la tarjeta.
+- Web: hilo de comentarios en un dialog propio `Comments` abierto desde el menú de la tarjeta, campos `branch`/`pr_url` en modo edición y badge de contador de comentarios en la tarjeta.
 - Route Handler `GET /api/dev-board/tickets/[ticketId]/comments` y Server Action para crear comentarios con autor `user`.
 - Actualizar `.agents/skills/forge-tickets/SKILL.md` con el loop y `apps/cli/README.md` con los comandos nuevos.
 - Tests web y CLI de schemas, servicios y formatos nuevos.
@@ -169,7 +169,7 @@ Reglas:
 7. Actualizar `.agents/skills/forge-tickets/SKILL.md` con el loop (next → implementar → comment → move review con branch/PR) y `apps/cli/README.md` con la tabla de comandos, flags y errores JSON.
 8. Web schemas y tipos: `ticketInputSchema` acepta `branch`/`prUrl` nullable; nuevo `ticketCommentSchema` (`body` 1–5000); `Ticket` con los campos nuevos y `commentCount` opcional.
 9. Web servicio: `TICKET_COLUMNS` ampliado, `toTicket` mapea branch/PR, `fetchTicketPage` adjunta `commentCount`, y nuevos `listComments(ticketId)` / `createComment(ticketId, body)` con autor `user`. `updateTicket` pasa `p_branch`/`p_pr_url` (la web edita el valor completo o lo limpia con `''`).
-10. Web surface: Route Handler `GET /api/dev-board/tickets/[ticketId]/comments` (auth re-check, 401/404/500), Server Action `createTicketCommentAction` con Zod + re-check de usuario, hook `use-ticket-comments.ts` siguiendo el patrón de `use-webhook-events.ts`, componente `ticket-comments.tsx` dentro del dialog de `ticket-form.tsx`, campos branch/PR en modo edición y badge en `ticket-card.tsx`. Preservar `commentCount` en `upsertTicket`.
+10. Web surface: Route Handler `GET /api/dev-board/tickets/[ticketId]/comments` (auth re-check, 401/404/500), Server Action `createTicketCommentAction` con Zod + re-check de usuario, hook `use-ticket-comments.ts` siguiendo el patrón de `use-webhook-events.ts`, componente `ticket-comments.tsx` dentro de un dialog `Comments` propio (`ticket-comments-dialog.tsx`) abierto desde el menú de `ticket-card.tsx`, campos branch/PR en modo edición de `ticket-form.tsx` (sin el hilo de comentarios) y badge de contador en la tarjeta. Preservar `commentCount` en `upsertTicket` (y helper `incrementCommentCount` para el alta en vivo).
 11. Tests: CLI (schemas, servicios: ranking de `next`, comentarios, move con handoff, semántica `NULL`/`''`, formato de errores JSON) y web (schemas, servicios: counts, listComments/createComment, acción). Reutilizar `apps/cli/tests/helpers/insforge-client.ts` y los mocks web existentes.
 12. Ejecutar `pnpm test:web`, `pnpm test:cli`, `pnpm build:web`, `pnpm build:cli`, `pnpm lint` y Prettier solo sobre archivos tocados.
 
@@ -206,14 +206,14 @@ Reglas:
 
 **Web:**
 
-- [ ] El dialog de edición muestra el hilo de comentarios en orden ascendente con badge "agente" o "yo".
-- [ ] Se puede crear un comentario desde el dialog; aparece sin recargar la página y con autor `user`.
+- [ ] El menú de la tarjeta abre un dialog `Comments` con el hilo en orden ascendente y badge "agent" o "you".
+- [ ] Se puede crear un comentario desde el dialog `Comments`; aparece sin recargar la página y con autor `user`.
 - [ ] El dialog de edición muestra `branch` y `pr_url` con link clickable del PR; el formulario de creación no los muestra.
 - [ ] Editar un ticket que tenía `branch`/`pr_url` y guardar sin tocarlos no los borra.
 - [ ] La tarjeta muestra el badge de comentarios cuando `commentCount > 0`.
-- [ ] Un move o edit optimista no resetea el `commentCount` visible.
+- [ ] Un move o edit optimista no resetea el `commentCount` visible; crear un comentario lo incrementa en vivo.
 - [ ] El Route Handler responde 401 sin sesión y 404 con ticket inexistente.
-- [ ] Sin comentarios, el hilo muestra un estado vacío discreto y el badge no aparece.
+- [ ] Sin comentarios, el hilo solo muestra el textarea y el badge no aparece.
 
 **Skills y docs:**
 
@@ -243,7 +243,7 @@ Reglas:
 - **Sí:** `NULL` = no cambio y `''` = limpiar en los RPCs; permite mantener compatibilidad con llamadas viejas y limpiar con flags dedicados.
 - **Sí:** `move` acepta `branch`/`pr_url`: handoff atómico en una llamada, sin ventana inconsistente entre update y move.
 - **Sí:** errores JSON en todos los comandos con `--json` y `--json` en deletes; interfaz de máquina consistente para agentes.
-- **Sí:** UI web incluida en esta spec: hilo de comentarios en el dialog de edición, campos branch/PR ahí mismo y badge en la tarjeta; el loop de review necesita superficie humana.
+- **Sí:** UI web incluida en esta spec: hilo de comentarios en un dialog `Comments` desde el menú de la tarjeta, campos branch/PR en el dialog de edición y badge en la tarjeta; el loop de review necesita superficie humana.
 - **Sí:** branch/PR en tarjeta solo como mejora futura; el dialog es suficiente v1.
 - **Sí:** skill existente `forge-tickets` actualizada en lugar de una skill nueva; una sola fuente para el CLI de tickets.
 - **No:** MCP en esta spec; CLI + skills cubre el flujo y MCP queda para cuando duela.

@@ -4,6 +4,7 @@ import type { ColumnId, Ticket } from "../types/board";
 import {
   appendTickets,
   columnTickets,
+  incrementCommentCount,
   removeTicket,
   toColumnRecord,
   upsertTicket,
@@ -167,6 +168,38 @@ describe("board-state", () => {
     const moved = upsertTicket(columns, ticket({ id: "t1", column: "review", position: 5 }));
 
     expect(moved.review.tickets[0]?.commentCount).toBe(2);
+  });
+
+  it("increments a ticket comment count in place", () => {
+    const columns = toColumnRecord([
+      {
+        column: "todo",
+        tickets: [ticket({ id: "t1", column: "todo", commentCount: 2 })],
+        total: 1,
+        nextCursor: null,
+      },
+    ]);
+
+    const next = incrementCommentCount(columns, "t1");
+
+    expect(next.todo.tickets[0]?.commentCount).toBe(3);
+    expect(next.todo.total).toBe(1);
+  });
+
+  it("increments from zero and ignores unknown tickets", () => {
+    const columns = toColumnRecord([
+      {
+        column: "todo",
+        tickets: [ticket({ id: "t1", column: "todo" })],
+        total: 1,
+        nextCursor: null,
+      },
+    ]);
+
+    const next = incrementCommentCount(columns, "missing");
+
+    expect(next.todo.tickets[0]?.commentCount).toBeUndefined();
+    expect(incrementCommentCount(columns, "t1").todo.tickets[0]?.commentCount).toBe(1);
   });
 
   it("sorts flattened tickets by position descending", () => {

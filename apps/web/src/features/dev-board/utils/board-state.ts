@@ -57,6 +57,31 @@ export function upsertTicket(columns: ColumnRecord, ticket: Ticket): ColumnRecor
   return next;
 }
 
+export function incrementCommentCount(columns: ColumnRecord, ticketId: string): ColumnRecord {
+  const next = {} as ColumnRecord;
+
+  for (const column of COLUMNS) {
+    const page = columns[column];
+    const hasTicket = page.tickets.some((ticket) => ticket.id === ticketId);
+
+    if (!hasTicket) {
+      next[column] = page;
+      continue;
+    }
+
+    next[column] = {
+      ...page,
+      tickets: page.tickets.map((ticket) =>
+        ticket.id === ticketId
+          ? { ...ticket, commentCount: (ticket.commentCount ?? 0) + 1 }
+          : ticket,
+      ),
+    };
+  }
+
+  return next;
+}
+
 export function removeTicket(columns: ColumnRecord, ticket: Ticket): ColumnRecord {
   const next = {} as ColumnRecord;
 

@@ -31,6 +31,7 @@ import { computeElapsed, formatDuration, pauseTimer, resumeTimer } from "../util
 interface TicketCardProps {
   ticket: Ticket;
   onEdit: (ticket: Ticket) => void;
+  onComments: (ticket: Ticket) => void;
   onMoveToColumn: (id: string, column: ColumnId) => void;
   onUpdate: (ticket: Ticket) => void;
   onDelete: (ticket: Ticket) => void;
@@ -39,6 +40,7 @@ interface TicketCardProps {
 export function TicketCard({
   ticket,
   onEdit,
+  onComments,
   onMoveToColumn,
   onUpdate,
   onDelete,
@@ -147,6 +149,15 @@ export function TicketCard({
             <DropdownMenuItem onClick={() => onEdit(ticket)}>
               <Pencil className="size-3" />
               Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onComments(ticket)}>
+              <MessageSquare className="size-3" />
+              Comments
+              {(ticket.commentCount ?? 0) > 0 && (
+                <span className="ml-auto text-[10px] text-muted-foreground">
+                  {ticket.commentCount}
+                </span>
+              )}
             </DropdownMenuItem>
             {inProgress && (
               <DropdownMenuItem
