@@ -39,13 +39,13 @@ long-lived `NPM_TOKEN` is required for the happy path.
 
 Configure once on npm (package or scope settings → **Trusted Publisher**):
 
-| Field | Value |
-| --- | --- |
-| Provider | GitHub Actions |
-| Organization or user | `elmerjacobo97` |
-| Repository | `forge` |
-| Workflow filename | `publish-cli.yml` |
-| Environment name | _(leave empty)_ |
+| Field                | Value             |
+| -------------------- | ----------------- |
+| Provider             | GitHub Actions    |
+| Organization or user | `elmerjacobo97`   |
+| Repository           | `forge`           |
+| Workflow filename    | `publish-cli.yml` |
+| Environment name     | _(leave empty)_   |
 
 The workflow file must remain `.github/workflows/publish-cli.yml` (filename
 match is required). After this is saved on npm, pushing a tag `vX.Y.Z` whose
@@ -231,7 +231,9 @@ row/RPC response mapping. They do not call the live backend.
 
 ## Agent skills
 
-- Bookmarks: `.claude/skills/forge-bookmarks/` and `.agents/skills/forge-bookmarks/`
-- Resources: `.claude/skills/forge-resources/` and `.agents/skills/forge-resources/`
-- Projects: `.claude/skills/forge-projects/` and `.agents/skills/forge-projects/`
-- Tickets: `.claude/skills/forge-tickets/` and `.agents/skills/forge-tickets/`
+The `forge-*` skills (bookmarks, resources, projects, tickets) live in the global agent skill directory, not in this repo:
+
+- Source of truth: `~/.agents/skills/forge-<area>/`
+- Claude Code symlinks: `~/.claude/skills/forge-<area>`
+
+They drive the global `forge-cli` binary, so they work from any directory.
