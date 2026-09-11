@@ -1,4 +1,4 @@
-export const COLUMNS = ["backlog", "todo", "in_progress", "review", "done"] as const;
+export const COLUMNS = ["backlog", "todo", "in_progress", "validation", "review", "done"] as const;
 
 export type ColumnId = (typeof COLUMNS)[number];
 
@@ -6,9 +6,17 @@ export const COLUMN_LABELS: Record<ColumnId, string> = {
   backlog: "Backlog",
   todo: "To Do",
   in_progress: "In Progress",
+  validation: "Validation",
   review: "Review",
   done: "Done",
 };
+
+/** Columns where the ticket timer runs (see move_dev_board_ticket RPC). */
+export const TIMER_COLUMNS = ["in_progress", "validation"] as const;
+
+export function isTimerColumn(column: ColumnId): boolean {
+  return (TIMER_COLUMNS as readonly string[]).includes(column);
+}
 
 export const PRIORITIES = ["low", "med", "high"] as const;
 export type Priority = (typeof PRIORITIES)[number];

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it } from "vitest";
 import {
   parseColumnId,
   parsePriority,
@@ -6,7 +6,7 @@ import {
   parseTicketCreateInput,
   parseTicketMoveInput,
   parseTicketUpdateInput,
-} from "../../src/ticket-schema.js"
+} from "../../src/ticket-schema.js";
 
 describe("parseTicketCreateInput", () => {
   it("accepts a valid ticket payload", () => {
@@ -16,7 +16,7 @@ describe("parseTicketCreateInput", () => {
       description: "CRUD + move",
       priority: "med",
       column: "backlog",
-    })
+    });
 
     expect(result).toEqual({
       projectId: "proj1",
@@ -24,8 +24,8 @@ describe("parseTicketCreateInput", () => {
       description: "CRUD + move",
       priority: "med",
       column: "backlog",
-    })
-  })
+    });
+  });
 
   it("accepts empty description and trims title and projectId", () => {
     const result = parseTicketCreateInput({
@@ -34,7 +34,7 @@ describe("parseTicketCreateInput", () => {
       description: "",
       priority: "high",
       column: "todo",
-    })
+    });
 
     expect(result).toEqual({
       projectId: "proj1",
@@ -42,8 +42,8 @@ describe("parseTicketCreateInput", () => {
       description: "",
       priority: "high",
       column: "todo",
-    })
-  })
+    });
+  });
 
   it("rejects empty title, unknown priority, and invalid column", () => {
     const result = parseTicketCreateInput({
@@ -52,14 +52,14 @@ describe("parseTicketCreateInput", () => {
       description: "ok",
       priority: "urgent",
       column: "archive",
-    })
+    });
 
-    expect(result).toHaveProperty("error")
-    if (!("error" in result)) throw new Error("expected validation error")
-    expect(result.error).toContain("Title is required.")
-    expect(result.error).toContain("Priority must be one of:")
-    expect(result.error).toContain("Column must be one of:")
-  })
+    expect(result).toHaveProperty("error");
+    if (!("error" in result)) throw new Error("expected validation error");
+    expect(result.error).toContain("Title is required.");
+    expect(result.error).toContain("Priority must be one of:");
+    expect(result.error).toContain("Column must be one of:");
+  });
 
   it("rejects title longer than 120 and description longer than 2000", () => {
     const result = parseTicketCreateInput({
@@ -68,24 +68,22 @@ describe("parseTicketCreateInput", () => {
       description: "y".repeat(2001),
       priority: "low",
       column: "done",
-    })
+    });
 
-    expect(result).toHaveProperty("error")
-    if (!("error" in result)) throw new Error("expected validation error")
-    expect(result.error).toContain("Title must be at most 120 characters.")
-    expect(result.error).toContain(
-      "Description must be at most 2000 characters.",
-    )
-  })
+    expect(result).toHaveProperty("error");
+    if (!("error" in result)) throw new Error("expected validation error");
+    expect(result.error).toContain("Title must be at most 120 characters.");
+    expect(result.error).toContain("Description must be at most 2000 characters.");
+  });
 
   it("requires project id and title with clear messages", () => {
-    const result = parseTicketCreateInput({})
+    const result = parseTicketCreateInput({});
 
-    expect(result).toHaveProperty("error")
-    if (!("error" in result)) throw new Error("expected validation error")
-    expect(result.error).toContain("Project id is required (--project-id).")
-    expect(result.error).toContain("Title is required (--title).")
-  })
+    expect(result).toHaveProperty("error");
+    if (!("error" in result)) throw new Error("expected validation error");
+    expect(result.error).toContain("Project id is required (--project-id).");
+    expect(result.error).toContain("Title is required (--title).");
+  });
 
   it("rejects empty project id", () => {
     const result = parseTicketCreateInput({
@@ -94,50 +92,55 @@ describe("parseTicketCreateInput", () => {
       description: "",
       priority: "med",
       column: "backlog",
-    })
+    });
 
-    expect(result).toHaveProperty("error")
-    if (!("error" in result)) throw new Error("expected validation error")
-    expect(result.error).toContain("Project id is required (--project-id).")
-  })
-})
+    expect(result).toHaveProperty("error");
+    if (!("error" in result)) throw new Error("expected validation error");
+    expect(result.error).toContain("Project id is required (--project-id).");
+  });
+});
 
 describe("parseTicketUpdateInput", () => {
   it("accepts a partial update", () => {
-    const result = parseTicketUpdateInput({ title: "Updated title" })
-    expect(result).toEqual({ title: "Updated title" })
-  })
+    const result = parseTicketUpdateInput({ title: "Updated title" });
+    expect(result).toEqual({ title: "Updated title" });
+  });
 
   it("rejects an empty update", () => {
-    const result = parseTicketUpdateInput({})
-    expect(result).toHaveProperty("error")
-    if (!("error" in result)) throw new Error("expected validation error")
-    expect(result.error).toContain("Provide at least one field to update")
-  })
+    const result = parseTicketUpdateInput({});
+    expect(result).toHaveProperty("error");
+    if (!("error" in result)) throw new Error("expected validation error");
+    expect(result.error).toContain("Provide at least one field to update");
+  });
 
   it("rejects invalid priority in a partial update", () => {
-    const result = parseTicketUpdateInput({ priority: "critical" })
-    expect(result).toHaveProperty("error")
-    if (!("error" in result)) throw new Error("expected validation error")
-    expect(result.error).toContain("Priority must be one of:")
-  })
-})
+    const result = parseTicketUpdateInput({ priority: "critical" });
+    expect(result).toHaveProperty("error");
+    if (!("error" in result)) throw new Error("expected validation error");
+    expect(result.error).toContain("Priority must be one of:");
+  });
+});
 
 describe("parseTicketMoveInput", () => {
   it("accepts a valid move", () => {
-    expect(
-      parseTicketMoveInput({ id: "ticket1", column: "in_progress" }),
-    ).toEqual({ id: "ticket1", column: "in_progress" })
-  })
+    expect(parseTicketMoveInput({ id: "ticket1", column: "in_progress" })).toEqual({
+      id: "ticket1",
+      column: "in_progress",
+    });
+    expect(parseTicketMoveInput({ id: "ticket1", column: "validation" })).toEqual({
+      id: "ticket1",
+      column: "validation",
+    });
+  });
 
   it("rejects empty id and invalid column", () => {
-    const result = parseTicketMoveInput({ id: "  ", column: "nope" })
-    expect(result).toHaveProperty("error")
-    if (!("error" in result)) throw new Error("expected validation error")
-    expect(result.error).toContain("Ticket id is required.")
-    expect(result.error).toContain("Column must be one of:")
-  })
-})
+    const result = parseTicketMoveInput({ id: "  ", column: "nope" });
+    expect(result).toHaveProperty("error");
+    if (!("error" in result)) throw new Error("expected validation error");
+    expect(result.error).toContain("Ticket id is required.");
+    expect(result.error).toContain("Column must be one of:");
+  });
+});
 
 describe("ticket handoff fields", () => {
   it("accepts branch and prUrl in update and move", () => {
@@ -149,7 +152,7 @@ describe("ticket handoff fields", () => {
     ).toEqual({
       branch: "spec-17-agent-ticket-loop",
       prUrl: "https://github.com/acme/forge/pull/17",
-    })
+    });
 
     expect(
       parseTicketMoveInput({
@@ -163,13 +166,14 @@ describe("ticket handoff fields", () => {
       column: "review",
       branch: "spec-17-agent-ticket-loop",
       prUrl: "http://example.com/pr/1",
-    })
-  })
+    });
+  });
 
   it("accepts the clear flags on their own", () => {
-    expect(
-      parseTicketUpdateInput({ clearBranch: true, clearPrUrl: true }),
-    ).toEqual({ clearBranch: true, clearPrUrl: true })
+    expect(parseTicketUpdateInput({ clearBranch: true, clearPrUrl: true })).toEqual({
+      clearBranch: true,
+      clearPrUrl: true,
+    });
 
     expect(
       parseTicketMoveInput({
@@ -177,8 +181,8 @@ describe("ticket handoff fields", () => {
         column: "review",
         clearBranch: true,
       }),
-    ).toEqual({ id: "ticket1", column: "review", clearBranch: true })
-  })
+    ).toEqual({ id: "ticket1", column: "review", clearBranch: true });
+  });
 
   it("trims branch and prUrl values", () => {
     expect(
@@ -189,100 +193,99 @@ describe("ticket handoff fields", () => {
     ).toEqual({
       branch: "dev/handoff",
       prUrl: "https://example.com/pr/2",
-    })
-  })
+    });
+  });
 
   it("rejects empty and oversized branch values", () => {
-    const empty = parseTicketUpdateInput({ branch: "   " })
-    expect(empty).toHaveProperty("error")
-    if (!("error" in empty)) throw new Error("expected validation error")
-    expect(empty.error).toContain("Branch must be at least 1 character.")
+    const empty = parseTicketUpdateInput({ branch: "   " });
+    expect(empty).toHaveProperty("error");
+    if (!("error" in empty)) throw new Error("expected validation error");
+    expect(empty.error).toContain("Branch must be at least 1 character.");
 
     const long = parseTicketMoveInput({
       id: "ticket1",
       column: "review",
       branch: "x".repeat(201),
-    })
-    expect(long).toHaveProperty("error")
-    if (!("error" in long)) throw new Error("expected validation error")
-    expect(long.error).toContain("Branch must be at most 200 characters.")
-  })
+    });
+    expect(long).toHaveProperty("error");
+    if (!("error" in long)) throw new Error("expected validation error");
+    expect(long.error).toContain("Branch must be at most 200 characters.");
+  });
 
   it("rejects non-http prUrl and prUrl over 2048 characters", () => {
-    const invalid = parseTicketUpdateInput({ prUrl: "ftp://example.com/pr/1" })
-    expect(invalid).toHaveProperty("error")
-    if (!("error" in invalid)) throw new Error("expected validation error")
-    expect(invalid.error).toContain(
-      "PR URL must start with http:// or https://.",
-    )
+    const invalid = parseTicketUpdateInput({ prUrl: "ftp://example.com/pr/1" });
+    expect(invalid).toHaveProperty("error");
+    if (!("error" in invalid)) throw new Error("expected validation error");
+    expect(invalid.error).toContain("PR URL must start with http:// or https://.");
 
     const long = parseTicketUpdateInput({
       prUrl: `https://example.com/${"x".repeat(2049)}`,
-    })
-    expect(long).toHaveProperty("error")
-    if (!("error" in long)) throw new Error("expected validation error")
-    expect(long.error).toContain("PR URL must be at most 2048 characters.")
-  })
+    });
+    expect(long).toHaveProperty("error");
+    if (!("error" in long)) throw new Error("expected validation error");
+    expect(long.error).toContain("PR URL must be at most 2048 characters.");
+  });
 
   it("keeps rejecting an empty update", () => {
-    const result = parseTicketUpdateInput({})
-    expect(result).toHaveProperty("error")
-    if (!("error" in result)) throw new Error("expected validation error")
-    expect(result.error).toContain("Provide at least one field to update")
-  })
-})
+    const result = parseTicketUpdateInput({});
+    expect(result).toHaveProperty("error");
+    if (!("error" in result)) throw new Error("expected validation error");
+    expect(result.error).toContain("Provide at least one field to update");
+  });
+});
 
 describe("parseTicketCommentInput", () => {
   it("accepts a body and defaults author to user", () => {
     expect(parseTicketCommentInput({ body: "Ready for review" })).toEqual({
       body: "Ready for review",
       author: "user",
-    })
-  })
+    });
+  });
 
   it("accepts an explicit agent author and trims the body", () => {
-    expect(
-      parseTicketCommentInput({ body: "  Handoff complete  ", author: "agent" }),
-    ).toEqual({ body: "Handoff complete", author: "agent" })
-  })
+    expect(parseTicketCommentInput({ body: "  Handoff complete  ", author: "agent" })).toEqual({
+      body: "Handoff complete",
+      author: "agent",
+    });
+  });
 
   it("rejects a missing body, invalid author, and body over 5000", () => {
-    const missing = parseTicketCommentInput({})
-    expect(missing).toHaveProperty("error")
-    if (!("error" in missing)) throw new Error("expected validation error")
-    expect(missing.error).toContain("Comment body is required (--body).")
+    const missing = parseTicketCommentInput({});
+    expect(missing).toHaveProperty("error");
+    if (!("error" in missing)) throw new Error("expected validation error");
+    expect(missing.error).toContain("Comment body is required (--body).");
 
-    const author = parseTicketCommentInput({ body: "hi", author: "bot" })
-    expect(author).toHaveProperty("error")
-    if (!("error" in author)) throw new Error("expected validation error")
-    expect(author.error).toContain("Author must be one of:")
+    const author = parseTicketCommentInput({ body: "hi", author: "bot" });
+    expect(author).toHaveProperty("error");
+    if (!("error" in author)) throw new Error("expected validation error");
+    expect(author.error).toContain("Author must be one of:");
 
-    const long = parseTicketCommentInput({ body: "x".repeat(5001) })
-    expect(long).toHaveProperty("error")
-    if (!("error" in long)) throw new Error("expected validation error")
-    expect(long.error).toContain("Comment body must be at most 5000 characters.")
-  })
-})
+    const long = parseTicketCommentInput({ body: "x".repeat(5001) });
+    expect(long).toHaveProperty("error");
+    if (!("error" in long)) throw new Error("expected validation error");
+    expect(long.error).toContain("Comment body must be at most 5000 characters.");
+  });
+});
 
 describe("parseColumnId / parsePriority", () => {
   it("accepts valid enums", () => {
-    expect(parseColumnId("review")).toBe("review")
-    expect(parsePriority("low")).toBe("low")
-  })
+    expect(parseColumnId("review")).toBe("review");
+    expect(parsePriority("low")).toBe("low");
+  });
 
   it("rejects invalid enums", () => {
-    const column = parseColumnId("blocked")
-    expect(column).toHaveProperty("error")
+    const column = parseColumnId("blocked");
+    expect(column).toHaveProperty("error");
     if (typeof column !== "object" || !("error" in column)) {
-      throw new Error("expected validation error")
+      throw new Error("expected validation error");
     }
-    expect(column.error).toContain("Column must be one of:")
+    expect(column.error).toContain("Column must be one of:");
 
-    const priority = parsePriority("medium")
-    expect(priority).toHaveProperty("error")
+    const priority = parsePriority("medium");
+    expect(priority).toHaveProperty("error");
     if (typeof priority !== "object" || !("error" in priority)) {
-      throw new Error("expected validation error")
+      throw new Error("expected validation error");
     }
-    expect(priority.error).toContain("Priority must be one of:")
-  })
-})
+    expect(priority.error).toContain("Priority must be one of:");
+  });
+});

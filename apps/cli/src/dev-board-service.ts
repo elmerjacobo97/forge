@@ -221,7 +221,10 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
       const projectId = options.projectId;
       const refs = await projectRefs(projectId);
       const candidates = await listByColumn("todo", projectId);
-      const inProgressTickets = await listByColumn("in_progress", projectId);
+      const activeTickets = [
+        ...(await listByColumn("in_progress", projectId)),
+        ...(await listByColumn("validation", projectId)),
+      ];
       const [chosen] = [...candidates].sort(compareCandidates);
       const comments = chosen ? await listComments(chosen.id) : [];
 
@@ -229,7 +232,7 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
         ticket: chosen ?? null,
         project: chosen ? (refs.get(chosen.projectId) ?? null) : null,
         comments,
-        inProgress: inProgressTickets.map((ticket) => ({
+        inProgress: activeTickets.map((ticket) => ({
           ticket,
           project: refs.get(ticket.projectId) ?? null,
         })),

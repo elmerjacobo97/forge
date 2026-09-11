@@ -181,6 +181,7 @@ forge-cli ticket update <id> --title "New title" --priority med
 forge-cli ticket update <id> --branch dev/handoff --pr-url "https://github.com/acme/forge/pull/17"
 forge-cli ticket update <id> --clear-branch --clear-pr-url
 forge-cli ticket move <id> --column in_progress
+forge-cli ticket move <id> --column validation
 forge-cli ticket move <id> --column review --branch dev/handoff --pr-url "https://github.com/acme/forge/pull/17"
 forge-cli ticket next
 forge-cli ticket next --project-id <projectId> --json
@@ -191,18 +192,21 @@ forge-cli ticket delete <id> --json
 
 `--project-id` is required on `create` and `list` and optional on `next`
 (default: all projects). Columns: `backlog` | `todo` | `in_progress` |
-`review` | `done`. Priorities: `low` | `med` | `high`. Ticket writes use
+`validation` | `review` | `done`. Priorities: `low` | `med` | `high`. Ticket writes use
 backend RPCs so moves, timers, events, and time entries remain atomic.
+Timer-active columns are `in_progress` and `validation`; moving between them
+keeps the timer running, and `review`/`done` stop it.
 
 `next` returns the best pending `todo` ticket ranked by priority
 (`high → med → low`, ties by board position) plus its project, its comments,
-and an `inProgress` warning list. With no pending work, text says
-`No pending tickets.` and `--json` returns `{ "ticket": null, ... }` (exit 0).
-`next` is read-only.
+and an `inProgress` warning list (tickets in `in_progress` or `validation`).
+With no pending work, text says `No pending tickets.` and `--json` returns
+`{ "ticket": null, ... }` (exit 0). `next` is read-only.
 
 `comment` requires `--body` (1–5000) and accepts `--author user|agent`
 (default `user`); comments are append-only plain text, listed oldest first by
-`comments`. Handoff fields: `--branch` (1–200), `--pr-url` (http/https, max
+`comments` (the web dialog renders their GFM markdown; the CLI prints the raw
+body). Handoff fields: `--branch` (1–200), `--pr-url` (http/https, max
 2048), `--clear-branch`, `--clear-pr-url`. `update` without them keeps the
 current values; `move` writes the handoff atomically with the column change.
 

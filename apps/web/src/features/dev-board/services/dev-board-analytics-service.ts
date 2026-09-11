@@ -11,8 +11,10 @@ const eventRowSchema = z.object({
   id: z.string(),
   ticket_id: z.string(),
   event_type: z.enum(["created", "moved", "started", "completed", "paused", "resumed"]),
-  from_column: z.enum(["backlog", "todo", "in_progress", "review", "done"]).nullable(),
-  to_column: z.enum(["backlog", "todo", "in_progress", "review", "done"]).nullable(),
+  from_column: z
+    .enum(["backlog", "todo", "in_progress", "validation", "review", "done"])
+    .nullable(),
+  to_column: z.enum(["backlog", "todo", "in_progress", "validation", "review", "done"]).nullable(),
   occurred_at: z.string(),
 });
 

@@ -1,5 +1,5 @@
 import type { TicketFormValues } from "../schemas/ticket";
-import type { ColumnId, Ticket } from "../types/board";
+import { isTimerColumn, type ColumnId, type Ticket } from "../types/board";
 import { nowISO, startTimer, stopTimer } from "./timer";
 
 function positionAtEnd(tickets: Ticket[]): number {
@@ -47,8 +47,8 @@ export function moveTicket(
     .filter((item) => item.column === target && item.id !== ticket.id)
     .sort((a, b) => b.position - a.position);
   let updated = ticket;
-  if (target === "in_progress") updated = startTimer(updated);
-  if (ticket.column === "in_progress" && target !== "in_progress") updated = stopTimer(updated);
+  if (isTimerColumn(target)) updated = startTimer(updated);
+  if (isTimerColumn(ticket.column) && !isTimerColumn(target)) updated = stopTimer(updated);
 
   return {
     ...updated,
