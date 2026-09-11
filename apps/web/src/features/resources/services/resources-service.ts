@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createInsForgeServerClient } from "@/lib/insforge/server";
 import type { ResourceFilters } from "../schemas/resource-filters";
 import type { Resource } from "../types";
-import { filterResources } from "../utils/filters";
+import { buildOtherFormatFilter, buildResourceSearchFilter } from "../utils/query-filters";
 
 const resourceToolSchema = z.enum([
   "react-native",
@@ -73,25 +73,65 @@ function failure(error: { message?: string } | null, fallback: string): Error {
 export interface ResourcesPage {
   resources: Resource[];
   tags: string[];
+  total: number;
 }
 
-export const resourcesService = {
-  async fetchResourcesPage(filters?: ResourceFilters): Promise<ResourcesPage> {
-    const insforge = await createInsForgeServerClient();
-    const { data, error } = await insforge.database
-      .from("resources")
-      .select(resourceSelect)
-      .order("created_at", { ascending: false });
-    if (error) throw failure(error, "Failed to load resources.");
+const resourceTagsRowSchema = z.object({
+  tags: z.array(z.string()),
+});
 
-    const resources = resourceRowSchema.array().parse(data).map(toResource);
-    const tags = Array.from(new Set(resources.flatMap((resource) => resource.tags))).sort((a, b) =>
-      a.localeCompare(b),
-    );
+export const resourcesService = {
+  async fetchResourcesPage(filters: ResourceFilters, visible: number): Promise<ResourcesPage> {
+    const insforge = await createInsForgeServerClient();
+    let query = insforge.database.from("resources").select(resourceSelect, { count: "exact" });
+
+    if (filters.kind !== "all") {
+      query = query.eq("kind", filters.kind);
+    }
+
+    if (filters.tool !== "all") {
+      query = query.eq("tool", filters.tool);
+    }
+
+    if (filters.tag !== "all") {
+      query = query.contains("tags", [filters.tag]);
+    }
+
+    if (filters.format === "other") {
+      query = query.or(buildOtherFormatFilter());
+    } else if (filters.format !== "all") {
+      query = query.eq("language", filters.format);
+    }
+
+    const search = filters.q.trim();
+    if (search) {
+      query = query.or(buildResourceSearchFilter(search));
+    }
+
+    const [pageResult, tagsResult] = await Promise.all([
+      query
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(0, visible - 1),
+      insforge.database.from("resources").select("tags"),
+    ]);
+    if (pageResult.error) throw failure(pageResult.error, "Failed to load resources.");
+    if (tagsResult.error) throw failure(tagsResult.error, "Failed to load resource tags.");
+
+    const resources = resourceRowSchema.array().parse(pageResult.data).map(toResource);
+    const tags = Array.from(
+      new Set(
+        resourceTagsRowSchema
+          .array()
+          .parse(tagsResult.data)
+          .flatMap((row) => row.tags),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
 
     return {
-      resources: filters ? filterResources(resources, filters) : resources,
+      resources,
       tags,
+      total: pageResult.count ?? 0,
     };
   },
 

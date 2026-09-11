@@ -1,19 +1,14 @@
-import { createAuthedBookmarksService } from "../insforge.js"
-import {
-  parseBookmarkCreateInput,
-  parseBookmarkUpdateInput,
-} from "../bookmark-schema.js"
+import { createAuthedBookmarksService } from "../insforge.js";
+import { parseBookmarkCreateInput, parseBookmarkUpdateInput } from "../bookmark-schema.js";
 import {
   getFlagValue,
   getPositionals,
   hasFlag,
+  parseListOptions,
   parseTagsFlag,
-} from "../flags.js"
-import {
-  writeBookmarkListOutput,
-  writeBookmarkOutput,
-} from "../format.js"
-import { CATEGORIES } from "../types.js"
+} from "../flags.js";
+import { writeBookmarkListOutput, writeBookmarkOutput } from "../format.js";
+import { CATEGORIES } from "../types.js";
 
 const BOOKMARK_HELP = `Usage:
   forge-cli bookmark <command> [options]
@@ -27,6 +22,10 @@ Commands:
 
 Shared options:
   --json                       Emit JSON instead of text (create|list|get|update)
+
+list options:
+  --limit <n>              Optional max rows (1-1000)
+  --offset <n>             Optional rows to skip (>= 0, requires --limit)
 
 create options:
   --title <text>           Required (min 2)
@@ -46,125 +45,132 @@ Examples:
   forge-cli bookmark create --title "Docs" --url "https://example.com" --category docs --description "Useful docs" --tags react,docs
   forge-cli bookmark list
   forge-cli bookmark list --json
+  forge-cli bookmark list --limit 10 --offset 10
   forge-cli bookmark get <id> --json
   forge-cli bookmark update <id> --title "New title"
   forge-cli bookmark delete <id>
-`
+`;
 
 function fail(message: string): void {
-  process.stderr.write(`${message}\n`)
-  process.exitCode = 1
+  process.stderr.write(`${message}\n`);
+  process.exitCode = 1;
 }
 
 async function runCreate(args: string[]): Promise<void> {
-  const json = hasFlag(args, "--json")
+  const json = hasFlag(args, "--json");
   const input = parseBookmarkCreateInput({
     title: getFlagValue(args, "--title"),
     url: getFlagValue(args, "--url"),
     category: getFlagValue(args, "--category"),
     description: getFlagValue(args, "--description"),
     tags: parseTagsFlag(getFlagValue(args, "--tags")),
-  })
+  });
 
   if ("error" in input) {
-    fail(input.error)
-    return
+    fail(input.error);
+    return;
   }
 
-  const service = await createAuthedBookmarksService()
-  const bookmark = await service.create(input)
-  writeBookmarkOutput(bookmark, json)
+  const service = await createAuthedBookmarksService();
+  const bookmark = await service.create(input);
+  writeBookmarkOutput(bookmark, json);
 }
 
 async function runList(args: string[]): Promise<void> {
-  const json = hasFlag(args, "--json")
-  const service = await createAuthedBookmarksService()
-  const bookmarks = await service.list()
-  writeBookmarkListOutput(bookmarks, json)
+  const json = hasFlag(args, "--json");
+  const parsed = parseListOptions(args);
+  if ("error" in parsed) {
+    fail(parsed.error);
+    return;
+  }
+
+  const service = await createAuthedBookmarksService();
+  const bookmarks = await service.list(parsed.options);
+  writeBookmarkListOutput(bookmarks, json);
 }
 
 async function runGet(args: string[]): Promise<void> {
-  const json = hasFlag(args, "--json")
-  const [id] = getPositionals(args)
+  const json = hasFlag(args, "--json");
+  const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing bookmark id.\n\nUsage: forge-cli bookmark get <id>")
-    return
+    fail("Missing bookmark id.\n\nUsage: forge-cli bookmark get <id>");
+    return;
   }
 
-  const service = await createAuthedBookmarksService()
-  const bookmark = await service.get(id)
-  writeBookmarkOutput(bookmark, json)
+  const service = await createAuthedBookmarksService();
+  const bookmark = await service.get(id);
+  writeBookmarkOutput(bookmark, json);
 }
 
 async function runUpdate(args: string[]): Promise<void> {
-  const json = hasFlag(args, "--json")
-  const [id] = getPositionals(args)
+  const json = hasFlag(args, "--json");
+  const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing bookmark id.\n\nUsage: forge-cli bookmark update <id> [--title …]")
-    return
+    fail("Missing bookmark id.\n\nUsage: forge-cli bookmark update <id> [--title …]");
+    return;
   }
 
-  const raw: Record<string, unknown> = {}
-  const title = getFlagValue(args, "--title")
-  const url = getFlagValue(args, "--url")
-  const category = getFlagValue(args, "--category")
-  const description = getFlagValue(args, "--description")
-  const tagsRaw = getFlagValue(args, "--tags")
+  const raw: Record<string, unknown> = {};
+  const title = getFlagValue(args, "--title");
+  const url = getFlagValue(args, "--url");
+  const category = getFlagValue(args, "--category");
+  const description = getFlagValue(args, "--description");
+  const tagsRaw = getFlagValue(args, "--tags");
 
-  if (title !== undefined) raw.title = title
-  if (url !== undefined) raw.url = url
-  if (category !== undefined) raw.category = category
-  if (description !== undefined) raw.description = description
-  if (tagsRaw !== undefined) raw.tags = parseTagsFlag(tagsRaw)
+  if (title !== undefined) raw.title = title;
+  if (url !== undefined) raw.url = url;
+  if (category !== undefined) raw.category = category;
+  if (description !== undefined) raw.description = description;
+  if (tagsRaw !== undefined) raw.tags = parseTagsFlag(tagsRaw);
 
-  const input = parseBookmarkUpdateInput(raw)
+  const input = parseBookmarkUpdateInput(raw);
   if ("error" in input) {
-    fail(input.error)
-    return
+    fail(input.error);
+    return;
   }
 
-  const service = await createAuthedBookmarksService()
-  const bookmark = await service.update(id, input)
-  writeBookmarkOutput(bookmark, json)
+  const service = await createAuthedBookmarksService();
+  const bookmark = await service.update(id, input);
+  writeBookmarkOutput(bookmark, json);
 }
 
 async function runDelete(args: string[]): Promise<void> {
-  const [id] = getPositionals(args)
+  const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing bookmark id.\n\nUsage: forge-cli bookmark delete <id>")
-    return
+    fail("Missing bookmark id.\n\nUsage: forge-cli bookmark delete <id>");
+    return;
   }
 
-  const service = await createAuthedBookmarksService()
-  await service.delete(id)
-  process.stdout.write(`Deleted bookmark ${id}\n`)
+  const service = await createAuthedBookmarksService();
+  await service.delete(id);
+  process.stdout.write(`Deleted bookmark ${id}\n`);
 }
 
 export async function runBookmark(args: string[]): Promise<void> {
   if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
-    process.stdout.write(`${BOOKMARK_HELP}\n`)
-    return
+    process.stdout.write(`${BOOKMARK_HELP}\n`);
+    return;
   }
 
-  const [subcommand, ...rest] = args
+  const [subcommand, ...rest] = args;
 
   switch (subcommand) {
     case "create":
-      await runCreate(rest)
-      return
+      await runCreate(rest);
+      return;
     case "list":
-      await runList(rest)
-      return
+      await runList(rest);
+      return;
     case "get":
-      await runGet(rest)
-      return
+      await runGet(rest);
+      return;
     case "update":
-      await runUpdate(rest)
-      return
+      await runUpdate(rest);
+      return;
     case "delete":
-      await runDelete(rest)
-      return
+      await runDelete(rest);
+      return;
     default:
-      fail(`Unknown bookmark command: ${subcommand}\n\n${BOOKMARK_HELP}`)
+      fail(`Unknown bookmark command: ${subcommand}\n\n${BOOKMARK_HELP}`);
   }
 }

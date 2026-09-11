@@ -5,7 +5,9 @@ import { z } from "zod";
 import { createInsForgeServerClient } from "@/lib/insforge/server";
 import type { BookmarkFilters } from "../schemas/bookmarks-schema";
 import type { Bookmark } from "../types";
-import { filterBookmarks } from "../utils/filters";
+import { buildBookmarkSearchFilter } from "../utils/query-filters";
+
+const COLUMNS = "id,title,url,category,description,tags,created_at";
 
 const bookmarkRowSchema = z.object({
   id: z.string(),
@@ -16,6 +18,11 @@ const bookmarkRowSchema = z.object({
   tags: z.array(z.string()),
   created_at: z.string(),
 });
+
+export interface BookmarksPage {
+  bookmarks: Bookmark[];
+  total: number;
+}
 
 export type BookmarkInput = Omit<Bookmark, "id" | "createdAt">;
 
@@ -29,16 +36,29 @@ function failure(error: { message?: string } | null, fallback: string): Error {
 }
 
 export const bookmarksService = {
-  async fetchBookmarks(filters?: BookmarkFilters): Promise<Bookmark[]> {
+  async fetchBookmarks(filters: BookmarkFilters, visible: number): Promise<BookmarksPage> {
     const insforge = await createInsForgeServerClient();
-    const { data, error } = await insforge.database
-      .from("bookmarks")
-      .select("id,title,url,category,description,tags,created_at")
-      .order("created_at", { ascending: false });
+    let query = insforge.database.from("bookmarks").select(COLUMNS, { count: "exact" });
+
+    if (filters.category !== "all") {
+      query = query.eq("category", filters.category);
+    }
+
+    const search = filters.q.trim();
+    if (search) {
+      query = query.or(buildBookmarkSearchFilter(search));
+    }
+
+    const { data, error, count } = await query
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(0, visible - 1);
     if (error) throw failure(error, "Failed to load bookmarks.");
 
-    const bookmarks = bookmarkRowSchema.array().parse(data).map(toBookmark);
-    return filters ? filterBookmarks(bookmarks, filters) : bookmarks;
+    return {
+      bookmarks: bookmarkRowSchema.array().parse(data).map(toBookmark),
+      total: count ?? 0,
+    };
   },
 
   async createBookmark(bookmark: BookmarkInput): Promise<Bookmark> {
@@ -46,7 +66,7 @@ export const bookmarksService = {
     const { data, error } = await insforge.database
       .from("bookmarks")
       .insert([bookmark])
-      .select("id,title,url,category,description,tags,created_at")
+      .select(COLUMNS)
       .single();
     if (error) throw failure(error, "Failed to create bookmark.");
     return toBookmark(data);
@@ -58,7 +78,7 @@ export const bookmarksService = {
       .from("bookmarks")
       .update(bookmark)
       .eq("id", bookmarkId)
-      .select("id,title,url,category,description,tags,created_at")
+      .select(COLUMNS)
       .single();
     if (error) throw failure(error, "Failed to update bookmark.");
     return toBookmark(data);

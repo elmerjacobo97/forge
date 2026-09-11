@@ -1,19 +1,14 @@
-import { createAuthedResourcesService } from "../insforge.js"
-import {
-  parseResourceCreateInput,
-  parseResourceUpdateInput,
-} from "../resource-schema.js"
+import { createAuthedResourcesService } from "../insforge.js";
+import { parseResourceCreateInput, parseResourceUpdateInput } from "../resource-schema.js";
 import {
   getFlagValue,
   getPositionals,
   hasFlag,
+  parseListOptions,
   parseTagsFlag,
-} from "../flags.js"
-import {
-  writeResourceListOutput,
-  writeResourceOutput,
-} from "../format.js"
-import { RESOURCE_KINDS, RESOURCE_TOOLS } from "../types.js"
+} from "../flags.js";
+import { writeResourceListOutput, writeResourceOutput } from "../format.js";
+import { RESOURCE_KINDS, RESOURCE_TOOLS } from "../types.js";
 
 const RESOURCE_HELP = `Usage:
   forge-cli resource <command> [options]
@@ -27,6 +22,10 @@ Commands:
 
 Shared options:
   --json                       Emit JSON instead of text (create|list|get|update)
+
+list options:
+  --limit <n>              Optional max rows (1-1000)
+  --offset <n>             Optional rows to skip (>= 0, requires --limit)
 
 create options:
   --title <text>               Required (min 2)
@@ -54,43 +53,44 @@ Examples:
   forge-cli resource create --title "ESLint flat" --kind config --content "{}" --language json --tool vscode --tags eslint
   forge-cli resource list
   forge-cli resource list --json
+  forge-cli resource list --limit 10 --offset 10
   forge-cli resource get <id> --json
   forge-cli resource update <id> --title "New title"
   forge-cli resource delete <id>
-`
+`;
 
 function fail(message: string): void {
-  process.stderr.write(`${message}\n`)
-  process.exitCode = 1
+  process.stderr.write(`${message}\n`);
+  process.exitCode = 1;
 }
 
 function readResourceFlags(args: string[]): Record<string, unknown> {
-  const raw: Record<string, unknown> = {}
-  const title = getFlagValue(args, "--title")
-  const kind = getFlagValue(args, "--kind")
-  const content = getFlagValue(args, "--content")
-  const language = getFlagValue(args, "--language")
-  const tagsRaw = getFlagValue(args, "--tags")
-  const tool = getFlagValue(args, "--tool")
-  const customTool = getFlagValue(args, "--custom-tool")
-  const version = getFlagValue(args, "--version")
-  const context = getFlagValue(args, "--context")
+  const raw: Record<string, unknown> = {};
+  const title = getFlagValue(args, "--title");
+  const kind = getFlagValue(args, "--kind");
+  const content = getFlagValue(args, "--content");
+  const language = getFlagValue(args, "--language");
+  const tagsRaw = getFlagValue(args, "--tags");
+  const tool = getFlagValue(args, "--tool");
+  const customTool = getFlagValue(args, "--custom-tool");
+  const version = getFlagValue(args, "--version");
+  const context = getFlagValue(args, "--context");
 
-  if (title !== undefined) raw.title = title
-  if (kind !== undefined) raw.kind = kind
-  if (content !== undefined) raw.content = content
-  if (language !== undefined) raw.language = language
-  if (tagsRaw !== undefined) raw.tags = parseTagsFlag(tagsRaw)
-  if (tool !== undefined) raw.tool = tool
-  if (customTool !== undefined) raw.customTool = customTool
-  if (version !== undefined) raw.version = version
-  if (context !== undefined) raw.context = context
+  if (title !== undefined) raw.title = title;
+  if (kind !== undefined) raw.kind = kind;
+  if (content !== undefined) raw.content = content;
+  if (language !== undefined) raw.language = language;
+  if (tagsRaw !== undefined) raw.tags = parseTagsFlag(tagsRaw);
+  if (tool !== undefined) raw.tool = tool;
+  if (customTool !== undefined) raw.customTool = customTool;
+  if (version !== undefined) raw.version = version;
+  if (context !== undefined) raw.context = context;
 
-  return raw
+  return raw;
 }
 
 async function runCreate(args: string[]): Promise<void> {
-  const json = hasFlag(args, "--json")
+  const json = hasFlag(args, "--json");
   const input = parseResourceCreateInput({
     title: getFlagValue(args, "--title"),
     kind: getFlagValue(args, "--kind"),
@@ -101,99 +101,105 @@ async function runCreate(args: string[]): Promise<void> {
     customTool: getFlagValue(args, "--custom-tool"),
     version: getFlagValue(args, "--version"),
     context: getFlagValue(args, "--context"),
-  })
+  });
 
   if ("error" in input) {
-    fail(input.error)
-    return
+    fail(input.error);
+    return;
   }
 
-  const service = await createAuthedResourcesService()
-  const resource = await service.create(input)
-  writeResourceOutput(resource, json)
+  const service = await createAuthedResourcesService();
+  const resource = await service.create(input);
+  writeResourceOutput(resource, json);
 }
 
 async function runList(args: string[]): Promise<void> {
-  const json = hasFlag(args, "--json")
-  const service = await createAuthedResourcesService()
-  const resources = await service.list()
-  writeResourceListOutput(resources, json)
+  const json = hasFlag(args, "--json");
+  const parsed = parseListOptions(args);
+  if ("error" in parsed) {
+    fail(parsed.error);
+    return;
+  }
+
+  const service = await createAuthedResourcesService();
+  const resources = await service.list(parsed.options);
+  writeResourceListOutput(resources, json);
 }
 
 async function runGet(args: string[]): Promise<void> {
-  const json = hasFlag(args, "--json")
-  const [id] = getPositionals(args)
+  const json = hasFlag(args, "--json");
+  const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing resource id.\n\nUsage: forge-cli resource get <id>")
-    return
+    fail("Missing resource id.\n\nUsage: forge-cli resource get <id>");
+    return;
   }
 
-  const service = await createAuthedResourcesService()
-  const resource = await service.get(id)
-  writeResourceOutput(resource, json)
+  const service = await createAuthedResourcesService();
+  const resource = await service.get(id);
+  writeResourceOutput(resource, json);
 }
 
 async function runUpdate(args: string[]): Promise<void> {
-  const json = hasFlag(args, "--json")
-  const [id] = getPositionals(args)
+  const json = hasFlag(args, "--json");
+  const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing resource id.\n\nUsage: forge-cli resource update <id> [--title …]")
-    return
+    fail("Missing resource id.\n\nUsage: forge-cli resource update <id> [--title …]");
+    return;
   }
 
-  const raw = readResourceFlags(args)
+  const raw = readResourceFlags(args);
   if (getFlagValue(args, "--tags") !== undefined) {
-    raw.tags = parseTagsFlag(getFlagValue(args, "--tags"))
+    raw.tags = parseTagsFlag(getFlagValue(args, "--tags"));
   }
 
-  const input = parseResourceUpdateInput(raw)
+  const input = parseResourceUpdateInput(raw);
   if ("error" in input) {
-    fail(input.error)
-    return
+    fail(input.error);
+    return;
   }
 
-  const service = await createAuthedResourcesService()
-  const resource = await service.update(id, input)
-  writeResourceOutput(resource, json)
+  const service = await createAuthedResourcesService();
+  const resource = await service.update(id, input);
+  writeResourceOutput(resource, json);
 }
 
 async function runDelete(args: string[]): Promise<void> {
-  const [id] = getPositionals(args)
+  const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing resource id.\n\nUsage: forge-cli resource delete <id>")
-    return
+    fail("Missing resource id.\n\nUsage: forge-cli resource delete <id>");
+    return;
   }
 
-  const service = await createAuthedResourcesService()
-  await service.delete(id)
-  process.stdout.write(`Deleted resource ${id}\n`)
+  const service = await createAuthedResourcesService();
+  await service.delete(id);
+  process.stdout.write(`Deleted resource ${id}\n`);
 }
 
 export async function runResource(args: string[]): Promise<void> {
   if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
-    process.stdout.write(`${RESOURCE_HELP}\n`)
-    return
+    process.stdout.write(`${RESOURCE_HELP}\n`);
+    return;
   }
 
-  const [subcommand, ...rest] = args
+  const [subcommand, ...rest] = args;
 
   switch (subcommand) {
     case "create":
-      await runCreate(rest)
-      return
+      await runCreate(rest);
+      return;
     case "list":
-      await runList(rest)
-      return
+      await runList(rest);
+      return;
     case "get":
-      await runGet(rest)
-      return
+      await runGet(rest);
+      return;
     case "update":
-      await runUpdate(rest)
-      return
+      await runUpdate(rest);
+      return;
     case "delete":
-      await runDelete(rest)
-      return
+      await runDelete(rest);
+      return;
     default:
-      fail(`Unknown resource command: ${subcommand}\n\n${RESOURCE_HELP}`)
+      fail(`Unknown resource command: ${subcommand}\n\n${RESOURCE_HELP}`);
   }
 }
