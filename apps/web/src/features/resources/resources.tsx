@@ -1,5 +1,6 @@
 import { Code2 } from "lucide-react";
 
+import { ListPagination } from "@/components/list-pagination";
 import { ResourceCard } from "./components/resource-card";
 import { ResourcesToolbar } from "./components/resources-toolbar";
 import type { ResourceFilters } from "./schemas/resource-filters";
@@ -9,10 +10,12 @@ export function Resources({
   resources,
   filters,
   tags,
+  total,
 }: {
   resources: Resource[];
   filters: ResourceFilters;
   tags: string[];
+  total: number;
 }) {
   return (
     <div className="flex h-full flex-col gap-4">
@@ -41,6 +44,11 @@ export function Resources({
           </div>
         )}
       </div>
+
+      <ListPagination
+        loaded={resources.length}
+        total={total}
+      />
     </div>
   );
 }

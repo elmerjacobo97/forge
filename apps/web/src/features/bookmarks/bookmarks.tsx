@@ -1,5 +1,6 @@
 import { Globe } from "lucide-react";
 
+import { ListPagination } from "@/components/list-pagination";
 import { BookmarkCard } from "./components/bookmark-card";
 import { BookmarksToolbar } from "./components/bookmarks-toolbar";
 import type { BookmarkFilters } from "./schemas/bookmarks-schema";
@@ -8,9 +9,11 @@ import type { Bookmark } from "./types";
 export function Bookmarks({
   bookmarks,
   filters,
+  total,
 }: {
   bookmarks: Bookmark[];
   filters: BookmarkFilters;
+  total: number;
 }) {
   return (
     <div className="flex h-full flex-col gap-4">
@@ -36,6 +39,11 @@ export function Bookmarks({
           </div>
         )}
       </div>
+
+      <ListPagination
+        loaded={bookmarks.length}
+        total={total}
+      />
     </div>
   );
 }

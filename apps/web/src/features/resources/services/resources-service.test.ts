@@ -7,7 +7,41 @@ const createInsForgeServerClient = vi.hoisted(() => vi.fn(async () => ({ databas
 
 vi.mock("@/lib/insforge/server", () => ({ createInsForgeServerClient }));
 
+import { buildOtherFormatFilter, buildResourceSearchFilter } from "../utils/query-filters";
 import { resourcesService } from "./resources-service";
+
+const filters = {
+  q: "",
+  kind: "all",
+  tool: "all",
+  format: "all",
+  tag: "all",
+} as const;
+
+function mockFetchQueries(
+  mainResult: { data: unknown; error: unknown; count?: number | null },
+  tagRows: unknown,
+) {
+  const range = vi.fn().mockResolvedValue(mainResult);
+  const query = {
+    select: vi.fn(),
+    eq: vi.fn(),
+    or: vi.fn(),
+    contains: vi.fn(),
+    order: vi.fn(),
+    range,
+  };
+  query.select.mockReturnValue(query);
+  query.eq.mockReturnValue(query);
+  query.or.mockReturnValue(query);
+  query.contains.mockReturnValue(query);
+  query.order.mockReturnValue(query);
+
+  const tagsSelect = vi.fn().mockResolvedValue({ data: tagRows, error: null });
+  database.from.mockReturnValueOnce(query).mockReturnValueOnce({ select: tagsSelect });
+
+  return query;
+}
 
 describe("resourcesService", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -26,10 +60,9 @@ describe("resourcesService", () => {
       context: null,
       created_at: "2026-07-20T00:00:00.000Z",
     };
-    const order = vi.fn().mockResolvedValue({ data: [row], error: null });
-    database.from.mockReturnValue({ select: vi.fn(() => ({ order })) });
+    mockFetchQueries({ data: [row], error: null, count: 1 }, [{ tags: ["tooling"] }]);
 
-    const page = await resourcesService.fetchResourcesPage();
+    const page = await resourcesService.fetchResourcesPage(filters, 10);
 
     expect(page.resources).toEqual([
       {
@@ -47,6 +80,7 @@ describe("resourcesService", () => {
       },
     ]);
     expect(page.tags).toEqual(["tooling"]);
+    expect(page.total).toBe(1);
   });
 
   it("maps complete configuration rows", async () => {
@@ -63,10 +97,9 @@ describe("resourcesService", () => {
       context: "Shared mobile defaults",
       created_at: "2026-07-20T01:00:00.000Z",
     };
-    const order = vi.fn().mockResolvedValue({ data: [row], error: null });
-    database.from.mockReturnValue({ select: vi.fn(() => ({ order })) });
+    mockFetchQueries({ data: [row], error: null, count: 1 }, [{ tags: ["mobile", "config"] }]);
 
-    const page = await resourcesService.fetchResourcesPage();
+    const page = await resourcesService.fetchResourcesPage(filters, 10);
 
     expect(page.resources).toEqual([
       {
@@ -84,6 +117,67 @@ describe("resourcesService", () => {
       },
     ]);
     expect(page.tags).toEqual(["config", "mobile"]);
+    expect(page.total).toBe(1);
+  });
+
+  it("applies the visible parameter, exact count and stable order", async () => {
+    const query = mockFetchQueries({ data: [], error: null, count: 0 }, []);
+
+    await resourcesService.fetchResourcesPage(filters, 25);
+
+    expect(query.select).toHaveBeenCalledWith(expect.stringContaining("id,title"), {
+      count: "exact",
+    });
+    expect(query.order).toHaveBeenNthCalledWith(1, "created_at", { ascending: false });
+    expect(query.order).toHaveBeenNthCalledWith(2, "id", { ascending: false });
+    expect(query.range).toHaveBeenCalledWith(0, 24);
+  });
+
+  it("applies kind, tool, tag and format filters server-side", async () => {
+    const query = mockFetchQueries({ data: [], error: null, count: 0 }, []);
+
+    await resourcesService.fetchResourcesPage(
+      { q: "", kind: "config", tool: "vscode", format: "json", tag: "eslint" },
+      10,
+    );
+
+    expect(query.eq).toHaveBeenCalledWith("kind", "config");
+    expect(query.eq).toHaveBeenCalledWith("tool", "vscode");
+    expect(query.eq).toHaveBeenCalledWith("language", "json");
+    expect(query.contains).toHaveBeenCalledWith("tags", ["eslint"]);
+    expect(query.or).not.toHaveBeenCalled();
+  });
+
+  it("maps the other format filter to an or expression", async () => {
+    const query = mockFetchQueries({ data: [], error: null, count: 0 }, []);
+
+    await resourcesService.fetchResourcesPage({ ...filters, format: "other" }, 10);
+
+    expect(query.or).toHaveBeenCalledWith(buildOtherFormatFilter());
+    expect(query.eq).not.toHaveBeenCalled();
+  });
+
+  it("combines the other format and search filters", async () => {
+    const query = mockFetchQueries({ data: [], error: null, count: 0 }, []);
+
+    await resourcesService.fetchResourcesPage({ ...filters, format: "other", q: "  react  " }, 10);
+
+    expect(query.or).toHaveBeenNthCalledWith(1, buildOtherFormatFilter());
+    expect(query.or).toHaveBeenNthCalledWith(2, buildResourceSearchFilter("react"));
+  });
+
+  it("defaults the total to 0 when count is null", async () => {
+    mockFetchQueries({ data: [], error: null, count: null }, []);
+
+    await expect(resourcesService.fetchResourcesPage(filters, 10)).resolves.toMatchObject({
+      total: 0,
+    });
+  });
+
+  it("throws when InsForge returns an error", async () => {
+    mockFetchQueries({ data: null, error: { message: "boom" }, count: null }, []);
+
+    await expect(resourcesService.fetchResourcesPage(filters, 10)).rejects.toThrow("boom");
   });
 
   it("persists configuration metadata with nullable optional fields", async () => {
