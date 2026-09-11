@@ -16,8 +16,8 @@ import {
   formatTicketListJson,
   formatTicketListText,
   formatTicketText,
-} from "./format.js"
-import type { Bookmark, Project, Resource, Ticket } from "./types.js"
+} from "../../src/format.js"
+import type { Bookmark, Project, Resource, Ticket } from "../../src/types.js"
 
 const sampleBookmark: Bookmark = {
   id: "row1",

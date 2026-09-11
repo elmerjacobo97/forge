@@ -5,7 +5,7 @@ import {
   parseTicketCreateInput,
   parseTicketMoveInput,
   parseTicketUpdateInput,
-} from "./ticket-schema.js"
+} from "../../src/ticket-schema.js"
 
 describe("parseTicketCreateInput", () => {
   it("accepts a valid ticket payload", () => {

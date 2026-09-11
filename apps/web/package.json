@@ -9,6 +9,8 @@
     "start": "next start",
     "typegen": "next typegen",
     "test": "vitest run --config tests.config.ts",
+    "test:watch": "vitest --config tests.config.ts",
+    "test:coverage": "vitest run --config tests.config.ts --coverage",
     "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
@@ -47,6 +49,7 @@
     "@types/node": "^25.9.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-v8": "^4.1.11",
     "jsdom": "^29.1.1",
     "react-doctor": "^0.5.6",
     "typescript": "~5.8.3",

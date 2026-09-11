@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { filterRowsForTickets, ticketIdSet } from "../utils/project-scope";
+import { filterRowsForTickets, ticketIdSet } from "./project-scope";
 
 describe("project-scope", () => {
   it("builds a set of ticket ids", () => {

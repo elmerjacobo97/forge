@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("server-only", () => ({}));
 vi.mock("@/features/auth/server", () => ({ getCurrentUser: vi.fn() }));
 
 import type { AiGenerationResponse } from "@/features/ai-generation/types";

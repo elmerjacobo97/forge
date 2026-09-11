@@ -5,8 +5,8 @@ import {
   resolveUpdateEventType,
   startTimer,
   stopTimer,
-} from "./dev-board-helpers.js"
-import type { Ticket } from "./types.js"
+} from "../../src/dev-board-helpers.js"
+import type { Ticket } from "../../src/types.js"
 
 afterEach(() => vi.useRealTimers())
 

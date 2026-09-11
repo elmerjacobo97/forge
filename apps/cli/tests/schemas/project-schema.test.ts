@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   parseProjectCreateInput,
   parseProjectUpdateInput,
-} from "./project-schema.js"
+} from "../../src/project-schema.js"
 
 describe("parseProjectCreateInput", () => {
   it("accepts a valid project payload", () => {

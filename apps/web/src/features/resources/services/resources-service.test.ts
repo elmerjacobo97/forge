@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("server-only", () => ({}));
-
 const database = vi.hoisted(() => ({ from: vi.fn() }));
 const createInsForgeServerClient = vi.hoisted(() => vi.fn(async () => ({ database })));
 
