@@ -49,4 +49,41 @@ describe("moveTicket", () => {
       lastMovedAt: "2026-07-11T15:05:00.000Z",
     });
   });
+
+  it("starts the timer when entering Validation from To Do", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-11T15:06:00.000Z"));
+    const moving = ticket("moving", "todo", 0);
+
+    const moved = moveTicket(moving, "validation", [moving], null, true);
+
+    expect(moved).toMatchObject({
+      column: "validation",
+      timerStartedAt: "2026-07-11T15:06:00.000Z",
+    });
+  });
+
+  it("keeps the timer between In Progress and Validation and stops it at Review", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-11T15:10:00.000Z"));
+    const running = ticket("moving", "in_progress", 0);
+    running.timerStartedAt = "2026-07-11T15:00:00.000Z";
+
+    const toValidation = moveTicket(running, "validation", [running], null, true);
+
+    expect(toValidation).toMatchObject({
+      column: "validation",
+      timerStartedAt: "2026-07-11T15:00:00.000Z",
+      totalElapsedMs: 0,
+    });
+
+    vi.setSystemTime(new Date("2026-07-11T15:20:00.000Z"));
+    const toReview = moveTicket(toValidation, "review", [toValidation], null, true);
+
+    expect(toReview).toMatchObject({
+      column: "review",
+      timerStartedAt: null,
+      totalElapsedMs: 20 * 60_000,
+    });
+  });
 });

@@ -33,9 +33,16 @@ export type BookmarkCreateInput = {
 
 export type BookmarkUpdateInput = Partial<BookmarkCreateInput>;
 
-export const COLUMNS = ["backlog", "todo", "in_progress", "review", "done"] as const;
+export const COLUMNS = ["backlog", "todo", "in_progress", "validation", "review", "done"] as const;
 
 export type ColumnId = (typeof COLUMNS)[number];
+
+/** Columns where the ticket timer runs (mirrors move_dev_board_ticket RPC). */
+export const TIMER_COLUMNS = ["in_progress", "validation"] as const;
+
+export function isTimerColumn(column: ColumnId): boolean {
+  return (TIMER_COLUMNS as readonly string[]).includes(column);
+}
 
 export const PRIORITIES = ["low", "med", "high"] as const;
 

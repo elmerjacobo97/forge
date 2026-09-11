@@ -223,6 +223,27 @@ describe("devBoardService.next", () => {
       ]),
     );
   });
+
+  it("includes validation tickets in the inProgress warning", async () => {
+    const { client } = createDevBoardMockClient({
+      projects,
+      tickets: [
+        ticketRow({ id: "todo-1", project_id: "project-1" }),
+        ticketRow({
+          id: "validating",
+          project_id: "project-1",
+          column_id: "validation",
+        }),
+      ],
+    });
+
+    const context = await createDevBoardService({ client }).next({
+      projectId: "project-1",
+    });
+
+    expect(context.ticket?.id).toBe("todo-1");
+    expect(context.inProgress.map((entry) => entry.ticket.id)).toEqual(["validating"]);
+  });
 });
 
 describe("devBoardService comments", () => {
@@ -231,9 +252,7 @@ describe("devBoardService comments", () => {
       comments: [commentRow()],
     });
 
-    const comments = await createDevBoardService({ client }).listComments(
-      "ticket-1",
-    );
+    const comments = await createDevBoardService({ client }).listComments("ticket-1");
 
     expect(comments).toEqual([
       {
@@ -244,14 +263,9 @@ describe("devBoardService comments", () => {
         createdAt: "2026-09-01T00:00:00.000Z",
       },
     ]);
+    expect(hasCall(calls, "dev_board_ticket_comments", "eq", ["ticket_id", "ticket-1"])).toBe(true);
     expect(
-      hasCall(calls, "dev_board_ticket_comments", "eq", ["ticket_id", "ticket-1"]),
-    ).toBe(true);
-    expect(
-      hasCall(calls, "dev_board_ticket_comments", "order", [
-        "created_at",
-        { ascending: true },
-      ]),
+      hasCall(calls, "dev_board_ticket_comments", "order", ["created_at", { ascending: true }]),
     ).toBe(true);
   });
 
@@ -275,8 +289,7 @@ describe("devBoardService comments", () => {
     });
     expect(hasCall(calls, "dev_board_tickets", "maybeSingle", [])).toBe(true);
     const insert = calls.find(
-      (call) =>
-        call.table === "dev_board_ticket_comments" && call.method === "insert",
+      (call) => call.table === "dev_board_ticket_comments" && call.method === "insert",
     );
     expect(insert?.args[0]).toEqual([
       { ticket_id: "ticket-1", body: "Moved to review", author: "agent" },

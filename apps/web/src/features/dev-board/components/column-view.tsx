@@ -32,6 +32,7 @@ const COLUMN_ACCENT: Record<ColumnId, string> = {
   backlog: "border-t-slate-400",
   todo: "border-t-sky-400",
   in_progress: "border-t-primary",
+  validation: "border-t-teal-400",
   review: "border-t-violet-400",
   done: "border-t-emerald-400",
 };

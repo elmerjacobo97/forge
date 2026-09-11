@@ -1,5 +1,5 @@
 import type { Ticket } from "../types/board";
-import { STALE_THRESHOLD_MS } from "../types/board";
+import { isTimerColumn, STALE_THRESHOLD_MS } from "../types/board";
 import { computeElapsed, formatDuration } from "./timer";
 
 const alertedKey = "forge_devboard:alerted";
@@ -21,11 +21,15 @@ export function saveAlertedTickets(ticketIds: Set<string>): void {
   }
 }
 
-export function checkStaleTickets(tickets: Ticket[], alerted: Set<string>, now = Date.now()): boolean {
+export function checkStaleTickets(
+  tickets: Ticket[],
+  alerted: Set<string>,
+  now = Date.now(),
+): boolean {
   let changed = false;
 
   tickets.forEach((ticket) => {
-    if (ticket.column !== "in_progress" || ticket.isPaused || !ticket.timerStartedAt) {
+    if (!isTimerColumn(ticket.column) || ticket.isPaused || !ticket.timerStartedAt) {
       if (alerted.delete(ticket.id)) changed = true;
       return;
     }
@@ -36,10 +40,9 @@ export function checkStaleTickets(tickets: Ticket[], alerted: Set<string>, now =
     alerted.add(ticket.id);
     changed = true;
     if ("Notification" in window && Notification.permission === "granted") {
-      new Notification(
-        "Ticket stale",
-        { body: `"${ticket.title}" in progress for ${formatDuration(computeElapsed(ticket, now))}. Update?` },
-      );
+      new Notification("Ticket stale", {
+        body: `"${ticket.title}" in progress for ${formatDuration(computeElapsed(ticket, now))}. Update?`,
+      });
     }
   });
 

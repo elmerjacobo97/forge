@@ -79,6 +79,7 @@ Examples:
   forge-cli ticket get <id>
   forge-cli ticket update <id> --title "New title"
   forge-cli ticket update <id> --clear-branch --clear-pr-url
+  forge-cli ticket move <id> --column validation
   forge-cli ticket move <id> --column review --branch dev/handoff --pr-url https://github.com/acme/forge/pull/17
   forge-cli ticket next --json
   forge-cli ticket comment <id> --body "Moved to review" --author agent
@@ -87,8 +88,8 @@ Examples:
 `;
 
 function fail(message: string, json: boolean): void {
-  writeErrorOutput(message, json)
-  process.exitCode = 1
+  writeErrorOutput(message, json);
+  process.exitCode = 1;
 }
 
 async function runCreate(args: string[]): Promise<void> {
@@ -161,10 +162,7 @@ async function runUpdate(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json");
   const [id] = getPositionals(args);
   if (!id) {
-    fail(
-      "Missing ticket id.\n\nUsage: forge-cli ticket update <id> [--title …]",
-      json,
-    );
+    fail("Missing ticket id.\n\nUsage: forge-cli ticket update <id> [--title …]", json);
     return;
   }
 
@@ -243,10 +241,7 @@ async function runComment(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json");
   const [id] = getPositionals(args);
   if (!id) {
-    fail(
-      "Missing ticket id.\n\nUsage: forge-cli ticket comment <id> --body <text>",
-      json,
-    );
+    fail("Missing ticket id.\n\nUsage: forge-cli ticket comment <id> --body <text>", json);
     return;
   }
 
@@ -314,9 +309,6 @@ export async function runTicket(args: string[]): Promise<void> {
       await runComments(rest);
       return;
     default:
-      fail(
-        `Unknown ticket command: ${subcommand}\n\n${TICKET_HELP}`,
-        hasFlag(args, "--json"),
-      );
+      fail(`Unknown ticket command: ${subcommand}\n\n${TICKET_HELP}`, hasFlag(args, "--json"));
   }
 }

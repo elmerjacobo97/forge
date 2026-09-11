@@ -3,19 +3,14 @@ import "server-only";
 import { z } from "zod";
 
 import { createInsForgeServerClient } from "@/lib/insforge/server";
-import {
-  type ColumnId,
-  type Ticket,
-  type TicketComment,
-  TICKETS_PAGE_SIZE,
-} from "../types/board";
+import { type ColumnId, type Ticket, type TicketComment, TICKETS_PAGE_SIZE } from "../types/board";
 
 const ticketRowSchema = z.object({
   id: z.string(),
   project_id: z.string(),
   title: z.string(),
   description: z.string(),
-  column_id: z.enum(["backlog", "todo", "in_progress", "review", "done"]),
+  column_id: z.enum(["backlog", "todo", "in_progress", "validation", "review", "done"]),
   position: z.coerce.number(),
   priority: z.enum(["low", "med", "high"]),
   created_at: z.string(),

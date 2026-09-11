@@ -36,6 +36,7 @@ import {
   type Ticket,
   COLUMN_LABELS,
   COLUMNS,
+  isTimerColumn,
   PRIORITY_COLORS,
   PRIORITY_LABELS,
 } from "../types/board";
@@ -90,9 +91,9 @@ export function TicketCard({
     return () => clearInterval(id);
   }, [ticket]);
 
-  const inProgress = ticket.column === "in_progress";
-  const timerRunning = inProgress && ticket.timerStartedAt !== null && !ticket.isPaused;
-  const timerPaused = inProgress && ticket.isPaused;
+  const timerActive = isTimerColumn(ticket.column);
+  const timerRunning = timerActive && ticket.timerStartedAt !== null && !ticket.isPaused;
+  const timerPaused = timerActive && ticket.isPaused;
 
   return (
     <div
@@ -123,14 +124,14 @@ export function TicketCard({
             </p>
           )}
 
-          {(inProgress || ticket.totalElapsedMs > 0) && (
+          {(timerActive || ticket.totalElapsedMs > 0) && (
             <div className="mt-2 flex items-center gap-1.5">
               <Clock
                 className={cn(
                   "size-3",
                   timerRunning && "text-primary animate-pulse",
                   timerPaused && "text-muted-foreground",
-                  !inProgress && "text-muted-foreground",
+                  !timerActive && "text-muted-foreground",
                 )}
               />
               <span
@@ -183,7 +184,7 @@ export function TicketCard({
               {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
               Copy ID
             </DropdownMenuItem>
-            {inProgress && (
+            {timerActive && (
               <DropdownMenuItem
                 onClick={() =>
                   onUpdate(

@@ -3,6 +3,7 @@ import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import type { Ticket } from "../types/board";
+import { isTimerColumn } from "../types/board";
 import { computeElapsed, formatDuration } from "../utils/timer";
 
 interface TicketDragOverlayProps {
@@ -11,7 +12,7 @@ interface TicketDragOverlayProps {
 
 export function TicketDragOverlay({ ticket }: TicketDragOverlayProps) {
   const timerRunning =
-    ticket.column === "in_progress" && ticket.timerStartedAt !== null && !ticket.isPaused;
+    isTimerColumn(ticket.column) && ticket.timerStartedAt !== null && !ticket.isPaused;
 
   return (
     <div
@@ -24,7 +25,7 @@ export function TicketDragOverlay({ ticket }: TicketDragOverlayProps) {
       {ticket.description && (
         <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">{ticket.description}</p>
       )}
-      {(ticket.column === "in_progress" || ticket.totalElapsedMs > 0) && (
+      {(isTimerColumn(ticket.column) || ticket.totalElapsedMs > 0) && (
         <div className="mt-2 flex items-center gap-1.5 text-muted-foreground">
           <Clock className="size-3" />
           <span className="font-mono text-[11px]">{formatDuration(computeElapsed(ticket))}</span>
