@@ -1,6 +1,6 @@
 # SPEC 17 — Loop de agente sobre tickets
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 03 — CLI Forge para tickets del Dev Board; SPEC 04 — Dev Board proyectos; SPEC 08 — Resources (patrón de tabla con RLS)
 > **Fecha:** 2026-09-11
 > **Objetivo:** Cerrar el loop de trabajo entre agentes de código y el Dev Board: un comando `ticket next` que entrega contexto accionable, comentarios de handoff en el ticket y `branch`/`pr_url` opcionales que el agente reporta al mover a `review`, todo operable desde `forge-cli` con salida JSON y errores parseables.
