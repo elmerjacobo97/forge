@@ -63,6 +63,10 @@ export async function proxy(request: NextRequest) {
   const hasSession =
     request.cookies.has("insforge_access_token") || request.cookies.has("insforge_refresh_token");
 
+  if (request.nextUrl.pathname === "/") {
+    return NextResponse.redirect(new URL(hasSession ? "/dev-board" : "/login", request.url));
+  }
+
   if (!hasSession && isProtectedPath(request.nextUrl.pathname)) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", request.nextUrl.pathname);

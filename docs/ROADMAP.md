@@ -39,6 +39,7 @@
 
 - **Accesibilidad:** 11 botones solo-icono sin `aria-label` (base64, http-tester, image-tools, json-formatter, json-to-typescript, jwt-decoder, mock-data-generator, regex-tester) según React Doctor.
 - **Complejidad:** dividir `webhook-inspector.tsx`, `project-analytics.tsx` y `ticket-card.tsx` en subcomponentes con responsabilidades claras (React Doctor: control-flow complexity).
+- **Duplicación JSX:** unificar el formulario compartido de bookmark (add/edit) y extraer un diálogo de confirmación reutilizable para los tres `delete-*-dialog` (React Doctor: duplicated JSX subtree).
 - **Formato:** el repo no pasa `pnpm format:check` (326 archivos previos a este refactor); decidir si se formatea todo en una pasada aparte.
 - Cambio de tema por tool, atajos de teclado por herramienta.
 - Env / `.env` manager vía File System Access API.

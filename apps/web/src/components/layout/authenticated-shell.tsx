@@ -8,6 +8,8 @@ import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Header } from "@/components/layout/header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthUserProvider } from "@/features/auth/components/auth-user-provider";
 import type { AuthUser } from "@/features/auth/types";
 import { getToolByPath, tools } from "@/lib/tools";
@@ -46,28 +48,34 @@ export function AuthenticatedShell({
 
   return (
     <AuthUserProvider user={user}>
-      <SidebarProvider>
-        <AppSidebar
-          activePath={pathname}
-          user={user}
-          version={version}
-        />
-        <SidebarInset className="min-w-0 bg-background text-foreground">
-          <Header
-            tool={tool}
-            onOpenPalette={() => setPaletteOpen(true)}
+      <TooltipProvider delayDuration={300}>
+        <SidebarProvider>
+          <AppSidebar
+            activePath={pathname}
+            user={user}
+            version={version}
           />
-          <main className="min-h-0 flex-1 p-4 md:p-5">{children}</main>
-        </SidebarInset>
-        <CommandPalette
-          open={paletteOpen}
-          onOpenChange={setPaletteOpen}
+          <SidebarInset className="min-w-0 bg-background text-foreground">
+            <Header
+              tool={tool}
+              onOpenPalette={() => setPaletteOpen(true)}
+            />
+            <main className="min-h-0 flex-1 p-4 md:p-5">{children}</main>
+          </SidebarInset>
+          <CommandPalette
+            open={paletteOpen}
+            onOpenChange={setPaletteOpen}
+          />
+          <KeyboardShortcuts
+            open={shortcutsOpen}
+            onOpenChange={setShortcutsOpen}
+          />
+        </SidebarProvider>
+        <Toaster
+          position="bottom-right"
+          closeButton
         />
-        <KeyboardShortcuts
-          open={shortcutsOpen}
-          onOpenChange={setShortcutsOpen}
-        />
-      </SidebarProvider>
+      </TooltipProvider>
     </AuthUserProvider>
   );
 }

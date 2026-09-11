@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <main className="landing-grain relative flex min-h-dvh items-center overflow-hidden bg-background px-4 py-16 sm:px-6">
+    <main className="relative flex min-h-dvh items-center overflow-hidden bg-background px-4 py-16 sm:px-6">
       <div
         aria-hidden
         className="pointer-events-none absolute -top-48 left-1/2 size-[36rem] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,color-mix(in_oklch,var(--primary)_20%,transparent),transparent_68%)]"
@@ -31,7 +31,7 @@ export default function NotFound() {
             aria-hidden
             className="absolute inset-8 rotate-3 rounded-[2rem] border border-primary/25 bg-primary/8"
           />
-          <div className="landing-metal-panel relative flex size-56 -rotate-3 flex-col items-center justify-center rounded-3xl sm:size-64">
+          <div className="relative flex size-56 -rotate-3 flex-col items-center justify-center rounded-3xl border border-border bg-card shadow-xl sm:size-64">
             <span className="font-mono text-[5.5rem] font-semibold leading-none tracking-[-0.12em] text-primary sm:text-[6.5rem]">
               404
             </span>
@@ -52,7 +52,7 @@ export default function NotFound() {
         </div>
 
         <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
-          <span className="landing-eyebrow">
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-3 py-1 text-[11px] font-medium tracking-widest text-primary uppercase">
             <span className="size-1.5 rounded-full bg-primary" />
             Broken link in the chain
           </span>

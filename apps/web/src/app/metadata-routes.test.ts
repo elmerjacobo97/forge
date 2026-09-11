@@ -2,22 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import manifest from "./manifest";
 import robots from "./robots";
-import sitemap from "./sitemap";
 
 describe("SEO metadata routes", () => {
-  it("publishes only the public landing page in the sitemap", () => {
-    const entries = sitemap();
-
-    expect(entries).toHaveLength(1);
-    expect(entries[0].url).toBe("https://forge.elmerjacobo.dev/");
-    expect(entries[0].priority).toBe(1);
-  });
-
-  it("allows public pages, blocks API crawling, and advertises the sitemap", () => {
+  it("keeps the private app out of search indexes", () => {
     const value = robots();
 
-    expect(value.rules).toEqual({ userAgent: "*", allow: "/", disallow: "/api/" });
-    expect(value.sitemap).toBe("https://forge.elmerjacobo.dev/sitemap.xml");
+    expect(value.rules).toEqual({ userAgent: "*", disallow: "/" });
   });
 
   it("exposes install metadata and the SVG application icon", () => {

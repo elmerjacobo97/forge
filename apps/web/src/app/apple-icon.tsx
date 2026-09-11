@@ -14,7 +14,7 @@ export default function AppleIcon() {
         justifyContent: "center",
         position: "relative",
         borderRadius: 36,
-        background: "linear-gradient(145deg, #dc8a52, #9f4729)",
+        background: "linear-gradient(145deg, #34d399, #047857)",
       }}
     >
       <div
@@ -24,7 +24,7 @@ export default function AppleIcon() {
           display: "flex",
           position: "absolute",
           borderRadius: 11,
-          background: "#fff8ee",
+          background: "#ecfdf5",
           transform: "rotate(-42deg) translate(17px, 12px)",
         }}
       />
@@ -35,7 +35,7 @@ export default function AppleIcon() {
           display: "flex",
           position: "absolute",
           borderRadius: 12,
-          background: "#fff8ee",
+          background: "#ecfdf5",
           transform: "rotate(-42deg) translate(0, -28px)",
         }}
       />

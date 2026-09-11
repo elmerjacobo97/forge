@@ -4,13 +4,13 @@ import { siteDescription, siteName } from "@/lib/site";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${siteName} - Developer toolkit`,
+    name: `${siteName} - Personal dev workspace`,
     short_name: siteName,
     description: siteDescription,
     start_url: "/",
     display: "standalone",
-    background_color: "#171a20",
-    theme_color: "#c97842",
+    background_color: "#131a17",
+    theme_color: "#10b981",
     icons: [
       {
         src: "/favicon.svg",

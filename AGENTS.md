@@ -20,7 +20,7 @@ pnpm format:check         # Check Prettier formatting
 pnpm doctor               # Run the web React Doctor check
 ```
 
-Use `pnpm build:web`, `pnpm build:cli`, `pnpm test:web`, or `pnpm test:cli` to focus a package. Run one test with `pnpm --filter @forge/web exec vitest run <path>` or `pnpm --filter ./apps/cli exec vitest run <path>`. For CLI releases, run `pnpm check-cli-release-tag -- vX.Y.Z`.
+Use `pnpm build:web`, `pnpm build:cli`, `pnpm test:web`, or `pnpm test:cli` to focus a package. Run one web test with `pnpm --filter @forge/web exec vitest run --config tests.config.ts <path>` (`tests.config.ts`, not `vitest.config.ts`, so react-doctor does not misdetect Vite); for the CLI, `pnpm --filter ./apps/cli exec vitest run <path>`. For CLI releases, run `pnpm check-cli-release-tag -- vX.Y.Z`.
 
 ## Code Style and Conventions
 

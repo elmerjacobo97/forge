@@ -1,8 +1,21 @@
 import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 
+import { ThemeProvider } from "@/components/theme-provider";
 import { siteDescription, siteName, siteTitle, siteUrl } from "@/lib/site";
-import { Providers } from "./providers";
 import "../index.css";
+
+const geistSans = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist-sans",
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
@@ -12,17 +25,6 @@ export const metadata: Metadata = {
   },
   description: siteDescription,
   applicationName: siteName,
-  keywords: [
-    "developer tools",
-    "developer workspace",
-    "web development utilities",
-    "Kanban board",
-    "JSON formatter",
-    "webhook inspector",
-    "uptime monitor",
-  ],
-  creator: siteName,
-  publisher: siteName,
   category: "technology",
   formatDetection: {
     email: false,
@@ -35,13 +37,18 @@ export const metadata: Metadata = {
     apple: "/apple-icon",
   },
   manifest: "/manifest.webmanifest",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
 };
 
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8f9fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#171a20" },
+    { media: "(prefers-color-scheme: light)", color: "#f7faf8" },
+    { media: "(prefers-color-scheme: dark)", color: "#131a17" },
   ],
 };
 
@@ -49,10 +56,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      className={`${geistSans.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
       <body>
-        <Providers>{children}</Providers>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          storageKey="forge-theme"
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

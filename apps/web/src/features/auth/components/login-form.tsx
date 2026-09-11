@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { useForm } from "@tanstack/react-form";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 
@@ -15,12 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
   InputGroup,
   InputGroupAddon,
@@ -56,9 +50,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>Sign in to Forge</CardTitle>
-        <CardDescription>
-          Authenticate to access your dev toolkit and saved data.
-        </CardDescription>
+        <CardDescription>Authenticate to access your dev toolkit and saved data.</CardDescription>
       </CardHeader>
       <CardContent>
         <form
@@ -71,12 +63,9 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
         >
           <FieldGroup>
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
-            <form.Field
-              name="email"
-            >
+            <form.Field name="email">
               {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Email</FieldLabel>
@@ -99,19 +88,14 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
                         disabled={isPending}
                       />
                     </InputGroup>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
             </form.Field>
-            <form.Field
-              name="password"
-            >
+            <form.Field name="password">
               {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Password</FieldLabel>
@@ -136,26 +120,26 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
                       <InputGroupAddon align="inline-end">
                         <InputGroupButton
                           size="icon-xs"
-                          onClick={() =>
-                            setShowPassword((current) => !current)
-                          }
-                          aria-label={
-                            showPassword ? "Hide password" : "Show password"
-                          }
+                          onClick={() => setShowPassword((current) => !current)}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
                           aria-pressed={showPassword}
                           disabled={isPending}
                         >
                           {showPassword ? (
-                            <EyeOff className="size-3.5" aria-hidden="true" />
+                            <EyeOff
+                              className="size-3.5"
+                              aria-hidden="true"
+                            />
                           ) : (
-                            <Eye className="size-3.5" aria-hidden="true" />
+                            <Eye
+                              className="size-3.5"
+                              aria-hidden="true"
+                            />
                           )}
                         </InputGroupButton>
                       </InputGroupAddon>
                     </InputGroup>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
@@ -172,15 +156,6 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
         >
           {isPending ? "Signing in..." : "Sign in"}
         </Button>
-        <div className="text-center text-xs text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/register"
-            className="text-primary hover:underline font-medium"
-          >
-            Sign up
-          </Link>
-        </div>
       </CardFooter>
     </Card>
   );
