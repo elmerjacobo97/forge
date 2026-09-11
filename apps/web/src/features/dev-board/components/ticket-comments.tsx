@@ -11,6 +11,7 @@ import {
   InputGroupText,
   InputGroupTextarea,
 } from "@/components/ui/input-group";
+import { Markdown } from "@/components/markdown";
 import { cn } from "@/lib/utils";
 
 import { createTicketCommentAction } from "../actions";
@@ -55,13 +56,9 @@ export function TicketComments({ ticketId, onCommentCreated }: TicketCommentsPro
 
   return (
     <div className="flex flex-col gap-2">
-      {isLoading && (
-        <p className="text-[11px] text-muted-foreground">Loading comments…</p>
-      )}
+      {isLoading && <p className="text-[11px] text-muted-foreground">Loading comments…</p>}
 
-      {!isLoading && error && (
-        <p className="text-[11px] text-destructive">{error}</p>
-      )}
+      {!isLoading && error && <p className="text-[11px] text-destructive">{error}</p>}
 
       {comments.length > 0 && (
         <ul className="flex flex-col gap-2">
@@ -85,7 +82,10 @@ export function TicketComments({ ticketId, onCommentCreated }: TicketCommentsPro
                   {formatCommentDate(comment.createdAt)}
                 </span>
               </div>
-              <p className="mt-1 whitespace-pre-wrap text-[11px]">{comment.body}</p>
+              <Markdown
+                content={comment.body}
+                className="mt-1"
+              />
             </li>
           ))}
         </ul>
@@ -104,9 +104,7 @@ export function TicketComments({ ticketId, onCommentCreated }: TicketCommentsPro
           align="block-end"
           className="justify-between"
         >
-          <InputGroupText className="tabular-nums text-xs">
-            {body.length}/5000
-          </InputGroupText>
+          <InputGroupText className="tabular-nums text-xs">{body.length}/5000</InputGroupText>
           <Button
             type="button"
             size="sm"
