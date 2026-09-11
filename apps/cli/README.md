@@ -151,7 +151,7 @@ Kinds: `note` | `prompt` | `config` | `code`. Tools (required for `config`):
 When `tool` is `other`, pass `--custom-tool`. Config metadata (`--tool`,
 `--custom-tool`, `--version`, `--context`) is stored only for `kind=config`.
 Resources sync to the InsForge `resources` table (same as the web `/resources`
-tool). `--json` applies to `create|list|get|update`.
+tool). `--json` applies to `create|list|get|update|delete`.
 
 ## Dev Board projects
 
@@ -167,7 +167,7 @@ forge-cli project delete <id>
 
 `--name` is required on create (1-80). `--description` defaults to `""` (max
 2000). Delete uses `delete_empty_dev_board_project` and fails if tickets remain.
-`--json` applies to `create|list|get|update`.
+`--json` applies to `create|list|get|update|delete`.
 
 ## Dev Board tickets
 
@@ -178,16 +178,47 @@ forge-cli ticket list --project-id <projectId>
 forge-cli ticket list --project-id <projectId> --column todo --json
 forge-cli ticket get <id>
 forge-cli ticket update <id> --title "New title" --priority med
+forge-cli ticket update <id> --branch dev/handoff --pr-url "https://github.com/acme/forge/pull/17"
+forge-cli ticket update <id> --clear-branch --clear-pr-url
 forge-cli ticket move <id> --column in_progress
-forge-cli ticket move <id> --column done --json
-forge-cli ticket delete <id>
+forge-cli ticket move <id> --column review --branch dev/handoff --pr-url "https://github.com/acme/forge/pull/17"
+forge-cli ticket next
+forge-cli ticket next --project-id <projectId> --json
+forge-cli ticket comment <id> --body "Handoff notes" --author agent
+forge-cli ticket comments <id> --json
+forge-cli ticket delete <id> --json
 ```
 
-`--project-id` is required on `create` and `list` (must be a project owned by
-you). Columns: `backlog` | `todo` | `in_progress` | `review` | `done`.
-Priorities: `low` | `med` | `high`. Ticket writes use backend RPCs so moves,
-timers, events, and time entries remain atomic. `--json` applies to
-`create|list|get|update|move` and retains existing camelCase output fields.
+`--project-id` is required on `create` and `list` and optional on `next`
+(default: all projects). Columns: `backlog` | `todo` | `in_progress` |
+`review` | `done`. Priorities: `low` | `med` | `high`. Ticket writes use
+backend RPCs so moves, timers, events, and time entries remain atomic.
+
+`next` returns the best pending `todo` ticket ranked by priority
+(`high → med → low`, ties by board position) plus its project, its comments,
+and an `inProgress` warning list. With no pending work, text says
+`No pending tickets.` and `--json` returns `{ "ticket": null, ... }` (exit 0).
+`next` is read-only.
+
+`comment` requires `--body` (1–5000) and accepts `--author user|agent`
+(default `user`); comments are append-only plain text, listed oldest first by
+`comments`. Handoff fields: `--branch` (1–200), `--pr-url` (http/https, max
+2048), `--clear-branch`, `--clear-pr-url`. `update` without them keeps the
+current values; `move` writes the handoff atomically with the column change.
+
+`--json` applies to every ticket command. With it, delete returns
+`{"deleted":true,"id":"..."}` and any error prints
+`{"error":{"message":"..."}}` to stderr with exit code 1 while stdout stays
+clean. Existing `--json` responses keep camelCase output fields; commands
+without `--json` keep their text output.
+
+## JSON output and errors
+
+`--json` is available on every command across `bookmark`, `resource`,
+`project`, and `ticket`, including the `delete` subcommands. Deletes accept
+`--json` and return `{"deleted":true,"id":"..."}`. When `--json` is active,
+failures write `{"error":{"message":"..."}}` to stderr and exit 1; stdout
+carries only the successful payload.
 
 ## Tests
 

@@ -290,6 +290,7 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
       </div>
 
       <DndContext
+        id="project-board-dnd"
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}

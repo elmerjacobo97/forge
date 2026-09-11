@@ -31,6 +31,8 @@ export function createTicket(values: TicketFormValues, projectId: string): Ticke
     totalElapsedMs: 0,
     isPaused: false,
     lastMovedAt: now,
+    branch: null,
+    prUrl: null,
   };
 }
 

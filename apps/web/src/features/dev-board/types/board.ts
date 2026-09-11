@@ -38,6 +38,17 @@ export interface Ticket {
   totalElapsedMs: number;
   isPaused: boolean;
   lastMovedAt: string;
+  branch: string | null;
+  prUrl: string | null;
+  commentCount?: number;
+}
+
+export interface TicketComment {
+  id: string;
+  ticketId: string;
+  author: "user" | "agent";
+  body: string;
+  createdAt: string;
 }
 
 export const STALE_THRESHOLD_MS = 25 * 60 * 1000;

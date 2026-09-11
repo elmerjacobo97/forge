@@ -68,6 +68,8 @@ export type Ticket = {
   totalElapsedMs: number;
   isPaused: boolean;
   lastMovedAt: string;
+  branch: string | null;
+  prUrl: string | null;
 };
 
 export type TicketCreateInput = {
@@ -80,12 +82,48 @@ export type TicketCreateInput = {
 
 export type TicketUpdateInput = Partial<
   Pick<TicketCreateInput, "title" | "description" | "priority">
->;
+> & {
+  branch?: string;
+  prUrl?: string;
+  clearBranch?: boolean;
+  clearPrUrl?: boolean;
+};
 
 export type TicketMoveInput = {
   id: string;
   column: ColumnId;
+  branch?: string;
+  prUrl?: string;
+  clearBranch?: boolean;
+  clearPrUrl?: boolean;
 };
+
+export const COMMENT_AUTHORS = ["user", "agent"] as const;
+
+export type CommentAuthor = (typeof COMMENT_AUTHORS)[number];
+
+export interface TicketComment {
+  id: string;
+  ticketId: string;
+  author: CommentAuthor;
+  body: string;
+  createdAt: string;
+}
+
+export type TicketCommentInput = {
+  body: string;
+  author: CommentAuthor;
+};
+
+export interface NextTicketContext {
+  ticket: Ticket | null;
+  project: { id: string; name: string } | null;
+  comments: TicketComment[];
+  inProgress: Array<{
+    ticket: Ticket;
+    project: { id: string; name: string } | null;
+  }>;
+}
 
 export const RESOURCE_KINDS = ["note", "prompt", "config", "code"] as const;
 

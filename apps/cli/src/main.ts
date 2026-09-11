@@ -6,6 +6,7 @@ import { runProject } from "./commands/project.js"
 import { runResource } from "./commands/resource.js"
 import { runTicket } from "./commands/ticket.js"
 import { runWhoami } from "./commands/whoami.js"
+import { writeErrorOutput } from "./format.js"
 import { getCliVersion } from "./version.js"
 
 const HELP = `forge-cli — Forge CLI
@@ -23,7 +24,7 @@ Commands:
   bookmark  Manage bookmarks (create|list|get|update|delete)
   resource  Manage resources (create|list|get|update|delete)
   project   Manage Dev Board projects (create|list|get|update|delete)
-  ticket    Manage Dev Board tickets (create|list|get|update|delete|move)
+  ticket    Manage Dev Board tickets (create|list|get|update|delete|move|next|comment|comments)
 
 Options:
   -h, --help       Show this help
@@ -80,6 +81,7 @@ async function main(argv: string[]): Promise<void> {
 
 main(process.argv).catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error)
-  process.stderr.write(`Error: ${message}\n`)
+  const json = process.argv.includes("--json")
+  writeErrorOutput(json ? message : `Error: ${message}`, json)
   process.exitCode = 1
 })

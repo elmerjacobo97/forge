@@ -6,9 +6,29 @@ export const ticketSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(120, "Title is too long"),
   description: z.string().trim().max(2000, "Description is too long").max(2000),
   priority: z.enum(PRIORITIES),
+  branch: z
+    .string()
+    .max(200, "Branch is too long")
+    .transform((value) => value.trim() || null)
+    .nullable(),
+  prUrl: z
+    .string()
+    .max(2048, "PR URL is too long")
+    .refine(
+      (value) => value.trim() === "" || /^https?:\/\//i.test(value.trim()),
+      "PR URL must start with http:// or https://",
+    )
+    .transform((value) => value.trim() || null)
+    .nullable(),
 });
 
 export type TicketFormValues = z.infer<typeof ticketSchema>;
+
+export const ticketCommentSchema = z.object({
+  body: z.string().trim().min(1, "Comment is required").max(5000, "Comment is too long"),
+});
+
+export type TicketCommentFormValues = z.infer<typeof ticketCommentSchema>;
 
 export const ticketCreateSchema = ticketSchema.extend({
   projectId: z.uuid(),
@@ -29,6 +49,12 @@ export const ticketInputSchema = z.object({
   totalElapsedMs: z.number(),
   isPaused: z.boolean(),
   lastMovedAt: z.string(),
+  branch: z.string().min(1, "Branch is required").max(200, "Branch is too long").nullable(),
+  prUrl: z
+    .string()
+    .max(2048, "PR URL is too long")
+    .regex(/^https?:\/\//i, "PR URL must start with http:// or https://")
+    .nullable(),
 });
 
 export type TicketInput = z.infer<typeof ticketInputSchema>;

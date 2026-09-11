@@ -28,6 +28,7 @@ import {
 
 import { type Priority, type Ticket, PRIORITIES, PRIORITY_LABELS } from "../types/board";
 import { type TicketFormValues, ticketSchema } from "../schemas/ticket";
+import { TicketComments } from "./ticket-comments";
 
 interface TicketFormProps {
   open: boolean;
@@ -59,6 +60,8 @@ export function TicketForm({
       title: "",
       description: "",
       priority: "med" as Priority,
+      branch: null as string | null,
+      prUrl: null as string | null,
     },
     validators: {
       onSubmit: ticketSchema,
@@ -77,8 +80,16 @@ export function TicketForm({
               title: editTicket.title,
               description: editTicket.description,
               priority: editTicket.priority,
+              branch: editTicket.branch ?? "",
+              prUrl: editTicket.prUrl ?? "",
             }
-          : { title: "", description: "", priority: "med" },
+          : {
+              title: "",
+              description: "",
+              priority: "med",
+              branch: "",
+              prUrl: "",
+            },
       );
     }
   }, [open, editTicket, form]);
@@ -177,7 +188,71 @@ export function TicketForm({
                 </Field>
               )}
             </form.Field>
+
+            {isEdit && (
+              <>
+                <form.Field
+                  name="branch"
+                >
+                  {(field) => {
+                    const isInvalid =
+                      field.state.meta.isTouched && !!field.state.meta.errors.length;
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>Branch</FieldLabel>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value ?? ""}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          placeholder="e.g. dev/handoff"
+                          autoComplete="off"
+                          aria-invalid={isInvalid}
+                        />
+                        {isInvalid && (
+                          <FieldError errors={formatErrors(field.state.meta.errors)} />
+                        )}
+                      </Field>
+                    );
+                  }}
+                </form.Field>
+
+                <form.Field
+                  name="prUrl"
+                >
+                  {(field) => {
+                    const isInvalid =
+                      field.state.meta.isTouched && !!field.state.meta.errors.length;
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>PR URL</FieldLabel>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value ?? ""}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          placeholder="https://github.com/acme/forge/pull/123"
+                          autoComplete="off"
+                          aria-invalid={isInvalid}
+                        />
+                        {isInvalid && (
+                          <FieldError errors={formatErrors(field.state.meta.errors)} />
+                        )}
+                      </Field>
+                    );
+                  }}
+                </form.Field>
+              </>
+            )}
           </FieldGroup>
+
+          {editTicket && (
+            <div className="mt-4 border-t border-input/50 pt-3">
+              <TicketComments ticketId={editTicket.id} />
+            </div>
+          )}
         </form>
 
         <DialogFooter>

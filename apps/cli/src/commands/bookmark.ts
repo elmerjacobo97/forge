@@ -7,7 +7,12 @@ import {
   parseListOptions,
   parseTagsFlag,
 } from "../flags.js";
-import { writeBookmarkListOutput, writeBookmarkOutput } from "../format.js";
+import {
+  writeBookmarkListOutput,
+  writeBookmarkOutput,
+  writeDeletedOutput,
+  writeErrorOutput,
+} from "../format.js";
 import { CATEGORIES } from "../types.js";
 
 const BOOKMARK_HELP = `Usage:
@@ -51,8 +56,8 @@ Examples:
   forge-cli bookmark delete <id>
 `;
 
-function fail(message: string): void {
-  process.stderr.write(`${message}\n`);
+function fail(message: string, json: boolean): void {
+  writeErrorOutput(message, json);
   process.exitCode = 1;
 }
 
@@ -67,7 +72,7 @@ async function runCreate(args: string[]): Promise<void> {
   });
 
   if ("error" in input) {
-    fail(input.error);
+    fail(input.error, json);
     return;
   }
 
@@ -80,7 +85,7 @@ async function runList(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json");
   const parsed = parseListOptions(args);
   if ("error" in parsed) {
-    fail(parsed.error);
+    fail(parsed.error, json);
     return;
   }
 
@@ -93,7 +98,7 @@ async function runGet(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json");
   const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing bookmark id.\n\nUsage: forge-cli bookmark get <id>");
+    fail("Missing bookmark id.\n\nUsage: forge-cli bookmark get <id>", json);
     return;
   }
 
@@ -106,7 +111,10 @@ async function runUpdate(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json");
   const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing bookmark id.\n\nUsage: forge-cli bookmark update <id> [--title …]");
+    fail(
+      "Missing bookmark id.\n\nUsage: forge-cli bookmark update <id> [--title …]",
+      json,
+    );
     return;
   }
 
@@ -125,7 +133,7 @@ async function runUpdate(args: string[]): Promise<void> {
 
   const input = parseBookmarkUpdateInput(raw);
   if ("error" in input) {
-    fail(input.error);
+    fail(input.error, json);
     return;
   }
 
@@ -135,15 +143,16 @@ async function runUpdate(args: string[]): Promise<void> {
 }
 
 async function runDelete(args: string[]): Promise<void> {
+  const json = hasFlag(args, "--json");
   const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing bookmark id.\n\nUsage: forge-cli bookmark delete <id>");
+    fail("Missing bookmark id.\n\nUsage: forge-cli bookmark delete <id>", json);
     return;
   }
 
   const service = await createAuthedBookmarksService();
   await service.delete(id);
-  process.stdout.write(`Deleted bookmark ${id}\n`);
+  writeDeletedOutput("bookmark", id, json);
 }
 
 export async function runBookmark(args: string[]): Promise<void> {
@@ -171,6 +180,9 @@ export async function runBookmark(args: string[]): Promise<void> {
       await runDelete(rest);
       return;
     default:
-      fail(`Unknown bookmark command: ${subcommand}\n\n${BOOKMARK_HELP}`);
+      fail(
+        `Unknown bookmark command: ${subcommand}\n\n${BOOKMARK_HELP}`,
+        hasFlag(args, "--json"),
+      );
   }
 }

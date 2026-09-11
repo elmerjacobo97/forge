@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest"
-import { mapRowToTicket } from "../../src/dev-board-service.js"
-import { mapRowToProject } from "../../src/projects-service.js"
+import { describe, expect, it } from "vitest";
+import { mapRowToTicket } from "../../src/dev-board-service.js";
+import { mapRowToProject } from "../../src/projects-service.js";
 
 describe("InsForge row mapping", () => {
   it("maps project snake_case fields to stable CLI fields", () => {
@@ -16,8 +16,8 @@ describe("InsForge row mapping", () => {
       name: "Forge",
       description: "Developer tools",
       createdAt: "2026-07-20T00:00:00.000Z",
-    })
-  })
+    });
+  });
 
   it("maps and validates ticket RPC output", () => {
     const row = {
@@ -33,7 +33,9 @@ describe("InsForge row mapping", () => {
       total_elapsed_ms: 1000,
       is_paused: false,
       last_moved_at: "2026-07-20T00:01:00.000Z",
-    }
+      branch: "spec-17-agent-ticket-loop",
+      pr_url: "https://github.com/acme/forge/pull/17",
+    };
 
     expect(mapRowToTicket(row)).toMatchObject({
       id: "ticket-1",
@@ -41,9 +43,9 @@ describe("InsForge row mapping", () => {
       column: "in_progress",
       priority: "high",
       totalElapsedMs: 1000,
-    })
-    expect(() => mapRowToTicket({ ...row, position: "0" })).toThrow(
-      /position must be a number/,
-    )
-  })
-})
+      branch: "spec-17-agent-ticket-loop",
+      prUrl: "https://github.com/acme/forge/pull/17",
+    });
+    expect(() => mapRowToTicket({ ...row, position: "0" })).toThrow(/position must be a number/);
+  });
+});

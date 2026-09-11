@@ -5,6 +5,8 @@ import {
   hasFlag,
 } from "../flags.js"
 import {
+  writeDeletedOutput,
+  writeErrorOutput,
   writeProjectListOutput,
   writeProjectOutput,
 } from "../format.js"
@@ -44,8 +46,8 @@ Examples:
   forge-cli project delete <id>
 `
 
-function fail(message: string): void {
-  process.stderr.write(`${message}\n`)
+function fail(message: string, json: boolean): void {
+  writeErrorOutput(message, json)
   process.exitCode = 1
 }
 
@@ -57,7 +59,7 @@ async function runCreate(args: string[]): Promise<void> {
   })
 
   if ("error" in input) {
-    fail(input.error)
+    fail(input.error, json)
     return
   }
 
@@ -77,7 +79,7 @@ async function runGet(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json")
   const [id] = getPositionals(args)
   if (!id) {
-    fail("Missing project id.\n\nUsage: forge-cli project get <id>")
+    fail("Missing project id.\n\nUsage: forge-cli project get <id>", json)
     return
   }
 
@@ -92,6 +94,7 @@ async function runUpdate(args: string[]): Promise<void> {
   if (!id) {
     fail(
       "Missing project id.\n\nUsage: forge-cli project update <id> [--name …]",
+      json,
     )
     return
   }
@@ -105,7 +108,7 @@ async function runUpdate(args: string[]): Promise<void> {
 
   const input = parseProjectUpdateInput(raw)
   if ("error" in input) {
-    fail(input.error)
+    fail(input.error, json)
     return
   }
 
@@ -115,15 +118,16 @@ async function runUpdate(args: string[]): Promise<void> {
 }
 
 async function runDelete(args: string[]): Promise<void> {
+  const json = hasFlag(args, "--json")
   const [id] = getPositionals(args)
   if (!id) {
-    fail("Missing project id.\n\nUsage: forge-cli project delete <id>")
+    fail("Missing project id.\n\nUsage: forge-cli project delete <id>", json)
     return
   }
 
   const service = await createAuthedProjectsService()
   await service.delete(id)
-  process.stdout.write(`Deleted project ${id}\n`)
+  writeDeletedOutput("project", id, json)
 }
 
 export async function runProject(args: string[]): Promise<void> {
@@ -151,6 +155,9 @@ export async function runProject(args: string[]): Promise<void> {
       await runDelete(rest)
       return
     default:
-      fail(`Unknown project command: ${subcommand}\n\n${PROJECT_HELP}`)
+      fail(
+        `Unknown project command: ${subcommand}\n\n${PROJECT_HELP}`,
+        hasFlag(args, "--json"),
+      )
   }
 }

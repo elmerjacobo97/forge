@@ -24,13 +24,21 @@ function sortTickets(tickets: Ticket[]): Ticket[] {
 }
 
 export function upsertTicket(columns: ColumnRecord, ticket: Ticket): ColumnRecord {
+  const existing =
+    ticket.commentCount === undefined
+      ? COLUMNS.flatMap((column) => columns[column].tickets).find((item) => item.id === ticket.id)
+      : undefined;
+  const incoming =
+    existing?.commentCount === undefined
+      ? ticket
+      : { ...ticket, commentCount: existing.commentCount };
   const next = {} as ColumnRecord;
 
   for (const column of COLUMNS) {
     const page = columns[column];
-    const withoutTicket = page.tickets.filter((item) => item.id !== ticket.id);
+    const withoutTicket = page.tickets.filter((item) => item.id !== incoming.id);
 
-    if (column !== ticket.column) {
+    if (column !== incoming.column) {
       next[column] =
         withoutTicket.length === page.tickets.length
           ? page
@@ -41,7 +49,7 @@ export function upsertTicket(columns: ColumnRecord, ticket: Ticket): ColumnRecor
     const existed = withoutTicket.length !== page.tickets.length;
     next[column] = {
       ...page,
-      tickets: sortTickets([...withoutTicket, ticket]),
+      tickets: sortTickets([...withoutTicket, incoming]),
       total: existed ? page.total : page.total + 1,
     };
   }
