@@ -124,19 +124,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-image:
-      radial-gradient(
-        100% 70% at 100% 0%,
-        color-mix(in oklch, var(--primary) 8%, transparent),
-        transparent 55%
-      ),
-      radial-gradient(
-        80% 50% at 0% 100%,
-        color-mix(in oklch, var(--muted) 45%, transparent),
-        transparent 50%
-      );
-    background-attachment: fixed;
-    overflow-x: clip;
+    overflow: visible !important;
+    margin-right: 0 !important;
   }
   html {
     @apply font-sans;
