@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { useForm } from "@tanstack/react-form";
+import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -29,7 +31,7 @@ import {
   UPTIME_FAILURE_THRESHOLD_MIN,
   UPTIME_INTERVALS_MINUTES,
 } from "../constants";
-import { useCreateUptimeMonitorMutation, useUpdateUptimeMonitorMutation } from "../hooks/mutations";
+import { createUptimeMonitorAction, updateUptimeMonitorAction } from "../actions";
 import {
   createUptimeMonitorSchema,
   type CreateUptimeMonitorInput,
@@ -73,11 +75,9 @@ export function MonitorFormDialog({
   monitor = null,
   disabled = false,
 }: MonitorFormDialogProps) {
-  const createMutation = useCreateUptimeMonitorMutation();
-  const updateMutation = useUpdateUptimeMonitorMutation();
+  const [isPending, startSaving] = useTransition();
+  const [mutationError, setMutationError] = useState<string | null>(null);
   const isEditing = monitor !== null;
-  const isPending = createMutation.isPending || updateMutation.isPending;
-  const mutationError = isEditing ? updateMutation.error : createMutation.error;
 
   const form = useForm({
     defaultValues: defaultsFor(monitor),
@@ -85,15 +85,26 @@ export function MonitorFormDialog({
       onSubmit: createUptimeMonitorSchema,
     },
     onSubmit: async ({ value }) => {
-      const onSuccess = () => {
+      setMutationError(null);
+
+      startSaving(async () => {
+        const result = isEditing
+          ? await updateUptimeMonitorAction(monitor.id, value)
+          : await createUptimeMonitorAction(value);
+
+        if (!result.ok) {
+          setMutationError(result.message);
+          return;
+        }
+
+        toast.success(
+          isEditing
+            ? `Monitor "${result.data.name}" updated.`
+            : `Monitor "${result.data.name}" created.`,
+        );
         onOpenChange(false);
         form.reset();
-      };
-      if (isEditing) {
-        updateMutation.mutate({ monitorId: monitor.id, input: value }, { onSuccess });
-      } else {
-        createMutation.mutate(value, { onSuccess });
-      }
+      });
     },
   });
 
@@ -277,7 +288,7 @@ export function MonitorFormDialog({
 
           {mutationError ? (
             <Alert variant="destructive">
-              <AlertDescription>{mutationError.message}</AlertDescription>
+              <AlertDescription>{mutationError}</AlertDescription>
             </Alert>
           ) : null}
 

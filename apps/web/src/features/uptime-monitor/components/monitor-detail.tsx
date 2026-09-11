@@ -1,7 +1,7 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ArrowLeft, History, ShieldAlert } from "lucide-react";
@@ -25,19 +25,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMonitorDetailQuery, useUptimeMonitorsQuery } from "../hooks/queries";
-import type { LatencyRange } from "../types";
+import { useMonitorDetail } from "../hooks/use-monitor-detail";
+import type { LatencyRange, MonitorDetailData, UptimeMonitor } from "../types";
 import { formatIncidentDuration, formatLatency, formatUptimePercentage } from "../utils/stats";
 import { MonitorStatusBadge } from "./monitor-status-badge";
 import { UptimeBarStrip } from "./uptime-bar-strip";
 
-const LatencyChart = dynamic(
-  () => import("./latency-chart").then((mod) => mod.LatencyChart),
-  { ssr: false, loading: () => <Skeleton className="h-50 w-full" /> },
-);
+const LatencyChart = dynamic(() => import("./latency-chart").then((mod) => mod.LatencyChart), {
+  ssr: false,
+  loading: () => <Skeleton className="h-50 w-full" />,
+});
 
 type MonitorDetailProps = {
-  monitorId: string;
+  monitor: UptimeMonitor;
+  initialDetail: MonitorDetailData;
 };
 
 function BackToMonitorsButton() {
@@ -56,41 +57,24 @@ function BackToMonitorsButton() {
   );
 }
 
-export function MonitorDetail({ monitorId }: MonitorDetailProps) {
+export function MonitorDetail({ monitor, initialDetail }: MonitorDetailProps) {
   const [range, setRange] = useState<LatencyRange>("24h");
-  const { data: monitors = [], isLoading: monitorsLoading } = useUptimeMonitorsQuery();
-  const monitor = monitors.find((m) => m.id === monitorId) ?? null;
   const {
     data: detail,
-    isLoading: detailLoading,
-    isError: detailError,
-    error: detailErrorValue,
-  } = useMonitorDetailQuery(monitorId, range, monitor?.intervalMinutes);
+    error,
+    isLoading,
+  } = useMonitorDetail(monitor.id, range, initialDetail, monitor.intervalMinutes);
 
   const checks = detail?.checks ?? [];
   const incidents = detail?.incidents ?? [];
 
-  if (!monitorsLoading && !monitor) {
-    return (
-      <div className="flex h-full flex-col gap-4">
-        <BackToMonitorsButton />
-        <Alert variant="destructive">
-          <AlertTitle>Monitor not found</AlertTitle>
-          <AlertDescription>
-            It may have been deleted, or it belongs to another account.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  if (detailError) {
+  if (error) {
     return (
       <div className="flex h-full flex-col gap-4">
         <BackToMonitorsButton />
         <Alert variant="destructive">
           <AlertTitle>Could not load monitor data</AlertTitle>
-          <AlertDescription>{detailErrorValue.message}</AlertDescription>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       </div>
     );
@@ -100,39 +84,35 @@ export function MonitorDetail({ monitorId }: MonitorDetailProps) {
     <div className="flex h-full min-h-0 min-w-0 flex-col gap-4">
       <div className="flex min-w-0 flex-col gap-3">
         <BackToMonitorsButton />
-        {monitor ? (
-          <div className="flex min-w-0 flex-wrap items-center gap-3">
-            <h2 className="text-sm font-medium">{monitor.name}</h2>
-            <MonitorStatusBadge status={monitor.status} />
-            {!monitor.enabled ? <Badge variant="secondary">Paused</Badge> : null}
-            <a
-              href={monitor.url}
-              target="_blank"
-              rel="noreferrer"
-              className="min-w-0 truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
-            >
-              {monitor.url}
-            </a>
-          </div>
-        ) : (
-          <Skeleton className="h-5 w-48" />
-        )}
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <h2 className="text-sm font-medium">{monitor.name}</h2>
+          <MonitorStatusBadge status={monitor.status} />
+          {!monitor.enabled ? <Badge variant="secondary">Paused</Badge> : null}
+          <a
+            href={monitor.url}
+            target="_blank"
+            rel="noreferrer"
+            className="min-w-0 truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
+          >
+            {monitor.url}
+          </a>
+        </div>
 
         <div className="flex flex-wrap gap-4 text-xs">
           <StatChip
             label="24h"
             value={detail?.stats.uptime24h ?? null}
-            loading={detailLoading}
+            loading={isLoading}
           />
           <StatChip
             label="7d"
             value={detail?.stats.uptime7d ?? null}
-            loading={detailLoading}
+            loading={isLoading}
           />
           <StatChip
             label="30d"
             value={detail?.stats.uptime30d ?? null}
-            loading={detailLoading}
+            loading={isLoading}
           />
         </div>
       </div>
@@ -142,11 +122,11 @@ export function MonitorDetail({ monitorId }: MonitorDetailProps) {
           buckets={detail?.latencyBuckets ?? []}
           range={range}
           onRangeChange={setRange}
-          loading={detailLoading}
+          loading={isLoading}
         />
         <UptimeBarStrip
           days={detail?.dailyUptime ?? []}
-          loading={detailLoading}
+          loading={isLoading}
         />
       </div>
 
@@ -154,7 +134,7 @@ export function MonitorDetail({ monitorId }: MonitorDetailProps) {
         <div className="flex min-h-0 flex-col gap-1.5">
           <span className="text-xs font-medium text-muted-foreground">Check history</span>
           <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-input/60">
-            {detailLoading ? (
+            {isLoading ? (
               <div className="flex flex-col gap-2 p-2">
                 {[1, 2, 3].map((index) => (
                   <Skeleton
@@ -219,7 +199,7 @@ export function MonitorDetail({ monitorId }: MonitorDetailProps) {
         <div className="flex min-h-0 flex-col gap-1.5">
           <span className="text-xs font-medium text-muted-foreground">Recent incidents</span>
           <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-input/60">
-            {detailLoading ? (
+            {isLoading ? (
               <div className="flex flex-col gap-2 p-2">
                 {[1, 2].map((index) => (
                   <Skeleton

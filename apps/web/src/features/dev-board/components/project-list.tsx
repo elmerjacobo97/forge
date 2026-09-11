@@ -1,20 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { FolderKanban, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,31 +21,17 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useUserQuery } from "@/features/auth/hooks/queries";
-
-import {
-  useCreateDevBoardProject,
-  useDeleteDevBoardProject,
-  useUpdateDevBoardProject,
-} from "../hooks/mutations";
-import { useDevBoardProjects } from "../hooks/queries";
+import { createProjectAction, updateProjectAction } from "../actions";
 import type { ProjectFormValues } from "../schemas/project";
 import type { Project } from "../types/project";
+import { DeleteProjectDialog } from "./delete-project-dialog";
 import { ProjectForm } from "./project-form";
 
-export function ProjectList() {
-  const { data: user } = useUserQuery();
-  const projectsQuery = useDevBoardProjects(user?.id);
-  const createMutation = useCreateDevBoardProject();
-  const updateMutation = useUpdateDevBoardProject();
-  const deleteMutation = useDeleteDevBoardProject();
-
+export function ProjectList({ projects }: { projects: Project[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
-
-  const projects = projectsQuery.data ?? [];
+  const [, startMutating] = useTransition();
 
   function openCreate() {
     setEditProject(null);
@@ -66,32 +44,21 @@ export function ProjectList() {
   }
 
   function handleSubmit(values: ProjectFormValues) {
-    if (editProject) {
-      updateMutation.mutate({ projectId: editProject.id, input: values });
-      return;
-    }
-    createMutation.mutate(values);
-  }
+    const project = editProject;
 
-  function confirmDelete() {
-    if (!deleteTarget) return;
-    deleteMutation.mutate(deleteTarget.id, {
-      onSettled: () => setDeleteTarget(null),
+    startMutating(async () => {
+      const result = project
+        ? await updateProjectAction(project.id, values)
+        : await createProjectAction(values);
+
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(project ? "Project updated." : "Project created.");
+      setDialogOpen(false);
     });
-  }
-
-  if (projectsQuery.isError) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>Could not load projects</AlertTitle>
-        <AlertDescription className="flex items-center justify-between gap-3">
-          <span>{projectsQuery.error.message}</span>
-          <Button size="sm" variant="outline" onClick={() => void projectsQuery.refetch()}>
-            Retry
-          </Button>
-        </AlertDescription>
-      </Alert>
-    );
   }
 
   return (
@@ -104,20 +71,18 @@ export function ProjectList() {
           </p>
         </div>
         {projects.length > 0 ? (
-          <Button size="sm" onClick={openCreate} className="gap-1.5">
+          <Button
+            size="sm"
+            onClick={openCreate}
+            className="gap-1.5"
+          >
             <Plus className="size-3.5" />
             New project
           </Button>
         ) : null}
       </div>
 
-      {projectsQuery.isLoading ? (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 3 }, (_, index) => (
-            <Skeleton key={index} className="h-28 rounded-xl" />
-          ))}
-        </div>
-      ) : projects.length === 0 ? (
+      {projects.length === 0 ? (
         <Empty className="border border-dashed">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -129,7 +94,11 @@ export function ProjectList() {
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button size="sm" onClick={openCreate} className="gap-1.5">
+            <Button
+              size="sm"
+              onClick={openCreate}
+              className="gap-1.5"
+            >
               <Plus className="size-3.5" />
               Create project
             </Button>
@@ -195,35 +164,15 @@ export function ProjectList() {
         onSubmit={handleSubmit}
       />
 
-      <Dialog
-        open={deleteTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Delete project?</DialogTitle>
-            <DialogDescription>
-              {deleteTarget
-                ? `“${deleteTarget.name}” will be removed. Projects with tickets cannot be deleted.`
-                : null}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={deleteMutation.isPending}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {deleteTarget ? (
+        <DeleteProjectDialog
+          project={deleteTarget}
+          isOpen
+          onOpenChange={(open) => {
+            if (!open) setDeleteTarget(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

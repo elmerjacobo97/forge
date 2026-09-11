@@ -15,13 +15,8 @@ const utilityIds = new Set([
   "jwt-decoder",
   "regex-tester",
   "base64",
-  "hash-generator",
-  "uuid-generator",
-  "diff-tool",
-  "format-converter",
   "json-to-typescript",
   "mock-data-generator",
-  "qr-generator",
   "password-generator",
   "image-tools",
 ]);

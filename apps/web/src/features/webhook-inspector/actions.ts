@@ -1,16 +1,15 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
 
 import { getCurrentUser } from "@/features/auth/server";
 import { createWebhookEndpointSchema } from "./schemas/webhook-inspector-schema";
 import { webhookInspectorService } from "./services/webhook-inspector-service";
-import type { WebhookEndpoint, WebhookEvent } from "./types";
+import type { WebhookEndpoint } from "./types";
 import { WebhookEndpointLimitError } from "./utils/limits";
 
-export type WebhookActionResult<T = void> =
-  | { ok: true; data: T }
-  | { ok: false; message: string };
+export type WebhookActionResult<T = void> = { ok: true; data: T } | { ok: false; message: string };
 
 function actionError(error: unknown, fallback: string): WebhookActionResult<never> {
   if (error instanceof WebhookEndpointLimitError) {
@@ -45,10 +44,8 @@ export async function createWebhookEndpointAction(
   }
 
   try {
-    const endpoint = await webhookInspectorService.createEndpoint(
-      parsed.data,
-      user.id,
-    );
+    const endpoint = await webhookInspectorService.createEndpoint(parsed.data, user.id);
+    revalidatePath("/webhook-inspector");
     return { ok: true, data: endpoint };
   } catch (error) {
     return actionError(error, "Failed to create webhook endpoint.");
@@ -69,44 +66,9 @@ export async function deleteWebhookEndpointAction(
 
   try {
     await webhookInspectorService.deleteEndpoint(endpointId, user.id);
+    revalidatePath("/webhook-inspector");
     return { ok: true, data: undefined };
   } catch (error) {
     return actionError(error, "Failed to delete webhook endpoint.");
-  }
-}
-
-export async function listWebhookEndpointsAction(): Promise<
-  WebhookActionResult<WebhookEndpoint[]>
-> {
-  const user = await getCurrentUser();
-  if (!user) {
-    return { ok: false, message: "Sign in to use Webhook Inspector." };
-  }
-
-  try {
-    const endpoints = await webhookInspectorService.listEndpoints(user.id);
-    return { ok: true, data: endpoints };
-  } catch (error) {
-    return actionError(error, "Failed to load webhook endpoints.");
-  }
-}
-
-export async function listWebhookEventsAction(
-  endpointId: unknown,
-): Promise<WebhookActionResult<WebhookEvent[]>> {
-  const user = await getCurrentUser();
-  if (!user) {
-    return { ok: false, message: "Sign in to use Webhook Inspector." };
-  }
-
-  if (typeof endpointId !== "string" || endpointId.length === 0) {
-    return { ok: false, message: "Invalid webhook endpoint." };
-  }
-
-  try {
-    const events = await webhookInspectorService.listEvents(endpointId, user.id);
-    return { ok: true, data: events };
-  } catch (error) {
-    return actionError(error, "Failed to load webhook events.");
   }
 }

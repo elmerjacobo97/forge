@@ -17,7 +17,6 @@ import {
   Trophy,
 } from "lucide-react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,17 +32,16 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ToggleGroupItem, ToggleGroup } from "@/components/ui/toggle-group";
-import { useUserQuery } from "@/features/auth/hooks/queries";
-
-import { useDevBoardAnalytics, useDevBoardProject } from "../hooks/queries";
-import { AnalyticsPreset } from "../types/analytics";
+import { useAnalytics } from "../hooks/use-analytics";
+import { AnalyticsPreset, type AnalyticsData, type AnalyticsRange } from "../types/analytics";
 import { PRIORITY_COLORS } from "../types/board";
+import type { Project } from "../types/project";
 import { downloadCsv, formatRangeLabel } from "../utils/analytics-range";
 import { analyticsCsv, buildAnalytics, presetRange } from "../utils/analytics";
 import { formatDuration } from "../utils/timer";
 import { AnalyticsSkeleton } from "./analytics-skeleton";
 import { ChartsSkeleton } from "./charts-skeleton";
-import { SectionEyebrow } from "./section-eyebrow";
+
 import { StatItem } from "./stat-item";
 
 const AnalyticsCharts = dynamic(
@@ -63,12 +61,16 @@ function lastFifteenDays(): DateRange {
 }
 
 interface ProjectAnalyticsProps {
-  projectId: string;
+  project: Project;
+  initialRange: AnalyticsRange;
+  initialAnalytics: AnalyticsData;
 }
 
-export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
-  const { data: user } = useUserQuery();
-  const projectQuery = useDevBoardProject(user?.id, projectId);
+export function ProjectAnalytics({
+  project,
+  initialRange,
+  initialAnalytics,
+}: ProjectAnalyticsProps) {
   const [preset, setPreset] = useState<AnalyticsPreset>("30d");
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -82,8 +84,13 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
       to: endOfDay(to).toISOString(),
     };
   }, [preset, customRange]);
-  const analyticsQuery = useDevBoardAnalytics(user?.id, projectId, range);
-  const summary = analyticsQuery.data && range ? buildAnalytics(analyticsQuery.data, range) : null;
+
+  const {
+    data: analytics,
+    error,
+    isLoading,
+  } = useAnalytics(project.id, range, initialRange, initialAnalytics);
+  const summary = analytics && range ? buildAnalytics(analytics, range) : null;
   const maxTicketDuration = summary?.topTickets[0]?.durationMs ?? 0;
 
   function selectPreset(value: string) {
@@ -93,37 +100,22 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
     setPreset(nextPreset);
   }
 
-  if (projectQuery.isError) {
-    return (
-      <div className="flex flex-col gap-3">
-        <Button asChild size="sm" variant="ghost" className="w-fit gap-1.5">
-          <Link href="/dev-board">
-            <ArrowLeft className="size-3.5" />
-            Projects
-          </Link>
-        </Button>
-        <Alert variant="destructive">
-          <AlertTitle>Project not found</AlertTitle>
-          <AlertDescription>{projectQuery.error.message}</AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-col">
-          <h2 className="truncate font-heading text-lg font-semibold">
-            {projectQuery.data?.name ?? "Project"} analytics
-          </h2>
+          <h2 className="truncate font-heading text-lg font-semibold">{project.name} analytics</h2>
           <p className="text-sm text-muted-foreground">
             Work trends, cycle time, and time invested for this project.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button asChild size="sm" variant="outline">
-            <Link href={`/dev-board/${projectId}`}>
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+          >
+            <Link href={`/dev-board/${project.id}`}>
               <ArrowLeft className="size-3.5" />
               Board
             </Link>
@@ -154,7 +146,10 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
             <ToggleGroupItem value="custom">Custom</ToggleGroupItem>
           </ToggleGroup>
           {preset === "custom" && (
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <Popover
+              open={isCalendarOpen}
+              onOpenChange={setIsCalendarOpen}
+            >
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -165,7 +160,10 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
                   {formatCustomRange(customRange)}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="start" className="w-auto p-0">
+              <PopoverContent
+                align="start"
+                className="w-auto p-0"
+              >
                 <Card className="w-fit p-0">
                   <CardContent className="p-0">
                     <Calendar
@@ -174,9 +172,7 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
                       onSelect={setCustomRange}
                       defaultMonth={customRange?.from}
                       numberOfMonths={2}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                      }
+                      disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
                     />
                   </CardContent>
                 </Card>
@@ -191,13 +187,11 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
 
       <div className="min-h-0 flex-1">
         <div className="flex flex-col gap-4 pb-6 *:shrink-0">
-          {analyticsQuery.isLoading || projectQuery.isLoading ? (
+          {isLoading ? (
             <AnalyticsSkeleton />
-          ) : analyticsQuery.error ? (
+          ) : error ? (
             <Card>
-              <CardContent className="p-6 text-sm text-destructive">
-                {analyticsQuery.error.message}
-              </CardContent>
+              <CardContent className="p-6 text-sm text-destructive">{error}</CardContent>
             </Card>
           ) : summary ? (
             <>
@@ -233,12 +227,16 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
                 </CardContent>
               </Card>
 
-              <SectionEyebrow>Trends</SectionEyebrow>
+              <p className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
+                Trends
+              </p>
               <Suspense fallback={<ChartsSkeleton />}>
                 <AnalyticsCharts summary={summary} />
               </Suspense>
 
-              <SectionEyebrow>Leaderboard</SectionEyebrow>
+              <p className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
+                Leaderboard
+              </p>
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
@@ -255,7 +253,10 @@ export function ProjectAnalytics({ projectId }: ProjectAnalyticsProps) {
                   {summary.topTickets.length ? (
                     <ItemGroup>
                       {summary.topTickets.map(({ ticket, durationMs }, index) => (
-                        <Item key={ticket.id} variant="outline">
+                        <Item
+                          key={ticket.id}
+                          variant="outline"
+                        >
                           <ItemMedia>
                             <span className="flex size-6 items-center justify-center rounded-full bg-muted font-mono text-xs tabular-nums">
                               {index + 1}

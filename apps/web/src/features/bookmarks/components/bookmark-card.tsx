@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { ExternalLink, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -9,30 +12,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DeleteBookmarkDialog } from "./delete-bookmark-dialog";
+import { EditBookmarkDialog } from "./edit-bookmark-dialog";
 import type { Bookmark } from "../types";
 
-interface BookmarkCardProps {
-  bookmark: Bookmark;
-  onEdit: (bookmark: Bookmark) => void;
-  onDelete: (bookmark: Bookmark) => void;
-}
+export function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-export function BookmarkCard({ bookmark, onEdit, onDelete }: BookmarkCardProps) {
   return (
     <div className="group flex flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/20">
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="capitalize">
+            <Badge
+              variant="outline"
+              className="capitalize"
+            >
               {bookmark.category}
             </Badge>
             <span className="text-xs text-muted-foreground">
               {format(new Date(bookmark.createdAt), "MMM d, yyyy")}
             </span>
           </div>
-          <h3 className="font-heading text-base font-medium leading-snug">
-            {bookmark.title}
-          </h3>
+          <h3 className="font-heading text-base font-medium leading-snug">{bookmark.title}</h3>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -46,13 +49,13 @@ export function BookmarkCard({ bookmark, onEdit, onDelete }: BookmarkCardProps) 
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(bookmark)}>
+            <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
               <Pencil className="size-3.5" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
-              onClick={() => onDelete(bookmark)}
+              onClick={() => setIsDeleteOpen(true)}
             >
               <Trash2 className="size-3.5" />
               Delete
@@ -65,7 +68,11 @@ export function BookmarkCard({ bookmark, onEdit, onDelete }: BookmarkCardProps) 
         <p className="text-sm text-muted-foreground">{bookmark.description}</p>
         <div className="flex flex-wrap gap-1.5">
           {bookmark.tags.map((t) => (
-            <Badge key={t} variant="secondary" className="text-xs font-mono">
+            <Badge
+              key={t}
+              variant="secondary"
+              className="text-xs font-mono"
+            >
               #{t}
             </Badge>
           ))}
@@ -83,6 +90,22 @@ export function BookmarkCard({ bookmark, onEdit, onDelete }: BookmarkCardProps) 
           <ExternalLink className="size-3.5" />
         </Button>
       </div>
+
+      {isEditOpen ? (
+        <EditBookmarkDialog
+          bookmark={bookmark}
+          isOpen
+          onOpenChange={setIsEditOpen}
+        />
+      ) : null}
+
+      {isDeleteOpen ? (
+        <DeleteBookmarkDialog
+          bookmark={bookmark}
+          isOpen
+          onOpenChange={setIsDeleteOpen}
+        />
+      ) : null}
     </div>
   );
 }

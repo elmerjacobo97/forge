@@ -1,19 +1,20 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import dynamic from "next/dynamic";
-import { useState } from "react";
 import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { UPTIME_UPTIME_WINDOW_HOURS } from "../constants";
-import { useSetUptimeMonitorEnabledMutation } from "../hooks/mutations";
-import { useRecentUptimeChecksQuery } from "../hooks/queries";
-import type { LatencyBucket, UptimeMonitor } from "../types";
-import { computeUptimePercentage, formatLatency, formatUptimePercentage } from "../utils/stats";
+import { setUptimeMonitorEnabledAction } from "../actions";
+import type { MonitorRowData } from "../types";
+import { formatLatency, formatUptimePercentage } from "../utils/stats";
+import { DeleteMonitorDialog } from "./delete-monitor-dialog";
+import { MonitorFormDialog } from "./monitor-form-dialog";
 import { MonitorStatusBadge } from "./monitor-status-badge";
 
 const MonitorSparkline = dynamic(
@@ -21,29 +22,23 @@ const MonitorSparkline = dynamic(
   { ssr: false, loading: () => <Skeleton className="h-8 w-24" /> },
 );
 
-type MonitorTableRowProps = {
-  monitor: UptimeMonitor;
-  sparklineBuckets: LatencyBucket[];
-  sparklinesLoading?: boolean;
-  onEdit: (monitor: UptimeMonitor) => void;
-  onDelete: (monitor: UptimeMonitor) => void;
-};
+export function MonitorTableRow({ row }: { row: MonitorRowData }) {
+  const { monitor, sparklineBuckets, lastLatencyMs, uptimePercentage } = row;
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isToggling, startToggling] = useTransition();
 
-export function MonitorTableRow({
-  monitor,
-  sparklineBuckets,
-  sparklinesLoading = false,
-  onEdit,
-  onDelete,
-}: MonitorTableRowProps) {
-  const [sinceIso] = useState(() =>
-    new Date(Date.now() - UPTIME_UPTIME_WINDOW_HOURS * 60 * 60 * 1000).toISOString(),
-  );
-  const { data: recentChecks = [] } = useRecentUptimeChecksQuery(monitor.id, sinceIso);
-  const toggleMutation = useSetUptimeMonitorEnabledMutation();
+  function toggleEnabled(enabled: boolean) {
+    startToggling(async () => {
+      const result = await setUptimeMonitorEnabledAction(monitor.id, enabled);
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
 
-  const lastCheck = recentChecks[0] ?? null;
-  const uptimePercentage = computeUptimePercentage(recentChecks);
+      toast.success(enabled ? "Monitor resumed." : "Monitor paused.");
+    });
+  }
 
   return (
     <TableRow>
@@ -60,12 +55,12 @@ export function MonitorTableRow({
         <MonitorStatusBadge status={monitor.status} />
       </TableCell>
       <TableCell className="text-xs text-muted-foreground">
-        {lastCheck ? formatLatency(lastCheck.latencyMs) : "—"}
+        {lastLatencyMs === null ? "—" : formatLatency(lastLatencyMs)}
       </TableCell>
       <TableCell>
         <MonitorSparkline
           buckets={sparklineBuckets}
-          isLoading={sparklinesLoading}
+          isLoading={false}
         />
       </TableCell>
       <TableCell className="text-xs text-muted-foreground">
@@ -74,8 +69,8 @@ export function MonitorTableRow({
       <TableCell>
         <Switch
           checked={monitor.enabled}
-          disabled={toggleMutation.isPending}
-          onCheckedChange={(enabled) => toggleMutation.mutate({ monitorId: monitor.id, enabled })}
+          disabled={isToggling}
+          onCheckedChange={toggleEnabled}
           aria-label={monitor.enabled ? "Pause monitor" : "Resume monitor"}
         />
       </TableCell>
@@ -84,7 +79,7 @@ export function MonitorTableRow({
           <Button
             size="icon-sm"
             variant="ghost"
-            onClick={() => onEdit(monitor)}
+            onClick={() => setIsEditOpen(true)}
             aria-label="Edit monitor"
           >
             <Pencil />
@@ -92,13 +87,29 @@ export function MonitorTableRow({
           <Button
             size="icon-sm"
             variant="ghost"
-            onClick={() => onDelete(monitor)}
+            onClick={() => setIsDeleteOpen(true)}
             aria-label="Delete monitor"
           >
             <Trash2 />
           </Button>
         </div>
       </TableCell>
+
+      {isEditOpen ? (
+        <MonitorFormDialog
+          monitor={monitor}
+          isOpen
+          onOpenChange={setIsEditOpen}
+        />
+      ) : null}
+
+      {isDeleteOpen ? (
+        <DeleteMonitorDialog
+          monitor={monitor}
+          isOpen
+          onOpenChange={setIsDeleteOpen}
+        />
+      ) : null}
     </TableRow>
   );
 }

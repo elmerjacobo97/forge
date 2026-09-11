@@ -1,17 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const database = vi.hoisted(() => ({ from: vi.fn() }));
+vi.mock("server-only", () => ({}));
 
-vi.mock("@/lib/insforge/browser", () => ({ insforge: { database } }));
+const database = vi.hoisted(() => ({ from: vi.fn() }));
+const createInsForgeServerClient = vi.hoisted(() => vi.fn(async () => ({ database })));
+
+vi.mock("@/lib/insforge/server", () => ({ createInsForgeServerClient }));
 
 import { resourcesService } from "./resources-service";
 
 describe("resourcesService", () => {
   beforeEach(() => vi.clearAllMocks());
-
-  it("requires an authenticated user", async () => {
-    await expect(resourcesService.fetchResources()).rejects.toThrow("Sign in");
-  });
 
   it("maps rows with nullable resource metadata", async () => {
     const row = {
@@ -30,7 +29,9 @@ describe("resourcesService", () => {
     const order = vi.fn().mockResolvedValue({ data: [row], error: null });
     database.from.mockReturnValue({ select: vi.fn(() => ({ order })) });
 
-    await expect(resourcesService.fetchResources("user-1")).resolves.toEqual([
+    const page = await resourcesService.fetchResourcesPage();
+
+    expect(page.resources).toEqual([
       {
         id: row.id,
         title: row.title,
@@ -45,6 +46,7 @@ describe("resourcesService", () => {
         createdAt: row.created_at,
       },
     ]);
+    expect(page.tags).toEqual(["tooling"]);
   });
 
   it("maps complete configuration rows", async () => {
@@ -64,7 +66,9 @@ describe("resourcesService", () => {
     const order = vi.fn().mockResolvedValue({ data: [row], error: null });
     database.from.mockReturnValue({ select: vi.fn(() => ({ order })) });
 
-    await expect(resourcesService.fetchResources("user-1")).resolves.toEqual([
+    const page = await resourcesService.fetchResourcesPage();
+
+    expect(page.resources).toEqual([
       {
         id: row.id,
         title: row.title,
@@ -79,6 +83,7 @@ describe("resourcesService", () => {
         createdAt: row.created_at,
       },
     ]);
+    expect(page.tags).toEqual(["config", "mobile"]);
   });
 
   it("persists configuration metadata with nullable optional fields", async () => {
@@ -112,7 +117,7 @@ describe("resourcesService", () => {
       context: null,
     };
 
-    await expect(resourcesService.createResource(input, "user-1")).resolves.toEqual({
+    await expect(resourcesService.createResource(input)).resolves.toEqual({
       id: row.id,
       title: row.title,
       kind: row.kind,
@@ -172,7 +177,7 @@ describe("resourcesService", () => {
       context: row.context,
     };
 
-    await expect(resourcesService.updateResource(row.id, input, "user-1")).resolves.toMatchObject({
+    await expect(resourcesService.updateResource(row.id, input)).resolves.toMatchObject({
       id: row.id,
       tool: row.tool,
       customTool: row.custom_tool,

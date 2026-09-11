@@ -17,7 +17,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "doctor": "pnpm --filter @forge/web doctor"
+    "doctor": "pnpm --filter @forge/web run doctor"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

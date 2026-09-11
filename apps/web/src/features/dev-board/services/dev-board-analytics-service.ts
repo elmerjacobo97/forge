@@ -1,6 +1,8 @@
+import "server-only";
+
 import { z } from "zod";
 
-import { insforge } from "@/lib/insforge/browser";
+import { createInsForgeServerClient } from "@/lib/insforge/server";
 import type { AnalyticsData, AnalyticsRange } from "../types/analytics";
 import { COLUMNS, type Ticket } from "../types/board";
 import { devBoardService } from "./dev-board-service";
@@ -27,17 +29,13 @@ function failure(error: { message?: string } | null, fallback: string): Error {
 }
 
 export const devBoardAnalyticsService = {
-  async fetchAnalytics(
-    userId: string,
-    projectId: string,
-    range: AnalyticsRange,
-  ): Promise<AnalyticsData> {
+  async fetchAnalytics(projectId: string, range: AnalyticsRange): Promise<AnalyticsData> {
     const ticketPages = await Promise.all(
       COLUMNS.map(async (column) => {
         const tickets: Ticket[] = [];
         let cursor: string | null = null;
         do {
-          const page = await devBoardService.fetchTicketPage(userId, projectId, column, cursor);
+          const page = await devBoardService.fetchTicketPage(projectId, column, cursor);
           tickets.push(...page.tickets);
           cursor = page.nextCursor;
         } while (cursor);
@@ -48,6 +46,7 @@ export const devBoardAnalyticsService = {
     const ticketIds = tickets.map((ticket) => ticket.id);
     if (ticketIds.length === 0) return { tickets, events: [], timeEntries: [] };
 
+    const insforge = await createInsForgeServerClient();
     const [eventsResult, timeEntriesResult] = await Promise.all([
       insforge.database
         .from("dev_board_events")
@@ -69,21 +68,27 @@ export const devBoardAnalyticsService = {
       throw failure(timeEntriesResult.error, "Failed to load time entries.");
     }
 
-    const events = eventRowSchema.array().parse(eventsResult.data).map((row) => ({
-      id: row.id,
-      ticketId: row.ticket_id,
-      eventType: row.event_type,
-      fromColumn: row.from_column,
-      toColumn: row.to_column,
-      occurredAt: row.occurred_at,
-    }));
-    const timeEntries = timeEntryRowSchema.array().parse(timeEntriesResult.data).map((row) => ({
-      id: row.id,
-      ticketId: row.ticket_id,
-      startedAt: row.started_at,
-      endedAt: row.ended_at,
-      durationMs: row.duration_ms,
-    }));
+    const events = eventRowSchema
+      .array()
+      .parse(eventsResult.data)
+      .map((row) => ({
+        id: row.id,
+        ticketId: row.ticket_id,
+        eventType: row.event_type,
+        fromColumn: row.from_column,
+        toColumn: row.to_column,
+        occurredAt: row.occurred_at,
+      }));
+    const timeEntries = timeEntryRowSchema
+      .array()
+      .parse(timeEntriesResult.data)
+      .map((row) => ({
+        id: row.id,
+        ticketId: row.ticket_id,
+        startedAt: row.started_at,
+        endedAt: row.ended_at,
+        durationMs: row.duration_ms,
+      }));
 
     return { tickets, events, timeEntries };
   },

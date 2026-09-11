@@ -17,6 +17,8 @@ interface ColumnViewProps {
   tickets: Ticket[];
   isHighlighted: boolean;
   onEdit: (ticket: Ticket) => void;
+  onUpdate: (ticket: Ticket) => void;
+  onDelete: (ticket: Ticket) => void;
   onMoveToColumn: (id: string, column: ColumnId) => void;
   onAddTicket: () => void;
   totalTickets: number;
@@ -38,6 +40,8 @@ export function ColumnView({
   tickets,
   isHighlighted,
   onEdit,
+  onUpdate,
+  onDelete,
   onMoveToColumn,
   onAddTicket,
   totalTickets,
@@ -69,7 +73,10 @@ export function ColumnView({
           <span className="truncate text-xs font-semibold whitespace-nowrap">
             {COLUMN_LABELS[columnId]}
           </span>
-          <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+          <Badge
+            variant="secondary"
+            className="h-4 px-1.5 text-[10px]"
+          >
             {totalTickets}
           </Badge>
         </div>
@@ -79,7 +86,10 @@ export function ColumnView({
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
-        <div ref={setNodeRef} className="flex min-h-full flex-col gap-2 p-2">
+        <div
+          ref={setNodeRef}
+          className="flex min-h-full flex-col gap-2 p-2"
+        >
           <SortableContext
             items={colTickets.map((t) => t.id)}
             strategy={verticalListSortingStrategy}
@@ -89,6 +99,8 @@ export function ColumnView({
                 key={ticket.id}
                 ticket={ticket}
                 onEdit={onEdit}
+                onUpdate={onUpdate}
+                onDelete={onDelete}
                 onMoveToColumn={onMoveToColumn}
               />
             ))}

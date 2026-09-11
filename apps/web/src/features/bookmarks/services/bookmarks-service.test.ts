@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const database = vi.hoisted(() => ({ from: vi.fn() }));
+vi.mock("server-only", () => ({}));
 
-vi.mock("@/lib/insforge/browser", () => ({ insforge: { database } }));
+const database = vi.hoisted(() => ({ from: vi.fn() }));
+const createInsForgeServerClient = vi.hoisted(() => vi.fn(async () => ({ database })));
+
+vi.mock("@/lib/insforge/server", () => ({ createInsForgeServerClient }));
 
 import { bookmarksService } from "./bookmarks-service";
 
@@ -19,16 +22,19 @@ const row = {
 describe("bookmarksService", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("requires an authenticated user", async () => {
-    await expect(bookmarksService.fetchBookmarks()).rejects.toThrow("Sign in");
-  });
-
   it("maps InsForge rows", async () => {
     const order = vi.fn().mockResolvedValue({ data: [row], error: null });
     database.from.mockReturnValue({ select: vi.fn(() => ({ order })) });
 
-    await expect(bookmarksService.fetchBookmarks("user-1")).resolves.toEqual([
+    await expect(bookmarksService.fetchBookmarks()).resolves.toEqual([
       { ...row, createdAt: row.created_at },
     ]);
+  });
+
+  it("throws when InsForge returns an error", async () => {
+    const order = vi.fn().mockResolvedValue({ data: null, error: { message: "boom" } });
+    database.from.mockReturnValue({ select: vi.fn(() => ({ order })) });
+
+    await expect(bookmarksService.fetchBookmarks()).rejects.toThrow("boom");
   });
 });

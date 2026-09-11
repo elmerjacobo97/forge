@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createInsForgeServerClient } from "@/lib/insforge/server";
+import { UPTIME_CHECK_HISTORY_LIMIT } from "../constants";
 import type {
   CreateUptimeMonitorInput,
   NotificationSettingsInput,
@@ -23,6 +24,7 @@ import type {
   DailyUptime,
   LatencyBucket,
   LatencyRange,
+  MonitorDetailData,
   MonitorSparkline,
   PersistedRequestHeader,
   RequestHeaderInput,
@@ -546,5 +548,23 @@ export const uptimeMonitorService = {
       uptime7d: uptimeFromBuckets(buckets7d),
       uptime30d: uptimeFromBuckets(buckets30d),
     };
+  },
+
+  async getMonitorDetail(
+    monitorId: string,
+    range: LatencyRange,
+    userId?: string,
+  ): Promise<MonitorDetailData> {
+    requireUser(userId);
+    const [checks, incidents, stats, latencyBuckets, dailyUptime] = await Promise.all([
+      uptimeMonitorService.listChecks(monitorId, userId, {
+        limit: UPTIME_CHECK_HISTORY_LIMIT,
+      }),
+      uptimeMonitorService.listIncidents(monitorId, userId),
+      uptimeMonitorService.getUptimeStats(monitorId, userId),
+      uptimeMonitorService.getLatencyBuckets(monitorId, range, userId),
+      uptimeMonitorService.getDailyUptime(monitorId, userId),
+    ]);
+    return { checks, incidents, stats, latencyBuckets, dailyUptime };
   },
 };

@@ -46,3 +46,24 @@ export const editResourceSchema = baseResourceSchema.superRefine((value, context
 });
 
 export type ResourceSchema = z.infer<typeof resourceSchema>;
+
+const resourceToolValues = [
+  "react-native",
+  "vscode",
+  "cursor",
+  "opencode",
+  "claude-code",
+  "other",
+] as const;
+
+export const resourceInputSchema = z.object({
+  title: z.string().min(2, "Title must be at least 2 characters."),
+  kind: z.enum(["note", "prompt", "config", "code"]),
+  content: z.string().min(1, "Content is required."),
+  language: z.string().nullable(),
+  tags: z.array(z.string()),
+  tool: z.enum(resourceToolValues).nullable(),
+  customTool: z.string().nullable(),
+  version: z.string().nullable(),
+  context: z.string().nullable(),
+});

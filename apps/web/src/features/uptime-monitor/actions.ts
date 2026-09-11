@@ -1,25 +1,17 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
 
 import { getCurrentUser } from "@/features/auth/server";
-import { UPTIME_CHECK_HISTORY_LIMIT } from "./constants";
 import {
-  latencyRangeSchema,
   notificationSettingsSchema,
   slackNotificationSettingsSchema,
 } from "./schemas/uptime-monitor-schema";
 import { formatSlackTestPayload, sendSlackWebhook } from "./server/slack";
 import { sendTelegramMessage } from "./server/telegram";
 import { uptimeMonitorService } from "./services/uptime-monitor-service";
-import type {
-  MonitorDetailData,
-  MonitorSparkline,
-  SlackNotificationSettings,
-  UptimeCheck,
-  UptimeMonitor,
-  UptimeNotificationSettings,
-} from "./types";
+import type { SlackNotificationSettings, UptimeMonitor, UptimeNotificationSettings } from "./types";
 import { UptimeMonitorLimitError } from "./utils/limits";
 
 export type UptimeActionResult<T = void> = { ok: true; data: T } | { ok: false; message: string };
@@ -56,6 +48,7 @@ export async function createUptimeMonitorAction(
 
   try {
     const monitor = await uptimeMonitorService.createMonitor(input, auth.userId);
+    revalidatePath("/uptime-monitor", "layout");
     return { ok: true, data: monitor };
   } catch (error) {
     return actionError(error, "Failed to create monitor.");
@@ -75,6 +68,7 @@ export async function updateUptimeMonitorAction(
 
   try {
     const monitor = await uptimeMonitorService.updateMonitor(monitorId, input, auth.userId);
+    revalidatePath("/uptime-monitor", "layout");
     return { ok: true, data: monitor };
   } catch (error) {
     return actionError(error, "Failed to update monitor.");
@@ -97,6 +91,7 @@ export async function setUptimeMonitorEnabledAction(
 
   try {
     const monitor = await uptimeMonitorService.setMonitorEnabled(monitorId, enabled, auth.userId);
+    revalidatePath("/uptime-monitor", "layout");
     return { ok: true, data: monitor };
   } catch (error) {
     return actionError(error, "Failed to update monitor.");
@@ -113,54 +108,10 @@ export async function deleteUptimeMonitorAction(monitorId: unknown): Promise<Upt
 
   try {
     await uptimeMonitorService.deleteMonitor(monitorId, auth.userId);
+    revalidatePath("/uptime-monitor", "layout");
     return { ok: true, data: undefined };
   } catch (error) {
     return actionError(error, "Failed to delete monitor.");
-  }
-}
-
-export async function listUptimeMonitorsAction(): Promise<UptimeActionResult<UptimeMonitor[]>> {
-  const auth = await requireAuthUser();
-  if (!auth.ok) return auth;
-
-  try {
-    const monitors = await uptimeMonitorService.listMonitors(auth.userId);
-    return { ok: true, data: monitors };
-  } catch (error) {
-    return actionError(error, "Failed to load monitors.");
-  }
-}
-
-export async function listUptimeChecksAction(
-  monitorId: unknown,
-  options?: { sinceIso?: string; limit?: number },
-): Promise<UptimeActionResult<UptimeCheck[]>> {
-  const auth = await requireAuthUser();
-  if (!auth.ok) return auth;
-
-  if (typeof monitorId !== "string" || monitorId.length === 0) {
-    return { ok: false, message: "Invalid monitor." };
-  }
-
-  try {
-    const checks = await uptimeMonitorService.listChecks(monitorId, auth.userId, options);
-    return { ok: true, data: checks };
-  } catch (error) {
-    return actionError(error, "Failed to load checks.");
-  }
-}
-
-export async function getNotificationSettingsAction(): Promise<
-  UptimeActionResult<UptimeNotificationSettings | null>
-> {
-  const auth = await requireAuthUser();
-  if (!auth.ok) return auth;
-
-  try {
-    const settings = await uptimeMonitorService.getNotificationSettings(auth.userId);
-    return { ok: true, data: settings };
-  } catch (error) {
-    return actionError(error, "Failed to load notification settings.");
   }
 }
 
@@ -180,6 +131,7 @@ export async function saveNotificationSettingsAction(
 
   try {
     const settings = await uptimeMonitorService.saveNotificationSettings(parsed.data, auth.userId);
+    revalidatePath("/uptime-monitor", "layout");
     return { ok: true, data: settings };
   } catch (error) {
     return actionError(error, "Failed to save notification settings.");
@@ -207,20 +159,6 @@ export async function sendTestTelegramMessageAction(): Promise<UptimeActionResul
   return { ok: true, data: undefined };
 }
 
-export async function getSlackNotificationSettingsAction(): Promise<
-  UptimeActionResult<SlackNotificationSettings | null>
-> {
-  const auth = await requireAuthUser();
-  if (!auth.ok) return auth;
-
-  try {
-    const settings = await uptimeMonitorService.getSlackNotificationSettings(auth.userId);
-    return { ok: true, data: settings };
-  } catch (error) {
-    return actionError(error, "Failed to load Slack notification settings.");
-  }
-}
-
 export async function saveSlackNotificationSettingsAction(
   input: unknown,
 ): Promise<UptimeActionResult<SlackNotificationSettings>> {
@@ -240,6 +178,7 @@ export async function saveSlackNotificationSettingsAction(
       parsed.data,
       auth.userId,
     );
+    revalidatePath("/uptime-monitor", "layout");
     return { ok: true, data: settings };
   } catch (error) {
     return actionError(error, "Failed to save Slack notification settings.");
@@ -270,59 +209,4 @@ export async function sendTestSlackMessageAction(): Promise<UptimeActionResult> 
   const result = await sendSlackWebhook(settings.slackWebhookUrl, formatSlackTestPayload());
   if (!result.ok) return { ok: false, message: result.message };
   return { ok: true, data: undefined };
-}
-
-export async function getMonitorDetailAction(
-  monitorId: unknown,
-  range: unknown,
-): Promise<UptimeActionResult<MonitorDetailData>> {
-  const auth = await requireAuthUser();
-  if (!auth.ok) return auth;
-
-  if (typeof monitorId !== "string" || monitorId.length === 0) {
-    return { ok: false, message: "Invalid monitor." };
-  }
-  const parsedRange = latencyRangeSchema.safeParse(range);
-  if (!parsedRange.success) {
-    return { ok: false, message: "Invalid latency range." };
-  }
-
-  try {
-    const [checks, incidents, stats, latencyBuckets, dailyUptime] = await Promise.all([
-      uptimeMonitorService.listChecks(monitorId, auth.userId, {
-        limit: UPTIME_CHECK_HISTORY_LIMIT,
-      }),
-      uptimeMonitorService.listIncidents(monitorId, auth.userId),
-      uptimeMonitorService.getUptimeStats(monitorId, auth.userId),
-      uptimeMonitorService.getLatencyBuckets(monitorId, parsedRange.data, auth.userId),
-      uptimeMonitorService.getDailyUptime(monitorId, auth.userId),
-    ]);
-    return { ok: true, data: { checks, incidents, stats, latencyBuckets, dailyUptime } };
-  } catch (error) {
-    return actionError(error, "Failed to load monitor detail.");
-  }
-}
-
-export async function getSparklinesAction(
-  monitorIds: unknown,
-): Promise<UptimeActionResult<MonitorSparkline[]>> {
-  const auth = await requireAuthUser();
-  if (!auth.ok) return auth;
-
-  if (
-    !Array.isArray(monitorIds) ||
-    monitorIds.some((id) => typeof id !== "string" || id.length === 0)
-  ) {
-    return { ok: false, message: "Invalid monitor list." };
-  }
-
-  try {
-    const sparklines = await uptimeMonitorService.getSparklines(
-      monitorIds as string[],
-      auth.userId,
-    );
-    return { ok: true, data: sparklines };
-  } catch (error) {
-    return actionError(error, "Failed to load sparklines.");
-  }
 }

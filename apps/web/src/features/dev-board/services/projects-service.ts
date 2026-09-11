@@ -1,6 +1,8 @@
+import "server-only";
+
 import { z } from "zod";
 
-import { insforge } from "@/lib/insforge/browser";
+import { createInsForgeServerClient } from "@/lib/insforge/server";
 import type { Project, ProjectCreateInput, ProjectUpdateInput } from "../types/project";
 
 const projectRowSchema = z.object({
@@ -20,7 +22,8 @@ function failure(error: { message?: string } | null, fallback: string): Error {
 }
 
 export const projectsService = {
-  async listProjects(_userId: string): Promise<Project[]> {
+  async listProjects(): Promise<Project[]> {
+    const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database
       .from("dev_board_projects")
       .select("id,name,description,created_at")
@@ -29,7 +32,8 @@ export const projectsService = {
     return projectRowSchema.array().parse(data).map(toProject);
   },
 
-  async getProject(projectId: string, _userId: string): Promise<Project> {
+  async getProject(projectId: string): Promise<Project> {
+    const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database
       .from("dev_board_projects")
       .select("id,name,description,created_at")
@@ -39,7 +43,8 @@ export const projectsService = {
     return toProject(data);
   },
 
-  async createProject(input: ProjectCreateInput, _userId: string): Promise<Project> {
+  async createProject(input: ProjectCreateInput): Promise<Project> {
+    const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database
       .from("dev_board_projects")
       .insert([input])
@@ -49,11 +54,8 @@ export const projectsService = {
     return toProject(data);
   },
 
-  async updateProject(
-    projectId: string,
-    input: ProjectUpdateInput,
-    _userId: string,
-  ): Promise<Project> {
+  async updateProject(projectId: string, input: ProjectUpdateInput): Promise<Project> {
+    const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database
       .from("dev_board_projects")
       .update(input)
@@ -64,7 +66,8 @@ export const projectsService = {
     return toProject(data);
   },
 
-  async deleteProject(projectId: string, _userId: string): Promise<void> {
+  async deleteProject(projectId: string): Promise<void> {
+    const insforge = await createInsForgeServerClient();
     const { error } = await insforge.database.rpc("delete_empty_dev_board_project", {
       p_project_id: projectId,
     });

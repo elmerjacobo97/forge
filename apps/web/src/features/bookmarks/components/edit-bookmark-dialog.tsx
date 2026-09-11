@@ -9,12 +9,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Field,
-  FieldLabel,
-  FieldError,
-  FieldGroup,
-} from "@/components/ui/field";
+import { Field, FieldLabel, FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   InputGroup,
@@ -33,8 +28,9 @@ import { Button } from "@/components/ui/button";
 import { useForm, useStore } from "@tanstack/react-form";
 import { AiGenerationButton } from "@/features/ai-generation/components/ai-generation-button";
 import { aiGenerationService } from "@/features/ai-generation/services/ai-generation-service";
+import { tagsFromString } from "@/lib/tags";
+import { updateBookmarkAction } from "../actions";
 import { bookmarksSchema, BookmarksSchema } from "../schemas/bookmarks-schema";
-import { useUpdateBookmarkMutation } from "../hooks/mutations";
 import type { Bookmark } from "../types";
 
 function canGenerateBookmark(title: string, url: string) {
@@ -59,12 +55,8 @@ interface EditBookmarkDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditBookmarkDialog({
-  bookmark,
-  isOpen,
-  onOpenChange,
-}: EditBookmarkDialogProps) {
-  const updateMutation = useUpdateBookmarkMutation();
+export function EditBookmarkDialog({ bookmark, isOpen, onOpenChange }: EditBookmarkDialogProps) {
+  const [isSaving, startSaving] = useTransition();
   const [isGenerating, startGenerating] = useTransition();
 
   const form = useForm({
@@ -86,28 +78,23 @@ export function EditBookmarkDialog({
   const generationUrl = useStore(form.store, (state) => state.values.url);
 
   function saveBookmark(data: BookmarksSchema) {
-    const tags = data.tagsString
-      ? data.tagsString.split(",").flatMap((t: string) => {
-          const trimmed = t.trim().toLowerCase();
-          return trimmed ? [trimmed] : [];
-        })
-      : [];
-
-    updateMutation.mutate(
-      {
-        id: bookmark.id,
+    startSaving(async () => {
+      const result = await updateBookmarkAction(bookmark.id, {
         title: data.title,
         url: data.url,
         category: data.category,
         description: data.description,
-        tags,
-      },
-      {
-        onSuccess: () => {
-          onOpenChange(false);
-        },
-      },
-    );
+        tags: tagsFromString(data.tagsString),
+      });
+
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Bookmark updated successfully!");
+      onOpenChange(false);
+    });
   }
 
   function generateBookmark(title: string, url: string) {
@@ -127,22 +114,21 @@ export function EditBookmarkDialog({
         form.setFieldValue("tagsString", response.data.tags.join(", "));
       } catch (error) {
         toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to generate bookmark details.",
+          error instanceof Error ? error.message : "Failed to generate bookmark details.",
         );
       }
     });
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={onOpenChange}
+    >
       <DialogContent className="max-h-[90vh] max-w-md grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Edit Bookmark</DialogTitle>
-          <DialogDescription>
-            Update this bookmark. Changes save to your library.
-          </DialogDescription>
+          <DialogDescription>Update this bookmark. Changes save to your library.</DialogDescription>
         </DialogHeader>
 
         <form
@@ -157,9 +143,7 @@ export function EditBookmarkDialog({
           <FieldGroup>
             <form.Field name="title">
               {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched &&
-                  !!field.state.meta.errors.length;
+                const isInvalid = field.state.meta.isTouched && !!field.state.meta.errors.length;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Title</FieldLabel>
@@ -173,9 +157,7 @@ export function EditBookmarkDialog({
                       autoComplete="off"
                       aria-invalid={isInvalid}
                     />
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
@@ -183,9 +165,7 @@ export function EditBookmarkDialog({
 
             <form.Field name="url">
               {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched &&
-                  !!field.state.meta.errors.length;
+                const isInvalid = field.state.meta.isTouched && !!field.state.meta.errors.length;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>URL</FieldLabel>
@@ -200,9 +180,7 @@ export function EditBookmarkDialog({
                       autoComplete="off"
                       aria-invalid={isInvalid}
                     />
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
@@ -253,9 +231,7 @@ export function EditBookmarkDialog({
 
             <form.Field name="description">
               {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched &&
-                  !!field.state.meta.errors.length;
+                const isInvalid = field.state.meta.isTouched && !!field.state.meta.errors.length;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Description</FieldLabel>
@@ -271,23 +247,22 @@ export function EditBookmarkDialog({
                         className="max-h-48 resize-y overflow-y-auto"
                         aria-invalid={isInvalid}
                       />
-                      <InputGroupAddon align="block-end" className="justify-between">
+                      <InputGroupAddon
+                        align="block-end"
+                        className="justify-between"
+                      >
                         <InputGroupText className="tabular-nums text-xs">
                           {field.state.value.length}/200
                         </InputGroupText>
                         <AiGenerationButton
                           label="Generate bookmark details with AI"
-                          disabled={
-                            !canGenerateBookmark(generationTitle, generationUrl)
-                          }
+                          disabled={!canGenerateBookmark(generationTitle, generationUrl)}
                           onClick={() => generateBookmark(generationTitle, generationUrl)}
                           isGenerating={isGenerating}
                         />
                       </InputGroupAddon>
                     </InputGroup>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
@@ -304,7 +279,11 @@ export function EditBookmarkDialog({
           >
             Cancel
           </Button>
-          <Button type="submit" form="form-edit-bookmark">
+          <Button
+            type="submit"
+            form="form-edit-bookmark"
+            disabled={isSaving}
+          >
             Save Changes
           </Button>
         </DialogFooter>

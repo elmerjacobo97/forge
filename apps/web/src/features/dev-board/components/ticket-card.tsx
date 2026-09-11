@@ -2,15 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-  Clock,
-  GripVertical,
-  MoreHorizontal,
-  Pencil,
-  Pause,
-  Play,
-  Trash2,
-} from "lucide-react";
+import { Clock, GripVertical, MoreHorizontal, Pencil, Pause, Play, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +17,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-import { useDeleteDevBoardTicket, useUpdateDevBoardTicket } from "../hooks/mutations";
 import {
   type ColumnId,
   type Priority,
@@ -41,15 +32,17 @@ interface TicketCardProps {
   ticket: Ticket;
   onEdit: (ticket: Ticket) => void;
   onMoveToColumn: (id: string, column: ColumnId) => void;
+  onUpdate: (ticket: Ticket) => void;
+  onDelete: (ticket: Ticket) => void;
 }
 
 export function TicketCard({
   ticket,
   onEdit,
   onMoveToColumn,
+  onUpdate,
+  onDelete,
 }: TicketCardProps) {
-  const updateTicketMutation = useUpdateDevBoardTicket();
-  const deleteTicketMutation = useDeleteDevBoardTicket();
   const sortable = useSortable({
     id: ticket.id,
   });
@@ -147,7 +140,10 @@ export function TicketCard({
               <MoreHorizontal className="size-3.5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuContent
+            align="end"
+            className="w-40"
+          >
             <DropdownMenuItem onClick={() => onEdit(ticket)}>
               <Pencil className="size-3" />
               Edit
@@ -155,7 +151,7 @@ export function TicketCard({
             {inProgress && (
               <DropdownMenuItem
                 onClick={() =>
-                  updateTicketMutation.mutate(
+                  onUpdate(
                     ticket.isPaused || !ticket.timerStartedAt
                       ? resumeTimer(ticket)
                       : pauseTimer(ticket),
@@ -198,11 +194,9 @@ export function TicketCard({
                 {(Object.keys(PRIORITY_LABELS) as Priority[]).map((p) => (
                   <DropdownMenuItem
                     key={p}
-                    onClick={() => updateTicketMutation.mutate({ ...ticket, priority: p })}
+                    onClick={() => onUpdate({ ...ticket, priority: p })}
                   >
-                    <span
-                      className={cn("size-2 rounded-full", PRIORITY_COLORS[p])}
-                    />
+                    <span className={cn("size-2 rounded-full", PRIORITY_COLORS[p])} />
                     {PRIORITY_LABELS[p]}
                     {ticket.priority === p && " ✓"}
                   </DropdownMenuItem>
@@ -211,7 +205,7 @@ export function TicketCard({
             </DropdownMenuSub>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => deleteTicketMutation.mutate(ticket.id)}
+              onClick={() => onDelete(ticket)}
               className="text-destructive focus:text-destructive"
             >
               <Trash2 className="size-3" />

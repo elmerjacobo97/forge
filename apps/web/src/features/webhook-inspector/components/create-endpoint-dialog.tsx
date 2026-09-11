@@ -1,6 +1,8 @@
 "use client";
 
+import { useTransition } from "react";
 import { useForm } from "@tanstack/react-form";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useCreateWebhookEndpointMutation } from "../hooks/mutations";
+import { createWebhookEndpointAction } from "../actions";
 import {
   createWebhookEndpointSchema,
   type CreateWebhookEndpointInput,
@@ -30,7 +32,7 @@ export function CreateEndpointDialog({
   onOpenChange,
   disabled = false,
 }: CreateEndpointDialogProps) {
-  const createMutation = useCreateWebhookEndpointMutation();
+  const [isPending, startCreating] = useTransition();
 
   const form = useForm({
     defaultValues: { name: "" } satisfies CreateWebhookEndpointInput,
@@ -38,23 +40,34 @@ export function CreateEndpointDialog({
       onSubmit: createWebhookEndpointSchema,
     },
     onSubmit: async ({ value }) => {
-      createMutation.mutate(value, {
-        onSuccess: () => {
-          onOpenChange(false);
-          form.reset();
-        },
+      startCreating(async () => {
+        const result = await createWebhookEndpointAction(value);
+        if (!result.ok) {
+          toast.error(result.message);
+          return;
+        }
+
+        toast.success(
+          result.data.name
+            ? `Endpoint "${result.data.name}" created.`
+            : "Webhook endpoint created.",
+        );
+        onOpenChange(false);
+        form.reset();
       });
     },
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={onOpenChange}
+    >
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Create webhook endpoint</DialogTitle>
           <DialogDescription>
-            Get a temporary public URL that captures incoming HTTP requests for 7
-            days.
+            Get a temporary public URL that captures incoming HTTP requests for 7 days.
           </DialogDescription>
         </DialogHeader>
 
@@ -68,8 +81,7 @@ export function CreateEndpointDialog({
           <FieldGroup>
             <form.Field name="name">
               {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid || undefined}>
                     <FieldLabel htmlFor={field.name}>Name (optional)</FieldLabel>
@@ -81,12 +93,10 @@ export function CreateEndpointDialog({
                       onChange={(event) => field.handleChange(event.target.value)}
                       placeholder="Stripe webhooks"
                       maxLength={80}
-                      disabled={disabled || createMutation.isPending}
+                      disabled={disabled || isPending}
                       aria-invalid={isInvalid || undefined}
                     />
-                    {isInvalid ? (
-                      <FieldError errors={field.state.meta.errors} />
-                    ) : null}
+                    {isInvalid ? <FieldError errors={field.state.meta.errors} /> : null}
                   </Field>
                 );
               }}
@@ -98,15 +108,15 @@ export function CreateEndpointDialog({
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
-              disabled={createMutation.isPending}
+              disabled={isPending}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={disabled || createMutation.isPending}
+              disabled={disabled || isPending}
             >
-              {createMutation.isPending ? "Creating…" : "Create"}
+              {isPending ? "Creating…" : "Create"}
             </Button>
           </DialogFooter>
         </form>

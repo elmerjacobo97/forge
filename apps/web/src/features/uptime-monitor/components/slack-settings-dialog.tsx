@@ -1,6 +1,8 @@
 "use client";
 
+import { useTransition } from "react";
 import { useForm } from "@tanstack/react-form";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,20 +18,19 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
-  useClearSlackWebhookMutation,
-  useSaveSlackNotificationSettingsMutation,
-  useSendTestSlackMessageMutation,
-} from "../hooks/mutations";
-import { useSlackNotificationSettingsQuery } from "../hooks/queries";
+  clearSlackWebhookAction,
+  saveSlackNotificationSettingsAction,
+  sendTestSlackMessageAction,
+} from "../actions";
+import type { SlackNotificationSettings } from "../types";
 
 type SlackSettingsDialogProps = {
+  settings: SlackNotificationSettings | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-export function SlackSettingsDialog({ isOpen, onOpenChange }: SlackSettingsDialogProps) {
-  const { data: settings, isLoading } = useSlackNotificationSettingsQuery();
-
+export function SlackSettingsDialog({ settings, isOpen, onOpenChange }: SlackSettingsDialogProps) {
   return (
     <Dialog
       open={isOpen}
@@ -53,14 +54,12 @@ export function SlackSettingsDialog({ isOpen, onOpenChange }: SlackSettingsDialo
           </DialogDescription>
         </DialogHeader>
 
-        {isLoading ? null : (
-          <SlackSettingsForm
-            key={settings?.updatedAt ?? "new"}
-            slackConfigured={settings?.slackConfigured ?? false}
-            slackEnabled={settings?.slackEnabled ?? false}
-            onSaved={() => onOpenChange(false)}
-          />
-        )}
+        <SlackSettingsForm
+          key={settings?.updatedAt ?? "new"}
+          slackConfigured={settings?.slackConfigured ?? false}
+          slackEnabled={settings?.slackEnabled ?? false}
+          onSaved={() => onOpenChange(false)}
+        />
       </DialogContent>
     </Dialog>
   );
@@ -72,14 +71,10 @@ type SlackSettingsFormProps = {
   onSaved: () => void;
 };
 
-function SlackSettingsForm({
-  slackConfigured,
-  slackEnabled,
-  onSaved,
-}: SlackSettingsFormProps) {
-  const saveMutation = useSaveSlackNotificationSettingsMutation();
-  const clearMutation = useClearSlackWebhookMutation();
-  const testMutation = useSendTestSlackMessageMutation();
+function SlackSettingsForm({ slackConfigured, slackEnabled, onSaved }: SlackSettingsFormProps) {
+  const [isSaving, startSaving] = useTransition();
+  const [isClearing, startClearing] = useTransition();
+  const [isTesting, startTesting] = useTransition();
 
   const form = useForm({
     defaultValues: {
@@ -87,16 +82,49 @@ function SlackSettingsForm({
       slackEnabled,
     },
     onSubmit: async ({ value }) => {
-      saveMutation.mutate(
-        {
+      startSaving(async () => {
+        const result = await saveSlackNotificationSettingsAction({
           slackWebhookUrl: value.slackWebhookUrl.trim() || undefined,
           slackEnabled: value.slackEnabled,
           clearSlackWebhook: false,
-        },
-        { onSuccess: onSaved },
-      );
+        });
+        if (!result.ok) {
+          toast.error(result.message);
+          return;
+        }
+
+        toast.success("Slack settings saved.");
+        onSaved();
+      });
     },
   });
+
+  function clearWebhook() {
+    startClearing(async () => {
+      const result = await clearSlackWebhookAction();
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Slack webhook removed.");
+      onSaved();
+    });
+  }
+
+  function sendTestMessage() {
+    startTesting(async () => {
+      const result = await sendTestSlackMessageAction();
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Test message sent.");
+    });
+  }
+
+  const isBusy = isSaving || isClearing;
 
   return (
     <form
@@ -119,15 +147,13 @@ function SlackSettingsForm({
             <>
               <form.Field name="slackEnabled">
                 {(field) => {
-                  const canEnable =
-                    slackConfigured || Boolean(webhookField.state.value.trim());
+                  const canEnable = slackConfigured || Boolean(webhookField.state.value.trim());
                   return (
                     <Field orientation="horizontal">
                       <div className="flex flex-1 flex-col gap-1">
                         <FieldLabel htmlFor={field.name}>Enable Slack alerts</FieldLabel>
                         <FieldDescription>
-                          Requires a saved webhook or a new HTTPS hooks.slack.com URL in this
-                          form.
+                          Requires a saved webhook or a new HTTPS hooks.slack.com URL in this form.
                         </FieldDescription>
                       </div>
                       <Switch
@@ -179,27 +205,27 @@ function SlackSettingsForm({
           <Button
             type="button"
             variant="outline"
-            onClick={() => testMutation.mutate()}
-            disabled={testMutation.isPending}
+            onClick={sendTestMessage}
+            disabled={isTesting}
           >
-            {testMutation.isPending ? "Sending…" : "Send test message"}
+            {isTesting ? "Sending…" : "Send test message"}
           </Button>
           {slackConfigured ? (
             <Button
               type="button"
               variant="outline"
-              onClick={() => clearMutation.mutate()}
-              disabled={clearMutation.isPending || saveMutation.isPending}
+              onClick={clearWebhook}
+              disabled={isBusy}
             >
-              {clearMutation.isPending ? "Removing…" : "Remove webhook"}
+              {isClearing ? "Removing…" : "Remove webhook"}
             </Button>
           ) : null}
         </div>
         <Button
           type="submit"
-          disabled={saveMutation.isPending || clearMutation.isPending}
+          disabled={isBusy}
         >
-          {saveMutation.isPending ? "Saving…" : "Save"}
+          {isSaving ? "Saving…" : "Save"}
         </Button>
       </DialogFooter>
     </form>

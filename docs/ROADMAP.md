@@ -1,81 +1,54 @@
-# Roadmap de mejoras — Forge
+# Roadmap — Forge
 
-> Complementa `docs/product.md` (visión) y `docs/IDEAS.md` (brainstorm de módulos). Forge es browser-only: `apps/cli` ya existe sobre la misma API Appwrite; MCP y móvil se añaden después sobre esos mismos modelos compartidos. `apps/desktop` está descartado salvo necesidad real (ver §2).
+> Complementa `docs/product.md` (alcance) y `docs/IDEAS.md` (ideas sin priorizar). Forge es browser-first: `apps/cli` ya existe sobre la misma API InsForge y no hay plan de app nativa.
 
-## 1. Estado actual
+## Estado actual
 
-El workspace ya tiene tres paquetes reales, no solo `apps/web`:
-- `apps/web` (`@forge/web`) — la app browser, herramientas en `apps/web/src/lib/tools.ts`.
-- `apps/cli` (`@codigoconelmer/forge-cli`, binario `forge-cli`) — CRUD de bookmarks/proyectos/tickets sobre las mismas tablas InsForge que usa la web.
-- `functions/ai-content-generator` (`@forge/ai-content-generator`) — Appwrite Function (Groq) que genera contenido; consumida hoy por `features/ai-generation`.
+- **Stack:** Next.js 16 (App Router, Server Components, Server Actions) + React 19 + InsForge (Postgres con RLS). Tailwind 4 + shadcn/ui.
+- **Sin TanStack Query:** el server-state se maneja con lecturas en servidor, Server Actions para mutaciones y Route Handlers para polling/paginación de cliente.
+- **Tools activas (14):** Dev Board, Bookmarks, Resources, JSON Formatter, JSON to TypeScript, HTTP Tester, Webhook Inspector, Uptime Monitor, JWT Decoder, Regex Tester, Base64, Mock Data Generator, Password Generator, Image Tools.
+- **Eliminado:** 12 utilidades triviales (html-entities, lorem-ipsum, url-encoder, text-manipulator, qr-generator, color-converter, uuid-generator, timestamp-converter, hash-generator, format-converter, diff-tool, file-validator), el residuo `supabase/`, la función Appwrite compilada en `functions/` y las carpetas vacías en `features/`.
+- **Tests:** 277 tests con Vitest (utils puras, servicios con InsForge mockeado, schemas y handlers críticos).
 
-Las herramientas de `apps/web` tienen dos niveles de madurez:
-- **Tools simples**: un archivo `.tsx` + `utils/` (json-formatter, base64, uuid-generator, etc.)
-- **Features completos**: `components/hooks/services/schemas/types` (bookmarks, dev-board, mock-data-generator, http-tester, auth, settings, y **ai-generation** — usado transversalmente dentro de bookmarks y snippets, no es una tool con ruta propia).
+## Hecho en la última pasada
 
-### Restricciones web
+- Poda de herramientas y dependencias huérfanas.
+- Refactor server-first de bookmarks, resources, webhook inspector, uptime monitor y dev board.
+- Filtros de listas (bookmarks, resources) en `searchParams` con islas de cliente mínimas.
+- Un módulo por diálogo (`add`, `edit`, `delete`) en cada recurso.
+- Route Handlers para: eventos de webhook, detalle de uptime, paginación de tickets y analítica del board.
+- `loading.tsx` y `error.tsx` por grupo de rutas.
+- Estados de página del dev board centralizados en `utils/board-state.ts` con tests.
 
-| Tool | Restricción | Comportamiento web |
-|---|---|---|
-| file-validator | Browser File API | Selección y hashing local de archivos |
-| image-tools | Browser File API | Drag and drop y Canvas local |
-| http-tester | CORS del navegador | Explica errores CORS; no los evita |
-| color-converter | Selector de color HTML | Conversión y paletas en navegador |
-| dev-board | Permiso de notificaciones | Usa Notification API si ya fue concedido |
+## Pendientes y mejoras
 
-Resto (json-formatter, uuid-generator, base64, timestamp-converter, jwt-decoder, regex-tester, hash-generator, qr-generator, text-manipulator, url-encoder, format-converter, diff-tool, lorem-ipsum, json-to-typescript, html-entities, mock-data-generator) — 100% client-side, web-ready tal cual.
+### Alta prioridad
 
-**Persistencia**: bookmarks y snippets usan Appwrite. El resto de utilidades locales usan almacenamiento del navegador hasta que el modelo de workspaces exista.
+- **MCP server sobre `forge-cli`/API InsForge:** exponer bookmarks, proyectos, tickets y recursos a agentes de IA.
+- **Búsqueda en server:** mover los filtros de bookmarks/resources a consultas SQL (`ilike`, `eq`) cuando el volumen lo justifique.
+- **Dev Board:** undo de drag fallido con snapshot por columna (hoy revierte solo la columna afectada completa), y refresco remoto (InsForge realtime) para multi-dispositivo.
 
-## 2. Estrategia web-first
+### Media
 
-- Mantener `apps/web` como única app de UI hasta que una segunda tenga consumidor real. `apps/cli` y `functions/ai-content-generator` ya son parte del workspace, no una app de UI competidora.
-- Modelar organizaciones, workspaces, miembros, roles, proyectos, tareas y entradas de tiempo en Appwrite antes de dar permisos multi-usuario reales (Team workspaces).
-- Exponer API autenticada con scopes y registro de auditoría antes de automatizar mutaciones por agentes.
-- `apps/cli` (`forge-cli`) ya existe y cubre bookmarks/proyectos/tickets. Pendiente: **MCP stdio sobre la misma API** para que agentes operen Forge directamente.
-- `apps/desktop` queda descartado mientras Forge sea browser-only (regla dura en `AGENTS.md`, no dependencias Tauri/Rust/native-IPC). Solo reconsiderar si aparece una necesidad real que el navegador no pueda cubrir (ver sección "Descartado" en `docs/IDEAS.md`).
+- **Image Tools:** romper el archivo monolítico en `components/`/`hooks/` y añadir resize/crop.
+- **HTTP Tester:** colecciones guardadas y environments.
+- **Mock Data Generator:** descripción en lenguaje natural aprovechando `/api/ai-content`.
+- **`use cache`:** aplicarlo solo si aparece data global cacheable (hoy todo lo server-side es por usuario).
 
-## 3. Mejoras transversales
+### Baja
 
-- **Error boundaries** — no existe ninguno hoy; una excepción en cualquier tool tumba toda la app. Agregar `errorComponent` en rutas TanStack Router.
-- **Favoritos/recientes** — no existen. Command palette solo busca y navega.
-- **Tests** — cero. Empezar por `utils/` puros (parsers/converters): alto valor, bajo costo, Vitest.
-- **Atajos por herramienta** — hoy solo Cmd+K / Cmd+/ globales.
-- **i18n** — UI en inglés, docs en español. Decidir idioma único o agregar i18n real.
-- **Limpieza** — carpetas basura en `apps/web/src/features/`: `types/` (vacía), `src/` (vacía), `node_modules/` (solo un cache `.vite` perdido ahí); README raíz de 378B sin contenido real.
+- **Accesibilidad:** 11 botones solo-icono sin `aria-label` (base64, http-tester, image-tools, json-formatter, json-to-typescript, jwt-decoder, mock-data-generator, regex-tester) según React Doctor.
+- **Complejidad:** dividir `webhook-inspector.tsx`, `project-analytics.tsx` y `ticket-card.tsx` en subcomponentes con responsabilidades claras (React Doctor: control-flow complexity).
+- **Formato:** el repo no pasa `pnpm format:check` (326 archivos previos a este refactor); decidir si se formatea todo en una pasada aparte.
+- Cambio de tema por tool, atajos de teclado por herramienta.
+- Env / `.env` manager vía File System Access API.
+- Cron expression parser y SQL formatter (si se usan de verdad).
 
-## 4. Mejoras a herramientas existentes
+## Restricciones
 
-- **json-formatter**: tree view, JSONPath/jq query, sort keys, soporte JSON5.
-- **base64**: archivos/imágenes vía drag-drop, variante URL-safe.
-- **jwt-decoder**: verificación de firma HS256 (secret local), indicador visual de expiración.
-- **http-tester**: colecciones guardadas, environments/variables, helpers de auth (ya en IDEAS.md — subir prioridad).
-- **image-tools**: romper el monolito de 19K líneas en components/hooks; agregar resize y crop.
-- **diff-tool**: diff a nivel palabra/carácter, vista side-by-side.
-- **regex-tester**: librería de patrones comunes, explicación en texto del patrón.
-- **color-converter**: generador de paletas/armonías, chequeo de contraste WCAG.
-- **hash-generator**: HMAC, comparación de dos hashes.
-- **settings**: exportar/importar configuración completa.
-
-## 5. Features nuevos propuestos
-
-No duplican IDEAS.md (webhook inspector, feature flags, secrets vault, etc. — ver ese doc):
-
-- Cron expression parser/explainer
-- SQL formatter
-- cURL ↔ código (fetch/axios/etc.) — versión determinista; versión IA-asistida en IDEAS.md
-- Markdown preview/editor
-- Conversor de base numérica (bin/hex/oct/dec)
-- String escape/unescape (JSON, HTML, shell)
-- Decoder de certificado X.509
-- Calculadora de chmod/permisos
-- Generador de slugs
-- Inspector ASCII/Unicode
-- MCP server sobre `forge-cli`/API Appwrite (ver IDEAS.md) — expone bookmarks/proyectos/tickets a agentes de IA.
-- Team workspaces (Appwrite Teams) para Dev Board/bookmarks/snippets compartidos — habilita el tier "Empresas" de `product.md`.
-
-## 6. Prioridad sugerida
-
-- **P0**: Saved HTTP collections (extiende HTTP Tester) y Webhook inspector — diferenciadores que aprovechan feature/infra ya existente.
-- **P1**: Team workspaces (habilita monetización Empresas), favoritos/recientes, reportes, mejoras a json-formatter y HTTP Tester, IA-asistida en regex/cURL/mock-data (infra Groq ya existe).
-- **P2**: MCP sobre `forge-cli`, PWA, tests y herramientas nuevas pequeñas.
+| Tool                         | Restricción      | Comportamiento                                |
+| ---------------------------- | ---------------- | --------------------------------------------- |
+| file-validator / image-tools | Browser File API | Procesado local en el navegador               |
+| http-tester                  | CORS             | Explica errores CORS; no los evita            |
+| webhook-inspector            | Polling          | Eventos vía Route Handler cada pocos segundos |
+| uptime-monitor               | Cron externo     | InsForge programa los chequeos                |

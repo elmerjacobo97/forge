@@ -13,8 +13,9 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "@tanstack/react-form";
 import { useSelector } from "@tanstack/react-store";
 import { aiGenerationService } from "@/features/ai-generation/services/ai-generation-service";
+import { tagsFromString } from "@/lib/tags";
+import { createResourceAction } from "../actions";
 import { resourceSchema, ResourceSchema } from "../schemas/resource-schema";
-import { useCreateResourceMutation } from "../hooks/mutations";
 import { isSelectContentTarget, toFormatValue } from "../utils/resource-form";
 import { ResourceFormFields, type ResourceFormApi } from "./resource-form-fields";
 
@@ -24,7 +25,7 @@ interface AddResourceDialogProps {
 }
 
 export function AddResourceDialog({ isOpen, onOpenChange }: AddResourceDialogProps) {
-  const createMutation = useCreateResourceMutation();
+  const [isSaving, startSaving] = useTransition();
   const [isGenerating, startGenerating] = useTransition();
 
   const form = useForm({
@@ -52,12 +53,7 @@ export function AddResourceDialog({ isOpen, onOpenChange }: AddResourceDialogPro
   const isConfig = selectedKind === "config";
 
   function addResource(data: ResourceSchema) {
-    const tags = data.tagsString
-      ? data.tagsString.split(",").flatMap((t: string) => {
-          const trimmed = t.trim().toLowerCase();
-          return trimmed ? [trimmed] : [];
-        })
-      : [];
+    const tags = tagsFromString(data.tagsString);
 
     const language = data.language.trim() || null;
     const tool = data.tool || null;
@@ -65,8 +61,8 @@ export function AddResourceDialog({ isOpen, onOpenChange }: AddResourceDialogPro
     const version = data.version.trim() || null;
     const context = data.context.trim() || null;
 
-    createMutation.mutate(
-      {
+    startSaving(async () => {
+      const result = await createResourceAction({
         title: data.title,
         kind: data.kind,
         content: data.content,
@@ -76,14 +72,17 @@ export function AddResourceDialog({ isOpen, onOpenChange }: AddResourceDialogPro
         customTool,
         version,
         context,
-      },
-      {
-        onSuccess: () => {
-          onOpenChange(false);
-          form.reset();
-        },
-      },
-    );
+      });
+
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Resource added successfully!");
+      onOpenChange(false);
+      form.reset();
+    });
   }
 
   function generateResource(title: string) {
@@ -163,6 +162,7 @@ export function AddResourceDialog({ isOpen, onOpenChange }: AddResourceDialogPro
           <Button
             type="submit"
             form="form-add-resource"
+            disabled={isSaving}
           >
             Save Resource
           </Button>

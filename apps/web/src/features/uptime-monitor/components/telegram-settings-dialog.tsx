@@ -1,6 +1,8 @@
 "use client";
 
+import { useTransition } from "react";
 import { useForm } from "@tanstack/react-form";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,20 +15,20 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  useSaveNotificationSettingsMutation,
-  useSendTestTelegramMessageMutation,
-} from "../hooks/mutations";
-import { useNotificationSettingsQuery } from "../hooks/queries";
+import { saveNotificationSettingsAction, sendTestTelegramMessageAction } from "../actions";
+import type { UptimeNotificationSettings } from "../types";
 
 type TelegramSettingsDialogProps = {
+  settings: UptimeNotificationSettings | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-export function TelegramSettingsDialog({ isOpen, onOpenChange }: TelegramSettingsDialogProps) {
-  const { data: settings, isLoading } = useNotificationSettingsQuery();
-
+export function TelegramSettingsDialog({
+  settings,
+  isOpen,
+  onOpenChange,
+}: TelegramSettingsDialogProps) {
   return (
     <Dialog
       open={isOpen}
@@ -49,14 +51,12 @@ export function TelegramSettingsDialog({ isOpen, onOpenChange }: TelegramSetting
           </DialogDescription>
         </DialogHeader>
 
-        {isLoading ? null : (
-          <TelegramSettingsForm
-            key={settings?.updatedAt ?? "new"}
-            telegramBotToken={settings?.telegramBotToken ?? ""}
-            telegramChatId={settings?.telegramChatId ?? ""}
-            onSaved={() => onOpenChange(false)}
-          />
-        )}
+        <TelegramSettingsForm
+          key={settings?.updatedAt ?? "new"}
+          telegramBotToken={settings?.telegramBotToken ?? ""}
+          telegramChatId={settings?.telegramChatId ?? ""}
+          onSaved={() => onOpenChange(false)}
+        />
       </DialogContent>
     </Dialog>
   );
@@ -73,15 +73,36 @@ function TelegramSettingsForm({
   telegramChatId,
   onSaved,
 }: TelegramSettingsFormProps) {
-  const saveMutation = useSaveNotificationSettingsMutation();
-  const testMutation = useSendTestTelegramMessageMutation();
+  const [isSaving, startSaving] = useTransition();
+  const [isTesting, startTesting] = useTransition();
 
   const form = useForm({
     defaultValues: { telegramBotToken, telegramChatId },
     onSubmit: async ({ value }) => {
-      saveMutation.mutate(value, { onSuccess: onSaved });
+      startSaving(async () => {
+        const result = await saveNotificationSettingsAction(value);
+        if (!result.ok) {
+          toast.error(result.message);
+          return;
+        }
+
+        toast.success("Telegram settings saved.");
+        onSaved();
+      });
     },
   });
+
+  function sendTestMessage() {
+    startTesting(async () => {
+      const result = await sendTestTelegramMessageAction();
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Test message sent.");
+    });
+  }
 
   return (
     <form
@@ -131,16 +152,16 @@ function TelegramSettingsForm({
         <Button
           type="button"
           variant="outline"
-          onClick={() => testMutation.mutate()}
-          disabled={testMutation.isPending}
+          onClick={sendTestMessage}
+          disabled={isTesting}
         >
-          {testMutation.isPending ? "Sending…" : "Send test message"}
+          {isTesting ? "Sending…" : "Send test message"}
         </Button>
         <Button
           type="submit"
-          disabled={saveMutation.isPending}
+          disabled={isSaving}
         >
-          {saveMutation.isPending ? "Saving…" : "Save"}
+          {isSaving ? "Saving…" : "Save"}
         </Button>
       </DialogFooter>
     </form>

@@ -1,7 +1,11 @@
+import "server-only";
+
 import { z } from "zod";
 
-import { insforge } from "@/lib/insforge/browser";
+import { createInsForgeServerClient } from "@/lib/insforge/server";
+import type { BookmarkFilters } from "../schemas/bookmarks-schema";
 import type { Bookmark } from "../types";
+import { filterBookmarks } from "../utils/filters";
 
 const bookmarkRowSchema = z.object({
   id: z.string(),
@@ -13,11 +17,7 @@ const bookmarkRowSchema = z.object({
   created_at: z.string(),
 });
 
-type BookmarkInput = Omit<Bookmark, "id" | "createdAt">;
-
-function requireUser(userId?: string): void {
-  if (!userId) throw new Error("Sign in to use Bookmarks.");
-}
+export type BookmarkInput = Omit<Bookmark, "id" | "createdAt">;
 
 function toBookmark(value: unknown): Bookmark {
   const row = bookmarkRowSchema.parse(value);
@@ -29,18 +29,20 @@ function failure(error: { message?: string } | null, fallback: string): Error {
 }
 
 export const bookmarksService = {
-  async fetchBookmarks(userId?: string): Promise<Bookmark[]> {
-    requireUser(userId);
+  async fetchBookmarks(filters?: BookmarkFilters): Promise<Bookmark[]> {
+    const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database
       .from("bookmarks")
       .select("id,title,url,category,description,tags,created_at")
       .order("created_at", { ascending: false });
     if (error) throw failure(error, "Failed to load bookmarks.");
-    return bookmarkRowSchema.array().parse(data).map(toBookmark);
+
+    const bookmarks = bookmarkRowSchema.array().parse(data).map(toBookmark);
+    return filters ? filterBookmarks(bookmarks, filters) : bookmarks;
   },
 
-  async createBookmark(bookmark: BookmarkInput, userId?: string): Promise<Bookmark> {
-    requireUser(userId);
+  async createBookmark(bookmark: BookmarkInput): Promise<Bookmark> {
+    const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database
       .from("bookmarks")
       .insert([bookmark])
@@ -50,12 +52,8 @@ export const bookmarksService = {
     return toBookmark(data);
   },
 
-  async updateBookmark(
-    bookmarkId: string,
-    bookmark: BookmarkInput,
-    userId?: string,
-  ): Promise<Bookmark> {
-    requireUser(userId);
+  async updateBookmark(bookmarkId: string, bookmark: BookmarkInput): Promise<Bookmark> {
+    const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database
       .from("bookmarks")
       .update(bookmark)
@@ -66,8 +64,8 @@ export const bookmarksService = {
     return toBookmark(data);
   },
 
-  async deleteBookmark(bookmarkId: string, userId?: string): Promise<void> {
-    requireUser(userId);
+  async deleteBookmark(bookmarkId: string): Promise<void> {
+    const insforge = await createInsForgeServerClient();
     const { error } = await insforge.database.from("bookmarks").delete().eq("id", bookmarkId);
     if (error) throw failure(error, "Failed to delete bookmark.");
   },

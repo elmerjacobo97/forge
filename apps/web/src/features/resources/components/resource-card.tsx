@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Check, Copy, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -12,12 +15,8 @@ import {
 import { useCopy } from "@/lib/hooks/use-copy";
 import { FORMATS, TOOLS } from "../constants";
 import type { Resource } from "../types";
-
-interface ResourceCardProps {
-  resource: Resource;
-  onEdit: (resource: Resource) => void;
-  onDelete: (resource: Resource) => void;
-}
+import { DeleteResourceDialog } from "./delete-resource-dialog";
+import { EditResourceDialog } from "./edit-resource-dialog";
 
 function getToolLabel(resource: Resource): string | null {
   if (!resource.tool) return null;
@@ -30,8 +29,10 @@ function getFormatLabel(language: string | null): string | null {
   return FORMATS.find((format) => format.value === language.toLowerCase())?.label ?? language;
 }
 
-export function ResourceCard({ resource, onEdit, onDelete }: ResourceCardProps) {
+export function ResourceCard({ resource }: { resource: Resource }) {
   const { copied, copy } = useCopy();
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const toolLabel = getToolLabel(resource);
   const formatLabel = getFormatLabel(resource.language);
 
@@ -71,13 +72,13 @@ export function ResourceCard({ resource, onEdit, onDelete }: ResourceCardProps) 
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(resource)}>
+            <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
               <Pencil className="size-3.5" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
-              onClick={() => onDelete(resource)}
+              onClick={() => setIsDeleteOpen(true)}
             >
               <Trash2 className="size-3.5" />
               Delete
@@ -125,6 +126,22 @@ export function ResourceCard({ resource, onEdit, onDelete }: ResourceCardProps) 
           )}
         </Button>
       </div>
+
+      {isEditOpen ? (
+        <EditResourceDialog
+          resource={resource}
+          isOpen
+          onOpenChange={setIsEditOpen}
+        />
+      ) : null}
+
+      {isDeleteOpen ? (
+        <DeleteResourceDialog
+          resource={resource}
+          isOpen
+          onOpenChange={setIsDeleteOpen}
+        />
+      ) : null}
     </div>
   );
 }

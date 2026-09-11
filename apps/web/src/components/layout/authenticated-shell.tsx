@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { CommandPalette } from "@/components/command-palette";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
@@ -23,14 +22,9 @@ export function AuthenticatedShell({
   version: string;
 }) {
   const pathname = usePathname();
-  const queryClient = useQueryClient();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const tool = getToolByPath(pathname) ?? tools[0];
-
-  useEffect(() => {
-    queryClient.setQueryData(["session"], user);
-  }, [queryClient, user]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {

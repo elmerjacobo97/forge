@@ -13,9 +13,10 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "@tanstack/react-form";
 import { useSelector } from "@tanstack/react-store";
 import { aiGenerationService } from "@/features/ai-generation/services/ai-generation-service";
+import { tagsFromString } from "@/lib/tags";
+import { updateResourceAction } from "../actions";
 import { FORMATS } from "../constants";
 import { editResourceSchema, resourceSchema, ResourceSchema } from "../schemas/resource-schema";
-import { useUpdateResourceMutation } from "../hooks/mutations";
 import type { Resource } from "../types";
 import { isSelectContentTarget, toFormatValue } from "../utils/resource-form";
 import { ResourceFormFields, type ResourceFormApi } from "./resource-form-fields";
@@ -27,7 +28,7 @@ interface EditResourceDialogProps {
 }
 
 export function EditResourceDialog({ resource, isOpen, onOpenChange }: EditResourceDialogProps) {
-  const updateMutation = useUpdateResourceMutation();
+  const [isSaving, startSaving] = useTransition();
   const [isGenerating, startGenerating] = useTransition();
   const originalLanguage = resource.language;
   const legacyFormat =
@@ -61,12 +62,7 @@ export function EditResourceDialog({ resource, isOpen, onOpenChange }: EditResou
   const isConfig = selectedKind === "config";
 
   function saveResource(data: ResourceSchema) {
-    const tags = data.tagsString
-      ? data.tagsString.split(",").flatMap((tag: string) => {
-          const trimmed = tag.trim().toLowerCase();
-          return trimmed ? [trimmed] : [];
-        })
-      : [];
+    const tags = tagsFromString(data.tagsString);
     const language =
       legacyFormat && data.language === "other" ? legacyFormat : data.language.trim() || null;
     const tool = isConfig ? data.tool || null : null;
@@ -74,9 +70,8 @@ export function EditResourceDialog({ resource, isOpen, onOpenChange }: EditResou
     const version = isConfig ? data.version.trim() || null : null;
     const context = isConfig ? data.context.trim() || null : null;
 
-    updateMutation.mutate(
-      {
-        id: resource.id,
+    startSaving(async () => {
+      const result = await updateResourceAction(resource.id, {
         title: data.title,
         kind: data.kind,
         content: data.content,
@@ -86,13 +81,16 @@ export function EditResourceDialog({ resource, isOpen, onOpenChange }: EditResou
         customTool,
         version,
         context,
-      },
-      {
-        onSuccess: () => {
-          onOpenChange(false);
-        },
-      },
-    );
+      });
+
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Resource updated successfully!");
+      onOpenChange(false);
+    });
   }
 
   function generateResource(title: string) {
@@ -168,6 +166,7 @@ export function EditResourceDialog({ resource, isOpen, onOpenChange }: EditResou
           <Button
             type="submit"
             form="form-edit-resource"
+            disabled={isSaving}
           >
             Save Changes
           </Button>

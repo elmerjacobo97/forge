@@ -1,10 +1,4 @@
-export const COLUMNS = [
-  "backlog",
-  "todo",
-  "in_progress",
-  "review",
-  "done",
-] as const;
+export const COLUMNS = ["backlog", "todo", "in_progress", "review", "done"] as const;
 
 export type ColumnId = (typeof COLUMNS)[number];
 
@@ -48,3 +42,10 @@ export interface Ticket {
 
 export const STALE_THRESHOLD_MS = 25 * 60 * 1000;
 export const TICKETS_PAGE_SIZE = 25;
+
+export interface ColumnPage {
+  column: ColumnId;
+  tickets: Ticket[];
+  total: number;
+  nextCursor: string | null;
+}

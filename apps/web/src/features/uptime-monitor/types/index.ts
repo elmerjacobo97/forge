@@ -34,6 +34,13 @@ export type UptimeMonitor = {
   requestHeaders: RequestHeaderMetadata[];
 };
 
+export type MonitorRowData = {
+  monitor: UptimeMonitor;
+  sparklineBuckets: LatencyBucket[];
+  lastLatencyMs: number | null;
+  uptimePercentage: number | null;
+};
+
 export type UptimeCheck = {
   id: string;
   monitorId: string;

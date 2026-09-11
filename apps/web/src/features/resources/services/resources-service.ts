@@ -1,7 +1,11 @@
+import "server-only";
+
 import { z } from "zod";
 
-import { insforge } from "@/lib/insforge/browser";
+import { createInsForgeServerClient } from "@/lib/insforge/server";
+import type { ResourceFilters } from "../schemas/resource-filters";
 import type { Resource } from "../types";
+import { filterResources } from "../utils/filters";
 
 const resourceToolSchema = z.enum([
   "react-native",
@@ -26,13 +30,10 @@ const resourceRowSchema = z.object({
   created_at: z.string(),
 });
 
-type ResourceInput = Omit<Resource, "id" | "createdAt">;
+export type ResourceInput = Omit<Resource, "id" | "createdAt">;
+
 const resourceSelect =
   "id,title,kind,content,language,tags,tool,custom_tool,version,context,created_at";
-
-function requireUser(userId?: string): void {
-  if (!userId) throw new Error("Sign in to use Resources.");
-}
 
 function toResource(value: unknown): Resource {
   const row = resourceRowSchema.parse(value);
@@ -69,19 +70,33 @@ function failure(error: { message?: string } | null, fallback: string): Error {
   return new Error(error?.message || fallback);
 }
 
+export interface ResourcesPage {
+  resources: Resource[];
+  tags: string[];
+}
+
 export const resourcesService = {
-  async fetchResources(userId?: string): Promise<Resource[]> {
-    requireUser(userId);
+  async fetchResourcesPage(filters?: ResourceFilters): Promise<ResourcesPage> {
+    const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database
       .from("resources")
       .select(resourceSelect)
       .order("created_at", { ascending: false });
     if (error) throw failure(error, "Failed to load resources.");
-    return resourceRowSchema.array().parse(data).map(toResource);
+
+    const resources = resourceRowSchema.array().parse(data).map(toResource);
+    const tags = Array.from(new Set(resources.flatMap((resource) => resource.tags))).sort((a, b) =>
+      a.localeCompare(b),
+    );
+
+    return {
+      resources: filters ? filterResources(resources, filters) : resources,
+      tags,
+    };
   },
 
-  async createResource(resource: ResourceInput, userId?: string): Promise<Resource> {
-    requireUser(userId);
+  async createResource(resource: ResourceInput): Promise<Resource> {
+    const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database
       .from("resources")
       .insert([toResourcePayload(resource)])
@@ -91,12 +106,8 @@ export const resourcesService = {
     return toResource(data);
   },
 
-  async updateResource(
-    resourceId: string,
-    resource: ResourceInput,
-    userId?: string,
-  ): Promise<Resource> {
-    requireUser(userId);
+  async updateResource(resourceId: string, resource: ResourceInput): Promise<Resource> {
+    const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database
       .from("resources")
       .update(toResourcePayload(resource))
@@ -107,8 +118,8 @@ export const resourcesService = {
     return toResource(data);
   },
 
-  async deleteResource(resourceId: string, userId?: string): Promise<void> {
-    requireUser(userId);
+  async deleteResource(resourceId: string): Promise<void> {
+    const insforge = await createInsForgeServerClient();
     const { error } = await insforge.database.from("resources").delete().eq("id", resourceId);
     if (error) throw failure(error, "Failed to delete resource.");
   },

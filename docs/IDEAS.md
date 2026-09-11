@@ -2,117 +2,87 @@
 
 > Lluvia de ideas para módulos futuros de Forge. No es roadmap ni spec, solo un registro de posibilidades a explorar. Filtrar y priorizar cuando se defina roadmap.
 
-Forge es browser-only (ver `AGENTS.md`): nada de Tauri/Rust/native-IPC. Organizadas por dependencia de backend/browser API.
+Forge es browser-only (ver `AGENTS.md`): nada de Tauri/Rust/native-IPC. Stack actual: Next.js 16 App Router + InsForge.
 
 ---
 
 ## Ya hecho (dejar de tratar como idea)
 
-- **Auth + session** — `features/auth`, login/register/logout sobre Appwrite.
-- **Cloud sync de snippets / bookmarks** — ya viven en Appwrite, multi-device por diseño.
-- **Image tools** — ya existe, 100% browser/Canvas (no Rust `image` crate como se planteaba originalmente).
-- **CLI** (`forge-cli`, `apps/cli`) — ya existe: bookmark/project/ticket CRUD sobre las mismas tablas Appwrite que usa la web. Ya no es dependencia bloqueante para nada de esta lista.
-- **Generación asistida por IA** (`functions/ai-content-generator`, Appwrite Function + Groq) — ya integrada en bookmarks y snippets vía `features/ai-generation` (botón de autocompletar).
+- **Auth + sesión** — `features/auth`, login/register/logout sobre InsForge; refresh en `src/proxy.ts`.
+- **Cloud sync de bookmarks / resources** — viven en InsForge con RLS por usuario.
+- **Dev Board** — kanban con time tracking, analítica y CLI (`forge-cli ticket ...`).
+- **Uptime Monitor** — chequeos programados, latencia, historial y alertas Telegram/Slack.
+- **Webhook Inspector** — URLs temporales con captura e inspección de requests.
+- **CLI** (`forge-cli`) — CRUD de bookmarks, proyectos, tickets y recursos.
+- **Generación asistida por IA** — `/api/ai-content` (Groq) integrada en bookmarks y resources.
+- **Image Tools** — compresión y conversión local en el navegador.
+- **HTTP Tester** — requests reales desde el servidor, sin CORS.
 
 ---
 
-## Web viable (browser API, sin backend)
+## IA, con infraestructura lista (`/api/ai-content`)
 
-### File hasher — mejora de streaming
-- Extender `file-validator` existente con streaming en el navegador (Web Streams / chunked `crypto.subtle.digest`) para archivos grandes, sin bloquear el main thread.
-
-### Local dev-server monitor
-- Dashboard de "está vivo localhost:3000/8080/etc." con pings via `fetch`. No requiere nada nativo, solo ojo con CORS/mixed-content en `https://`.
-
-### Env / .env manager
-- Editor con validación, secrets masking, export a dotenv.
-- Viable en navegador vía **File System Access API** (Chrome/Edge) para leer/escribir el archivo local con permiso explícito del usuario — no requiere FS nativo Rust. Degradar a copy/paste en navegadores sin soporte (Safari/Firefox).
-
----
-
-## IA, ya con infra lista (Appwrite Function + Groq)
-
-Aprovechar el patrón ya construido en `features/ai-generation` en vez de levantar infra nueva:
-
-- **Regex Tester**: explicación del patrón en lenguaje natural.
-- **cURL ↔ código**: generación asistida (fetch/axios/httpie/etc.), no solo parsing determinista.
-- **Mock Data Generator**: describir el shape deseado en lenguaje natural → schema JSON.
-- **Auto-resumen / auto-tag**: extender el autocompletado ya usado en bookmarks/snippets a otras herramientas con contenido libre.
+- **Regex Tester:** explicación del patrón en lenguaje natural.
+- **cURL ↔ código:** generación asistida (fetch/axios/httpie), no solo parsing determinista.
+- **Mock Data Generator:** describir el shape deseado en lenguaje natural → schema JSON.
+- **Auto-resumen / auto-tag:** extender el autocompletado ya usado en bookmarks/resources.
 
 ---
 
 ## Con backend (UI-first, conectar después)
 
-### API key / secrets vault
-- Store encrypted en backend.
-- Forge UI lista, rota, copia con TTL.
-- Mejor que `.env` suelto.
+### MCP server sobre forge-cli / API InsForge
 
-### Team workspace
-- Snippets/bookmarks/Dev Board compartidos, templates, permisos. Invite flow sobre Appwrite Teams.
-- Habilita el tier "Empresas" de `product.md`.
+Mismo API que ya consume `forge-cli`, expuesto como MCP stdio. Permite que agentes de IA operen bookmarks/proyectos/tickets/recursos directamente.
 
 ### Saved HTTP requests collections
-- Extender `http-tester` existente.
-- Backend persiste collections tipo Postman: folders, envs (dev/staging/prod), variables.
-- Valor alto porque ya hay feature base — subir prioridad.
 
-### Webhook inspector
-- Tipo webhook.site. Backend (Appwrite Function) genera URL única, recibe requests.
-- Forge muestra en tiempo real mediante Appwrite Realtime o polling.
-- Killer feature para devs. Diferenciador fuerte.
+Extender `http-tester`: colecciones tipo Postman con folders, environments (dev/staging/prod) y variables. Persistencia en InsForge.
 
-### Cron / scheduled jobs viewer
-- Backend corre jobs. Forge dashboard con logs, next-run, retry.
-- UI lista para cuando exista el scheduler.
+### Env / .env manager
+
+Editor con validación, masking de secrets y export a dotenv. Viable con File System Access API (Chrome/Edge) para leer/escribir el archivo con permiso explícito; degradar a copy/paste en Safari/Firefox.
+
+### API key / secrets vault
+
+Almacenamiento cifrado en backend, listado/rotación/copia con TTL.
 
 ### Feature flags dashboard
-- Toggle flags por env / user, sobre una colección Appwrite.
-- Conecta a backend config. UI liviana, mucho valor.
+
+Toggles por entorno sobre una tabla InsForge.
 
 ### DB browser remoto
-- Conectar a DB via backend proxy.
-- Tablas, queries, results. Tipo TablePlus lite.
+
+Conectar a una DB vía proxy del backend. Tablas, queries, resultados.
 
 ### Logs / observability viewer
-- Backend stream logs. Forge tail en vivo con filter / level.
-- Tipo console.log pero estructurado.
 
-### MCP server sobre forge-cli / Appwrite API
-- Mismo API que ya consume `forge-cli`, expuesto como MCP stdio.
-- Permite que agentes de IA operen bookmarks/proyectos/tickets directamente.
+Tail de logs estructurado con filtros por nivel.
 
 ---
 
-## Descartado (requiere desktop, viola regla browser-only de `AGENTS.md`)
+## Descartado (requiere desktop, viola la regla browser-only)
 
-Estas ideas necesitan Tauri/Rust/APIs nativas del sistema operativo. Fuera de alcance mientras Forge sea browser-only. Si en el futuro se justifica una `apps/desktop`, revisar esta lista primero.
-
-### Clipboard manager
-- Historial local usando `tauri-plugin-clipboard`. Sin equivalente browser API con el mismo alcance (no hay acceso a historial de portapapeles del sistema).
-
-### Global hotkey + system tray
-- `tauri-plugin-global-shortcut` + `tauri-plugin-tray` para abrir Forge desde cualquier app y mantenerlo en background. Requiere proceso nativo corriendo.
-
-### Port scanner local
-- Rust `std::net` para revisar puertos ocupados. El navegador no tiene acceso a sockets TCP crudos.
-
-### OCR screenshot
-- `tauri-plugin-screencapture` + Tesseract/`rustyocr`. Captura de pantalla del sistema + OCR nativo.
+- Clipboard manager nativo.
+- Global hotkey + system tray.
+- Port scanner local.
+- OCR de capturas del sistema.
 
 ---
 
-## Priorización sugerida (subject a confirmar)
+## Priorización sugerida (sujeta a confirmar)
 
-**Para empezar ahora (extiende feature existente, backend UI-first):**
-1. Saved HTTP collections — extiende `http-tester`, fácil gancho con Appwrite.
-2. Webhook inspector — diferenciador fuerte.
-3. Team workspace — habilita monetización "Empresas".
+**Sin backend nuevo:**
 
-**Para empezar ahora sin backend nuevo:**
-1. IA-asistida en Regex Tester / cURL↔código / Mock Data Generator — infra ya existe.
-2. Env / .env manager vía File System Access API.
+1. IA-asistida en Regex Tester, cURL↔código y Mock Data Generator.
+2. Resize/crop en Image Tools.
+
+**Con backend (extiende lo existente):**
+
+1. MCP server sobre `forge-cli`.
+2. Saved HTTP collections.
+3. Env / `.env` manager.
 
 ---
 
-_Última actualización: 2026-07-19._
+_Última actualización: 2026-09-10._
