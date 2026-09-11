@@ -17,6 +17,8 @@ function createTicket(overrides: Partial<Ticket> = {}): Ticket {
     totalElapsedMs: 0,
     isPaused: false,
     lastMovedAt: "2026-07-11T15:00:00.000Z",
+    branch: null,
+    prUrl: null,
     ...overrides,
   };
 }

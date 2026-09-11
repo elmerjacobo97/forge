@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   parseColumnId,
   parsePriority,
+  parseTicketCommentInput,
   parseTicketCreateInput,
   parseTicketMoveInput,
   parseTicketUpdateInput,
@@ -135,6 +136,131 @@ describe("parseTicketMoveInput", () => {
     if (!("error" in result)) throw new Error("expected validation error")
     expect(result.error).toContain("Ticket id is required.")
     expect(result.error).toContain("Column must be one of:")
+  })
+})
+
+describe("ticket handoff fields", () => {
+  it("accepts branch and prUrl in update and move", () => {
+    expect(
+      parseTicketUpdateInput({
+        branch: "spec-17-agent-ticket-loop",
+        prUrl: "https://github.com/acme/forge/pull/17",
+      }),
+    ).toEqual({
+      branch: "spec-17-agent-ticket-loop",
+      prUrl: "https://github.com/acme/forge/pull/17",
+    })
+
+    expect(
+      parseTicketMoveInput({
+        id: "ticket1",
+        column: "review",
+        branch: "spec-17-agent-ticket-loop",
+        prUrl: "http://example.com/pr/1",
+      }),
+    ).toEqual({
+      id: "ticket1",
+      column: "review",
+      branch: "spec-17-agent-ticket-loop",
+      prUrl: "http://example.com/pr/1",
+    })
+  })
+
+  it("accepts the clear flags on their own", () => {
+    expect(
+      parseTicketUpdateInput({ clearBranch: true, clearPrUrl: true }),
+    ).toEqual({ clearBranch: true, clearPrUrl: true })
+
+    expect(
+      parseTicketMoveInput({
+        id: "ticket1",
+        column: "review",
+        clearBranch: true,
+      }),
+    ).toEqual({ id: "ticket1", column: "review", clearBranch: true })
+  })
+
+  it("trims branch and prUrl values", () => {
+    expect(
+      parseTicketUpdateInput({
+        branch: "  dev/handoff  ",
+        prUrl: "  https://example.com/pr/2  ",
+      }),
+    ).toEqual({
+      branch: "dev/handoff",
+      prUrl: "https://example.com/pr/2",
+    })
+  })
+
+  it("rejects empty and oversized branch values", () => {
+    const empty = parseTicketUpdateInput({ branch: "   " })
+    expect(empty).toHaveProperty("error")
+    if (!("error" in empty)) throw new Error("expected validation error")
+    expect(empty.error).toContain("Branch must be at least 1 character.")
+
+    const long = parseTicketMoveInput({
+      id: "ticket1",
+      column: "review",
+      branch: "x".repeat(201),
+    })
+    expect(long).toHaveProperty("error")
+    if (!("error" in long)) throw new Error("expected validation error")
+    expect(long.error).toContain("Branch must be at most 200 characters.")
+  })
+
+  it("rejects non-http prUrl and prUrl over 2048 characters", () => {
+    const invalid = parseTicketUpdateInput({ prUrl: "ftp://example.com/pr/1" })
+    expect(invalid).toHaveProperty("error")
+    if (!("error" in invalid)) throw new Error("expected validation error")
+    expect(invalid.error).toContain(
+      "PR URL must start with http:// or https://.",
+    )
+
+    const long = parseTicketUpdateInput({
+      prUrl: `https://example.com/${"x".repeat(2049)}`,
+    })
+    expect(long).toHaveProperty("error")
+    if (!("error" in long)) throw new Error("expected validation error")
+    expect(long.error).toContain("PR URL must be at most 2048 characters.")
+  })
+
+  it("keeps rejecting an empty update", () => {
+    const result = parseTicketUpdateInput({})
+    expect(result).toHaveProperty("error")
+    if (!("error" in result)) throw new Error("expected validation error")
+    expect(result.error).toContain("Provide at least one field to update")
+  })
+})
+
+describe("parseTicketCommentInput", () => {
+  it("accepts a body and defaults author to user", () => {
+    expect(parseTicketCommentInput({ body: "Ready for review" })).toEqual({
+      body: "Ready for review",
+      author: "user",
+    })
+  })
+
+  it("accepts an explicit agent author and trims the body", () => {
+    expect(
+      parseTicketCommentInput({ body: "  Handoff complete  ", author: "agent" }),
+    ).toEqual({ body: "Handoff complete", author: "agent" })
+  })
+
+  it("rejects a missing body, invalid author, and body over 5000", () => {
+    const missing = parseTicketCommentInput({})
+    expect(missing).toHaveProperty("error")
+    if (!("error" in missing)) throw new Error("expected validation error")
+    expect(missing.error).toContain("Comment body is required (--body).")
+
+    const author = parseTicketCommentInput({ body: "hi", author: "bot" })
+    expect(author).toHaveProperty("error")
+    if (!("error" in author)) throw new Error("expected validation error")
+    expect(author.error).toContain("Author must be one of:")
+
+    const long = parseTicketCommentInput({ body: "x".repeat(5001) })
+    expect(long).toHaveProperty("error")
+    if (!("error" in long)) throw new Error("expected validation error")
+    expect(long.error).toContain("Comment body must be at most 5000 characters.")
   })
 })
 

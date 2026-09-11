@@ -7,7 +7,12 @@ import {
   parseListOptions,
   parseTagsFlag,
 } from "../flags.js";
-import { writeResourceListOutput, writeResourceOutput } from "../format.js";
+import {
+  writeDeletedOutput,
+  writeErrorOutput,
+  writeResourceListOutput,
+  writeResourceOutput,
+} from "../format.js";
 import { RESOURCE_KINDS, RESOURCE_TOOLS } from "../types.js";
 
 const RESOURCE_HELP = `Usage:
@@ -59,8 +64,8 @@ Examples:
   forge-cli resource delete <id>
 `;
 
-function fail(message: string): void {
-  process.stderr.write(`${message}\n`);
+function fail(message: string, json: boolean): void {
+  writeErrorOutput(message, json);
   process.exitCode = 1;
 }
 
@@ -104,7 +109,7 @@ async function runCreate(args: string[]): Promise<void> {
   });
 
   if ("error" in input) {
-    fail(input.error);
+    fail(input.error, json);
     return;
   }
 
@@ -117,7 +122,7 @@ async function runList(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json");
   const parsed = parseListOptions(args);
   if ("error" in parsed) {
-    fail(parsed.error);
+    fail(parsed.error, json);
     return;
   }
 
@@ -130,7 +135,7 @@ async function runGet(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json");
   const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing resource id.\n\nUsage: forge-cli resource get <id>");
+    fail("Missing resource id.\n\nUsage: forge-cli resource get <id>", json);
     return;
   }
 
@@ -143,7 +148,10 @@ async function runUpdate(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json");
   const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing resource id.\n\nUsage: forge-cli resource update <id> [--title …]");
+    fail(
+      "Missing resource id.\n\nUsage: forge-cli resource update <id> [--title …]",
+      json,
+    );
     return;
   }
 
@@ -154,7 +162,7 @@ async function runUpdate(args: string[]): Promise<void> {
 
   const input = parseResourceUpdateInput(raw);
   if ("error" in input) {
-    fail(input.error);
+    fail(input.error, json);
     return;
   }
 
@@ -164,15 +172,16 @@ async function runUpdate(args: string[]): Promise<void> {
 }
 
 async function runDelete(args: string[]): Promise<void> {
+  const json = hasFlag(args, "--json");
   const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing resource id.\n\nUsage: forge-cli resource delete <id>");
+    fail("Missing resource id.\n\nUsage: forge-cli resource delete <id>", json);
     return;
   }
 
   const service = await createAuthedResourcesService();
   await service.delete(id);
-  process.stdout.write(`Deleted resource ${id}\n`);
+  writeDeletedOutput("resource", id, json);
 }
 
 export async function runResource(args: string[]): Promise<void> {
@@ -200,6 +209,9 @@ export async function runResource(args: string[]): Promise<void> {
       await runDelete(rest);
       return;
     default:
-      fail(`Unknown resource command: ${subcommand}\n\n${RESOURCE_HELP}`);
+      fail(
+        `Unknown resource command: ${subcommand}\n\n${RESOURCE_HELP}`,
+        hasFlag(args, "--json"),
+      );
   }
 }

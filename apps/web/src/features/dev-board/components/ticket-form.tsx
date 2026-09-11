@@ -36,16 +36,6 @@ interface TicketFormProps {
   onSubmit: (values: TicketFormValues) => void;
 }
 
-const formatErrors = (errors: unknown[]) => {
-  return errors.map((error) => {
-    if (typeof error === "string") return { message: error };
-    if (error && typeof error === "object" && "message" in error) {
-      return { message: String(error.message) };
-    }
-    return { message: error?.toString() || "Invalid value" };
-  });
-};
-
 export function TicketForm({
   open,
   onOpenChange,
@@ -59,6 +49,8 @@ export function TicketForm({
       title: "",
       description: "",
       priority: "med" as Priority,
+      branch: null as string | null,
+      prUrl: null as string | null,
     },
     validators: {
       onSubmit: ticketSchema,
@@ -77,8 +69,16 @@ export function TicketForm({
               title: editTicket.title,
               description: editTicket.description,
               priority: editTicket.priority,
+              branch: editTicket.branch ?? "",
+              prUrl: editTicket.prUrl ?? "",
             }
-          : { title: "", description: "", priority: "med" },
+          : {
+              title: "",
+              description: "",
+              priority: "med",
+              branch: "",
+              prUrl: "",
+            },
       );
     }
   }, [open, editTicket, form]);
@@ -110,7 +110,7 @@ export function TicketForm({
             >
               {(field) => {
                 const isInvalid =
-                  field.state.meta.isTouched && !!field.state.meta.errors.length;
+                  field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Title</FieldLabel>
@@ -124,9 +124,7 @@ export function TicketForm({
                       autoComplete="off"
                       aria-invalid={isInvalid}
                     />
-                    {isInvalid && (
-                      <FieldError errors={formatErrors(field.state.meta.errors)} />
-                    )}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
@@ -177,6 +175,60 @@ export function TicketForm({
                 </Field>
               )}
             </form.Field>
+
+            {isEdit && (
+              <>
+                <form.Field
+                  name="branch"
+                >
+                  {(field) => {
+                    const isInvalid =
+                      field.state.meta.isTouched && !field.state.meta.isValid;
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>Branch</FieldLabel>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value ?? ""}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          placeholder="e.g. dev/handoff"
+                          autoComplete="off"
+                          aria-invalid={isInvalid}
+                        />
+                        {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                      </Field>
+                    );
+                  }}
+                </form.Field>
+
+                <form.Field
+                  name="prUrl"
+                >
+                  {(field) => {
+                    const isInvalid =
+                      field.state.meta.isTouched && !field.state.meta.isValid;
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>PR URL</FieldLabel>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value ?? ""}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          placeholder="https://github.com/acme/forge/pull/123"
+                          autoComplete="off"
+                          aria-invalid={isInvalid}
+                        />
+                        {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                      </Field>
+                    );
+                  }}
+                </form.Field>
+              </>
+            )}
           </FieldGroup>
         </form>
 

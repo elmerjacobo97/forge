@@ -5,10 +5,10 @@ import { z } from "zod";
 
 import { getCurrentUser } from "@/features/auth/server";
 import { projectSchema } from "./schemas/project";
-import { ticketCreateSchema, ticketInputSchema } from "./schemas/ticket";
+import { ticketCommentSchema, ticketCreateSchema, ticketInputSchema } from "./schemas/ticket";
 import { devBoardService } from "./services/dev-board-service";
 import { projectsService } from "./services/projects-service";
-import type { Ticket } from "./types/board";
+import type { Ticket, TicketComment } from "./types/board";
 import type { Project } from "./types/project";
 
 export type DevBoardActionResult<T = void> = { ok: true; data: T } | { ok: false; message: string };
@@ -138,5 +138,31 @@ export async function deleteTicketAction(ticketId: unknown): Promise<DevBoardAct
     return { ok: true, data: undefined };
   } catch (error) {
     return failure(error, "Failed to delete ticket.");
+  }
+}
+
+export async function createTicketCommentAction(
+  ticketId: unknown,
+  body: unknown,
+): Promise<DevBoardActionResult<TicketComment>> {
+  if (!(await isAuthenticated())) {
+    return { ok: false, message: "You must be signed in to comment." };
+  }
+
+  const parsedId = z.uuid().safeParse(ticketId);
+  if (!parsedId.success) {
+    return { ok: false, message: "Invalid ticket." };
+  }
+
+  const parsed = ticketCommentSchema.safeParse({ body });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Invalid comment." };
+  }
+
+  try {
+    const comment = await devBoardService.createComment(parsedId.data, parsed.data.body);
+    return { ok: true, data: comment };
+  } catch (error) {
+    return failure(error, "Failed to create comment.");
   }
 }

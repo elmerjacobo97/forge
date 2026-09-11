@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Clock, GripVertical, MoreHorizontal, Pencil, Pause, Play, Trash2 } from "lucide-react";
+import { Clock, GripVertical, MessageSquare, MoreHorizontal, Pencil, Pause, Play, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +31,7 @@ import { computeElapsed, formatDuration, pauseTimer, resumeTimer } from "../util
 interface TicketCardProps {
   ticket: Ticket;
   onEdit: (ticket: Ticket) => void;
+  onComments: (ticket: Ticket) => void;
   onMoveToColumn: (id: string, column: ColumnId) => void;
   onUpdate: (ticket: Ticket) => void;
   onDelete: (ticket: Ticket) => void;
@@ -39,6 +40,7 @@ interface TicketCardProps {
 export function TicketCard({
   ticket,
   onEdit,
+  onComments,
   onMoveToColumn,
   onUpdate,
   onDelete,
@@ -148,6 +150,15 @@ export function TicketCard({
               <Pencil className="size-3" />
               Edit
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onComments(ticket)}>
+              <MessageSquare className="size-3" />
+              Comments
+              {(ticket.commentCount ?? 0) > 0 && (
+                <span className="ml-auto text-[10px] text-muted-foreground">
+                  {ticket.commentCount}
+                </span>
+              )}
+            </DropdownMenuItem>
             {inProgress && (
               <DropdownMenuItem
                 onClick={() =>
@@ -220,6 +231,15 @@ export function TicketCard({
           className={cn("size-1.5 rounded-full", PRIORITY_COLORS[ticket.priority])}
           aria-label={`${PRIORITY_LABELS[ticket.priority]} priority`}
         />
+        {(ticket.commentCount ?? 0) > 0 && (
+          <span
+            className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground"
+            aria-label={`${ticket.commentCount} comment${ticket.commentCount === 1 ? "" : "s"}`}
+          >
+            <MessageSquare className="size-3" />
+            {ticket.commentCount}
+          </span>
+        )}
       </div>
     </div>
   );

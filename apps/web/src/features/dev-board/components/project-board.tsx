@@ -25,6 +25,7 @@ import type { Project } from "../types/project";
 import {
   appendTickets,
   columnTickets,
+  incrementCommentCount,
   removeTicket,
   toColumnRecord,
   upsertTicket,
@@ -33,6 +34,7 @@ import {
 import { checkStaleTickets, loadAlertedTickets, saveAlertedTickets } from "../utils/stale-alert";
 import { moveTicket } from "../utils/tickets";
 import { ColumnView } from "./column-view";
+import { TicketCommentsDialog } from "./ticket-comments-dialog";
 import { TicketDragOverlay } from "./ticket-drag-overlay";
 import { TicketForm } from "./ticket-form";
 
@@ -60,6 +62,7 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
   const [dragTickets, setDragTickets] = useState<Ticket[] | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTicket, setEditTicket] = useState<Ticket | null>(null);
+  const [commentsTicket, setCommentsTicket] = useState<Ticket | null>(null);
   const [alertedTickets] = useState(loadAlertedTickets);
   const dragTicketsRef = useRef<Ticket[] | null>(null);
 
@@ -207,6 +210,19 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
     setDialogOpen(true);
   }
 
+  function openComments(ticket: Ticket) {
+    setCommentsTicket(ticket);
+  }
+
+  function handleCommentCreated(ticketId: string) {
+    setColumns((current) => incrementCommentCount(current, ticketId));
+    setCommentsTicket((current) =>
+      current && current.id === ticketId
+        ? { ...current, commentCount: (current.commentCount ?? 0) + 1 }
+        : current,
+    );
+  }
+
   function moveToColumn(id: string, target: ColumnId) {
     const ticket = findTicket(tickets, id);
     if (ticket) handleUpdate(moveTicket(ticket, target, tickets, null, true));
@@ -290,6 +306,7 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
       </div>
 
       <DndContext
+        id="project-board-dnd"
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
@@ -310,6 +327,7 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
               tickets={visibleTickets}
               isHighlighted={overColumn === columnId}
               onEdit={openEditTicket}
+              onComments={openComments}
               onUpdate={handleUpdate}
               onDelete={handleDelete}
               onMoveToColumn={moveToColumn}
@@ -332,6 +350,15 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
         onOpenChange={setDialogOpen}
         editTicket={editTicket}
         onSubmit={handleSubmit}
+      />
+
+      <TicketCommentsDialog
+        ticket={commentsTicket}
+        open={commentsTicket !== null}
+        onOpenChange={(open) => {
+          if (!open) setCommentsTicket(null);
+        }}
+        onCommentCreated={handleCommentCreated}
       />
     </div>
   );

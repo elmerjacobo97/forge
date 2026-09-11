@@ -15,7 +15,13 @@ export function hasFlag(args: string[], name: string): boolean {
 }
 
 /** Flags that do not take a following value (must not steal positionals). */
-export const BOOLEAN_FLAGS = new Set(["--json", "--help", "-h"]);
+export const BOOLEAN_FLAGS = new Set([
+  "--json",
+  "--help",
+  "-h",
+  "--clear-branch",
+  "--clear-pr-url",
+]);
 
 export function getPositionals(args: string[]): string[] {
   const positionals: string[] = [];

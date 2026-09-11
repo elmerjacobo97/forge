@@ -1,4 +1,11 @@
-import type { Bookmark, Project, Resource, Ticket } from "./types.js"
+import type {
+  Bookmark,
+  NextTicketContext,
+  Project,
+  Resource,
+  Ticket,
+  TicketComment,
+} from "./types.js"
 
 function formatDuration(ms: number): string {
   if (ms < 0) ms = 0
@@ -78,6 +85,8 @@ export function formatTicketText(ticket: Ticket): string {
     `title:       ${ticket.title}\n` +
     `column:      ${ticket.column}\n` +
     `priority:    ${ticket.priority}\n` +
+    `branch:      ${formatNullable(ticket.branch)}\n` +
+    `prUrl:       ${formatNullable(ticket.prUrl)}\n` +
     `description: ${ticket.description || "(none)"}\n` +
     `timer:       ${formatTimerSummary(ticket)}\n` +
     `createdAt:   ${ticket.createdAt}\n` +
@@ -112,6 +121,117 @@ export function writeTicketListOutput(tickets: Ticket[], json: boolean): void {
       ? formatTicketListJson(tickets)
       : `${formatTicketListText(tickets)}\n`,
   )
+}
+
+export function formatCommentText(comment: TicketComment): string {
+  return (
+    `id:        ${comment.id}\n` +
+    `author:    ${comment.author}\n` +
+    `body:      ${comment.body}\n` +
+    `createdAt: ${comment.createdAt}`
+  )
+}
+
+export function formatCommentListText(comments: TicketComment[]): string {
+  if (comments.length === 0) {
+    return "No comments."
+  }
+  return comments.map(formatCommentText).join("\n\n")
+}
+
+export function formatCommentJson(comment: TicketComment): string {
+  return `${JSON.stringify(comment, null, 2)}\n`
+}
+
+export function formatCommentListJson(comments: TicketComment[]): string {
+  return `${JSON.stringify(comments, null, 2)}\n`
+}
+
+export function writeCommentOutput(comment: TicketComment, json: boolean): void {
+  process.stdout.write(
+    json ? formatCommentJson(comment) : `${formatCommentText(comment)}\n`,
+  )
+}
+
+export function writeCommentListOutput(
+  comments: TicketComment[],
+  json: boolean,
+): void {
+  process.stdout.write(
+    json
+      ? formatCommentListJson(comments)
+      : `${formatCommentListText(comments)}\n`,
+  )
+}
+
+export function formatNextContextText(context: NextTicketContext): string {
+  const inProgressWarning =
+    context.inProgress.length > 0
+      ? `${context.inProgress.length} ticket(s) in progress`
+      : null
+
+  if (!context.ticket) {
+    const lines = ["No pending tickets."]
+    if (inProgressWarning) {
+      lines.push(`In progress: ${inProgressWarning} (not eligible).`)
+    }
+    return lines.join("\n")
+  }
+
+  const projectLabel = context.project
+    ? `${context.project.name} (${context.project.id})`
+    : "(unknown)"
+  const lines = [
+    `ticket:      ${context.ticket.id}`,
+    `title:       ${context.ticket.title}`,
+    `project:     ${projectLabel}`,
+    `column:      ${context.ticket.column}`,
+    `priority:    ${context.ticket.priority}`,
+    `description: ${context.ticket.description || "(none)"}`,
+    `comments:    ${context.comments.length}`,
+  ]
+  if (inProgressWarning) {
+    lines.push(`inProgress:  ${inProgressWarning} (not eligible)`)
+  }
+  if (context.comments.length > 0) {
+    lines.push("", "Comments:", formatCommentListText(context.comments))
+  }
+  return lines.join("\n")
+}
+
+export function formatNextContextJson(context: NextTicketContext): string {
+  return `${JSON.stringify(context, null, 2)}\n`
+}
+
+export function writeNextContextOutput(
+  context: NextTicketContext,
+  json: boolean,
+): void {
+  process.stdout.write(
+    json
+      ? formatNextContextJson(context)
+      : `${formatNextContextText(context)}\n`,
+  )
+}
+
+export function formatDeletedJson(id: string): string {
+  return `${JSON.stringify({ deleted: true, id }, null, 2)}\n`
+}
+
+export function writeDeletedOutput(
+  entity: string,
+  id: string,
+  json: boolean,
+): void {
+  process.stdout.write(json ? formatDeletedJson(id) : `Deleted ${entity} ${id}\n`)
+}
+
+export function writeErrorOutput(message: string, json: boolean): void {
+  if (json) {
+    process.stderr.write(`${JSON.stringify({ error: { message } })}\n`)
+    return
+  }
+  process.stderr.write(`${message}\n`)
 }
 
 function shortenDescription(description: string, max = 80): string {
