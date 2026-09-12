@@ -29,7 +29,10 @@ export function TicketCommentsDialog({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-h-[90vh] max-w-md grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:max-w-md">
+      <DialogContent
+        onInteractOutside={(event) => event.preventDefault()}
+        className="max-h-[90vh] max-w-md grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:max-w-md"
+      >
         <DialogHeader className="min-w-0">
           <DialogTitle>Comments</DialogTitle>
           <DialogDescription className="line-clamp-2">{ticket?.title ?? ""}</DialogDescription>

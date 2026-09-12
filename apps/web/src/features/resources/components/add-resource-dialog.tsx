@@ -16,7 +16,7 @@ import { aiGenerationService } from "@/features/ai-generation/services/ai-genera
 import { tagsFromString } from "@/lib/tags";
 import { createResourceAction } from "../actions";
 import { resourceSchema, ResourceSchema } from "../schemas/resource-schema";
-import { isSelectContentTarget, toFormatValue } from "../utils/resource-form";
+import { toFormatValue } from "../utils/resource-form";
 import { ResourceFormFields, type ResourceFormApi } from "./resource-form-fields";
 
 interface AddResourceDialogProps {
@@ -116,12 +116,7 @@ export function AddResourceDialog({ isOpen, onOpenChange }: AddResourceDialogPro
       <DialogContent
         className="max-h-[90vh] max-w-md grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden"
         style={{ pointerEvents: "auto" }}
-        onPointerDownOutside={(event) => {
-          if (isSelectContentTarget(event.target)) event.preventDefault();
-        }}
-        onInteractOutside={(event) => {
-          if (isSelectContentTarget(event.target)) event.preventDefault();
-        }}
+        onInteractOutside={(event) => event.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle>Add Resource</DialogTitle>

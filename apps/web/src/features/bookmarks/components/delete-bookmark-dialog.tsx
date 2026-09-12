@@ -46,7 +46,10 @@ export function DeleteBookmarkDialog({
       open={isOpen}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-w-md">
+      <DialogContent
+        onInteractOutside={(event) => event.preventDefault()}
+        className="max-w-md"
+      >
         <DialogHeader>
           <DialogTitle>Delete bookmark?</DialogTitle>
           <DialogDescription>

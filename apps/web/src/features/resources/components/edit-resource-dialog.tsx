@@ -18,7 +18,7 @@ import { updateResourceAction } from "../actions";
 import { FORMATS } from "../constants";
 import { editResourceSchema, resourceSchema, ResourceSchema } from "../schemas/resource-schema";
 import type { Resource } from "../types";
-import { isSelectContentTarget, toFormatValue } from "../utils/resource-form";
+import { toFormatValue } from "../utils/resource-form";
 import { ResourceFormFields, type ResourceFormApi } from "./resource-form-fields";
 
 interface EditResourceDialogProps {
@@ -124,12 +124,7 @@ export function EditResourceDialog({ resource, isOpen, onOpenChange }: EditResou
       <DialogContent
         className="max-h-[90vh] max-w-md grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden"
         style={{ pointerEvents: "auto" }}
-        onPointerDownOutside={(event) => {
-          if (isSelectContentTarget(event.target)) event.preventDefault();
-        }}
-        onInteractOutside={(event) => {
-          if (isSelectContentTarget(event.target)) event.preventDefault();
-        }}
+        onInteractOutside={(event) => event.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle>Edit Resource</DialogTitle>

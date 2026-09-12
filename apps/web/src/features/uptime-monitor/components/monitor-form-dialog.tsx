@@ -113,7 +113,10 @@ export function MonitorFormDialog({
       open={isOpen}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-2xl">
+      <DialogContent
+        onInteractOutside={(event) => event.preventDefault()}
+        className="max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-2xl"
+      >
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit monitor" : "Create monitor"}</DialogTitle>
           <DialogDescription>
