@@ -1,7 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import OAuthProvider from "@cloudflare/workers-oauth-provider";
 import { McpAgent } from "agents/mcp";
 import type { Env } from "./env.js";
 import { createForgeSession } from "./forge-session.js";
+import githubHandler from "./github-handler.js";
 import { createForgeServices } from "./services.js";
 import {
   activityReportInput,
@@ -97,4 +99,11 @@ export class ForgeMcp extends McpAgent<Env> {
   }
 }
 
-export default ForgeMcp.serve("/mcp");
+export default new OAuthProvider({
+  apiRoute: "/mcp",
+  apiHandler: ForgeMcp.serve("/mcp"),
+  defaultHandler: githubHandler,
+  authorizeEndpoint: "/authorize",
+  tokenEndpoint: "/token",
+  clientRegistrationEndpoint: "/register",
+});
