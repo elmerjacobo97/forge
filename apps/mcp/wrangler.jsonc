@@ -21,4 +21,16 @@
   "observability": {
     "enabled": true,
   },
+  "kv_namespaces": [
+    {
+      "binding": "OAUTH_KV",
+      "id": "cfdedac087224487ba75c3e84e8e92d9",
+    },
+  ],
+  "vars": {
+    "GITHUB_CLIENT_ID": "Ov23lig4KNW92JjjcRw1",
+    "ALLOWED_GITHUB_LOGIN": "elmerjacobo97",
+    "INSFORGE_URL": "https://w8x6am34.us-east.insforge.app",
+    "INSFORGE_ANON_KEY": "anon_2a8e88cf082e114e6a75b979ddd5d129d99d1c4f51141bb7e25f5c556883077e",
+  },
 }
