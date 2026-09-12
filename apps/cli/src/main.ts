@@ -1,13 +1,13 @@
-import { runBookmark } from "./commands/bookmark.js"
-import { runInit } from "./commands/init.js"
-import { runLogin } from "./commands/login.js"
-import { runLogout } from "./commands/logout.js"
-import { runProject } from "./commands/project.js"
-import { runResource } from "./commands/resource.js"
-import { runTicket } from "./commands/ticket.js"
-import { runWhoami } from "./commands/whoami.js"
-import { writeErrorOutput } from "./format.js"
-import { getCliVersion } from "./version.js"
+import { runBookmark } from "./commands/bookmark.js";
+import { runInit } from "./commands/init.js";
+import { runLogin } from "./commands/login.js";
+import { runLogout } from "./commands/logout.js";
+import { runProject } from "./commands/project.js";
+import { runResource } from "./commands/resource.js";
+import { runTicket } from "./commands/ticket.js";
+import { runWhoami } from "./commands/whoami.js";
+import { writeErrorOutput } from "./format.js";
+import { getCliVersion } from "./version.js";
 
 const HELP = `forge-cli — Forge CLI
 
@@ -24,64 +24,64 @@ Commands:
   bookmark  Manage bookmarks (create|list|get|update|delete)
   resource  Manage resources (create|list|get|update|delete)
   project   Manage Dev Board projects (create|list|get|update|delete)
-  ticket    Manage Dev Board tickets (create|list|get|update|delete|move|next|comment|comments)
+  ticket    Manage Dev Board tickets (create|list|get|update|delete|move|next|comment|comments|report)
 
 Options:
   -h, --help       Show this help
   -v, --version    Show CLI version
-`
+`;
 
 async function main(argv: string[]): Promise<void> {
-  let args = argv.slice(2)
+  let args = argv.slice(2);
   // pnpm run sometimes forwards a literal "--" before the command args
-  if (args[0] === "--") args = args.slice(1)
+  if (args[0] === "--") args = args.slice(1);
 
   if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
-    process.stdout.write(`${HELP}\n`)
-    return
+    process.stdout.write(`${HELP}\n`);
+    return;
   }
 
   if (args[0] === "--version" || args[0] === "-v") {
-    process.stdout.write(`${getCliVersion()}\n`)
-    return
+    process.stdout.write(`${getCliVersion()}\n`);
+    return;
   }
 
-  const [command, ...rest] = args
+  const [command, ...rest] = args;
 
   switch (command) {
     case "init":
-      await runInit(rest)
-      return
+      await runInit(rest);
+      return;
     case "login":
-      await runLogin(rest)
-      return
+      await runLogin(rest);
+      return;
     case "logout":
-      await runLogout(rest)
-      return
+      await runLogout(rest);
+      return;
     case "whoami":
-      await runWhoami(rest)
-      return
+      await runWhoami(rest);
+      return;
     case "bookmark":
-      await runBookmark(rest)
-      return
+      await runBookmark(rest);
+      return;
     case "resource":
-      await runResource(rest)
-      return
+      await runResource(rest);
+      return;
     case "project":
-      await runProject(rest)
-      return
+      await runProject(rest);
+      return;
     case "ticket":
-      await runTicket(rest)
-      return
+      await runTicket(rest);
+      return;
     default:
-      process.stderr.write(`Unknown command: ${command}\n\n${HELP}\n`)
-      process.exitCode = 1
+      process.stderr.write(`Unknown command: ${command}\n\n${HELP}\n`);
+      process.exitCode = 1;
   }
 }
 
 main(process.argv).catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error)
-  const json = process.argv.includes("--json")
-  writeErrorOutput(json ? message : `Error: ${message}`, json)
-  process.exitCode = 1
-})
+  const message = error instanceof Error ? error.message : String(error);
+  const json = process.argv.includes("--json");
+  writeErrorOutput(json ? message : `Error: ${message}`, json);
+  process.exitCode = 1;
+});

@@ -187,6 +187,9 @@ forge-cli ticket next
 forge-cli ticket next --project-id <projectId> --json
 forge-cli ticket comment <id> --body "Handoff notes" --author agent
 forge-cli ticket comments <id> --json
+forge-cli ticket report
+forge-cli ticket report --days 7 --json
+forge-cli ticket report --column review --column done
 forge-cli ticket delete <id> --json
 ```
 
@@ -209,6 +212,14 @@ With no pending work, text says `No pending tickets.` and `--json` returns
 body). Handoff fields: `--branch` (1–200), `--pr-url` (http/https, max
 2048), `--clear-branch`, `--clear-pr-url`. `update` without them keeps the
 current values; `move` writes the handoff atomically with the column change.
+
+`report` summarizes activity for the weekly meeting: every ticket with events
+or comments inside a rolling window (default 7 days), with its project, its
+in-window events, and its in-window comments. `--days` (1-90), `--since` /
+`--until` (ISO 8601; `--since` overrides `--days`), `--column` (repeatable,
+filters by the ticket's current column), and `--project-id` (optional scope).
+Tickets currently in `backlog` are always excluded. `--json` returns
+`{ from, to, days, tickets }`.
 
 `--json` applies to every ticket command. With it, delete returns
 `{"deleted":true,"id":"..."}` and any error prints
@@ -235,7 +246,7 @@ row/RPC response mapping. They do not call the live backend.
 
 ## Agent skills
 
-The `forge-*` skills (bookmarks, resources, projects, tickets) live in the global agent skill directory, not in this repo:
+The `forge-*` skills (bookmarks, resources, projects, tickets, weekly) live in the global agent skill directory, not in this repo:
 
 - Source of truth: `~/.agents/skills/forge-<area>/`
 - Claude Code symlinks: `~/.claude/skills/forge-<area>`

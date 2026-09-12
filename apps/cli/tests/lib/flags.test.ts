@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { getFlagValue, getPositionals, hasFlag, parseListOptions, parseTagsFlag } from "../../src/flags.js";
+import {
+  getFlagValue,
+  getFlagValues,
+  getPositionals,
+  hasFlag,
+  parseListOptions,
+  parseTagsFlag,
+} from "../../src/flags.js";
 
 describe("getFlagValue", () => {
   it("reads a value flag", () => {
@@ -11,6 +18,20 @@ describe("getFlagValue", () => {
   it("returns undefined when the flag is missing or has no value", () => {
     expect(getFlagValue(["--title"], "--title")).toBeUndefined();
     expect(getFlagValue(["--json"], "--title")).toBeUndefined();
+  });
+});
+
+describe("getFlagValues", () => {
+  it("collects every occurrence of a repeatable flag", () => {
+    expect(getFlagValues(["--column", "review", "--column", "done"], "--column")).toEqual([
+      "review",
+      "done",
+    ]);
+  });
+
+  it("returns an empty array when the flag is missing or has no value", () => {
+    expect(getFlagValues(["--json"], "--column")).toEqual([]);
+    expect(getFlagValues(["--column", "--json"], "--column")).toEqual([]);
   });
 });
 

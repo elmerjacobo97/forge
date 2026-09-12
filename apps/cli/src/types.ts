@@ -132,6 +132,48 @@ export interface NextTicketContext {
   }>;
 }
 
+export const EVENT_TYPES = [
+  "created",
+  "moved",
+  "started",
+  "completed",
+  "paused",
+  "resumed",
+] as const;
+
+export type TicketEventType = (typeof EVENT_TYPES)[number];
+
+export type TicketEvent = {
+  id: string;
+  ticketId: string;
+  eventType: TicketEventType;
+  fromColumn: ColumnId | null;
+  toColumn: ColumnId | null;
+  occurredAt: string;
+};
+
+export type ActivityTicket = {
+  ticket: Ticket;
+  project: { id: string; name: string } | null;
+  events: TicketEvent[];
+  comments: TicketComment[];
+};
+
+export type ActivityReport = {
+  from: string;
+  to: string;
+  days: number;
+  tickets: ActivityTicket[];
+};
+
+export type TicketReportInput = {
+  days: number;
+  since?: string;
+  until?: string;
+  projectId?: string;
+  columns?: ColumnId[];
+};
+
 export const RESOURCE_KINDS = ["note", "prompt", "config", "code"] as const;
 
 export type ResourceKind = (typeof RESOURCE_KINDS)[number];
