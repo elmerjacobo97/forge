@@ -3,7 +3,14 @@ import "server-only";
 import { z } from "zod";
 
 import { createInsForgeServerClient } from "@/lib/insforge/server";
-import { type ColumnId, type Ticket, type TicketComment, TICKETS_PAGE_SIZE } from "../types/board";
+import {
+  type ColumnId,
+  type ColumnPage,
+  type Ticket,
+  type TicketComment,
+  COLUMNS,
+  TICKETS_PAGE_SIZE,
+} from "../types/board";
 
 const ticketRowSchema = z.object({
   id: z.string(),
@@ -151,6 +158,15 @@ export const devBoardService = {
       nextCursor: tickets.length === TICKETS_PAGE_SIZE ? String(nextOffset) : null,
       total: count ?? tickets.length,
     };
+  },
+
+  async fetchBoardPages(projectId: string): Promise<ColumnPage[]> {
+    return Promise.all(
+      COLUMNS.map(async (column) => ({
+        column,
+        ...(await devBoardService.fetchTicketPage(projectId, column, null)),
+      })),
+    );
   },
 
   async createTicket(input: {
