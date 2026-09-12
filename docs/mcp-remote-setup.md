@@ -5,7 +5,7 @@ Guía completa para levantar el servidor MCP remoto de Forge (SPEC 18) desde cer
 ## Qué vas a construir
 
 ```
-Claude web / móvil  o  MCP Inspector
+Claude web / móvil, Claude Code, opencode, Cursor  o  MCP Inspector
         │  OAuth 2.1 (GitHub, allowlist)
         ▼
 Worker forge-mcp (Cloudflare)  ──  Durable Object (sesión Forge, rotación de token)
@@ -156,6 +156,55 @@ Con el `client_id` devuelto, `GET /authorize` con PKCE debe responder `302` haci
 3. `Add` → `Connect` → login de GitHub → `Authorize`.
 4. El connector se sincroniza a las apps de iOS/Android. El plan free permite 1 connector custom.
 5. Prueba: "dime los tickets pendientes en Forge" y "dame el reporte de actividad de la última semana".
+
+### Claude Code
+
+```bash
+claude mcp add --transport http forge https://forge-mcp.<tu-subdominio>.workers.dev/mcp --scope user
+```
+
+`--scope user` deja el server disponible en todos tus proyectos. `claude mcp list` muestra `Needs authentication` hasta el primer login; dentro de una sesión, `/mcp` abre la autorización de GitHub y conecta.
+
+### opencode
+
+Config global (`~/.config/opencode/opencode.json`):
+
+```json
+{
+  "mcp": {
+    "forge": {
+      "type": "remote",
+      "url": "https://forge-mcp.<tu-subdominio>.workers.dev/mcp",
+      "enabled": true
+    }
+  }
+}
+```
+
+```bash
+opencode mcp auth forge     # completa el flujo OAuth en el navegador
+opencode mcp debug forge    # muestra discovery/estado sin autorizar
+```
+
+Los tokens quedan en `~/.local/share/opencode/mcp-auth.json`; `opencode mcp logout forge` los borra.
+
+### Cursor
+
+Config global (`~/.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "forge": { "url": "https://forge-mcp.<tu-subdominio>.workers.dev/mcp" }
+  }
+}
+```
+
+Autentica desde los ajustes de MCP de Cursor (lo pide al primer uso) o con `cursor-agent mcp login forge`. `cursor-agent mcp list` reporta `requires_authentication` hasta completar el login. El IDE de Cursor y el CLI `cursor-agent` guardan credenciales por separado: inicia sesión en cada uno que uses.
+
+### Clientes sin OAuth remoto
+
+`npx -y mcp-remote https://forge-mcp.<tu-subdominio>.workers.dev/mcp` actúa de puente para clientes solo-stdio: hace el flujo OAuth localmente y guarda los tokens en `~/.mcp-auth`.
 
 ### MCP Inspector (pruebas locales)
 
