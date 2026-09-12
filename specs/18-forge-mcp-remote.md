@@ -161,7 +161,7 @@ Reglas:
 4. Refactor del CLI: actualizar imports a `@forge/core`, reducir `insforge.ts` al factory + fs, añadir `scripts/build.mjs`, cambiar `build` a `node ./scripts/build.mjs && tsc --noEmit`, resolver el core por `paths`/alias (sin declararlo en package.json). Verificar que la salida de todos los comandos no cambia.
 5. Actualizar scripts raíz y `AGENTS.md`; correr `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm format:check`.
 6. Verificar el publish del CLI: `npm pack --dry-run` (sin `@forge/core` en dependencies), instalar el tarball en un temp y correr `forge-cli --help` y `forge-cli --version`.
-7. Crear `apps/mcp` con `wrangler` + `agents/mcp` + `@cloudflare/workers-oauth-provider`, partiendo de la plantilla `remote-mcp-github-oauth` de Cloudflare. Configurar `wrangler.jsonc` (binding del Durable Object con storage SQLite, KV para OAuth, vars).
+7. Crear `apps/mcp` con `wrangler` + `agents/mcp` (sin OAuth todavía): `wrangler.jsonc` con binding del Durable Object y storage SQLite, `.dev.vars` ignorado y la tool `forge_list_projects`. El wrapper de `@cloudflare/workers-oauth-provider` (plantilla `remote-mcp-github-oauth`) y el KV de OAuth se integran al conectar GitHub, en los pasos 12-13.
 8. Spike temprano: una tool trivial `forge_list_projects` contra InsForge real en `wrangler dev` para confirmar que `@forge/core` y `@insforge/sdk` corren en el runtime de Workers. Si falla, detenerse y reevaluar hosting antes de seguir.
 9. Implementar `forge-session.ts` (siembra, refresh, rotación en DO storage) y las seis tools con schemas Zod, mapeo a `TicketSummary` y manejo de errores `isError`.
 10. Tests vitest de las tools con services del core mockeados (sin red), siguiendo el patrón de mocks del CLI.
@@ -242,6 +242,7 @@ Reglas:
 | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@insforge/sdk` no corre en el runtime de Workers (APIs no fetch)              | Spike temprano con `forge_list_projects` antes de implementar las seis tools; si falla, reevaluar hosting (VPS o ruta Vercel).                   |
 | La API de `agents/mcp` cambia entre versiones                                  | Pinear versiones exactas en `package.json`; fallback documentado a `@modelcontextprotocol/sdk` stateless.                                        |
+| `vitest-pool-workers` no digiere el SDK (`@supabase/postgrest-js` CJS/ESM)     | Spike con `wrangler dev` y llamada MCP real; tests unitarios de handlers puros con services mockeados, sin runtime de Workers.                   |
 | La extracción del core rompe tests o el build del CLI                          | Mover archivos y tests en el mismo commit, correr `pnpm test`/`build` tras cada paso y verificar el tarball con `npm pack` antes de seguir.      |
 | El cambio a `esbuild` altera la salida publicada del CLI                       | Typecheck con `tsc --noEmit` y smoke test del tarball (`--help`/`--version`); el binario y `files` no cambian.                                   |
 | Rotación de refresh token con pérdida de sesión                                | Guardar cada token rotado en DO storage tras el refresh; si el refresh falla, mensaje claro con el paso de `wrangler secret put`.                |

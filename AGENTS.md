@@ -5,6 +5,7 @@
 - `apps/web` is the Next.js 16 application (`@forge/web`). Routes live in `src/app`; feature code belongs in `src/features/<feature>`, shared UI in `src/components`, and reusable infrastructure in `src/lib`.
 - `apps/cli` is the Node/TypeScript CLI (`@codigoconelmer/forge-cli`, binary `forge-cli`). Its source is under `src`, tests under `tests/`, executable entrypoint under `bin`, and release checks under `scripts`.
 - `packages/forge-core` is the private shared core (`@forge/core`): InsForge schemas, services, helpers, and types consumed by the CLI. Keep it free of `node:*` imports; config/session file access stays in `apps/cli`.
+- `apps/mcp` is the Cloudflare Worker (`@forge/mcp`) that serves the remote MCP endpoint; it consumes `@forge/core` and keeps secrets in `.dev.vars` locally and `wrangler secret` in production.
 - Database migrations are in `migrations/`; supporting documentation and specifications are in `docs/` and `specs/`. Web tests are colocated with their feature modules; CLI tests live grouped under `apps/cli/tests/`.
 - Keep the product web-first; do not add Tauri, Rust, native IPC, or desktop-only dependencies.
 
@@ -23,7 +24,7 @@ pnpm format:check         # Check Prettier formatting
 pnpm doctor               # Run the web React Doctor check
 ```
 
-Use `pnpm build:core`, `pnpm build:web`, `pnpm build:cli`, `pnpm test:core`, `pnpm test:web`, or `pnpm test:cli` to focus a package. Run one web test with `pnpm --filter @forge/web exec vitest run --config tests.config.ts <path>` (`tests.config.ts`, not `vitest.config.ts`, so react-doctor does not misdetect Vite); for the CLI and core, `pnpm --filter <pkg> exec vitest run tests/<group>/<file>.test.ts`. Coverage lives under each package's `coverage/` directory. For CLI releases, run `pnpm check-cli-release-tag -- vX.Y.Z`.
+Use `pnpm build:core`, `pnpm build:web`, `pnpm build:cli`, `pnpm test:core`, `pnpm test:web`, `pnpm test:cli`, or `pnpm test:mcp` to focus a package. Run one web test with `pnpm --filter @forge/web exec vitest run --config tests.config.ts <path>` (`tests.config.ts`, not `vitest.config.ts`, so react-doctor does not misdetect Vite); for the CLI and core, `pnpm --filter <pkg> exec vitest run tests/<group>/<file>.test.ts`. Coverage lives under each package's `coverage/` directory. For CLI releases, run `pnpm check-cli-release-tag -- vX.Y.Z`.
 
 ## Code Style and Conventions
 

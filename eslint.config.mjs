@@ -42,6 +42,12 @@ export default defineConfig([
     },
   },
 
+  // MCP Worker (@forge/mcp) — Cloudflare Workers runtime
+  {
+    files: ["apps/mcp/**/*.{js,mjs,cjs,ts}"],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+  },
+
   // Shared core (@forge/core) — TypeScript, no React
   {
     files: ["packages/**/*.{js,mjs,cjs,ts}"],
