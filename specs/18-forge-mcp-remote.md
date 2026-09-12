@@ -20,7 +20,7 @@ SPEC 17 dejó "Servidor MCP" explícitamente fuera de alcance. Esta spec lo reto
 **Incluye:**
 
 - Nuevo paquete `packages/forge-core` con schemas, services, helpers puros y types compartidos, sin dependencias de `node:fs`.
-- Refactor del CLI para consumir `@forge/core`; `apps/cli` pasa a empaquetarse con `tsup` (bundle del core incluido) para seguir publicando un solo paquete npm.
+- Refactor del CLI para consumir `@forge/core`; `apps/cli` pasa a empaquetarse con `esbuild` (bundle del core incluido) para seguir publicando un solo paquete npm.
 - Nuevo app `apps/mcp`: Worker de Cloudflare con `agents/mcp` + `@cloudflare/workers-oauth-provider` y login OAuth de GitHub con allowlist por usuario.
 - Seis tools MCP read-only: `forge_list_projects`, `forge_get_project`, `forge_list_tickets`, `forge_next_ticket`, `forge_get_ticket`, `forge_activity_report`.
 - Sesión de Forge single-user: refresh token propio guardado como secret, refresco y rotación persistida en Durable Object storage.
@@ -87,7 +87,7 @@ Reglas del paquete:
 
 Estrategia de publish del CLI:
 
-- `apps/cli` declara `@forge/core: workspace:*` como **devDependency** y lo bundlea con `tsup` (`noExternal: [/@forge\/core/]`).
+- `apps/cli` no declara `@forge/core` en `package.json`: lo resuelve por `paths` de tsconfig, alias de vitest y alias de esbuild, y lo bundlea. El manifest publicado no menciona el paquete interno.
 - `apps/cli/package.json` mantiene `files: ["bin", "dist"]` y el binario `bin/forge-cli.js` sigue importando `dist/main.js`.
 - El `package.json` publicado no debe referenciar `@forge/core`; el tarball es autocontenido.
 - Typecheck separado con `tsc --noEmit` (mismo `strict` de hoy).
@@ -158,7 +158,7 @@ Reglas:
 1. Actualizar `AGENTS.md` (nuevo paquete y app, comandos de build/test) y aprobar esta spec.
 2. Crear `packages/forge-core`: `package.json`, `tsconfig.json`, `vitest.config.ts`, mover los archivos listados, crear `src/index.ts` con la superficie pública y `createForgeClient`.
 3. Mover los tests de schemas/services/helpers a `packages/forge-core/tests` y verificar `pnpm --filter @forge/core test`.
-4. Refactor del CLI: actualizar imports a `@forge/core`, reducir `insforge.ts` al factory + fs, añadir `tsup.config.ts`, cambiar `build` a `tsup && tsc --noEmit`, declarar `@forge/core` como devDependency. Verificar que la salida de todos los comandos no cambia.
+4. Refactor del CLI: actualizar imports a `@forge/core`, reducir `insforge.ts` al factory + fs, añadir `scripts/build.mjs`, cambiar `build` a `node ./scripts/build.mjs && tsc --noEmit`, resolver el core por `paths`/alias (sin declararlo en package.json). Verificar que la salida de todos los comandos no cambia.
 5. Actualizar scripts raíz y `AGENTS.md`; correr `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm format:check`.
 6. Verificar el publish del CLI: `npm pack --dry-run` (sin `@forge/core` en dependencies), instalar el tarball en un temp y correr `forge-cli --help` y `forge-cli --version`.
 7. Crear `apps/mcp` con `wrangler` + `agents/mcp` + `@cloudflare/workers-oauth-provider`, partiendo de la plantilla `remote-mcp-github-oauth` de Cloudflare. Configurar `wrangler.jsonc` (binding del Durable Object con storage SQLite, KV para OAuth, vars).
@@ -225,7 +225,7 @@ Reglas:
 - **Sí:** single-user con refresh token propio como secret; Forge tiene un solo usuario y RLS sigue aplicando como él.
 - **Sí:** v1 solo lectura; el modelo debe ganarse la confianza antes de habilitar mutaciones desde el celular.
 - **Sí:** extraer `packages/forge-core`; MCP y CLI deben compartir una sola implementación de services y schemas.
-- **Sí:** core privado + CLI bundleado con `tsup`; el paquete npm sigue siendo uno y autocontenido, y el core no se publica como API interna.
+- **Sí:** core privado + CLI bundleado con `esbuild`; el paquete npm sigue siendo uno y autocontenido, y el core no se publica como API interna. `esbuild` ya está en el lockfile con provenance; `tsup` queda descartado porque arrastra `chokidar@4.0.3`, que perdió provenance y viola el trust policy del workspace.
 - **Sí:** `agents/mcp` con Durable Object; da estado para OAuth y para la rotación del refresh token, y es el camino documentado con `workers-oauth-provider`. Si su API resulta inestable, alternativa: `@modelcontextprotocol/sdk` stateless + KV.
 - **Sí:** seis tools con prefijo `forge_` y salida JSON compacta; menos contexto y cero ambigüedad de nombres en clientes con varios servers.
 - **Sí:** listados con `TicketSummary`; el contexto del agente es el recurso escaso, `forge_get_ticket` da el detalle.
@@ -243,7 +243,7 @@ Reglas:
 | `@insforge/sdk` no corre en el runtime de Workers (APIs no fetch)              | Spike temprano con `forge_list_projects` antes de implementar las seis tools; si falla, reevaluar hosting (VPS o ruta Vercel).                   |
 | La API de `agents/mcp` cambia entre versiones                                  | Pinear versiones exactas en `package.json`; fallback documentado a `@modelcontextprotocol/sdk` stateless.                                        |
 | La extracción del core rompe tests o el build del CLI                          | Mover archivos y tests en el mismo commit, correr `pnpm test`/`build` tras cada paso y verificar el tarball con `npm pack` antes de seguir.      |
-| El cambio a `tsup` altera la salida publicada del CLI                          | Typecheck con `tsc --noEmit` y smoke test del tarball (`--help`/`--version`); el binario y `files` no cambian.                                   |
+| El cambio a `esbuild` altera la salida publicada del CLI                       | Typecheck con `tsc --noEmit` y smoke test del tarball (`--help`/`--version`); el binario y `files` no cambian.                                   |
 | Rotación de refresh token con pérdida de sesión                                | Guardar cada token rotado en DO storage tras el refresh; si el refresh falla, mensaje claro con el paso de `wrangler secret put`.                |
 | Refresh token comprometido o filtrado en logs                                  | Solo como `wrangler secret`, nunca en repo ni logs; allowlist de GitHub impide que terceros usen el server; rotar el token si hay duda.          |
 | Callback de OAuth mal configurado en la GitHub OAuth App                       | Documentar la URL exacta del Worker en el README con checklist de setup y troubleshooting de `redirect_uri`.                                     |

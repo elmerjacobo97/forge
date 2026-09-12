@@ -4,9 +4,11 @@
     "lib": ["ES2022"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "paths": {
+      "@forge/core": ["../../packages/forge-core/src/index.ts"]
+    },
     "types": ["node"],
-    "rootDir": "src",
-    "outDir": "dist",
+    "noEmit": true,
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
