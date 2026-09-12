@@ -5,6 +5,7 @@ import {
   ticketInputSchema,
   ticketSchema,
   ticketTimeAdjustSchema,
+  ticketTimeFormSchema,
 } from "./ticket";
 
 const base = {
@@ -151,5 +152,17 @@ describe("ticketTimeAdjustSchema", () => {
     expect(ticketTimeAdjustSchema.safeParse({ ...adjustBase, action: "unknown" }).success).toBe(
       false,
     );
+  });
+});
+
+describe("ticketTimeFormSchema", () => {
+  it("accepts non-negative integer hours and minutes", () => {
+    expect(ticketTimeFormSchema.safeParse({ hours: 0, minutes: 0 }).success).toBe(true);
+    expect(ticketTimeFormSchema.safeParse({ hours: 4, minutes: 30 }).success).toBe(true);
+  });
+
+  it("rejects negative and fractional values", () => {
+    expect(ticketTimeFormSchema.safeParse({ hours: -1, minutes: 0 }).success).toBe(false);
+    expect(ticketTimeFormSchema.safeParse({ hours: 0, minutes: 1.5 }).success).toBe(false);
   });
 });

@@ -40,6 +40,7 @@ function renderColumn(tickets: Ticket[]): string {
         isHighlighted={false}
         onEdit={noop}
         onComments={noop}
+        onAdjust={noop}
         onUpdate={noop}
         onDelete={noop}
         onMoveToColumn={noop}

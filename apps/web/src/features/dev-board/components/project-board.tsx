@@ -38,6 +38,7 @@ import { ColumnView } from "./column-view";
 import { TicketCommentsDialog } from "./ticket-comments-dialog";
 import { TicketDragOverlay } from "./ticket-drag-overlay";
 import { TicketForm } from "./ticket-form";
+import { TicketTimeDialog } from "./ticket-time-dialog";
 
 function findTicket(tickets: Ticket[], id: string): Ticket | undefined {
   return tickets.find((ticket) => ticket.id === id);
@@ -65,6 +66,7 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTicket, setEditTicket] = useState<Ticket | null>(null);
   const [commentsTicket, setCommentsTicket] = useState<Ticket | null>(null);
+  const [timeTicket, setTimeTicket] = useState<Ticket | null>(null);
   const [alertedTickets] = useState(loadAlertedTickets);
   const dragTicketsRef = useRef<Ticket[] | null>(null);
 
@@ -216,6 +218,17 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
     setCommentsTicket(ticket);
   }
 
+  function openAdjustTicket(ticket: Ticket) {
+    setTimeTicket(ticket);
+  }
+
+  function handleAdjusted(ticket: Ticket, addsComment: boolean) {
+    setColumns((current) => {
+      const next = upsertTicket(current, ticket);
+      return addsComment ? incrementCommentCount(next, ticket.id) : next;
+    });
+  }
+
   function handleCommentCreated(ticketId: string) {
     setColumns((current) => incrementCommentCount(current, ticketId));
     setCommentsTicket((current) =>
@@ -361,6 +374,7 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
               isHighlighted={overColumn === columnId}
               onEdit={openEditTicket}
               onComments={openComments}
+              onAdjust={openAdjustTicket}
               onUpdate={handleUpdate}
               onDelete={handleDelete}
               onMoveToColumn={moveToColumn}
@@ -392,6 +406,15 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
           if (!open) setCommentsTicket(null);
         }}
         onCommentCreated={handleCommentCreated}
+      />
+
+      <TicketTimeDialog
+        ticket={timeTicket}
+        open={timeTicket !== null}
+        onOpenChange={(open) => {
+          if (!open) setTimeTicket(null);
+        }}
+        onAdjusted={handleAdjusted}
       />
     </div>
   );

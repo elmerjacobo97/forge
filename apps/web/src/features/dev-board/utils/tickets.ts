@@ -1,4 +1,4 @@
-import type { TicketFormValues } from "../schemas/ticket";
+import type { TicketFormValues, TicketTimeAdjustInput } from "../schemas/ticket";
 import { isTimerColumn, type ColumnId, type Ticket } from "../types/board";
 import { nowISO, startTimer, stopTimer } from "./timer";
 
@@ -56,4 +56,9 @@ export function moveTicket(
     position: append ? positionAtEnd(targetTickets) : positionBefore(targetTickets, anchorId),
     lastMovedAt: ticket.column === target ? ticket.lastMovedAt : nowISO(),
   };
+}
+
+export function adjustmentAddsComment(input: TicketTimeAdjustInput, now = Date.now()): boolean {
+  if (input.action !== "stop_at") return true;
+  return now - Date.parse(input.endedAt) > 60_000;
 }

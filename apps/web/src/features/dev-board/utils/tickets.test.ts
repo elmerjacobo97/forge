@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Ticket } from "../types/board";
-import { moveTicket } from "./tickets";
+import { adjustmentAddsComment, moveTicket } from "./tickets";
 
 afterEach(() => vi.useRealTimers());
 
@@ -85,5 +85,34 @@ describe("moveTicket", () => {
       timerStartedAt: null,
       totalElapsedMs: 20 * 60_000,
     });
+  });
+});
+
+describe("adjustmentAddsComment", () => {
+  it("always comments on session edits and removals", () => {
+    expect(
+      adjustmentAddsComment({ ticketId: "ticket-1", action: "set_last_duration", durationMs: 0 }),
+    ).toBe(true);
+    expect(adjustmentAddsComment({ ticketId: "ticket-1", action: "delete_last" })).toBe(true);
+    expect(
+      adjustmentAddsComment({ ticketId: "ticket-1", action: "set_total", durationMs: 3_600_000 }),
+    ).toBe(true);
+  });
+
+  it("comments on retro stops but not on stopping at now", () => {
+    const now = Date.parse("2026-09-12T20:00:00.000Z");
+
+    expect(
+      adjustmentAddsComment(
+        { ticketId: "ticket-1", action: "stop_at", endedAt: "2026-09-12T18:00:00.000Z" },
+        now,
+      ),
+    ).toBe(true);
+    expect(
+      adjustmentAddsComment(
+        { ticketId: "ticket-1", action: "stop_at", endedAt: "2026-09-12T19:59:30.000Z" },
+        now,
+      ),
+    ).toBe(false);
   });
 });

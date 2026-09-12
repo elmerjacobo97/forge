@@ -38,6 +38,7 @@ function renderCard(ticket: Ticket): string {
         ticket={ticket}
         onEdit={noop}
         onComments={noop}
+        onAdjust={noop}
         onMoveToColumn={noop}
         onUpdate={noop}
         onDelete={noop}
