@@ -37,6 +37,7 @@ Vitest uses globals and Node by default in the web app; opt into a DOM environme
 - **Web** (`apps/web`): colocate each test next to the module it covers (`src/features/<feature>/utils/<module>.test.ts`). Shared setup lives in `src/test/setup.ts` (it mocks `server-only`) and is registered through `setupFiles` in `tests.config.ts`.
 - **CLI** (`apps/cli`): CLI-only tests live under `apps/cli/tests/lib/` (config, session, flags, format). Import `describe`/`expect`/`it`/`vi` explicitly; the CLI does not enable Vitest globals.
 - **Core** (`packages/forge-core`): group tests under `packages/forge-core/tests/{schemas,services,lib}/` and keep reusable InsForge client mocks in `packages/forge-core/tests/helpers/`. Import `describe`/`expect`/`it`/`vi` explicitly.
+- **MCP** (`apps/mcp`): tests live under `apps/mcp/tests/` with shared service mocks and fixtures in `tests/helpers/`. Import `describe`/`expect`/`it`/`vi` explicitly; `wrangler dev` covers runtime checks that plain Vitest cannot run.
 
 Mock CLI clients instead of using the live Forge project. Keep secrets in ignored `apps/web/.env.local` or `.insforge/project.json`; never expose server keys or commit credentials. CLI config/session files under `~/.forge` must remain mode `0600`. Mutations must validate input, re-check auth, and preserve InsForge RLS/RPC invariants.
 
