@@ -1,19 +1,14 @@
 import {
   isTimerColumn,
-  STALE_BANNER_THRESHOLD_MS,
+  STALE_SESSION_THRESHOLD_MS,
   type ColumnId,
   type Ticket,
 } from "../types/board";
-import { computeElapsed } from "./timer";
+import { runningSegmentMs } from "./timer";
 
 export function runningSessionMs(ticket: Ticket, now = Date.now()): number | null {
-  if (!isTimerColumn(ticket.column) || ticket.isPaused || !ticket.timerStartedAt) return null;
-  return computeElapsed(ticket, now);
-}
-
-export function isStaleSession(ticket: Ticket, now = Date.now()): boolean {
-  const sessionMs = runningSessionMs(ticket, now);
-  return sessionMs !== null && sessionMs > STALE_BANNER_THRESHOLD_MS;
+  if (!isTimerColumn(ticket.column) || ticket.isPaused) return null;
+  return runningSegmentMs(ticket, now);
 }
 
 export function staleSessionMsForMove(
@@ -24,6 +19,6 @@ export function staleSessionMsForMove(
   if (!isTimerColumn(ticket.column) || isTimerColumn(target)) return null;
 
   const sessionMs = runningSessionMs(ticket, now);
-  if (sessionMs === null || sessionMs <= STALE_BANNER_THRESHOLD_MS) return null;
+  if (sessionMs === null || sessionMs <= STALE_SESSION_THRESHOLD_MS) return null;
   return sessionMs;
 }

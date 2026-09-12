@@ -107,6 +107,17 @@ describe("TicketTimeDialog", () => {
     );
   });
 
+  it("prefills only the running segment, ignoring earlier logged time", () => {
+    vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-09-12T12:00:00.000Z"));
+
+    renderDialog(
+      makeTicket({ totalElapsedMs: 3_600_000, timerStartedAt: "2026-09-12T11:30:00.000Z" }),
+    );
+
+    expect(inputValue("Hours")).toBe("0");
+    expect(inputValue("Minutes")).toBe("30");
+  });
+
   it("edits and removes the last recorded session", async () => {
     const entry = {
       id: "entry-1",

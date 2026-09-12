@@ -9,6 +9,11 @@ export function computeElapsed(ticket: Ticket, now = Date.now()): number {
   return ticket.totalElapsedMs + (now - new Date(ticket.timerStartedAt).getTime());
 }
 
+export function runningSegmentMs(ticket: Ticket, now = Date.now()): number | null {
+  if (!ticket.timerStartedAt) return null;
+  return Math.max(0, now - new Date(ticket.timerStartedAt).getTime());
+}
+
 export function startTimer(ticket: Ticket): Ticket {
   if (ticket.timerStartedAt || ticket.isPaused) return ticket;
   return {

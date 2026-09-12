@@ -60,7 +60,7 @@ export interface TicketComment {
 }
 
 export const STALE_THRESHOLD_MS = 25 * 60 * 1000;
-export const STALE_BANNER_THRESHOLD_MS = 2 * 60 * 60 * 1000;
+export const STALE_SESSION_THRESHOLD_MS = 2 * 60 * 60 * 1000;
 export const TICKETS_PAGE_SIZE = 25;
 
 export interface ColumnPage {

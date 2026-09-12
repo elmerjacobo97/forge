@@ -22,11 +22,11 @@ import { ticketTimeFormSchema, type TicketTimeAdjustInput } from "../schemas/tic
 import type { TimeEntry } from "../types/analytics";
 import { isTimerColumn, type Ticket } from "../types/board";
 import {
-  computeElapsed,
   durationMsFromParts,
   durationParts,
   endTimeFromDuration,
   formatDuration,
+  runningSegmentMs,
 } from "../utils/timer";
 import { adjustmentAddsComment } from "../utils/tickets";
 
@@ -99,7 +99,7 @@ function TicketTimeEditor({ ticket, onAdjusted, onClose }: TicketTimeEditorProps
         ticket={ticket}
         mode="running"
         startedAt={startedAt}
-        initialMs={computeElapsed(ticket)}
+        initialMs={runningSegmentMs(ticket) ?? 0}
         onAdjusted={onAdjusted}
         onClose={onClose}
       />
@@ -221,7 +221,7 @@ function TicketTimeForm(props: TicketTimeFormProps) {
 
   const sessionLabel =
     props.mode === "running"
-      ? `Current session started ${formatClock(props.startedAt)} · ${formatDuration(computeElapsed(ticket))} so far`
+      ? `Current session started ${formatClock(props.startedAt)} · ${formatDuration(runningSegmentMs(ticket) ?? 0)} so far`
       : props.mode === "last"
         ? `Last session: ${formatClock(props.entry.startedAt)} – ${formatClock(props.entry.endedAt)} · ${formatDuration(props.entry.durationMs)}`
         : `No sessions recorded · logged total ${formatDuration(ticket.totalElapsedMs)}`;
