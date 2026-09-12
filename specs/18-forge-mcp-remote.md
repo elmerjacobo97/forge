@@ -1,6 +1,6 @@
 # SPEC 18 — Servidor MCP remoto de Forge (solo lectura)
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 03 — CLI Forge para tickets; SPEC 04 — Dev Board proyectos; SPEC 17 — Loop de agente sobre tickets
 > **Fecha:** 2026-09-11
 > **Objetivo:** Exponer tickets y proyectos de Forge a Claude (web y móvil) mediante un servidor MCP remoto en Cloudflare Workers, solo lectura, reutilizando los services del CLI extraídos a `packages/forge-core`, con OAuth de GitHub restringido al usuario dueño.
