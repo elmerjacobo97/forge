@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/refs -- @dnd-kit/sortable exposes refs/listeners that must be applied during render */
-import { useEffect, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -28,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useClock } from "@/lib/hooks/use-clock";
 import { useCopy } from "@/lib/hooks/use-copy";
 
 import {
@@ -70,30 +70,12 @@ export function TicketCard({
     transition: sortable.transition,
   };
 
-  const [elapsed, setElapsed] = useState(() => computeElapsed(ticket));
-  const [trackedTicket, setTrackedTicket] = useState(ticket);
-
-  // Sync elapsed when the ticket identity/timer fields change (React-recommended render adjust)
-  if (ticket !== trackedTicket) {
-    setTrackedTicket(ticket);
-    setElapsed(computeElapsed(ticket));
-  }
-
-  useEffect(() => {
-    if (!ticket.timerStartedAt || ticket.isPaused) {
-      return;
-    }
-
-    const id = setInterval(() => {
-      setElapsed(computeElapsed(ticket));
-    }, 1000);
-
-    return () => clearInterval(id);
-  }, [ticket]);
-
   const timerActive = isTimerColumn(ticket.column);
   const timerRunning = timerActive && ticket.timerStartedAt !== null && !ticket.isPaused;
   const timerPaused = timerActive && ticket.isPaused;
+
+  const now = useClock(timerRunning);
+  const elapsed = now === null ? ticket.totalElapsedMs : computeElapsed(ticket, now);
 
   return (
     <div

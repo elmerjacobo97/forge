@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { useClock } from "@/lib/hooks/use-clock";
 
 import { type ColumnId, type Ticket, COLUMN_LABELS } from "../types/board";
 import { computeElapsed } from "../utils/timer";
@@ -62,7 +63,12 @@ export function ColumnView({
     [tickets, columnId],
   );
 
-  const totalElapsed = colTickets.reduce((sum, t) => sum + computeElapsed(t), 0);
+  const hasRunningTimer = colTickets.some((t) => t.timerStartedAt !== null && !t.isPaused);
+  const now = useClock(hasRunningTimer);
+  const totalElapsed = colTickets.reduce(
+    (sum, t) => sum + (now === null ? t.totalElapsedMs : computeElapsed(t, now)),
+    0,
+  );
   const hours = totalElapsed / 3_600_000;
   const timeLabel = hours >= 1 ? `${hours.toFixed(1)}h` : `${Math.round(totalElapsed / 60_000)}m`;
 
