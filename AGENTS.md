@@ -14,8 +14,9 @@
 ```bash
 pnpm install              # Install workspace dependencies
 pnpm dev                  # Start the web app
+pnpm dev:mcp              # Start the MCP Worker locally (wrangler dev)
 pnpm build                # Build core, then web and CLI (also typechecks)
-pnpm test                 # Run core, web and CLI Vitest suites
+pnpm test                 # Run core, web, CLI and MCP Vitest suites
 pnpm test:watch           # Run all suites in watch mode (parallel)
 pnpm test:coverage        # Run all suites with V8 coverage reports
 pnpm lint                 # Run ESLint
