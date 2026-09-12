@@ -14,10 +14,11 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { ArrowLeft, BarChart3, Plus } from "lucide-react";
+import { ArrowLeft, BarChart3, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { createTicketAction, deleteTicketAction, updateTicketAction } from "../actions";
 import type { TicketFormValues } from "../schemas/ticket";
 import { type ColumnId, type ColumnPage, type Ticket, COLUMNS } from "../types/board";
@@ -54,6 +55,7 @@ interface ProjectBoardProps {
 export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
   const [columns, setColumns] = useState<ColumnRecord>(() => toColumnRecord(initialColumns));
   const [loadingColumns, setLoadingColumns] = useState<Partial<Record<ColumnId, boolean>>>({});
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [, startMutating] = useTransition();
   const tickets = columnTickets(columns);
 
@@ -258,6 +260,26 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
     }
   }
 
+  async function refreshBoard() {
+    if (isRefreshing) return;
+
+    setIsRefreshing(true);
+    try {
+      const response = await fetch(`/api/dev-board/projects/${project.id}/board`);
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? "Failed to refresh board.");
+      }
+
+      const body = (await response.json()) as { columns: ColumnPage[] };
+      setColumns(toColumnRecord(body.columns));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to refresh board.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  }
+
   const ticketCount = COLUMNS.reduce((total, column) => total + columns[column].total, 0);
 
   return (
@@ -284,6 +306,17 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <Button
+            type="button"
+            size="icon-sm"
+            variant="outline"
+            onClick={() => void refreshBoard()}
+            disabled={isRefreshing}
+            aria-label="Refresh board"
+            title="Refresh board"
+          >
+            <RefreshCw className={cn("size-3.5", isRefreshing && "animate-spin")} />
+          </Button>
           <Button
             asChild
             size="sm"

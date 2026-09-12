@@ -5,7 +5,7 @@ const createInsForgeServerClient = vi.hoisted(() => vi.fn(async () => ({ databas
 
 vi.mock("@/lib/insforge/server", () => ({ createInsForgeServerClient }));
 
-import type { Ticket } from "../types/board";
+import { COLUMNS, type Ticket } from "../types/board";
 import { devBoardService } from "./dev-board-service";
 
 interface QueryResult {
@@ -39,7 +39,10 @@ function createQueryMock(result: QueryResult) {
   return query;
 }
 
-function routeTables(tickets: ReturnType<typeof createQueryMock>, comments?: ReturnType<typeof createQueryMock>) {
+function routeTables(
+  tickets: ReturnType<typeof createQueryMock>,
+  comments?: ReturnType<typeof createQueryMock>,
+) {
   database.from.mockImplementation((table: string) =>
     table === "dev_board_ticket_comments" && comments ? comments : tickets,
   );
@@ -129,6 +132,23 @@ describe("devBoardService.fetchTicketPage", () => {
   });
 });
 
+describe("devBoardService.fetchBoardPages", () => {
+  it("fetches every column in COLUMNS order", async () => {
+    const tickets = createQueryMock({ data: [ticketRow], error: null, count: 1 });
+    const comments = createQueryMock({
+      data: [{ ticket_id: "ticket-1" }],
+      error: null,
+    });
+    routeTables(tickets, comments);
+
+    const pages = await devBoardService.fetchBoardPages("project-1");
+
+    expect(pages.map((page) => page.column)).toEqual([...COLUMNS]);
+    expect(pages.every((page) => page.tickets.length === 1 && page.total === 1)).toBe(true);
+    expect(tickets.eq).toHaveBeenCalledWith("column_id", "validation");
+  });
+});
+
 describe("devBoardService comments", () => {
   it("lists comments in ascending order after checking the ticket", async () => {
     const tickets = createQueryMock({ data: ticketRow, error: null });
@@ -155,9 +175,7 @@ describe("devBoardService comments", () => {
     const tickets = createQueryMock({ data: null, error: null });
     routeTables(tickets);
 
-    await expect(devBoardService.listComments("missing")).rejects.toThrow(
-      "Ticket not found.",
-    );
+    await expect(devBoardService.listComments("missing")).rejects.toThrow("Ticket not found.");
   });
 
   it("creates a comment with the user author", async () => {
