@@ -58,3 +58,27 @@ export const ticketInputSchema = z.object({
 });
 
 export type TicketInput = z.infer<typeof ticketInputSchema>;
+
+export const ticketTimeAdjustSchema = z.discriminatedUnion("action", [
+  z.object({
+    ticketId: z.uuid(),
+    action: z.literal("stop_at"),
+    endedAt: z.iso.datetime(),
+  }),
+  z.object({
+    ticketId: z.uuid(),
+    action: z.literal("set_last_duration"),
+    durationMs: z.number().int().min(0),
+  }),
+  z.object({
+    ticketId: z.uuid(),
+    action: z.literal("delete_last"),
+  }),
+  z.object({
+    ticketId: z.uuid(),
+    action: z.literal("set_total"),
+    durationMs: z.number().int().min(0),
+  }),
+]);
+
+export type TicketTimeAdjustInput = z.infer<typeof ticketTimeAdjustSchema>;

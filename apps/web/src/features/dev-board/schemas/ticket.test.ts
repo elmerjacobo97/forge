@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { ticketCommentSchema, ticketInputSchema, ticketSchema } from "./ticket";
+import {
+  ticketCommentSchema,
+  ticketInputSchema,
+  ticketSchema,
+  ticketTimeAdjustSchema,
+} from "./ticket";
 
 const base = {
   title: "Ship CLI tickets",
@@ -51,8 +56,7 @@ describe("ticketSchema handoff fields", () => {
       false,
     );
     expect(
-      ticketSchema.safeParse({ ...base, prUrl: `https://example.com/${"x".repeat(2049)}` })
-        .success,
+      ticketSchema.safeParse({ ...base, prUrl: `https://example.com/${"x".repeat(2049)}` }).success,
     ).toBe(false);
     expect(ticketSchema.safeParse({ ...base, branch: "x".repeat(201) }).success).toBe(false);
   });
@@ -86,8 +90,66 @@ describe("ticketInputSchema handoff fields", () => {
   it("rejects invalid handoff values", () => {
     expect(ticketInputSchema.safeParse({ ...inputRow, branch: "" }).success).toBe(false);
     expect(ticketInputSchema.safeParse({ ...inputRow, prUrl: "not-a-url" }).success).toBe(false);
+    expect(ticketInputSchema.safeParse({ ...inputRow, prUrl: "https://example.com" }).success).toBe(
+      true,
+    );
+  });
+});
+
+describe("ticketTimeAdjustSchema", () => {
+  const adjustBase = { ticketId: "d7f1ce67-cf72-4f8e-8545-f0d2fb4ec501" };
+
+  it("accepts each supported action", () => {
     expect(
-      ticketInputSchema.safeParse({ ...inputRow, prUrl: "https://example.com" }).success,
+      ticketTimeAdjustSchema.safeParse({
+        ...adjustBase,
+        action: "stop_at",
+        endedAt: "2026-09-12T20:00:00.000Z",
+      }).success,
     ).toBe(true);
+    expect(
+      ticketTimeAdjustSchema.safeParse({
+        ...adjustBase,
+        action: "set_last_duration",
+        durationMs: 3_600_000,
+      }).success,
+    ).toBe(true);
+    expect(ticketTimeAdjustSchema.safeParse({ ...adjustBase, action: "delete_last" }).success).toBe(
+      true,
+    );
+    expect(
+      ticketTimeAdjustSchema.safeParse({ ...adjustBase, action: "set_total", durationMs: 0 })
+        .success,
+    ).toBe(true);
+  });
+
+  it("rejects invalid ids, datetimes, durations and actions", () => {
+    expect(
+      ticketTimeAdjustSchema.safeParse({ ticketId: "nope", action: "delete_last" }).success,
+    ).toBe(false);
+    expect(
+      ticketTimeAdjustSchema.safeParse({ ...adjustBase, action: "stop_at", endedAt: "yesterday" })
+        .success,
+    ).toBe(false);
+    expect(ticketTimeAdjustSchema.safeParse({ ...adjustBase, action: "stop_at" }).success).toBe(
+      false,
+    );
+    expect(
+      ticketTimeAdjustSchema.safeParse({
+        ...adjustBase,
+        action: "set_last_duration",
+        durationMs: -1,
+      }).success,
+    ).toBe(false);
+    expect(
+      ticketTimeAdjustSchema.safeParse({
+        ...adjustBase,
+        action: "set_last_duration",
+        durationMs: 1.5,
+      }).success,
+    ).toBe(false);
+    expect(ticketTimeAdjustSchema.safeParse({ ...adjustBase, action: "unknown" }).success).toBe(
+      false,
+    );
   });
 });

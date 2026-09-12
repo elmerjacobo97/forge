@@ -5,9 +5,15 @@ import { z } from "zod";
 
 import { getCurrentUser } from "@/features/auth/server";
 import { projectSchema } from "./schemas/project";
-import { ticketCommentSchema, ticketCreateSchema, ticketInputSchema } from "./schemas/ticket";
+import {
+  ticketCommentSchema,
+  ticketCreateSchema,
+  ticketInputSchema,
+  ticketTimeAdjustSchema,
+} from "./schemas/ticket";
 import { devBoardService } from "./services/dev-board-service";
 import { projectsService } from "./services/projects-service";
+import type { TimeEntry } from "./types/analytics";
 import type { Ticket, TicketComment } from "./types/board";
 import type { Project } from "./types/project";
 
@@ -120,6 +126,46 @@ export async function updateTicketAction(input: unknown): Promise<DevBoardAction
     return { ok: true, data: ticket };
   } catch (error) {
     return failure(error, "Failed to update ticket.");
+  }
+}
+
+export async function adjustTicketTimeAction(
+  input: unknown,
+): Promise<DevBoardActionResult<Ticket>> {
+  if (!(await isAuthenticated())) {
+    return { ok: false, message: "You must be signed in to adjust ticket time." };
+  }
+
+  const parsed = ticketTimeAdjustSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Invalid adjustment." };
+  }
+
+  try {
+    const ticket = await devBoardService.adjustTicketTime(parsed.data);
+    return { ok: true, data: ticket };
+  } catch (error) {
+    return failure(error, "Failed to adjust ticket time.");
+  }
+}
+
+export async function getLastTimeEntryAction(
+  ticketId: unknown,
+): Promise<DevBoardActionResult<TimeEntry | null>> {
+  if (!(await isAuthenticated())) {
+    return { ok: false, message: "You must be signed in to load ticket time." };
+  }
+
+  const parsedId = z.uuid().safeParse(ticketId);
+  if (!parsedId.success) {
+    return { ok: false, message: "Invalid ticket." };
+  }
+
+  try {
+    const entry = await devBoardService.lastTimeEntry(parsedId.data);
+    return { ok: true, data: entry };
+  } catch (error) {
+    return failure(error, "Failed to load ticket time.");
   }
 }
 

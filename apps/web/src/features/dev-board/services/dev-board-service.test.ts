@@ -24,6 +24,7 @@ function createQueryMock(result: QueryResult) {
     range: vi.fn(),
     in: vi.fn(),
     insert: vi.fn(),
+    limit: vi.fn(),
     maybeSingle: vi.fn(),
     single: vi.fn(),
   };
@@ -31,6 +32,7 @@ function createQueryMock(result: QueryResult) {
   query.eq.mockReturnValue(query);
   query.order.mockReturnValue(query);
   query.insert.mockReturnValue(query);
+  query.limit.mockReturnValue(query);
   query.range.mockResolvedValue(result);
   query.in.mockResolvedValue(result);
   query.maybeSingle.mockResolvedValue(result);
@@ -234,5 +236,110 @@ describe("devBoardService.updateTicket handoff", () => {
         p_pr_url: "https://github.com/acme/forge/pull/17",
       }),
     );
+  });
+});
+
+describe("devBoardService.adjustTicketTime", () => {
+  it("sends the stop_at payload with a null duration", async () => {
+    database.rpc.mockResolvedValue({ data: ticketRow, error: null });
+
+    const result = await devBoardService.adjustTicketTime({
+      ticketId: "ticket-1",
+      action: "stop_at",
+      endedAt: "2026-09-12T20:00:00.000Z",
+    });
+
+    expect(database.rpc).toHaveBeenCalledWith("adjust_dev_board_ticket_time", {
+      p_ticket_id: "ticket-1",
+      p_action: "stop_at",
+      p_ended_at: "2026-09-12T20:00:00.000Z",
+      p_duration_ms: null,
+    });
+    expect(result.id).toBe("ticket-1");
+  });
+
+  it("sends duration payloads with a null end time", async () => {
+    database.rpc.mockResolvedValue({ data: ticketRow, error: null });
+
+    await devBoardService.adjustTicketTime({
+      ticketId: "ticket-1",
+      action: "set_last_duration",
+      durationMs: 3_600_000,
+    });
+    await devBoardService.adjustTicketTime({ ticketId: "ticket-1", action: "delete_last" });
+    await devBoardService.adjustTicketTime({
+      ticketId: "ticket-1",
+      action: "set_total",
+      durationMs: 0,
+    });
+
+    expect(database.rpc).toHaveBeenNthCalledWith(1, "adjust_dev_board_ticket_time", {
+      p_ticket_id: "ticket-1",
+      p_action: "set_last_duration",
+      p_ended_at: null,
+      p_duration_ms: 3_600_000,
+    });
+    expect(database.rpc).toHaveBeenNthCalledWith(2, "adjust_dev_board_ticket_time", {
+      p_ticket_id: "ticket-1",
+      p_action: "delete_last",
+      p_ended_at: null,
+      p_duration_ms: null,
+    });
+    expect(database.rpc).toHaveBeenNthCalledWith(3, "adjust_dev_board_ticket_time", {
+      p_ticket_id: "ticket-1",
+      p_action: "set_total",
+      p_ended_at: null,
+      p_duration_ms: 0,
+    });
+  });
+
+  it("surfaces RPC failures", async () => {
+    database.rpc.mockResolvedValue({ data: null, error: { message: "boom" } });
+
+    await expect(
+      devBoardService.adjustTicketTime({ ticketId: "ticket-1", action: "delete_last" }),
+    ).rejects.toThrow("boom");
+  });
+});
+
+describe("devBoardService.lastTimeEntry", () => {
+  const entryRow = {
+    id: "entry-1",
+    ticket_id: "ticket-1",
+    started_at: "2026-09-12T10:00:00.000Z",
+    ended_at: "2026-09-12T11:00:00.000Z",
+    duration_ms: 3_600_000,
+  };
+
+  it("returns the most recent entry mapped to camelCase", async () => {
+    const entries = createQueryMock({ data: entryRow, error: null });
+    database.from.mockReturnValue(entries);
+
+    const result = await devBoardService.lastTimeEntry("ticket-1");
+
+    expect(entries.eq).toHaveBeenCalledWith("ticket_id", "ticket-1");
+    expect(entries.order).toHaveBeenCalledWith("started_at", { ascending: false });
+    expect(entries.limit).toHaveBeenCalledWith(1);
+    expect(result).toEqual({
+      id: "entry-1",
+      ticketId: "ticket-1",
+      startedAt: "2026-09-12T10:00:00.000Z",
+      endedAt: "2026-09-12T11:00:00.000Z",
+      durationMs: 3_600_000,
+    });
+  });
+
+  it("returns null when the ticket has no entries", async () => {
+    const entries = createQueryMock({ data: null, error: null });
+    database.from.mockReturnValue(entries);
+
+    await expect(devBoardService.lastTimeEntry("ticket-1")).resolves.toBeNull();
+  });
+
+  it("surfaces query failures", async () => {
+    const entries = createQueryMock({ data: null, error: { message: "boom" } });
+    database.from.mockReturnValue(entries);
+
+    await expect(devBoardService.lastTimeEntry("ticket-1")).rejects.toThrow("boom");
   });
 });
