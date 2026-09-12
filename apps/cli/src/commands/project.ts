@@ -1,20 +1,12 @@
-import { createAuthedProjectsService } from "../insforge.js"
-import {
-  getFlagValue,
-  getPositionals,
-  hasFlag,
-} from "../flags.js"
+import { createAuthedProjectsService } from "../insforge.js";
+import { parseProjectCreateInput, parseProjectUpdateInput } from "@forge/core";
+import { getFlagValue, getPositionals, hasFlag } from "../flags.js";
 import {
   writeDeletedOutput,
   writeErrorOutput,
   writeProjectListOutput,
   writeProjectOutput,
-} from "../format.js"
-import {
-  parseProjectCreateInput,
-  parseProjectUpdateInput,
-} from "../project-schema.js"
-
+} from "../format.js";
 const PROJECT_HELP = `Usage:
   forge-cli project <command> [options]
 
@@ -44,120 +36,114 @@ Examples:
   forge-cli project get <id>
   forge-cli project update <id> --name "New name"
   forge-cli project delete <id>
-`
+`;
 
 function fail(message: string, json: boolean): void {
-  writeErrorOutput(message, json)
-  process.exitCode = 1
+  writeErrorOutput(message, json);
+  process.exitCode = 1;
 }
 
 async function runCreate(args: string[]): Promise<void> {
-  const json = hasFlag(args, "--json")
+  const json = hasFlag(args, "--json");
   const input = parseProjectCreateInput({
     name: getFlagValue(args, "--name"),
     description: getFlagValue(args, "--description") ?? "",
-  })
+  });
 
   if ("error" in input) {
-    fail(input.error, json)
-    return
+    fail(input.error, json);
+    return;
   }
 
-  const service = await createAuthedProjectsService()
-  const project = await service.create(input)
-  writeProjectOutput(project, json)
+  const service = await createAuthedProjectsService();
+  const project = await service.create(input);
+  writeProjectOutput(project, json);
 }
 
 async function runList(args: string[]): Promise<void> {
-  const json = hasFlag(args, "--json")
-  const service = await createAuthedProjectsService()
-  const projects = await service.list()
-  writeProjectListOutput(projects, json)
+  const json = hasFlag(args, "--json");
+  const service = await createAuthedProjectsService();
+  const projects = await service.list();
+  writeProjectListOutput(projects, json);
 }
 
 async function runGet(args: string[]): Promise<void> {
-  const json = hasFlag(args, "--json")
-  const [id] = getPositionals(args)
+  const json = hasFlag(args, "--json");
+  const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing project id.\n\nUsage: forge-cli project get <id>", json)
-    return
+    fail("Missing project id.\n\nUsage: forge-cli project get <id>", json);
+    return;
   }
 
-  const service = await createAuthedProjectsService()
-  const project = await service.get(id)
-  writeProjectOutput(project, json)
+  const service = await createAuthedProjectsService();
+  const project = await service.get(id);
+  writeProjectOutput(project, json);
 }
 
 async function runUpdate(args: string[]): Promise<void> {
-  const json = hasFlag(args, "--json")
-  const [id] = getPositionals(args)
+  const json = hasFlag(args, "--json");
+  const [id] = getPositionals(args);
   if (!id) {
-    fail(
-      "Missing project id.\n\nUsage: forge-cli project update <id> [--name …]",
-      json,
-    )
-    return
+    fail("Missing project id.\n\nUsage: forge-cli project update <id> [--name …]", json);
+    return;
   }
 
-  const raw: Record<string, unknown> = {}
-  const name = getFlagValue(args, "--name")
-  const description = getFlagValue(args, "--description")
+  const raw: Record<string, unknown> = {};
+  const name = getFlagValue(args, "--name");
+  const description = getFlagValue(args, "--description");
 
-  if (name !== undefined) raw.name = name
-  if (description !== undefined) raw.description = description
+  if (name !== undefined) raw.name = name;
+  if (description !== undefined) raw.description = description;
 
-  const input = parseProjectUpdateInput(raw)
+  const input = parseProjectUpdateInput(raw);
   if ("error" in input) {
-    fail(input.error, json)
-    return
+    fail(input.error, json);
+    return;
   }
 
-  const service = await createAuthedProjectsService()
-  const project = await service.update(id, input)
-  writeProjectOutput(project, json)
+  const service = await createAuthedProjectsService();
+  const project = await service.update(id, input);
+  writeProjectOutput(project, json);
 }
 
 async function runDelete(args: string[]): Promise<void> {
-  const json = hasFlag(args, "--json")
-  const [id] = getPositionals(args)
+  const json = hasFlag(args, "--json");
+  const [id] = getPositionals(args);
   if (!id) {
-    fail("Missing project id.\n\nUsage: forge-cli project delete <id>", json)
-    return
+    fail("Missing project id.\n\nUsage: forge-cli project delete <id>", json);
+    return;
   }
 
-  const service = await createAuthedProjectsService()
-  await service.delete(id)
-  writeDeletedOutput("project", id, json)
+  const service = await createAuthedProjectsService();
+  await service.delete(id);
+  writeDeletedOutput("project", id, json);
 }
 
 export async function runProject(args: string[]): Promise<void> {
   if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
-    process.stdout.write(`${PROJECT_HELP}\n`)
-    return
+    process.stdout.write(`${PROJECT_HELP}\n`);
+    return;
   }
 
-  const [subcommand, ...rest] = args
+  const [subcommand, ...rest] = args;
 
   switch (subcommand) {
     case "create":
-      await runCreate(rest)
-      return
+      await runCreate(rest);
+      return;
     case "list":
-      await runList(rest)
-      return
+      await runList(rest);
+      return;
     case "get":
-      await runGet(rest)
-      return
+      await runGet(rest);
+      return;
     case "update":
-      await runUpdate(rest)
-      return
+      await runUpdate(rest);
+      return;
     case "delete":
-      await runDelete(rest)
-      return
+      await runDelete(rest);
+      return;
     default:
-      fail(
-        `Unknown project command: ${subcommand}\n\n${PROJECT_HELP}`,
-        hasFlag(args, "--json"),
-      )
+      fail(`Unknown project command: ${subcommand}\n\n${PROJECT_HELP}`, hasFlag(args, "--json"));
   }
 }

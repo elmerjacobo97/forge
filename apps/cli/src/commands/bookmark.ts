@@ -1,5 +1,5 @@
 import { createAuthedBookmarksService } from "../insforge.js";
-import { parseBookmarkCreateInput, parseBookmarkUpdateInput } from "../bookmark-schema.js";
+import { CATEGORIES, parseBookmarkCreateInput, parseBookmarkUpdateInput } from "@forge/core";
 import {
   getFlagValue,
   getPositionals,
@@ -13,7 +13,6 @@ import {
   writeDeletedOutput,
   writeErrorOutput,
 } from "../format.js";
-import { CATEGORIES } from "../types.js";
 
 const BOOKMARK_HELP = `Usage:
   forge-cli bookmark <command> [options]
@@ -111,10 +110,7 @@ async function runUpdate(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json");
   const [id] = getPositionals(args);
   if (!id) {
-    fail(
-      "Missing bookmark id.\n\nUsage: forge-cli bookmark update <id> [--title …]",
-      json,
-    );
+    fail("Missing bookmark id.\n\nUsage: forge-cli bookmark update <id> [--title …]", json);
     return;
   }
 
@@ -180,9 +176,6 @@ export async function runBookmark(args: string[]): Promise<void> {
       await runDelete(rest);
       return;
     default:
-      fail(
-        `Unknown bookmark command: ${subcommand}\n\n${BOOKMARK_HELP}`,
-        hasFlag(args, "--json"),
-      );
+      fail(`Unknown bookmark command: ${subcommand}\n\n${BOOKMARK_HELP}`, hasFlag(args, "--json"));
   }
 }

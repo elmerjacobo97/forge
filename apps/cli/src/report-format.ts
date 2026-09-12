@@ -1,4 +1,4 @@
-import type { ActivityReport, TicketEvent } from "./types.js";
+import type { ActivityReport, TicketEvent } from "@forge/core";
 
 export function formatEventText(event: TicketEvent): string {
   if (event.eventType === "moved") {

@@ -1,6 +1,4 @@
-import { createActivityService } from "../activity-service.js";
 import { createAuthedClient, createAuthedDevBoardService } from "../insforge.js";
-import { createDevBoardService } from "../dev-board-service.js";
 import { getFlagValue, getFlagValues, getPositionals, hasFlag } from "../flags.js";
 import {
   writeCommentListOutput,
@@ -11,18 +9,25 @@ import {
   writeTicketListOutput,
   writeTicketOutput,
 } from "../format.js";
-import { createProjectsService } from "../projects-service.js";
-import { groupActivity, resolveReportWindow } from "../report-helpers.js";
 import { writeReportOutput } from "../report-format.js";
 import {
+  COLUMNS,
+  PRIORITIES,
+  createActivityService,
+  createDevBoardService,
+  createProjectsService,
+  groupActivity,
   parseColumnId,
   parseTicketCommentInput,
   parseTicketCreateInput,
   parseTicketMoveInput,
   parseTicketReportInput,
   parseTicketUpdateInput,
-} from "../ticket-schema.js";
-import { COLUMNS, PRIORITIES, type ActivityReport, type ColumnId, type Ticket } from "../types.js";
+  resolveReportWindow,
+  type ActivityReport,
+  type ColumnId,
+  type Ticket,
+} from "@forge/core";
 
 const TICKET_HELP = `Usage:
   forge-cli ticket <command> [options]

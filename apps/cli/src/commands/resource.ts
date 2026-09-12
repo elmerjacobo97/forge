@@ -1,5 +1,10 @@
 import { createAuthedResourcesService } from "../insforge.js";
-import { parseResourceCreateInput, parseResourceUpdateInput } from "../resource-schema.js";
+import {
+  RESOURCE_KINDS,
+  RESOURCE_TOOLS,
+  parseResourceCreateInput,
+  parseResourceUpdateInput,
+} from "@forge/core";
 import {
   getFlagValue,
   getPositionals,
@@ -13,7 +18,6 @@ import {
   writeResourceListOutput,
   writeResourceOutput,
 } from "../format.js";
-import { RESOURCE_KINDS, RESOURCE_TOOLS } from "../types.js";
 
 const RESOURCE_HELP = `Usage:
   forge-cli resource <command> [options]
@@ -148,10 +152,7 @@ async function runUpdate(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json");
   const [id] = getPositionals(args);
   if (!id) {
-    fail(
-      "Missing resource id.\n\nUsage: forge-cli resource update <id> [--title …]",
-      json,
-    );
+    fail("Missing resource id.\n\nUsage: forge-cli resource update <id> [--title …]", json);
     return;
   }
 
@@ -209,9 +210,6 @@ export async function runResource(args: string[]): Promise<void> {
       await runDelete(rest);
       return;
     default:
-      fail(
-        `Unknown resource command: ${subcommand}\n\n${RESOURCE_HELP}`,
-        hasFlag(args, "--json"),
-      );
+      fail(`Unknown resource command: ${subcommand}\n\n${RESOURCE_HELP}`, hasFlag(args, "--json"));
   }
 }

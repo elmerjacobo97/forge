@@ -1,6 +1,6 @@
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import type { ListOptions } from "./types.js";
+import type { ListOptions } from "@forge/core";
 
 export function getFlagValue(args: string[], name: string): string | undefined {
   const index = args.indexOf(name);
