@@ -115,6 +115,7 @@ describe("devBoardService.fetchTicketPage", () => {
       }),
     ]);
     expect(comments.in).toHaveBeenCalledWith("ticket_id", ["ticket-1"]);
+    expect(tickets.order).toHaveBeenCalledWith("created_at", { ascending: false });
     expect(tickets.range).toHaveBeenCalledWith(0, 24);
     expect(page.nextCursor).toBeNull();
     expect(page.total).toBe(1);

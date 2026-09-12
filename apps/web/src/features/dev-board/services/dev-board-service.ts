@@ -141,7 +141,7 @@ export const devBoardService = {
       .select(TICKET_COLUMNS, { count: "exact" })
       .eq("project_id", projectId)
       .eq("column_id", column)
-      .order("position", { ascending: false })
+      .order("created_at", { ascending: false })
       .range(offset, offset + TICKETS_PAGE_SIZE - 1);
     if (error) throw failure(error, "Failed to load tickets.");
     const tickets = ticketRowSchema.array().parse(data).map(toTicket);

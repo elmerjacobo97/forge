@@ -29,13 +29,13 @@ export function TicketCommentsDialog({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-h-[90vh] max-w-md grid-rows-[auto_minmax(0,1fr)] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-h-[90vh] max-w-md grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:max-w-md">
+        <DialogHeader className="min-w-0">
           <DialogTitle>Comments</DialogTitle>
-          <DialogDescription className="truncate">{ticket?.title ?? ""}</DialogDescription>
+          <DialogDescription className="line-clamp-2">{ticket?.title ?? ""}</DialogDescription>
         </DialogHeader>
 
-        <div className="-mx-4 min-h-0 max-h-[50vh] overflow-y-auto px-4 py-1">
+        <div className="-mx-4 min-h-0 min-w-0 max-h-[50vh] overflow-y-auto px-4 py-1">
           {ticket ? (
             <TicketComments
               ticketId={ticket.id}
