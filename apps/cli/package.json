@@ -27,7 +27,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "build": "node ./scripts/build.mjs && tsc --noEmit",
     "check-release-tag": "node ./scripts/check-release-tag.mjs",
     "forge-cli": "node ./bin/forge-cli.js",
     "test": "vitest run",
@@ -39,9 +39,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@forge/core": "workspace:*",
     "@types/node": "^25.9.3",
     "@vitest/coverage-v8": "^4.1.11",
+    "esbuild": "^0.28.2",
     "typescript": "~5.8.3",
     "vitest": "^4.1.10"
   }
