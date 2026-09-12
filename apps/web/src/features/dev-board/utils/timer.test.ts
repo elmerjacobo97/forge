@@ -8,6 +8,7 @@ import {
   endTimeFromDuration,
   pauseTimer,
   resumeTimer,
+  runningSegmentMs,
   startTimer,
   stopTimer,
 } from "./timer";
@@ -64,6 +65,21 @@ describe("ticket timer", () => {
       totalElapsedMs: 5_000,
       isPaused: false,
     });
+  });
+});
+
+describe("runningSegmentMs", () => {
+  it("measures only the current run and ignores the saved total", () => {
+    const ticket = createTicket({
+      timerStartedAt: "2026-07-11T15:00:00.000Z",
+      totalElapsedMs: 3_600_000,
+    });
+
+    expect(runningSegmentMs(ticket, Date.parse("2026-07-11T15:10:00.000Z"))).toBe(600_000);
+  });
+
+  it("returns null when the timer is not running", () => {
+    expect(runningSegmentMs(createTicket(), Date.now())).toBeNull();
   });
 });
 

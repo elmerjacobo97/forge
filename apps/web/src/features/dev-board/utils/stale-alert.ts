@@ -1,6 +1,6 @@
 import type { Ticket } from "../types/board";
 import { isTimerColumn, STALE_THRESHOLD_MS } from "../types/board";
-import { computeElapsed, formatDuration } from "./timer";
+import { formatDuration, runningSegmentMs } from "./timer";
 
 const alertedKey = "forge_devboard:alerted";
 
@@ -34,14 +34,14 @@ export function checkStaleTickets(
       return;
     }
 
-    const sinceMove = now - new Date(ticket.lastMovedAt).getTime();
-    if (sinceMove < STALE_THRESHOLD_MS || alerted.has(ticket.id)) return;
+    const sessionMs = runningSegmentMs(ticket, now) ?? 0;
+    if (sessionMs < STALE_THRESHOLD_MS || alerted.has(ticket.id)) return;
 
     alerted.add(ticket.id);
     changed = true;
     if ("Notification" in window && Notification.permission === "granted") {
       new Notification("Ticket stale", {
-        body: `"${ticket.title}" in progress for ${formatDuration(computeElapsed(ticket, now))}. Update?`,
+        body: `"${ticket.title}" in progress for ${formatDuration(sessionMs)}. Update?`,
       });
     }
   });

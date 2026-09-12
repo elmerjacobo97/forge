@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Ticket } from "../types/board";
-import { isStaleSession, runningSessionMs, staleSessionMsForMove } from "./stale-session";
+import { runningSessionMs, staleSessionMsForMove } from "./stale-session";
 
 const NOW = Date.parse("2026-09-12T12:00:00.000Z");
 const TWO_HOURS = 7_200_000;
@@ -35,32 +35,16 @@ describe("runningSessionMs", () => {
     expect(runningSessionMs(makeTicket(), NOW)).toBe(TWO_HOURS);
   });
 
-  it("adds previously logged time of the same session", () => {
+  it("ignores previously logged time from earlier sessions", () => {
     const ticket = makeTicket({ totalElapsedMs: 3_600_000 });
 
-    expect(runningSessionMs(ticket, NOW)).toBe(3 * 3_600_000);
+    expect(runningSessionMs(ticket, NOW)).toBe(TWO_HOURS);
   });
 
   it("returns null when paused, stopped or outside a timer column", () => {
     expect(runningSessionMs(makeTicket({ isPaused: true }), NOW)).toBeNull();
     expect(runningSessionMs(makeTicket({ timerStartedAt: null }), NOW)).toBeNull();
     expect(runningSessionMs(makeTicket({ column: "review" }), NOW)).toBeNull();
-  });
-});
-
-describe("isStaleSession", () => {
-  it("marks sessions above the two hour threshold as stale", () => {
-    expect(isStaleSession(makeTicket({ timerStartedAt: startedAgo(TWO_HOURS + 1) }), NOW)).toBe(
-      true,
-    );
-    expect(isStaleSession(makeTicket({ timerStartedAt: startedAgo(3 * 3_600_000) }), NOW)).toBe(
-      true,
-    );
-  });
-
-  it("does not mark exactly two hours or less as stale", () => {
-    expect(isStaleSession(makeTicket(), NOW)).toBe(false);
-    expect(isStaleSession(makeTicket({ timerStartedAt: startedAgo(3_600_000) }), NOW)).toBe(false);
   });
 });
 

@@ -3,7 +3,7 @@
 > **Estado:** Aprobado
 > **Depende de:** SPEC 03 — CLI Forge para tickets; SPEC 04 — Dev Board proyectos; SPEC 17 — Loop de agente sobre tickets (tabla de comentarios)
 > **Fecha:** 2026-09-12
-> **Objetivo:** Permitir corregir el tiempo registrado de un ticket (retro-pausa, editar o borrar su última sesión, con rastro en comentarios) y avisar en el board cuando una sesión activa supera el umbral.
+> **Objetivo:** Permitir corregir el tiempo registrado de un ticket (retro-pausa, editar o borrar su última sesión, con rastro en comentarios) y avisar al mover un ticket cuando la sesión activa supera el umbral.
 
 ## Alcance
 
@@ -15,7 +15,7 @@
 - Web: dialog `Adjust time` con inputs de horas/minutos, presets 30m/1h/2h/4h y preview del end time resultante; edita la sesión actual si el timer corre y la última sesión si está detenido.
 - Item "Adjust time" en el menú de la tarjeta cuando `timerActive || totalElapsedMs > 0`.
 - Prompt al mover un ticket fuera de columna timer si la sesión supera las 2 horas: Keep / Adjust (Adjust abre el dialog).
-- Banner de sesiones largas en el board: hasta 3 tickets ordenados por tiempo, con acciones Adjust / Pause / X; dismiss por sesión en `sessionStorage`.
+- Fix de semántica: `runningSegmentMs` mide solo la corrida actual; el prefill del dialog y el prompt ignoran el `total_elapsed_ms` acumulado de sesiones previas.
 - Fix de anclaje de la notificación browser existente: usa `timer_started_at` en vez de `last_moved_at`; umbral de 25 minutos intacto.
 - Tests web de schemas, servicios, actions, helpers de tiempo, utilidades stale y dialog (patrón jsdom existente).
 - Auditoría one-off posterior: query de solo lectura a `dev_board_time_entries` con duraciones > 3h, reporte en el chat.
@@ -32,7 +32,7 @@
 - Vista con historial completo de sesiones por ticket.
 - Nuevo tipo de evento en `dev_board_events`; la auditoría va por comentarios.
 - Timeline o feed de actividad en la web.
-- Garantía de que el banner vea tickets fuera de la primera página (25 por columna).
+- Banner de sesiones largas en el board; descartado en validation (2026-09-12) por el owner: no aporta y duplica el aviso del prompt al mover.
 - Cambios en `apps/web/src/components/ui` y en el esquema de tablas existentes (la migración solo crea una función).
 
 ## Data model
@@ -84,21 +84,20 @@ El dialog lee la última entry con el tipo `TimeEntry` ya existente (`types/anal
 
 Constantes:
 
-- `STALE_BANNER_THRESHOLD_MS = 7_200_000` (2h) en `types/board.ts`.
-- `STALE_BANNER_MAX = 3` tickets visibles en el banner.
+- `STALE_SESSION_THRESHOLD_MS = 7_200_000` (2h) en `types/board.ts`, usado por el prompt al mover y por la detección stale.
 - `STALE_THRESHOLD_MS = 25 min` (existente) se conserva para la notificación browser.
 
 ## Plan de implementación
 
 1. Crear `migrations/20260912120000_adjust-ticket-time.sql` con el RPC `adjust_dev_board_ticket_time`: las cuatro acciones, validaciones, comentario de auditoría y recálculo de `total_elapsed_ms`. Es aditiva: no toca tablas, RLS ni grants. Pedir al usuario aplicarla con InsForge CLI antes de la verificación manual; ningún paso posterior depende de ella para correr tests. Rollback documentado: `DROP FUNCTION IF EXISTS public.adjust_dev_board_ticket_time(UUID, TEXT, TIMESTAMPTZ, BIGINT)`.
-2. Web schemas y tipos: `ticketTimeAdjustSchema` (union discriminada) en `schemas/ticket.ts`; `STALE_BANNER_THRESHOLD_MS = 7_200_000` y `STALE_BANNER_MAX = 3` en `types/board.ts`. Tests de parsing para cada acción.
+2. Web schemas y tipos: `ticketTimeAdjustSchema` (union discriminada) en `schemas/ticket.ts`; `STALE_SESSION_THRESHOLD_MS = 7_200_000` en `types/board.ts`. Tests de parsing para cada acción.
 3. Web servicio: `adjustTicketTime(input)` invoca el RPC y `lastTimeEntry(ticketId)` lee la última time entry (grant SELECT ya existente), reutilizando el tipo `TimeEntry`. Tests de servicio con los mocks de InsForge existentes.
 4. Web actions: `adjustTicketTimeAction` y `getLastTimeEntryAction`, con re-check de sesión y validación Zod, siguiendo el patrón de `updateTicketAction`. Tests de auth y parseo.
 5. Helpers de tiempo en `utils/timer.ts`: H/M a ms, ms a partes, preview de `ended_at`. Tests unitarios.
 6. Dialog `ticket-time-dialog.tsx`: inputs H/M, presets 30m/1h/2h/4h y preview del end time. Con timer corriendo envía `stop_at`; detenido edita (`set_last_duration`) o borra (`delete_last`) la última sesión; sin entries muestra el fallback `set_total`. Estados de carga, error y toast. Test jsdom siguiendo `password-generator.test.tsx`.
 7. Menú de tarjeta: item "Adjust time" con icono Clock visible cuando `timerActive || totalElapsedMs > 0`; prop `onAdjust` por `ticket-card.tsx` y `column-view.tsx`.
 8. `project-board.tsx`: estado del dialog, update del board con el ticket devuelto, incremento local de `commentCount` cuando hubo comentario, y prompt post-move (`stale-move-prompt.tsx`) al salir de una columna timer con sesión mayor a 2h: Keep / Adjust.
-9. Banner: `utils/stale-banner.ts` (detección por `timer_started_at` + dismiss por sesión en `sessionStorage`) y `components/stale-tickets-banner.tsx` (hasta 3 tickets, Adjust / Pause / X) arriba de las columnas. Tests de la utilidad.
+9. Fix de semántica: `runningSegmentMs` en `utils/timer.ts` mide solo la corrida actual (sin `total_elapsed_ms`); `utils/stale-session.ts` lo usa para el umbral de 2h y el dialog prefillea el modo corriendo con esa base. Tests unitarios.
 10. Fix de `utils/stale-alert.ts`: anclar la notificación browser a `timerStartedAt` en lugar de `lastMovedAt`, manteniendo los 25 minutos. Crear `stale-alert.test.ts` (hoy no existe) cubriendo el falso positivo post-resume.
 11. Verificación: `pnpm test:web`, `pnpm build:web`, `pnpm lint` y Prettier solo sobre los archivos tocados. Luego aplicar la migración, corregir el ticket real olvidado y revisar card + analytics.
 
@@ -120,6 +119,7 @@ Constantes:
 
 - [ ] El menú de la tarjeta muestra "Adjust time" cuando el timer está activo o `totalElapsedMs > 0`.
 - [ ] Con el timer corriendo, el dialog muestra la sesión actual, presets y preview del end time; guardar con "ahora" pausa el timer.
+- [ ] Con el timer corriendo y sesiones previas registradas, el prefill y el máximo editable usan solo la corrida actual, no el total acumulado.
 - [ ] Con el timer detenido, el dialog edita la última sesión; borrarla deja el total en la suma de las entries restantes.
 - [ ] Sin entries y con `totalElapsedMs > 0`, el dialog muestra el fallback "Set total time".
 - [ ] Un ajuste exitoso actualiza la tarjeta sin recargar, incluido el `commentCount` cuando hubo comentario.
@@ -127,12 +127,8 @@ Constantes:
 - [ ] Mover un ticket fuera de columna timer con sesión mayor a 2h muestra Keep / Adjust; Keep cierra el aviso sin cambios y Adjust abre el dialog.
 - [ ] Mover con sesión de 2h o menos no muestra prompt.
 
-**Web — banner y notificación:**
+**Web — notificación:**
 
-- [ ] El banner lista tickets corriendo más de 2h, ordenados por tiempo descendente, máximo 3.
-- [ ] Adjust abre el dialog del ticket correspondiente; Pause pausa sin recargar la página; X lo oculta por sesión y no reaparece al refrescar dentro de la misma sesión.
-- [ ] Un ticket pausado o con timer detenido no aparece en el banner.
-- [ ] Tras ajustar o pausar, el ticket desaparece del banner.
 - [ ] La notificación browser usa `timer_started_at` y ya no se dispara al reanudar un timer pausado hacía mucho.
 
 **General:**
@@ -152,35 +148,34 @@ Constantes:
 - **Sí:** auditoría por comentario con autor `user` (formato `Timer adjusted: X → Y`). Evento `adjusted` descartado: exigiría migrar el CHECK, `EVENT_TYPES` del core y el zod de Analytics, y un comentario ya es visible en la UI.
 - **Sí:** el comentario se omite cuando `stop_at` cae en "ahora" (tolerancia de 1 minuto); pausar normal no debe llenar el hilo.
 - **Sí:** prompt Keep / Adjust al mover fuera de columna timer con sesión mayor a 2h. Preguntar siempre descartado: fricción diaria.
-- **Sí:** banner persistente en el board (máximo 3, orden por tiempo, Adjust / Pause / X, dismiss por sesión). Toast descartado: se autodestruye antes de que reacciones.
+- **No:** banner de sesiones largas en el board. Descartado en validation (2026-09-12): no aportaba y duplicaba el aviso del prompt; el código quedó fuera de la spec.
 - **Sí:** detección stale anclada en `timer_started_at`. `last_moved_at` descartado: resume no lo actualiza y produce falsos positivos.
 - **Sí:** fix mínimo de la notificación browser existente (mismo anclaje, umbral de 25 min intacto). Eliminarla descartado: sigue siendo útil en sesiones normales.
-- **Sí:** el banner considera solo los tickets cargados (25 por columna). Query dedicada descartada por optimización prematura; se acota en la spec.
+- **Sí:** `runningSegmentMs` mide solo la corrida actual. `computeElapsed` (total + corrida) sigue siendo la base del display del timer, pero no del umbral ni del prefill del ajuste.
 - **Sí:** limpieza histórica como auditoría one-off con query de solo lectura. Vista permanente de sesiones descartada por ahora.
 - **Sí:** sin tool MCP de escritura ni comando CLI de ajuste. El MCP remoto mantiene su contrato read-only (SPEC 18) y la web-first cubre el caso.
 - **Sí:** ticket separado para la migración `sonner` → `sileo`; no mezclar 8 features en este fix.
-- **Sí:** un ticket por feature en Forge (adjust, banner, sileo) para que las stats semanales reflejen el trabajo real.
+- **Sí:** un ticket por feature en Forge (adjust, avisos de sesión, sileo) para que las stats semanales reflejen el trabajo real.
 - **Sí:** branch dedicado, commits por unidad y PR con validaciones, como el resto del repo.
 - **No:** auto-pausa por cron. Puede cortar trabajo legítimo; si el olvido persiste, se evalúa en su propia spec.
-- **No:** email o push. Infra y spam para un problema que el banner resuelve al volver.
+- **No:** email o push. Infra y spam para un problema que el prompt resuelve al mover.
 - **No:** botón de ajuste en Analytics; esa vista se mantiene de solo lectura.
 - **No:** nuevo tipo de evento `adjusted`; la tabla de eventos conserva sus seis valores.
 - **No:** cambios en `apps/web/src/components/ui`.
 
 ## Riesgos
 
-| Riesgo                                                                      | Mitigación                                                                                                                                 |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Ajustar `ended_at` mueve el tiempo registrado a otro día en `loggedTime`    | Aceptado y documentado: `loggedTime` agrupa por `ended_at`; el usuario elige la hora real en la que dejó de trabajar.                      |
-| `set_total` rompe la invariante si convive con entries                      | El RPC lo rechaza con error claro cuando existen entries; caso cubierto en los tests de servicio.                                          |
-| La hora "ahora" de la UI casi nunca coincide con `now` del servidor         | Tolerancia de 1 minuto para el comentario de auditoría, documentada y testeada; pausar normal nunca comenta.                               |
-| Carrera entre un ajuste y un move/pause concurrente                         | El RPC toma el ticket con `FOR UPDATE`, igual que `move_dev_board_ticket` y `set_dev_board_ticket_timer`.                                  |
-| El banner solo ve la primera página (25 por columna) y omite tickets viejos | Limitación declarada en el alcance; si duele, se resuelve con una query dedicada en su propia spec.                                        |
-| Prompt de Keep / Adjust con trabajo legítimo mayor a 2h                     | El prompt aparece después del move y no lo bloquea; Keep cierra sin cambios. Adjust es opcional.                                           |
-| Doble submit del dialog duplica pausas o comentarios                        | Botón deshabilitado durante el envío y estado de carga; `stop_at` falla si el timer ya no está corriendo.                                  |
-| `delete_last` borra la única sesión por error                               | Sin undo; el comentario de auditoría registra la duración eliminada (`→ removed`) y el error se hace visible en el hilo del ticket.        |
-| La notificación browser sigue necesitando la pestaña abierta                | Fuera de alcance por decisión: el banner cubre el caso real cuando el usuario vuelve al board.                                             |
-| Migración aplicada sobre el proyecto compartido                             | Aditiva (solo crea una función) con rollback `DROP FUNCTION`; se aplica con InsForge CLI antes del smoke y se verifica con el ticket real. |
+| Riesgo                                                                   | Mitigación                                                                                                                                 |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Ajustar `ended_at` mueve el tiempo registrado a otro día en `loggedTime` | Aceptado y documentado: `loggedTime` agrupa por `ended_at`; el usuario elige la hora real en la que dejó de trabajar.                      |
+| `set_total` rompe la invariante si convive con entries                   | El RPC lo rechaza con error claro cuando existen entries; caso cubierto en los tests de servicio.                                          |
+| La hora "ahora" de la UI casi nunca coincide con `now` del servidor      | Tolerancia de 1 minuto para el comentario de auditoría, documentada y testeada; pausar normal nunca comenta.                               |
+| Carrera entre un ajuste y un move/pause concurrente                      | El RPC toma el ticket con `FOR UPDATE`, igual que `move_dev_board_ticket` y `set_dev_board_ticket_timer`.                                  |
+| Prompt de Keep / Adjust con trabajo legítimo mayor a 2h                  | El prompt aparece después del move y no lo bloquea; Keep cierra sin cambios. Adjust es opcional.                                           |
+| Doble submit del dialog duplica pausas o comentarios                     | Botón deshabilitado durante el envío y estado de carga; `stop_at` falla si el timer ya no está corriendo.                                  |
+| `delete_last` borra la única sesión por error                            | Sin undo; el comentario de auditoría registra la duración eliminada (`→ removed`) y el error se hace visible en el hilo del ticket.        |
+| La notificación browser sigue necesitando la pestaña abierta             | Fuera de alcance por decisión: el prompt al mover cubre el caso real cuando el usuario mueve el ticket.                                    |
+| Migración aplicada sobre el proyecto compartido                          | Aditiva (solo crea una función) con rollback `DROP FUNCTION`; se aplica con InsForge CLI antes del smoke y se verifica con el ticket real. |
 
 ## Qué **no** está en esta spec
 
@@ -192,7 +187,7 @@ Constantes:
 - Edición de cualquier time entry y vista de historial completo de sesiones.
 - Nuevo tipo de evento `adjusted` en `dev_board_events`.
 - Timeline o feed de actividad en la web.
-- Garantía de cobertura del banner sobre tickets fuera de la primera página.
+- Banner de sesiones largas en el board (descartado en validation; el aviso vive en el prompt al mover y la notificación browser).
 - Cambios en `apps/web/src/components/ui`.
 
 Cada elemento futuro deberá definirse en su propia spec.
