@@ -5,6 +5,7 @@ import {
   resolveUpdateEventType,
   startTimer,
   stopTimer,
+  toTicketSummary,
 } from "../../src/dev-board-helpers.js";
 import type { Ticket } from "../../src/types.js";
 
@@ -34,6 +35,30 @@ function ticket(
     ...overrides,
   };
 }
+
+describe("toTicketSummary", () => {
+  it("keeps board-level data and drops heavy fields", () => {
+    const summary = toTicketSummary(
+      ticket("t1", "todo", 0, {
+        description: "long text",
+        branch: "feat/x",
+        prUrl: "https://example.com/pr/1",
+      }),
+    );
+
+    expect(summary).toEqual({
+      id: "t1",
+      projectId: "project-1",
+      title: "t1",
+      column: "todo",
+      priority: "med",
+      branch: "feat/x",
+      prUrl: "https://example.com/pr/1",
+      createdAt: "2026-07-11T15:00:00.000Z",
+    });
+    expect("description" in summary).toBe(false);
+  });
+});
 
 describe("positionAtEnd", () => {
   it("returns 0 for an empty column", () => {
