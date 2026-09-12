@@ -4,6 +4,7 @@
 
 - `apps/web` is the Next.js 16 application (`@forge/web`). Routes live in `src/app`; feature code belongs in `src/features/<feature>`, shared UI in `src/components`, and reusable infrastructure in `src/lib`.
 - `apps/cli` is the Node/TypeScript CLI (`@codigoconelmer/forge-cli`, binary `forge-cli`). Its source is under `src`, tests under `tests/`, executable entrypoint under `bin`, and release checks under `scripts`.
+- `packages/forge-core` is the private shared core (`@forge/core`): InsForge schemas, services, helpers, and types consumed by the CLI. Keep it free of `node:*` imports; config/session file access stays in `apps/cli`.
 - Database migrations are in `migrations/`; supporting documentation and specifications are in `docs/` and `specs/`. Web tests are colocated with their feature modules; CLI tests live grouped under `apps/cli/tests/`.
 - Keep the product web-first; do not add Tauri, Rust, native IPC, or desktop-only dependencies.
 
@@ -12,17 +13,17 @@
 ```bash
 pnpm install              # Install workspace dependencies
 pnpm dev                  # Start the web app
-pnpm build                # Build web, then CLI (also typechecks)
-pnpm test                 # Run web and CLI Vitest suites
-pnpm test:watch           # Run both suites in watch mode (parallel)
-pnpm test:coverage        # Run both suites with V8 coverage reports
+pnpm build                # Build core, then web and CLI (also typechecks)
+pnpm test                 # Run core, web and CLI Vitest suites
+pnpm test:watch           # Run all suites in watch mode (parallel)
+pnpm test:coverage        # Run all suites with V8 coverage reports
 pnpm lint                 # Run ESLint
 pnpm format               # Format files with Prettier
 pnpm format:check         # Check Prettier formatting
 pnpm doctor               # Run the web React Doctor check
 ```
 
-Use `pnpm build:web`, `pnpm build:cli`, `pnpm test:web`, or `pnpm test:cli` to focus a package. Run one web test with `pnpm --filter @forge/web exec vitest run --config tests.config.ts <path>` (`tests.config.ts`, not `vitest.config.ts`, so react-doctor does not misdetect Vite); for the CLI, `pnpm --filter ./apps/cli exec vitest run tests/<group>/<file>.test.ts`. Coverage lives under each app's `coverage/` directory. For CLI releases, run `pnpm check-cli-release-tag -- vX.Y.Z`.
+Use `pnpm build:core`, `pnpm build:web`, `pnpm build:cli`, `pnpm test:core`, `pnpm test:web`, or `pnpm test:cli` to focus a package. Run one web test with `pnpm --filter @forge/web exec vitest run --config tests.config.ts <path>` (`tests.config.ts`, not `vitest.config.ts`, so react-doctor does not misdetect Vite); for the CLI and core, `pnpm --filter <pkg> exec vitest run tests/<group>/<file>.test.ts`. Coverage lives under each package's `coverage/` directory. For CLI releases, run `pnpm check-cli-release-tag -- vX.Y.Z`.
 
 ## Code Style and Conventions
 
@@ -33,7 +34,8 @@ Use strict TypeScript, two-space indentation, semicolons, double quotes, and tra
 Vitest uses globals and Node by default in the web app; opt into a DOM environment per web test with `// @vitest-environment jsdom`. Name tests `*.test.ts` or `*.test.tsx`.
 
 - **Web** (`apps/web`): colocate each test next to the module it covers (`src/features/<feature>/utils/<module>.test.ts`). Shared setup lives in `src/test/setup.ts` (it mocks `server-only`) and is registered through `setupFiles` in `tests.config.ts`.
-- **CLI** (`apps/cli`): group tests under `apps/cli/tests/{schemas,services,lib,commands}/` following the module they cover, and keep reusable mocks in `apps/cli/tests/helpers/`. Import `describe`/`expect`/`it`/`vi` explicitly; the CLI does not enable Vitest globals.
+- **CLI** (`apps/cli`): CLI-only tests live under `apps/cli/tests/lib/` (config, session, flags, format). Import `describe`/`expect`/`it`/`vi` explicitly; the CLI does not enable Vitest globals.
+- **Core** (`packages/forge-core`): group tests under `packages/forge-core/tests/{schemas,services,lib}/` and keep reusable InsForge client mocks in `packages/forge-core/tests/helpers/`. Import `describe`/`expect`/`it`/`vi` explicitly.
 
 Mock CLI clients instead of using the live Forge project. Keep secrets in ignored `apps/web/.env.local` or `.insforge/project.json`; never expose server keys or commit credentials. CLI config/session files under `~/.forge` must remain mode `0600`. Mutations must validate input, re-check auth, and preserve InsForge RLS/RPC invariants.
 

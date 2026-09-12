@@ -5,7 +5,7 @@ import {
   formatReportText,
   writeReportOutput,
 } from "../../src/report-format.js";
-import type { ActivityReport, Ticket, TicketComment, TicketEvent } from "../../src/types.js";
+import type { ActivityReport, Ticket, TicketComment, TicketEvent } from "@forge/core";
 
 const sampleTicket: Ticket = {
   id: "t1",

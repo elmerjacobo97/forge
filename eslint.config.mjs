@@ -42,6 +42,17 @@ export default defineConfig([
     },
   },
 
+  // Shared core (@forge/core) — TypeScript, no React
+  {
+    files: ["packages/**/*.{js,mjs,cjs,ts}"],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+
   // Workspace root config files
   {
     files: ["*.{js,mjs,cjs}", "eslint.config.mjs"],
@@ -70,10 +81,7 @@ export default defineConfig([
 
   // shadcn UI + generated hooks — do not lint/edit these
   {
-    files: [
-      "apps/web/src/components/ui/**/*.{ts,tsx}",
-      "apps/web/src/hooks/use-mobile.ts",
-    ],
+    files: ["apps/web/src/components/ui/**/*.{ts,tsx}", "apps/web/src/hooks/use-mobile.ts"],
     rules: {
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/refs": "off",
