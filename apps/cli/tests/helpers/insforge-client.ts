@@ -22,6 +22,7 @@ export interface DevBoardMockOptions {
   tickets?: Row[];
   projects?: Row[];
   comments?: Row[];
+  events?: Row[];
   rpc?: (name: string, params: Record<string, unknown>) => MockResponse;
 }
 
@@ -29,6 +30,18 @@ export interface DevBoardMockCall {
   table: string;
   method: string;
   args: unknown[];
+}
+
+function matchesCondition(
+  row: Row,
+  condition: { op: "eq" | "gte" | "lte"; key: string; value: unknown },
+): boolean {
+  const value = row[condition.key];
+  if (condition.op === "eq") return value === condition.value;
+  if (value === null || value === undefined) return false;
+  const left = String(value);
+  const right = String(condition.value);
+  return condition.op === "gte" ? left >= right : left <= right;
 }
 
 export function createDevBoardMockClient(options: DevBoardMockOptions = {}) {
@@ -39,17 +52,18 @@ export function createDevBoardMockClient(options: DevBoardMockOptions = {}) {
     if (table === "dev_board_tickets") return options.tickets ?? [];
     if (table === "dev_board_projects") return options.projects ?? [];
     if (table === "dev_board_ticket_comments") return options.comments ?? [];
+    if (table === "dev_board_events") return options.events ?? [];
     return [];
   }
 
   function builder(table: string): unknown {
-    const conditions: Array<[string, unknown]> = [];
+    const conditions: Array<{ op: "eq" | "gte" | "lte"; key: string; value: unknown }> = [];
     let insertedRows: Row[] | null = null;
 
     const response = (): MockResponse => {
       let rows = insertedRows ?? rowsFor(table);
-      for (const [key, value] of conditions) {
-        rows = rows.filter((row) => row[key] === value);
+      for (const condition of conditions) {
+        rows = rows.filter((row) => matchesCondition(row, condition));
       }
       return { data: rows, error: null };
     };
@@ -75,7 +89,11 @@ export function createDevBoardMockClient(options: DevBoardMockOptions = {}) {
               return proxy;
             }
             if (prop === "eq") {
-              conditions.push(args as [string, unknown]);
+              conditions.push({ op: "eq", key: args[0] as string, value: args[1] });
+              return proxy;
+            }
+            if (prop === "gte" || prop === "lte") {
+              conditions.push({ op: prop, key: args[0] as string, value: args[1] });
               return proxy;
             }
             if (prop === "maybeSingle" || prop === "single") {

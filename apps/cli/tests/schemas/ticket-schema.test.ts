@@ -5,6 +5,7 @@ import {
   parseTicketCommentInput,
   parseTicketCreateInput,
   parseTicketMoveInput,
+  parseTicketReportInput,
   parseTicketUpdateInput,
 } from "../../src/ticket-schema.js";
 
@@ -264,6 +265,68 @@ describe("parseTicketCommentInput", () => {
     expect(long).toHaveProperty("error");
     if (!("error" in long)) throw new Error("expected validation error");
     expect(long.error).toContain("Comment body must be at most 5000 characters.");
+  });
+});
+
+describe("parseTicketReportInput", () => {
+  it("defaults to a 7-day rolling window", () => {
+    expect(parseTicketReportInput({})).toEqual({ days: 7 });
+  });
+
+  it("coerces days and passes through window options", () => {
+    expect(
+      parseTicketReportInput({
+        days: "14",
+        since: "2026-09-01T00:00:00Z",
+        until: "2026-09-08T00:00:00Z",
+        projectId: "proj1",
+        columns: ["review", "done"],
+      }),
+    ).toEqual({
+      days: 14,
+      since: "2026-09-01T00:00:00Z",
+      until: "2026-09-08T00:00:00Z",
+      projectId: "proj1",
+      columns: ["review", "done"],
+    });
+  });
+
+  it("rejects invalid days, dates, and unknown columns", () => {
+    for (const days of ["0", "91", "abc", "1.5"]) {
+      const result = parseTicketReportInput({ days });
+      expect(result).toHaveProperty("error");
+      if (!("error" in result)) throw new Error("expected validation error");
+      expect(result.error).toContain("Days");
+    }
+
+    const date = parseTicketReportInput({ days: "7", since: "not-a-date" });
+    expect(date).toHaveProperty("error");
+    if (!("error" in date)) throw new Error("expected validation error");
+    expect(date.error).toContain("Date must be a valid ISO 8601 timestamp.");
+
+    const column = parseTicketReportInput({ days: "7", columns: ["blocked"] });
+    expect(column).toHaveProperty("error");
+    if (!("error" in column)) throw new Error("expected validation error");
+    expect(column.error).toContain("Column must be one of:");
+  });
+
+  it("rejects --since later than --until", () => {
+    const result = parseTicketReportInput({
+      days: "7",
+      since: "2026-09-08T00:00:00Z",
+      until: "2026-09-01T00:00:00Z",
+    });
+
+    expect(result).toHaveProperty("error");
+    if (!("error" in result)) throw new Error("expected validation error");
+    expect(result.error).toContain("--since must be earlier than --until.");
+  });
+
+  it("rejects an empty project id", () => {
+    const result = parseTicketReportInput({ days: "7", projectId: "   " });
+    expect(result).toHaveProperty("error");
+    if (!("error" in result)) throw new Error("expected validation error");
+    expect(result.error).toContain("Project id must not be empty.");
   });
 });
 

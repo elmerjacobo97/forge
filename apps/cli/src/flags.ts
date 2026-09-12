@@ -10,6 +10,16 @@ export function getFlagValue(args: string[], name: string): string | undefined {
   return value;
 }
 
+export function getFlagValues(args: string[], name: string): string[] {
+  const values: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] !== name) continue;
+    const value = args[i + 1];
+    if (value && !value.startsWith("--")) values.push(value);
+  }
+  return values;
+}
+
 export function hasFlag(args: string[], name: string): boolean {
   return args.includes(name);
 }

@@ -1,6 +1,7 @@
+import { createActivityService } from "../activity-service.js";
 import { createAuthedClient, createAuthedDevBoardService } from "../insforge.js";
 import { createDevBoardService } from "../dev-board-service.js";
-import { getFlagValue, getPositionals, hasFlag } from "../flags.js";
+import { getFlagValue, getFlagValues, getPositionals, hasFlag } from "../flags.js";
 import {
   writeCommentListOutput,
   writeCommentOutput,
@@ -11,14 +12,17 @@ import {
   writeTicketOutput,
 } from "../format.js";
 import { createProjectsService } from "../projects-service.js";
+import { groupActivity, resolveReportWindow } from "../report-helpers.js";
+import { writeReportOutput } from "../report-format.js";
 import {
   parseColumnId,
   parseTicketCommentInput,
   parseTicketCreateInput,
   parseTicketMoveInput,
+  parseTicketReportInput,
   parseTicketUpdateInput,
 } from "../ticket-schema.js";
-import { COLUMNS, PRIORITIES, type ColumnId } from "../types.js";
+import { COLUMNS, PRIORITIES, type ActivityReport, type ColumnId, type Ticket } from "../types.js";
 
 const TICKET_HELP = `Usage:
   forge-cli ticket <command> [options]
@@ -33,6 +37,7 @@ Commands:
   next      Show the next pending ticket with context
   comment   Add a comment to a ticket
   comments  List a ticket comments
+  report    Summarize ticket activity in a rolling window
 
 Shared options:
   --json                       Emit JSON instead of text (all commands)
@@ -50,6 +55,13 @@ list options:
 
 next options:
   --project-id <id>            Optional project filter (default: all projects)
+
+report options:
+  --days <n>                   Rolling window in days (1-90, default 7)
+  --since <iso>                Window start (overrides --days)
+  --until <iso>                Window end (default: now)
+  --column <column>            Filter by current column (repeatable)
+  --project-id <id>            Optional project filter
 
 update options (at least one):
   --title <text>
@@ -84,6 +96,9 @@ Examples:
   forge-cli ticket next --json
   forge-cli ticket comment <id> --body "Moved to review" --author agent
   forge-cli ticket comments <id> --json
+  forge-cli ticket report
+  forge-cli ticket report --days 7 --json
+  forge-cli ticket report --since 2026-09-04T15:00:00Z --project-id <id>
   forge-cli ticket delete <id> --json
 `;
 
@@ -272,6 +287,52 @@ async function runComments(args: string[]): Promise<void> {
   writeCommentListOutput(comments, json);
 }
 
+async function runReport(args: string[]): Promise<void> {
+  const json = hasFlag(args, "--json");
+  const columns = getFlagValues(args, "--column");
+  const input = parseTicketReportInput({
+    days: getFlagValue(args, "--days") ?? "7",
+    since: getFlagValue(args, "--since"),
+    until: getFlagValue(args, "--until"),
+    projectId: getFlagValue(args, "--project-id"),
+    columns: columns.length > 0 ? columns : undefined,
+  });
+  if ("error" in input) {
+    fail(input.error, json);
+    return;
+  }
+
+  const window = resolveReportWindow({
+    days: input.days,
+    since: input.since,
+    until: input.until,
+  });
+
+  const { client } = await createAuthedClient();
+  const projectsService = createProjectsService({ client });
+  const projects = input.projectId
+    ? [await projectsService.get(input.projectId)]
+    : await projectsService.list();
+
+  const board = createDevBoardService({ client });
+  const tickets: Ticket[] = [];
+  for (const project of projects) {
+    tickets.push(...(await board.list(project.id)));
+  }
+
+  const activity = createActivityService({ client });
+  const [events, comments] = await Promise.all([
+    activity.listEvents(window.from, window.to),
+    activity.listCommentsInRange(window.from, window.to),
+  ]);
+
+  const report: ActivityReport = {
+    ...window,
+    tickets: groupActivity({ tickets, projects, events, comments, columns: input.columns }),
+  };
+  writeReportOutput(report, json);
+}
+
 export async function runTicket(args: string[]): Promise<void> {
   if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
     process.stdout.write(`${TICKET_HELP}\n`);
@@ -307,6 +368,9 @@ export async function runTicket(args: string[]): Promise<void> {
       return;
     case "comments":
       await runComments(rest);
+      return;
+    case "report":
+      await runReport(rest);
       return;
     default:
       fail(`Unknown ticket command: ${subcommand}\n\n${TICKET_HELP}`, hasFlag(args, "--json"));
