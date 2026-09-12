@@ -1,4 +1,16 @@
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Pie,
+  PieChart,
+  Rectangle,
+  XAxis,
+  YAxis,
+} from "recharts";
+import type { BarShapeProps } from "recharts";
 import type { ReactNode } from "react";
 import { format, parseISO } from "date-fns";
 import { Inbox } from "lucide-react";
@@ -29,7 +41,10 @@ const loggedTimeConfig = {
 } satisfies ChartConfig;
 
 const statusConfig = Object.fromEntries(
-  COLUMNS.map((column, index) => [column, { label: COLUMN_LABELS[column], color: `var(--chart-${(index % 5) + 1})` }]),
+  COLUMNS.map((column, index) => [
+    column,
+    { label: COLUMN_LABELS[column], color: `var(--chart-${(index % 5) + 1})` },
+  ]),
 ) satisfies ChartConfig;
 
 const priorityConfig = {
@@ -46,9 +61,27 @@ function minutesTick(value: number): string {
   return `${Math.round(value / 60_000)}m`;
 }
 
+function PriorityBarShape(props: BarShapeProps) {
+  const fill = (props.payload as { fill?: string } | undefined)?.fill;
+  return (
+    <Rectangle
+      {...props}
+      fill={fill}
+    />
+  );
+}
+
 export function AnalyticsCharts({ summary }: { summary: AnalyticsSummary }) {
   const totalTickets = summary.status.reduce((total, item) => total + item.count, 0);
   const priorityIsEmpty = summary.priority.every((item) => item.durationMs === 0);
+  const statusData = summary.status.map((item) => ({
+    ...item,
+    fill: `var(--color-${item.column})`,
+  }));
+  const priorityData = summary.priority.map((item) => ({
+    ...item,
+    fill: `var(--color-${item.priority})`,
+  }));
 
   return (
     <section className="grid gap-4 xl:grid-cols-2">
@@ -60,15 +93,43 @@ export function AnalyticsCharts({ summary }: { summary: AnalyticsSummary }) {
         emptyLabel="No tickets completed in this range yet."
       >
         <ChartContainer config={throughputConfig}>
-          <BarChart data={summary.throughput} margin={{ left: 0, right: 8 }}>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis dataKey="date" tickFormatter={shortDate} tickLine={false} axisLine={false} tickMargin={8} />
-            <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} tickMargin={4} />
+          <BarChart
+            data={summary.throughput}
+            margin={{ left: 0, right: 8 }}
+          >
+            <CartesianGrid
+              vertical={false}
+              strokeDasharray="3 3"
+            />
+            <XAxis
+              dataKey="date"
+              tickFormatter={shortDate}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
+            <YAxis
+              allowDecimals={false}
+              tickLine={false}
+              axisLine={false}
+              width={32}
+              tickMargin={4}
+            />
             <ChartTooltip
               cursor={{ fill: "var(--muted)" }}
-              content={<ChartTooltipContent indicator="dot" labelFormatter={(value) => shortDate(String(value))} />}
+              content={
+                <ChartTooltipContent
+                  indicator="dot"
+                  labelFormatter={(value) => shortDate(String(value))}
+                />
+              }
             />
-            <Bar dataKey="completed" fill="var(--color-completed)" radius={[6, 6, 0, 0]} maxBarSize={28} />
+            <Bar
+              dataKey="completed"
+              fill="var(--color-completed)"
+              radius={[6, 6, 0, 0]}
+              maxBarSize={28}
+            />
           </BarChart>
         </ChartContainer>
       </ChartCard>
@@ -81,16 +142,48 @@ export function AnalyticsCharts({ summary }: { summary: AnalyticsSummary }) {
         emptyLabel="No focus time recorded in this range yet."
       >
         <ChartContainer config={loggedTimeConfig}>
-          <AreaChart data={summary.loggedTime} margin={{ left: 0, right: 8 }}>
+          <AreaChart
+            data={summary.loggedTime}
+            margin={{ left: 0, right: 8 }}
+          >
             <defs>
-              <linearGradient id="fillLoggedTime" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-durationMs)" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="var(--color-durationMs)" stopOpacity={0} />
+              <linearGradient
+                id="fillLoggedTime"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-durationMs)"
+                  stopOpacity={0.35}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-durationMs)"
+                  stopOpacity={0}
+                />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis dataKey="date" tickFormatter={shortDate} tickLine={false} axisLine={false} tickMargin={8} />
-            <YAxis tickFormatter={minutesTick} tickLine={false} axisLine={false} width={40} tickMargin={4} />
+            <CartesianGrid
+              vertical={false}
+              strokeDasharray="3 3"
+            />
+            <XAxis
+              dataKey="date"
+              tickFormatter={shortDate}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
+            <YAxis
+              tickFormatter={minutesTick}
+              tickLine={false}
+              axisLine={false}
+              width={40}
+              tickMargin={4}
+            />
             <ChartTooltip
               content={
                 <ChartTooltipContent
@@ -111,16 +204,34 @@ export function AnalyticsCharts({ summary }: { summary: AnalyticsSummary }) {
         </ChartContainer>
       </ChartCard>
 
-      <ChartCard swatch="var(--chart-1)" title="Current status" description="Tickets by board column">
+      <ChartCard
+        swatch="var(--chart-1)"
+        title="Current status"
+        description="Tickets by board column"
+      >
         <div className="relative">
-          <ChartContainer config={statusConfig} className="mx-auto aspect-square max-h-64">
+          <ChartContainer
+            config={statusConfig}
+            className="mx-auto aspect-square max-h-64"
+          >
             <PieChart>
-              <ChartTooltip content={<ChartTooltipContent nameKey="column" hideLabel />} />
-              <Pie data={summary.status} dataKey="count" nameKey="column" innerRadius={55} outerRadius={85} strokeWidth={3}>
-                {summary.status.map((item) => (
-                  <Cell key={item.column} fill={`var(--color-${item.column})`} stroke="var(--card)" />
-                ))}
-              </Pie>
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    nameKey="column"
+                    hideLabel
+                  />
+                }
+              />
+              <Pie
+                data={statusData}
+                dataKey="count"
+                nameKey="column"
+                innerRadius={55}
+                outerRadius={85}
+                stroke="var(--card)"
+                strokeWidth={3}
+              />
               <ChartLegend
                 content={
                   <ChartLegendContent
@@ -146,9 +257,21 @@ export function AnalyticsCharts({ summary }: { summary: AnalyticsSummary }) {
         emptyLabel="No logged time to break down by priority yet."
       >
         <ChartContainer config={priorityConfig}>
-          <BarChart data={summary.priority} layout="vertical" margin={{ left: 0, right: 8 }}>
-            <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-            <XAxis type="number" tickFormatter={minutesTick} tickLine={false} axisLine={false} />
+          <BarChart
+            data={priorityData}
+            layout="vertical"
+            margin={{ left: 0, right: 8 }}
+          >
+            <CartesianGrid
+              horizontal={false}
+              strokeDasharray="3 3"
+            />
+            <XAxis
+              type="number"
+              tickFormatter={minutesTick}
+              tickLine={false}
+              axisLine={false}
+            />
             <YAxis
               type="category"
               dataKey="priority"
@@ -171,11 +294,12 @@ export function AnalyticsCharts({ summary }: { summary: AnalyticsSummary }) {
                 />
               }
             />
-            <Bar dataKey="durationMs" radius={[0, 6, 6, 0]} maxBarSize={22}>
-              {summary.priority.map((item) => (
-                <Cell key={item.priority} fill={`var(--color-${item.priority})`} />
-              ))}
-            </Bar>
+            <Bar
+              dataKey="durationMs"
+              radius={[0, 6, 6, 0]}
+              maxBarSize={22}
+              shape={PriorityBarShape}
+            />
           </BarChart>
         </ChartContainer>
       </ChartCard>
@@ -202,7 +326,11 @@ function ChartCard({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ backgroundColor: swatch }} />
+          <span
+            aria-hidden
+            className="size-2 shrink-0 rounded-full"
+            style={{ backgroundColor: swatch }}
+          />
           {title}
         </CardTitle>
         <CardDescription>{description}</CardDescription>
