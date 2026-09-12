@@ -33,8 +33,10 @@ import {
   type ColumnRecord,
 } from "../utils/board-state";
 import { checkStaleTickets, loadAlertedTickets, saveAlertedTickets } from "../utils/stale-alert";
+import { staleSessionMsForMove } from "../utils/stale-session";
 import { moveTicket } from "../utils/tickets";
 import { ColumnView } from "./column-view";
+import { StaleMovePrompt } from "./stale-move-prompt";
 import { TicketCommentsDialog } from "./ticket-comments-dialog";
 import { TicketDragOverlay } from "./ticket-drag-overlay";
 import { TicketForm } from "./ticket-form";
@@ -67,6 +69,7 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
   const [editTicket, setEditTicket] = useState<Ticket | null>(null);
   const [commentsTicket, setCommentsTicket] = useState<Ticket | null>(null);
   const [timeTicket, setTimeTicket] = useState<Ticket | null>(null);
+  const [movePrompt, setMovePrompt] = useState<{ ticket: Ticket; sessionMs: number } | null>(null);
   const [alertedTickets] = useState(loadAlertedTickets);
   const dragTicketsRef = useRef<Ticket[] | null>(null);
 
@@ -97,7 +100,11 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
     return ticket ? ticket.column : null;
   })();
 
-  function persistTicket(ticket: Ticket, previous: ColumnRecord) {
+  function persistTicket(
+    ticket: Ticket,
+    previous: ColumnRecord,
+    onSaved?: (saved: Ticket) => void,
+  ) {
     startMutating(async () => {
       const result = await updateTicketAction(ticket);
       if (!result.ok) {
@@ -107,6 +114,7 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
       }
 
       setColumns((current) => upsertTicket(current, result.data));
+      onSaved?.(result.data);
     });
   }
 
@@ -188,6 +196,7 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
 
     if (!currentActiveTicket || !targetColumn) return;
 
+    const staleSessionMs = staleSessionMsForMove(currentActiveTicket, targetColumn);
     const movedTicket =
       activeIdStr === overIdStr
         ? currentActiveTicket
@@ -201,7 +210,9 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
 
     const previous = columns;
     setColumns((current) => upsertTicket(current, movedTicket));
-    persistTicket(movedTicket, previous);
+    persistTicket(movedTicket, previous, (saved) => {
+      if (staleSessionMs !== null) setMovePrompt({ ticket: saved, sessionMs: staleSessionMs });
+    });
   }
 
   function openNewTicket() {
@@ -240,7 +251,15 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
 
   function moveToColumn(id: string, target: ColumnId) {
     const ticket = findTicket(tickets, id);
-    if (ticket) handleUpdate(moveTicket(ticket, target, tickets, null, true));
+    if (!ticket) return;
+
+    const staleSessionMs = staleSessionMsForMove(ticket, target);
+    const movedTicket = moveTicket(ticket, target, tickets, null, true);
+    const previous = columns;
+    setColumns((current) => upsertTicket(current, movedTicket));
+    persistTicket(movedTicket, previous, (saved) => {
+      if (staleSessionMs !== null) setMovePrompt({ ticket: saved, sessionMs: staleSessionMs });
+    });
   }
 
   async function loadMore(column: ColumnId) {
@@ -415,6 +434,19 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
           if (!open) setTimeTicket(null);
         }}
         onAdjusted={handleAdjusted}
+      />
+
+      <StaleMovePrompt
+        ticket={movePrompt?.ticket ?? null}
+        sessionMs={movePrompt?.sessionMs ?? 0}
+        open={movePrompt !== null}
+        onOpenChange={(open) => {
+          if (!open) setMovePrompt(null);
+        }}
+        onAdjust={(ticket) => {
+          setMovePrompt(null);
+          setTimeTicket(ticket);
+        }}
       />
     </div>
   );
