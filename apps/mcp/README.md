@@ -6,6 +6,8 @@ Cloudflare Worker that exposes the Forge Dev Board to MCP clients (Claude web an
 - Auth: OAuth 2.1 via GitHub (`@cloudflare/workers-oauth-provider`) with a single allowed login (`ALLOWED_GITHUB_LOGIN`)
 - Runtime: `agents/mcp` (`ForgeMcp` Durable Object) over the shared `@forge/core` services
 
+Full from-scratch walkthrough (accounts, OAuth App, KV, secrets, deploy, clients): [`docs/mcp-remote-setup.md`](../../docs/mcp-remote-setup.md) (Spanish).
+
 ## Tools
 
 | Tool                    | Input                                             | Returns                                                      |
