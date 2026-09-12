@@ -82,3 +82,10 @@ export const ticketTimeAdjustSchema = z.discriminatedUnion("action", [
 ]);
 
 export type TicketTimeAdjustInput = z.infer<typeof ticketTimeAdjustSchema>;
+
+export const ticketTimeFormSchema = z.object({
+  hours: z.number().int().min(0),
+  minutes: z.number().int().min(0),
+});
+
+export type TicketTimeFormValues = z.infer<typeof ticketTimeFormSchema>;

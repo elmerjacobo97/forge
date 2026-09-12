@@ -46,6 +46,7 @@ interface TicketCardProps {
   ticket: Ticket;
   onEdit: (ticket: Ticket) => void;
   onComments: (ticket: Ticket) => void;
+  onAdjust: (ticket: Ticket) => void;
   onMoveToColumn: (id: string, column: ColumnId) => void;
   onUpdate: (ticket: Ticket) => void;
   onDelete: (ticket: Ticket) => void;
@@ -55,6 +56,7 @@ export function TicketCard({
   ticket,
   onEdit,
   onComments,
+  onAdjust,
   onMoveToColumn,
   onUpdate,
   onDelete,
@@ -187,6 +189,12 @@ export function TicketCard({
                     Pause
                   </>
                 )}
+              </DropdownMenuItem>
+            )}
+            {(timerActive || ticket.totalElapsedMs > 0) && (
+              <DropdownMenuItem onClick={() => onAdjust(ticket)}>
+                <Clock className="size-3" />
+                Adjust time
               </DropdownMenuItem>
             )}
             <DropdownMenuSub>
