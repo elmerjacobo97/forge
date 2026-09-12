@@ -1,6 +1,6 @@
 # SPEC 19 — Ajuste de tiempo de tickets y aviso de sesión larga
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 03 — CLI Forge para tickets; SPEC 04 — Dev Board proyectos; SPEC 17 — Loop de agente sobre tickets (tabla de comentarios)
 > **Fecha:** 2026-09-12
 > **Objetivo:** Permitir corregir el tiempo registrado de un ticket (retro-pausa, editar o borrar su última sesión, con rastro en comentarios) y avisar al mover un ticket cuando la sesión activa supera el umbral.
