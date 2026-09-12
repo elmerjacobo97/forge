@@ -117,9 +117,9 @@ export function TicketCard({
         </button>
 
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium leading-snug">{ticket.title}</p>
+          <p className="wrap-anywhere text-xs font-medium leading-snug">{ticket.title}</p>
           {ticket.description && (
-            <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">
+            <p className="mt-1 line-clamp-2 text-[11px] wrap-anywhere text-muted-foreground">
               {ticket.description}
             </p>
           )}
