@@ -1,14 +1,12 @@
-import { Item, ItemActions, ItemContent, ItemMedia } from "@/components/ui/item";
-import { Sparkline } from "./sparkline";
+import { Item, ItemContent, ItemMedia } from "@/components/ui/item";
 
 interface StatItemProps {
   icon: React.ReactNode;
   label: string;
   value: string | number;
-  trend?: number[];
 }
 
-export function StatItem({ icon, label, value, trend }: StatItemProps) {
+export function StatItem({ icon, label, value }: StatItemProps) {
   return (
     <Item size="sm">
       <ItemMedia
@@ -21,11 +19,6 @@ export function StatItem({ icon, label, value, trend }: StatItemProps) {
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="text-xl font-semibold tabular-nums">{value}</p>
       </ItemContent>
-      {trend && trend.length > 1 && (
-        <ItemActions>
-          <Sparkline data={trend} />
-        </ItemActions>
-      )}
     </Item>
   );
 }

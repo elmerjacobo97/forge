@@ -201,13 +201,11 @@ export function ProjectAnalytics({
                     icon={<ListChecks className="size-4" />}
                     label="Completed"
                     value={summary.completed}
-                    trend={summary.throughput.map((point) => point.completed)}
                   />
                   <StatItem
                     icon={<Timer className="size-4" />}
                     label="Time logged"
                     value={formatDuration(summary.loggedMs)}
-                    trend={summary.loggedTime.map((point) => point.durationMs)}
                   />
                   <StatItem
                     icon={<Gauge className="size-4" />}
