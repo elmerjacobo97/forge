@@ -1,6 +1,6 @@
 # `@forge/mcp` — Forge remote MCP server
 
-Cloudflare Worker that exposes the Forge Dev Board to MCP clients (Claude web and mobile) over a remote Model Context Protocol endpoint. It is **read-only**: the tools query InsForge with the owner's session and never mutate the board.
+Cloudflare Worker that exposes the Forge Dev Board to MCP clients (Claude web/mobile, Claude Code, opencode, Cursor, MCP Inspector) over a remote Model Context Protocol endpoint. It is **read-only**: the tools query InsForge with the owner's session and never mutate the board.
 
 - Production endpoint: `https://forge-mcp.ejacobotiniano.workers.dev/mcp`
 - Auth: OAuth 2.1 via GitHub (`@cloudflare/workers-oauth-provider`) with a single allowed login (`ALLOWED_GITHUB_LOGIN`)
@@ -71,9 +71,62 @@ node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(process.env.
 
 ## Connecting clients
 
-Claude: **Settings → Connectors → Add custom connector** with the Worker URL. The connector is added from claude.ai and syncs to the Claude mobile apps; free plans allow one custom connector.
+The server implements OAuth 2.1 with dynamic client registration (`/register`), PKCE (`S256`), and loopback redirect flexibility (RFC 8252), so any MCP client that supports remote HTTP servers with OAuth can connect. The clients below were verified against the deployed Worker.
 
-MCP Inspector:
+### Claude
+
+**Settings → Connectors → Add custom connector** with the Worker URL. The connector is added from claude.ai and syncs to the Claude mobile apps; free plans allow one custom connector.
+
+### Claude Code
+
+```bash
+claude mcp add --transport http forge https://forge-mcp.ejacobotiniano.workers.dev/mcp --scope user
+```
+
+`claude mcp list` shows `Needs authentication` until the first sign-in; run `/mcp` inside a session and complete the GitHub authorization. Servers added with `--scope user` are available in every project.
+
+### opencode
+
+Global config (`~/.config/opencode/opencode.json`):
+
+```json
+{
+  "mcp": {
+    "forge": {
+      "type": "remote",
+      "url": "https://forge-mcp.ejacobotiniano.workers.dev/mcp",
+      "enabled": true
+    }
+  }
+}
+```
+
+```bash
+opencode mcp auth forge     # completes the OAuth flow in the browser
+opencode mcp debug forge    # shows discovery/auth status without authorizing
+```
+
+Tokens are stored in `~/.local/share/opencode/mcp-auth.json`; `opencode mcp logout forge` clears them.
+
+### Cursor
+
+Global config (`~/.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "forge": { "url": "https://forge-mcp.ejacobotiniano.workers.dev/mcp" }
+  }
+}
+```
+
+Authenticate from Cursor's MCP settings (prompts on first use) or with `cursor-agent mcp login forge`; `cursor-agent mcp list` reports `requires_authentication` until then. The Cursor IDE and the `cursor-agent` CLI store credentials separately, so sign in to each one you use.
+
+### Clients without remote OAuth
+
+`npx -y mcp-remote https://forge-mcp.ejacobotiniano.workers.dev/mcp` bridges any stdio-only client: it performs the OAuth flow locally and stores tokens under `~/.mcp-auth`.
+
+### MCP Inspector
 
 ```bash
 npx @modelcontextprotocol/inspector@latest
