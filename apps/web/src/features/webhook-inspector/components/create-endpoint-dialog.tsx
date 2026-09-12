@@ -63,7 +63,10 @@ export function CreateEndpointDialog({
       open={isOpen}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-w-md">
+      <DialogContent
+        onInteractOutside={(event) => event.preventDefault()}
+        className="max-w-md"
+      >
         <DialogHeader>
           <DialogTitle>Create webhook endpoint</DialogTitle>
           <DialogDescription>

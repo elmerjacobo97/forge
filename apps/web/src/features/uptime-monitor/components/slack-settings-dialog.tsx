@@ -43,7 +43,10 @@ export function SlackSettingsDialog({ settings, isOpen, onOpenChange }: SlackSet
       open={isOpen}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-w-md">
+      <DialogContent
+        onInteractOutside={(event) => event.preventDefault()}
+        className="max-w-md"
+      >
         <DialogHeader>
           <DialogTitle>Slack notifications</DialogTitle>
           <DialogDescription>

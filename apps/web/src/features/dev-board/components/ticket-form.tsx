@@ -88,7 +88,10 @@ export function TicketForm({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-h-[90vh] max-w-md grid-cols-1 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-md">
+      <DialogContent
+        onInteractOutside={(event) => event.preventDefault()}
+        className="max-h-[90vh] max-w-md grid-cols-1 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-md"
+      >
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Ticket" : "New Ticket"}</DialogTitle>
           <DialogDescription>

@@ -125,7 +125,10 @@ export function EditBookmarkDialog({ bookmark, isOpen, onOpenChange }: EditBookm
       open={isOpen}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-h-[90vh] max-w-md grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
+      <DialogContent
+        onInteractOutside={(event) => event.preventDefault()}
+        className="max-h-[90vh] max-w-md grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden"
+      >
         <DialogHeader>
           <DialogTitle>Edit Bookmark</DialogTitle>
           <DialogDescription>Update this bookmark. Changes save to your library.</DialogDescription>

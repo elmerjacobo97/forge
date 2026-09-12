@@ -253,7 +253,10 @@ export function WebhookInspector({ initialEndpoints }: { initialEndpoints: Webho
           if (!open) setDeleteTarget(null);
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent
+          onInteractOutside={(event) => event.preventDefault()}
+          className="max-w-md"
+        >
           <DialogHeader>
             <DialogTitle>Delete webhook endpoint?</DialogTitle>
             <DialogDescription>

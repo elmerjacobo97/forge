@@ -42,7 +42,10 @@ export function DeleteMonitorDialog({ monitor, isOpen, onOpenChange }: DeleteMon
       open={isOpen}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-w-md">
+      <DialogContent
+        onInteractOutside={(event) => event.preventDefault()}
+        className="max-w-md"
+      >
         <DialogHeader>
           <DialogTitle>Delete monitor?</DialogTitle>
           <DialogDescription>

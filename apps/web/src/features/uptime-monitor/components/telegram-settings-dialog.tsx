@@ -34,7 +34,10 @@ export function TelegramSettingsDialog({
       open={isOpen}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-w-md">
+      <DialogContent
+        onInteractOutside={(event) => event.preventDefault()}
+        className="max-w-md"
+      >
         <DialogHeader>
           <DialogTitle>Telegram notifications</DialogTitle>
           <DialogDescription>

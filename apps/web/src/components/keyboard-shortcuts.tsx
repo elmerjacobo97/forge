@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   Dialog,
@@ -6,43 +6,49 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 
 interface KeyboardShortcutsProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 interface ShortcutDef {
-  description: string
-  keys: string[]
+  description: string;
+  keys: string[];
 }
 
 function isMac() {
-  if (typeof navigator === "undefined") return false
-  return navigator.platform.toLowerCase().startsWith("mac")
+  if (typeof navigator === "undefined") return false;
+  return navigator.platform.toLowerCase().startsWith("mac");
 }
 
 const shortcuts: ShortcutDef[] = [
   { description: "Open command palette", keys: ["Cmd", "K"] },
   { description: "Open keyboard shortcuts", keys: ["Cmd", "/"] },
   { description: "Close dialogs and menus", keys: ["Esc"] },
-]
+];
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <kbd className="inline-flex min-w-[1.5rem] items-center justify-center rounded border bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
       {children}
     </kbd>
-  )
+  );
 }
 
 export function KeyboardShortcuts({ open, onOpenChange }: KeyboardShortcutsProps) {
-  const mac = isMac()
+  const mac = isMac();
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
+      <DialogContent
+        onInteractOutside={(event) => event.preventDefault()}
+        className="max-w-sm"
+      >
         <DialogHeader>
           <DialogTitle>Keyboard shortcuts</DialogTitle>
           <DialogDescription>Quick ways to move around Forge.</DialogDescription>
@@ -69,9 +75,9 @@ export function KeyboardShortcuts({ open, onOpenChange }: KeyboardShortcutsProps
                           "Ctrl"
                         )}
                       </Kbd>
-                    )
+                    );
                   }
-                  return <Kbd key={key}>{key}</Kbd>
+                  return <Kbd key={key}>{key}</Kbd>;
                 })}
               </span>
             </div>
@@ -79,5 +85,5 @@ export function KeyboardShortcuts({ open, onOpenChange }: KeyboardShortcutsProps
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
