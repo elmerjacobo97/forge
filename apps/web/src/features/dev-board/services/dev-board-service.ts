@@ -3,6 +3,8 @@ import "server-only";
 import { z } from "zod";
 
 import { createInsForgeServerClient } from "@/lib/insforge/server";
+import type { TicketTimeAdjustInput } from "../schemas/ticket";
+import type { TimeEntry } from "../types/analytics";
 import {
   type ColumnId,
   type ColumnPage,
@@ -37,6 +39,14 @@ const ticketCommentRowSchema = z.object({
   created_at: z.string(),
 });
 
+const timeEntryRowSchema = z.object({
+  id: z.string(),
+  ticket_id: z.string(),
+  started_at: z.string(),
+  ended_at: z.string(),
+  duration_ms: z.coerce.number(),
+});
+
 export interface TicketPage {
   tickets: Ticket[];
   nextCursor: string | null;
@@ -47,6 +57,8 @@ const TICKET_COLUMNS =
   "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url";
 
 const COMMENT_COLUMNS = "id,ticket_id,body,author,created_at";
+
+const TIME_ENTRY_COLUMNS = "id,ticket_id,started_at,ended_at,duration_ms";
 
 function toTicket(value: unknown): Ticket {
   const row = ticketRowSchema.parse(value);
@@ -76,6 +88,17 @@ function toTicketComment(value: unknown): TicketComment {
     author: row.author,
     body: row.body,
     createdAt: row.created_at,
+  };
+}
+
+function toTimeEntry(value: unknown): TimeEntry {
+  const row = timeEntryRowSchema.parse(value);
+  return {
+    id: row.id,
+    ticketId: row.ticket_id,
+    startedAt: row.started_at,
+    endedAt: row.ended_at,
+    durationMs: row.duration_ms,
   };
 }
 
@@ -219,6 +242,34 @@ export const devBoardService = {
     });
     if (error) throw failure(error, "Failed to update ticket.");
     return rpcTicket(data);
+  },
+
+  async adjustTicketTime(input: TicketTimeAdjustInput): Promise<Ticket> {
+    const insforge = await createInsForgeServerClient();
+    const { data, error } = await insforge.database.rpc("adjust_dev_board_ticket_time", {
+      p_ticket_id: input.ticketId,
+      p_action: input.action,
+      p_ended_at: input.action === "stop_at" ? input.endedAt : null,
+      p_duration_ms:
+        input.action === "set_last_duration" || input.action === "set_total"
+          ? input.durationMs
+          : null,
+    });
+    if (error) throw failure(error, "Failed to adjust ticket time.");
+    return rpcTicket(data);
+  },
+
+  async lastTimeEntry(ticketId: string): Promise<TimeEntry | null> {
+    const insforge = await createInsForgeServerClient();
+    const { data, error } = await insforge.database
+      .from("dev_board_time_entries")
+      .select(TIME_ENTRY_COLUMNS)
+      .eq("ticket_id", ticketId)
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw failure(error, "Failed to load ticket time entries.");
+    return data ? toTimeEntry(data) : null;
   },
 
   async listComments(ticketId: string): Promise<TicketComment[]> {
