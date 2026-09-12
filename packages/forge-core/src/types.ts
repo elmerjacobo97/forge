@@ -79,6 +79,17 @@ export type Ticket = {
   prUrl: string | null;
 };
 
+export interface TicketSummary {
+  id: string;
+  projectId: string;
+  title: string;
+  column: ColumnId;
+  priority: Priority;
+  branch: string | null;
+  prUrl: string | null;
+  createdAt: string;
+}
+
 export type TicketCreateInput = {
   projectId: string;
   title: string;

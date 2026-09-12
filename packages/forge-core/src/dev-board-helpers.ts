@@ -1,4 +1,17 @@
-import { isTimerColumn, type ColumnId, type Ticket } from "./types.js";
+import { isTimerColumn, type ColumnId, type Ticket, type TicketSummary } from "./types.js";
+
+export function toTicketSummary(ticket: Ticket): TicketSummary {
+  return {
+    id: ticket.id,
+    projectId: ticket.projectId,
+    title: ticket.title,
+    column: ticket.column,
+    priority: ticket.priority,
+    branch: ticket.branch,
+    prUrl: ticket.prUrl,
+    createdAt: ticket.createdAt,
+  };
+}
 
 export function nowISO(): string {
   return new Date().toISOString();
