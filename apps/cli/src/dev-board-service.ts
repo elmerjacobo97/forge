@@ -94,7 +94,7 @@ function compareCandidates(a: Ticket, b: Ticket): number {
   const rank = { high: 0, med: 1, low: 2 };
   const byPriority = rank[a.priority] - rank[b.priority];
   if (byPriority !== 0) return byPriority;
-  return b.position - a.position;
+  return b.createdAt.localeCompare(a.createdAt);
 }
 
 export type DevBoardServiceDeps = { client: InsForgeClient };
@@ -134,7 +134,7 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
           "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url",
         )
         .eq("column_id", column)
-        .order("position", { ascending: false })
+        .order("created_at", { ascending: false })
         .range(from, from + 100 - 1);
       if (projectId) query = query.eq("project_id", projectId);
 

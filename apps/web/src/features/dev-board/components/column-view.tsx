@@ -55,7 +55,10 @@ export function ColumnView({
   const { setNodeRef } = useDroppable({ id: columnId });
 
   const colTickets = useMemo(
-    () => tickets.filter((t) => t.column === columnId).sort((a, b) => b.position - a.position),
+    () =>
+      tickets
+        .filter((t) => t.column === columnId)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     [tickets, columnId],
   );
 

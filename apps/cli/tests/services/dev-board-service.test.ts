@@ -50,22 +50,25 @@ const projects = [
 ];
 
 describe("devBoardService.next", () => {
-  it("ranks candidates by priority and breaks ties by position desc", async () => {
-    const { client } = createDevBoardMockClient({
+  it("ranks candidates by priority and breaks ties by newest created_at", async () => {
+    const { client, calls } = createDevBoardMockClient({
       projects,
       tickets: [
-        ticketRow({ id: "low", priority: "low", position: 500 }),
-        ticketRow({ id: "med-bottom", priority: "med", position: 10 }),
-        ticketRow({ id: "med-top", priority: "med", position: 50 }),
-        ticketRow({ id: "high-low-pos", priority: "high", position: 1 }),
-        ticketRow({ id: "high-top-pos", priority: "high", position: 9 }),
+        ticketRow({ id: "low", priority: "low", created_at: "2026-09-05T00:00:00.000Z" }),
+        ticketRow({ id: "med-old", priority: "med", created_at: "2026-09-01T00:00:00.000Z" }),
+        ticketRow({ id: "med-new", priority: "med", created_at: "2026-09-03T00:00:00.000Z" }),
+        ticketRow({ id: "high-old", priority: "high", created_at: "2026-09-02T00:00:00.000Z" }),
+        ticketRow({ id: "high-new", priority: "high", created_at: "2026-09-04T00:00:00.000Z" }),
       ],
     });
 
     const context = await createDevBoardService({ client }).next();
 
-    expect(context.ticket?.id).toBe("high-top-pos");
+    expect(context.ticket?.id).toBe("high-new");
     expect(context.project).toEqual({ id: "project-1", name: "Forge" });
+    expect(hasCall(calls, "dev_board_tickets", "order", ["created_at", { ascending: false }])).toBe(
+      true,
+    );
   });
 
   it("only considers todo tickets as candidates", async () => {

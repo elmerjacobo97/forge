@@ -202,22 +202,40 @@ describe("board-state", () => {
     expect(incrementCommentCount(columns, "t1").todo.tickets[0]?.commentCount).toBe(1);
   });
 
-  it("sorts flattened tickets by position descending", () => {
+  it("sorts flattened tickets by createdAt descending", () => {
     const columns = toColumnRecord([
       {
         column: "backlog",
-        tickets: [ticket({ id: "t1", column: "backlog", position: 1 })],
+        tickets: [ticket({ id: "t1", column: "backlog", createdAt: "2026-07-20T00:00:00.000Z" })],
         total: 1,
         nextCursor: null,
       },
       {
         column: "todo",
-        tickets: [ticket({ id: "t2", column: "todo", position: 9 })],
+        tickets: [ticket({ id: "t2", column: "todo", createdAt: "2026-07-21T00:00:00.000Z" })],
         total: 1,
         nextCursor: null,
       },
     ]);
 
     expect(columnTickets(columns).map((item) => item.id)).toEqual(["t2", "t1"]);
+  });
+
+  it("sorts a column by createdAt descending on upsert", () => {
+    const columns = toColumnRecord([
+      {
+        column: "backlog",
+        tickets: [ticket({ id: "t1", column: "backlog", createdAt: "2026-07-20T00:00:00.000Z" })],
+        total: 1,
+        nextCursor: null,
+      },
+    ]);
+
+    const next = upsertTicket(
+      columns,
+      ticket({ id: "t2", column: "backlog", createdAt: "2026-07-21T00:00:00.000Z" }),
+    );
+
+    expect(next.backlog.tickets.map((item) => item.id)).toEqual(["t2", "t1"]);
   });
 });

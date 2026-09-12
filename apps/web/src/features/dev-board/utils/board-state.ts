@@ -14,13 +14,13 @@ export function toColumnRecord(pages: ColumnPage[]): ColumnRecord {
 }
 
 export function columnTickets(columns: ColumnRecord): Ticket[] {
-  return COLUMNS.flatMap((column) => columns[column].tickets).sort(
-    (a, b) => b.position - a.position,
+  return COLUMNS.flatMap((column) => columns[column].tickets).sort((a, b) =>
+    b.createdAt.localeCompare(a.createdAt),
   );
 }
 
 function sortTickets(tickets: Ticket[]): Ticket[] {
-  return [...tickets].sort((a, b) => b.position - a.position);
+  return [...tickets].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export function upsertTicket(columns: ColumnRecord, ticket: Ticket): ColumnRecord {

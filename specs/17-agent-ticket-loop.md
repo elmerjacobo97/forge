@@ -162,7 +162,7 @@ Reglas:
 
 1. Crear `migrations/20260911120000_agent-ticket-loop.sql` con las columnas, la tabla de comentarios, RLS/grants y los dos RPCs extendidos con su semántica `NULL`/`''`. Pedir al usuario aplicarla con InsForge CLI antes de la verificación manual; ningún paso posterior depende de la migración para correr tests.
 2. CLI: añadir `branch`/`prUrl` a `Ticket` y los tipos `TicketComment`/`NextTicketContext`/`CommentAuthor` en `types.ts`. Actualizar `dev-board-service.ts`: columnas del select, mapeo, `update` y `move` con los nuevos parámetros, `listComments`, `addComment` (con `get` previo para error "Ticket not found.") y `next({ projectId? })`.
-3. CLI `next`: candidatos `todo` globales o filtrados por proyecto, orden por prioridad `high → med → low` y empate por `position desc`; resolver nombres de proyecto con una sola lectura de `dev_board_projects`; incluir comentarios del ticket elegido y la lista `inProgress`. Sin pendientes: retorno `{ ticket: null, project: null, comments: [], inProgress: [...] }`.
+3. CLI `next`: candidatos `todo` globales o filtrados por proyecto, orden por prioridad `high → med → low` y empate por `created_at desc` (más reciente primero); resolver nombres de proyecto con una sola lectura de `dev_board_projects`; incluir comentarios del ticket elegido y la lista `inProgress`. Sin pendientes: retorno `{ ticket: null, project: null, comments: [], inProgress: [...] }`.
 4. CLI schemas: extender `ticket-schema.ts` con `branch` (1–200), `prUrl` (http/https, ≤2048), flags de limpieza y schema de comentario (`--body` 1–5000, `--author user|agent` default `user`). Tests de parsing para cada caso.
 5. CLI salida y errores: `format.ts` gana `writeErrorOutput(message, json)` con forma `{"error":{"message":"..."}}` a stderr; `formatComment*`, `formatNextContext*`, branch/PR en el texto de ticket y salida JSON de delete `{"deleted":true,"id":"..."}`. Cambiar `fail(message)` a `fail(message, json)` en los cuatro comandos y hacer que el catch de `main.ts` detecte `--json` en `process.argv`. Aplicarlo a bookmark, resource, project y ticket.
 6. CLI comandos: registrar `ticket next`, `ticket comment`, `ticket comments`; añadir `--branch`/`--pr-url`/`--clear-branch`/`--clear-pr-url` a `ticket update` y `ticket move`; `--json` en `ticket delete` y en los otros delete. Actualizar textos de ayuda. Tests de servicios y formatos.
@@ -190,7 +190,7 @@ Reglas:
 
 - [ ] `forge-cli ticket next` sin `--project-id` devuelve el mejor `todo` de todos los proyectos, con `project`, `comments` e `inProgress`.
 - [ ] `forge-cli ticket next --project-id X` limita candidatos e `inProgress` a ese proyecto.
-- [ ] El orden es prioridad `high → med → low` y empate por `position desc` (arriba del tablero primero).
+- [ ] El orden es prioridad `high → med → low` y empate por `created_at desc` (más reciente primero).
 - [ ] Sin tickets `todo`: exit code 0, `--json` devuelve `ticket: null` y el texto indica que no hay pendientes.
 - [ ] Con tickets en `in_progress`, `next` los incluye en `inProgress` y el texto advierte cuántos hay; no los elige como candidato.
 - [ ] `ticket comment <id> --body "..."` crea el comentario con `author: "user"`; `--author agent` lo marca como agente.
@@ -233,7 +233,7 @@ Reglas:
 - **Sí:** `ticket next` global por defecto con `--project-id` opcional; el flujo real es "¿qué tengo pendiente?", no "¿qué tiene pendiente un proyecto?".
 - **Sí:** candidatos solo de `todo`; el backlog es una bandeja de ideas, no trabajo comprometido.
 - **Sí:** `next` es solo lectura; la skill mueve a `in_progress` cuando decide trabajar. Sin efectos secundarios inesperados.
-- **Sí:** ranking por prioridad y desempate `position desc`; la prioridad ya existe en el modelo y el empate respeta el orden visual del tablero.
+- **Sí:** ranking por prioridad y desempate `created_at desc`; la prioridad ya existe en el modelo y el empate respeta el orden visual del tablero (más reciente primero).
 - **Sí:** `next` expone `inProgress` como aviso sin imponer política; un ticket colgado no se esconde ni bloquea el siguiente pendiente.
 - **Sí:** `next --json` devuelve el compuesto `{ticket, project, comments, inProgress}`; una sola llamada da todo el contexto de arranque.
 - **Sí:** comentarios append-only con autor `user | agent`, texto plano, 1–5000, sin paginar; información de handoff, no un chat.
