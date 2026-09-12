@@ -238,20 +238,21 @@ Reglas:
 
 ## Riesgos
 
-| Riesgo                                                                         | Mitigación                                                                                                                                       |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@insforge/sdk` no corre en el runtime de Workers (APIs no fetch)              | Spike temprano con `forge_list_projects` antes de implementar las seis tools; si falla, reevaluar hosting (VPS o ruta Vercel).                   |
-| La API de `agents/mcp` cambia entre versiones                                  | Pinear versiones exactas en `package.json`; fallback documentado a `@modelcontextprotocol/sdk` stateless.                                        |
-| `vitest-pool-workers` no digiere el SDK (`@supabase/postgrest-js` CJS/ESM)     | Spike con `wrangler dev` y llamada MCP real; tests unitarios de handlers puros con services mockeados, sin runtime de Workers.                   |
-| La extracción del core rompe tests o el build del CLI                          | Mover archivos y tests en el mismo commit, correr `pnpm test`/`build` tras cada paso y verificar el tarball con `npm pack` antes de seguir.      |
-| El cambio a `esbuild` altera la salida publicada del CLI                       | Typecheck con `tsc --noEmit` y smoke test del tarball (`--help`/`--version`); el binario y `files` no cambian.                                   |
-| Rotación de refresh token con pérdida de sesión                                | Guardar cada token rotado en DO storage tras el refresh; si el refresh falla, mensaje claro con el paso de `wrangler secret put`.                |
-| Refresh token comprometido o filtrado en logs                                  | Solo como `wrangler secret`, nunca en repo ni logs; allowlist de GitHub impide que terceros usen el server; rotar el token si hay duda.          |
-| Callback de OAuth mal configurado en la GitHub OAuth App                       | Documentar la URL exacta del Worker en el README con checklist de setup y troubleshooting de `redirect_uri`.                                     |
-| Payloads grandes de tickets (descripciones/comentarios) inflan el contexto     | `TicketSummary` en listados; detalle completo solo en `forge_get_ticket` y `forge_next_ticket`; reporte acotado por ventana.                     |
-| El DoS de contextos largos en Claude no aplica pero `next` global puede crecer | El core ya pagina de 100 en 100 y el ranking se hace en memoria sobre `todo`, conjunto pequeño.                                                  |
-| Rate limiting inexistente en `/mcp`                                            | OAuth de GitHub + allowlist limita el acceso a una sola identidad; el free tier absorbe el uso personal. Si crece, agregar reglas de Cloudflare. |
-| Deriva entre `apps/cli` y `apps/mcp` al evolucionar services                   | Una sola fuente: `@forge/core`; cualquier cambio de contrato se hace ahí y ambos consumidores lo heredan.                                        |
+| Riesgo                                                                         | Mitigación                                                                                                                                                          |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@insforge/sdk` no corre en el runtime de Workers (APIs no fetch)              | Spike temprano con `forge_list_projects` antes de implementar las seis tools; si falla, reevaluar hosting (VPS o ruta Vercel).                                      |
+| La API de `agents/mcp` cambia entre versiones                                  | Pinear versiones exactas en `package.json`; fallback documentado a `@modelcontextprotocol/sdk` stateless.                                                           |
+| InsForge podría invalidar refresh tokens viejos si agrega reuse detection      | El seed de `.dev.vars` sigue válido tras varias rotaciones (verificado); si cambia, mover la sesión a un store global compartido (KV) en vez de por Durable Object. |
+| `vitest-pool-workers` no digiere el SDK (`@supabase/postgrest-js` CJS/ESM)     | Spike con `wrangler dev` y llamada MCP real; tests unitarios de handlers puros con services mockeados, sin runtime de Workers.                                      |
+| La extracción del core rompe tests o el build del CLI                          | Mover archivos y tests en el mismo commit, correr `pnpm test`/`build` tras cada paso y verificar el tarball con `npm pack` antes de seguir.                         |
+| El cambio a `esbuild` altera la salida publicada del CLI                       | Typecheck con `tsc --noEmit` y smoke test del tarball (`--help`/`--version`); el binario y `files` no cambian.                                                      |
+| Rotación de refresh token con pérdida de sesión                                | Guardar cada token rotado en DO storage tras el refresh; si el refresh falla, mensaje claro con el paso de `wrangler secret put`.                                   |
+| Refresh token comprometido o filtrado en logs                                  | Solo como `wrangler secret`, nunca en repo ni logs; allowlist de GitHub impide que terceros usen el server; rotar el token si hay duda.                             |
+| Callback de OAuth mal configurado en la GitHub OAuth App                       | Documentar la URL exacta del Worker en el README con checklist de setup y troubleshooting de `redirect_uri`.                                                        |
+| Payloads grandes de tickets (descripciones/comentarios) inflan el contexto     | `TicketSummary` en listados; detalle completo solo en `forge_get_ticket` y `forge_next_ticket`; reporte acotado por ventana.                                        |
+| El DoS de contextos largos en Claude no aplica pero `next` global puede crecer | El core ya pagina de 100 en 100 y el ranking se hace en memoria sobre `todo`, conjunto pequeño.                                                                     |
+| Rate limiting inexistente en `/mcp`                                            | OAuth de GitHub + allowlist limita el acceso a una sola identidad; el free tier absorbe el uso personal. Si crece, agregar reglas de Cloudflare.                    |
+| Deriva entre `apps/cli` y `apps/mcp` al evolucionar services                   | Una sola fuente: `@forge/core`; cualquier cambio de contrato se hace ahí y ambos consumidores lo heredan.                                                           |
 
 ## Qué **no** está en esta spec
 
