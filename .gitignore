@@ -48,3 +48,6 @@ next-env.d.ts
 # graphify generated outputs
 graphify-out/
 
+# skill-registry generated index (local only; synced to Engram)
+.atl/
+
