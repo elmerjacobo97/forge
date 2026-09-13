@@ -231,6 +231,36 @@ export type ResourceCreateInput = {
 
 export type ResourceUpdateInput = Partial<ResourceCreateInput>;
 
+export const IDEA_STATUSES = ["seed", "exploring", "building", "parked", "shipped"] as const;
+
+export type IdeaStatus = (typeof IDEA_STATUSES)[number];
+
+export const IDEA_CATEGORIES = ["app", "web", "mobile", "business", "other"] as const;
+
+export type IdeaCategory = (typeof IDEA_CATEGORIES)[number];
+
+export type Idea = {
+  id: string;
+  title: string;
+  content: string;
+  status: IdeaStatus;
+  category: IdeaCategory;
+  tags: string[];
+  links: string[];
+  createdAt: string;
+};
+
+export type IdeaCreateInput = {
+  title: string;
+  content: string;
+  status: IdeaStatus;
+  category: IdeaCategory;
+  tags: string[];
+  links: string[];
+};
+
+export type IdeaUpdateInput = Partial<IdeaCreateInput>;
+
 export type ListOptions = {
   limit?: number;
   offset?: number;
