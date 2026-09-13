@@ -45,3 +45,6 @@ next-env.d.ts
 .wrangler/
 .dev.vars
 
+# graphify generated outputs
+graphify-out/
+
