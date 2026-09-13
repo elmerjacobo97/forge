@@ -8,6 +8,7 @@ import {
   Globe,
   Bookmark,
   NotebookText,
+  Lightbulb,
   ImageIcon,
   Columns3,
   Dices,
@@ -32,6 +33,14 @@ export const tools: ToolDef[] = [
     name: "Dev Board",
     description: "Kanban board with auto time tracking for dev tasks",
     icon: Columns3,
+    category: "Productivity",
+  },
+  {
+    id: "ideas",
+    path: "/ideas",
+    name: "Ideas",
+    description: "Capture and track product, app, and business ideas",
+    icon: Lightbulb,
     category: "Productivity",
   },
   {
