@@ -1,6 +1,6 @@
 # SPEC 20 — CLI: ajuste de tiempo de tickets
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 03 — CLI Forge para tickets; SPEC 17 — Loop de agente sobre tickets; SPEC 19 — Ajuste de tiempo de tickets (RPC y semántica)
 > **Fecha:** 2026-09-12
 > **Objetivo:** Permitir ajustar el tiempo registrado de un ticket desde `forge-cli` (editar o borrar la última sesión y retro-detener la corrida actual) con el mismo RPC y la misma auditoría que la web.
