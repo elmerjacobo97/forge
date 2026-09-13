@@ -31,6 +31,7 @@ export const BOOLEAN_FLAGS = new Set([
   "-h",
   "--clear-branch",
   "--clear-pr-url",
+  "--remove-last",
 ]);
 
 export function getPositionals(args: string[]): string[] {
