@@ -4,7 +4,7 @@
 
 ## Qué es
 
-Forge nació como colección de utilidades para desarrolladores y evolucionó a un workspace personal: además de las herramientas de cómputo puro (que corren 100% en el navegador), incluye superficies conectadas que guardan datos en una cuenta propia — bookmarks, recursos, un kanban con time tracking, uptime monitor y webhook inspector — más un CLI que opera sobre los mismos datos desde la terminal.
+Forge nació como colección de utilidades para desarrolladores y evolucionó a un workspace personal: además de las herramientas de cómputo puro (que corren 100% en el navegador), incluye superficies conectadas que guardan datos en una cuenta propia — bookmarks, recursos, ideas, un kanban con time tracking, uptime monitor y webhook inspector — más un CLI que opera sobre los mismos datos desde la terminal.
 
 Hoy el objetivo no es ser un producto SaaS, sino la herramienta diaria del autor: rápida, privada y útil sin fricción.
 
@@ -23,6 +23,7 @@ Hoy el objetivo no es ser un producto SaaS, sino la herramienta diaria del autor
 - **Dev Board:** kanban por proyecto con columnas fijas, drag & drop, time tracking automático en "In Progress" y analítica (cycle time, tiempo registrado, throughput).
 - **Bookmarks:** enlaces con categoría, tags, descripción y generación asistida por IA.
 - **Resources:** notas, prompts, configuraciones y código con metadatos por herramienta.
+- **Ideas:** captura de ideas con título, contenido, estado, categoría, tags y enlaces.
 - **Webhook Inspector:** URLs temporales que capturan requests entrantes para inspección.
 - **Uptime Monitor:** chequeos programados por HTTP con alertas a Telegram y Slack, latencia e historial.
 
@@ -32,7 +33,7 @@ JSON Formatter, JSON to TypeScript, JWT Decoder, Regex Tester, Base64, Mock Data
 
 ### CLI (`forge-cli`)
 
-CRUD de bookmarks, proyectos, tickets y recursos sobre las mismas tablas InsForge, pensado para terminal y agentes.
+CRUD de bookmarks, proyectos, tickets, recursos e ideas sobre las mismas tablas InsForge, pensado para terminal y agentes.
 
 ## Arquitectura
 

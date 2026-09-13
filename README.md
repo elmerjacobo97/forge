@@ -1,6 +1,6 @@
 # Forge
 
-Forge es un workspace personal para desarrollo: utilidades de navegador, bookmarks, recursos, un Dev Board kanban con time tracking, uptime monitor y webhook inspector, con un CLI que opera sobre los mismos datos.
+Forge es un workspace personal para desarrollo: utilidades de navegador, bookmarks, recursos, ideas, un Dev Board kanban con time tracking, uptime monitor y webhook inspector, con un CLI que opera sobre los mismos datos.
 
 ## Stack
 
@@ -13,7 +13,7 @@ Forge es un workspace personal para desarrollo: utilidades de navegador, bookmar
 
 ```
 apps/web        Next.js 16 — rutas en src/app, features en src/features
-apps/cli        forge-cli — bookmarks, proyectos, tickets, recursos
+apps/cli        forge-cli — bookmarks, proyectos, tickets, recursos, ideas
 migrations      Esquema InsForge (tablas, RLS, RPCs)
 docs            Producto, roadmap e ideas
 specs           Especificaciones por feature
@@ -39,7 +39,7 @@ Para un solo test web: `pnpm --filter @forge/web exec vitest run --config tests.
 
 ## Herramientas web
 
-Productividad y datos: Dev Board, Bookmarks, Resources, JSON Formatter, JSON to TypeScript.
+Productividad y datos: Dev Board, Ideas, Bookmarks, Resources, JSON Formatter, JSON to TypeScript.
 Red: HTTP Tester, Webhook Inspector, Uptime Monitor.
 Utilidades: JWT Decoder, Regex Tester, Base64, Mock Data Generator, Password Generator, Image Tools.
 
@@ -52,6 +52,7 @@ forge-cli bookmark list --json
 forge-cli project list
 forge-cli ticket list --project <id>
 forge-cli resource list
+forge-cli idea list
 ```
 
 La sesión y configuración viven en `~/.forge/` con permisos `0600`.
