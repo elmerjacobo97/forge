@@ -10,6 +10,7 @@ import type {
   TicketComment,
   TicketCreateInput,
   TicketMoveInput,
+  TicketTimeAdjustInput,
   TicketUpdateInput,
 } from "./types.js";
 
@@ -309,6 +310,21 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
         "set_dev_board_ticket_timer",
         { p_ticket_id: id, p_action: "resume" },
         "Failed to resume ticket timer.",
+      );
+    },
+
+    async adjustTime(input: TicketTimeAdjustInput): Promise<Ticket> {
+      const params =
+        "set" in input
+          ? { p_action: "set_last_duration", p_ended_at: null, p_duration_ms: input.set }
+          : "removeLast" in input
+            ? { p_action: "delete_last", p_ended_at: null, p_duration_ms: null }
+            : { p_action: "stop_at", p_ended_at: input.stopAt, p_duration_ms: null };
+
+      return ticketRpc(
+        "adjust_dev_board_ticket_time",
+        { p_ticket_id: input.id, ...params },
+        "Failed to adjust ticket time.",
       );
     },
 

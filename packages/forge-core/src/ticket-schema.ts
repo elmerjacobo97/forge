@@ -6,6 +6,7 @@ import type {
   TicketCreateInput,
   TicketMoveInput,
   TicketReportInput,
+  TicketTimeAdjustInput,
   TicketUpdateInput,
 } from "./types.js";
 
@@ -92,6 +93,64 @@ export const ticketCommentSchema = z.object({
   author: commentAuthorSchema.default("user"),
 });
 
+const DURATION_PATTERN = /^(?:(\d+)h)?(?:(\d+)m)?$/i;
+
+export function parseDurationMs(value: string): number | { error: string } {
+  const match = value.trim().match(DURATION_PATTERN);
+  if (!match || (match[1] === undefined && match[2] === undefined)) {
+    return { error: "Duration must look like 1h30m or 90m." };
+  }
+
+  const hours = Number(match[1] ?? 0);
+  const minutes = Number(match[2] ?? 0);
+  const durationMs = (hours * 60 + minutes) * 60_000;
+  if (!Number.isSafeInteger(durationMs)) {
+    return { error: "Duration is too large." };
+  }
+  return durationMs;
+}
+
+const stopAtSchema = z
+  .string({ error: "Stop time must be 'now' or an ISO 8601 timestamp (--stop-at)." })
+  .trim()
+  .refine((value) => value.toLowerCase() === "now" || !Number.isNaN(Date.parse(value)), {
+    message: "Stop time must be 'now' or a valid ISO 8601 timestamp.",
+  });
+
+export const ticketTimeAdjustSchema = z
+  .object({
+    id: z.string({ error: "Ticket id is required." }).trim().min(1, "Ticket id is required."),
+    set: z
+      .string({ error: "Duration must be a string (--set)." })
+      .trim()
+      .min(1, "Duration must not be empty (--set).")
+      .optional(),
+    removeLast: z.boolean().optional(),
+    stopAt: stopAtSchema.optional(),
+  })
+  .superRefine((value, context) => {
+    const provided = [
+      value.set !== undefined,
+      value.removeLast === true,
+      value.stopAt !== undefined,
+    ].filter(Boolean).length;
+
+    if (provided !== 1) {
+      context.addIssue({
+        code: "custom",
+        message: "Provide exactly one of --set, --remove-last or --stop-at.",
+      });
+      return;
+    }
+
+    if (value.set !== undefined) {
+      const duration = parseDurationMs(value.set);
+      if (typeof duration !== "number") {
+        context.addIssue({ code: "custom", message: duration.error });
+      }
+    }
+  });
+
 const reportDaysSchema = z.coerce
   .number({ error: "Days must be a number (--days)." })
   .int("Days must be an integer.")
@@ -148,6 +207,35 @@ export function parseTicketCommentInput(value: unknown): TicketCommentInput | { 
     return { error: formatZodError(parsed.error) };
   }
   return parsed.data;
+}
+
+export function parseTicketTimeAdjustInput(
+  value: unknown,
+): TicketTimeAdjustInput | { error: string } {
+  const parsed = ticketTimeAdjustSchema.safeParse(value);
+  if (!parsed.success) {
+    return { error: formatZodError(parsed.error) };
+  }
+
+  const { id, set, removeLast, stopAt } = parsed.data;
+
+  if (set !== undefined) {
+    const durationMs = parseDurationMs(set);
+    if (typeof durationMs !== "number") {
+      return { error: durationMs.error };
+    }
+    return { id, set: durationMs };
+  }
+
+  if (removeLast === true) {
+    return { id, removeLast: true };
+  }
+
+  if (stopAt !== undefined) {
+    return { id, stopAt: stopAt.toLowerCase() === "now" ? new Date().toISOString() : stopAt };
+  }
+
+  return { error: "Provide exactly one of --set, --remove-last or --stop-at." };
 }
 
 export function parseTicketReportInput(value: unknown): TicketReportInput | { error: string } {
