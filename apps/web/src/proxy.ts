@@ -9,6 +9,7 @@ const protectedPathPrefixes = [
   "/bookmarks",
   "/dev-board",
   "/http-tester",
+  "/ideas",
   "/image-tools",
   "/json-formatter",
   "/json-to-typescript",
