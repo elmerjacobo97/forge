@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   parseColumnId,
+  parseDurationMs,
   parsePriority,
   parseTicketCommentInput,
   parseTicketCreateInput,
   parseTicketMoveInput,
   parseTicketReportInput,
+  parseTicketTimeAdjustInput,
   parseTicketUpdateInput,
 } from "../../src/ticket-schema.js";
 
@@ -350,5 +352,90 @@ describe("parseColumnId / parsePriority", () => {
       throw new Error("expected validation error");
     }
     expect(priority.error).toContain("Priority must be one of:");
+  });
+});
+
+describe("parseDurationMs", () => {
+  it("parses hours and minutes with required units", () => {
+    expect(parseDurationMs("30m")).toBe(1_800_000);
+    expect(parseDurationMs("90m")).toBe(5_400_000);
+    expect(parseDurationMs("1h")).toBe(3_600_000);
+    expect(parseDurationMs("1h30m")).toBe(5_400_000);
+    expect(parseDurationMs("2h")).toBe(7_200_000);
+    expect(parseDurationMs("0m")).toBe(0);
+  });
+
+  it("is case-insensitive and trims surrounding whitespace", () => {
+    expect(parseDurationMs(" 1H30M ")).toBe(5_400_000);
+  });
+
+  it("rejects empty, unit-less, fractional and malformed values", () => {
+    for (const value of ["", "90", "1h30", "1.5h", "-30m", "1h 30m", "1m30h", "abc"]) {
+      expect(parseDurationMs(value)).toEqual({ error: "Duration must look like 1h30m or 90m." });
+    }
+  });
+});
+
+describe("parseTicketTimeAdjustInput", () => {
+  it("accepts --set and converts the duration to milliseconds", () => {
+    expect(parseTicketTimeAdjustInput({ id: "ticket1", set: "1h30m" })).toEqual({
+      id: "ticket1",
+      set: 5_400_000,
+    });
+  });
+
+  it("accepts --remove-last", () => {
+    expect(parseTicketTimeAdjustInput({ id: "ticket1", removeLast: true })).toEqual({
+      id: "ticket1",
+      removeLast: true,
+    });
+  });
+
+  it("accepts --stop-at with an ISO timestamp", () => {
+    expect(
+      parseTicketTimeAdjustInput({ id: "ticket1", stopAt: "2026-09-12T20:00:00.000Z" }),
+    ).toEqual({ id: "ticket1", stopAt: "2026-09-12T20:00:00.000Z" });
+  });
+
+  it("normalizes --stop-at now to the current ISO timestamp", () => {
+    const before = Date.now();
+    const result = parseTicketTimeAdjustInput({ id: "ticket1", stopAt: "NOW" });
+    if (!("stopAt" in result)) throw new Error("expected stopAt output");
+
+    const parsedMs = Date.parse(result.stopAt);
+    expect(parsedMs).toBeGreaterThanOrEqual(before);
+    expect(parsedMs).toBeLessThanOrEqual(Date.now());
+  });
+
+  it("requires exactly one action flag", () => {
+    for (const payload of [
+      { id: "ticket1" },
+      { id: "ticket1", set: "1h", removeLast: true },
+      { id: "ticket1", removeLast: true, stopAt: "now" },
+      { id: "ticket1", set: "1h", stopAt: "now" },
+      { id: "ticket1", set: "1h", removeLast: true, stopAt: "now" },
+    ]) {
+      const result = parseTicketTimeAdjustInput(payload);
+      expect(result).toHaveProperty("error");
+      if (!("error" in result)) throw new Error("expected validation error");
+      expect(result.error).toContain("Provide exactly one of --set, --remove-last or --stop-at.");
+    }
+  });
+
+  it("rejects invalid durations, stop times and ids", () => {
+    const duration = parseTicketTimeAdjustInput({ id: "ticket1", set: "90" });
+    expect(duration).toHaveProperty("error");
+    if (!("error" in duration)) throw new Error("expected validation error");
+    expect(duration.error).toContain("Duration must look like 1h30m or 90m.");
+
+    const stopAt = parseTicketTimeAdjustInput({ id: "ticket1", stopAt: "yesterday" });
+    expect(stopAt).toHaveProperty("error");
+    if (!("error" in stopAt)) throw new Error("expected validation error");
+    expect(stopAt.error).toContain("Stop time must be 'now' or a valid ISO 8601 timestamp.");
+
+    const id = parseTicketTimeAdjustInput({ id: "  ", set: "1h" });
+    expect(id).toHaveProperty("error");
+    if (!("error" in id)) throw new Error("expected validation error");
+    expect(id.error).toContain("Ticket id is required.");
   });
 });

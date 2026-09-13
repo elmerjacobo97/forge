@@ -394,3 +394,69 @@ describe("devBoardService handoff", () => {
     });
   });
 });
+
+describe("adjustTime", () => {
+  it("sends set_last_duration with the duration and a null end time", async () => {
+    const { client, rpcCalls } = createDevBoardMockClient({
+      rpc: () => ({ data: ticketRow({ id: "ticket-1" }), error: null }),
+    });
+
+    const ticket = await createDevBoardService({ client }).adjustTime({
+      id: "ticket-1",
+      set: 3_600_000,
+    });
+
+    expect(rpcCalls).toHaveLength(1);
+    expect(rpcCalls[0].name).toBe("adjust_dev_board_ticket_time");
+    expect(rpcCalls[0].params).toEqual({
+      p_ticket_id: "ticket-1",
+      p_action: "set_last_duration",
+      p_ended_at: null,
+      p_duration_ms: 3_600_000,
+    });
+    expect(ticket.id).toBe("ticket-1");
+  });
+
+  it("sends delete_last with a null payload", async () => {
+    const { client, rpcCalls } = createDevBoardMockClient({
+      rpc: () => ({ data: ticketRow({ id: "ticket-1" }), error: null }),
+    });
+
+    await createDevBoardService({ client }).adjustTime({ id: "ticket-1", removeLast: true });
+
+    expect(rpcCalls[0].params).toEqual({
+      p_ticket_id: "ticket-1",
+      p_action: "delete_last",
+      p_ended_at: null,
+      p_duration_ms: null,
+    });
+  });
+
+  it("sends stop_at with the end time and a null duration", async () => {
+    const { client, rpcCalls } = createDevBoardMockClient({
+      rpc: () => ({ data: ticketRow({ id: "ticket-1", is_paused: true }), error: null }),
+    });
+
+    await createDevBoardService({ client }).adjustTime({
+      id: "ticket-1",
+      stopAt: "2026-09-12T20:00:00.000Z",
+    });
+
+    expect(rpcCalls[0].params).toEqual({
+      p_ticket_id: "ticket-1",
+      p_action: "stop_at",
+      p_ended_at: "2026-09-12T20:00:00.000Z",
+      p_duration_ms: null,
+    });
+  });
+
+  it("surfaces RPC failures", async () => {
+    const { client } = createDevBoardMockClient({
+      rpc: () => ({ data: null, error: { message: "Ticket has no time entries" } }),
+    });
+
+    await expect(
+      createDevBoardService({ client }).adjustTime({ id: "ticket-1", removeLast: true }),
+    ).rejects.toThrow("Ticket has no time entries");
+  });
+});
