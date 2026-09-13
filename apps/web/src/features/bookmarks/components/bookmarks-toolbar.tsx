@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { AddBookmarkDialog } from "@/features/bookmarks/components/add-bookmark-dialog";
 import { CATEGORIES } from "@/features/bookmarks/constants";
 import type { BookmarkFilters } from "@/features/bookmarks/schemas/bookmarks-schema";
-import { useDebounce } from "@/lib/hooks/use-debounce";
+import { useUrlSearch } from "@/lib/hooks/use-url-search";
 import { cn } from "@/lib/utils";
 
 function buildQuery(filters: BookmarkFilters): string {
@@ -22,37 +22,8 @@ function buildQuery(filters: BookmarkFilters): string {
 export function BookmarksToolbar({ filters }: { filters: BookmarkFilters }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [search, setSearch] = useState(filters.q);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isNavigating, startNavigating] = useTransition();
-  const debouncedSearch = useDebounce(search, 200);
-  const lastSyncedQuery = useRef(filters.q);
-  const pendingQueries = useRef(new Set<string>());
-  const skipNextPush = useRef(false);
-
-  // Adopt URL changes that we did not push ourselves (back/forward, links).
-  useEffect(() => {
-    if (filters.q === lastSyncedQuery.current) {
-      pendingQueries.current.delete(filters.q);
-      return;
-    }
-
-    if (pendingQueries.current.has(filters.q)) {
-      pendingQueries.current.delete(filters.q);
-      return;
-    }
-
-    for (const pending of pendingQueries.current) {
-      if (pending.trim() === filters.q) {
-        pendingQueries.current.delete(pending);
-        return;
-      }
-    }
-
-    skipNextPush.current = true;
-    lastSyncedQuery.current = filters.q;
-    setSearch(filters.q);
-  }, [filters.q]);
 
   const applyFilters = useCallback(
     (next: Partial<BookmarkFilters>) => {
@@ -64,18 +35,9 @@ export function BookmarksToolbar({ filters }: { filters: BookmarkFilters }) {
     [filters, pathname, router],
   );
 
-  useEffect(() => {
-    if (skipNextPush.current) {
-      skipNextPush.current = false;
-      return;
-    }
-    if (debouncedSearch !== search) return;
-    if (debouncedSearch === filters.q) return;
-    if (debouncedSearch === lastSyncedQuery.current) return;
-    pendingQueries.current.add(debouncedSearch);
-    lastSyncedQuery.current = debouncedSearch;
-    applyFilters({ q: debouncedSearch });
-  }, [search, debouncedSearch, filters.q, applyFilters]);
+  const { value: search, setValue: setSearch } = useUrlSearch(filters.q, (q) =>
+    applyFilters({ q }),
+  );
 
   return (
     <div className="flex flex-wrap items-center gap-3">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 
@@ -17,7 +17,7 @@ import { AddResourceDialog } from "./add-resource-dialog";
 import { FORMATS, KINDS, TOOLS } from "../constants";
 import type { ResourceFilters } from "../schemas/resource-filters";
 import type { ResourceFormat, ResourceTool } from "../types";
-import { useDebounce } from "@/lib/hooks/use-debounce";
+import { useUrlSearch } from "@/lib/hooks/use-url-search";
 import { cn } from "@/lib/utils";
 
 function buildQuery(filters: ResourceFilters): string {
@@ -33,37 +33,8 @@ function buildQuery(filters: ResourceFilters): string {
 export function ResourcesToolbar({ filters, tags }: { filters: ResourceFilters; tags: string[] }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [search, setSearch] = useState(filters.q);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isNavigating, startNavigating] = useTransition();
-  const debouncedSearch = useDebounce(search, 200);
-  const lastSyncedQuery = useRef(filters.q);
-  const pendingQueries = useRef(new Set<string>());
-  const skipNextPush = useRef(false);
-
-  // Adopt URL changes that we did not push ourselves (back/forward, links).
-  useEffect(() => {
-    if (filters.q === lastSyncedQuery.current) {
-      pendingQueries.current.delete(filters.q);
-      return;
-    }
-
-    if (pendingQueries.current.has(filters.q)) {
-      pendingQueries.current.delete(filters.q);
-      return;
-    }
-
-    for (const pending of pendingQueries.current) {
-      if (pending.trim() === filters.q) {
-        pendingQueries.current.delete(pending);
-        return;
-      }
-    }
-
-    skipNextPush.current = true;
-    lastSyncedQuery.current = filters.q;
-    setSearch(filters.q);
-  }, [filters.q]);
 
   const applyFilters = useCallback(
     (next: Partial<ResourceFilters>) => {
@@ -75,18 +46,9 @@ export function ResourcesToolbar({ filters, tags }: { filters: ResourceFilters; 
     [filters, pathname, router],
   );
 
-  useEffect(() => {
-    if (skipNextPush.current) {
-      skipNextPush.current = false;
-      return;
-    }
-    if (debouncedSearch !== search) return;
-    if (debouncedSearch === filters.q) return;
-    if (debouncedSearch === lastSyncedQuery.current) return;
-    pendingQueries.current.add(debouncedSearch);
-    lastSyncedQuery.current = debouncedSearch;
-    applyFilters({ q: debouncedSearch });
-  }, [search, debouncedSearch, filters.q, applyFilters]);
+  const { value: search, setValue: setSearch } = useUrlSearch(filters.q, (q) =>
+    applyFilters({ q }),
+  );
 
   return (
     <div className="flex flex-wrap items-center gap-3">
