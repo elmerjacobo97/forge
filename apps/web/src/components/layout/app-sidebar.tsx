@@ -62,7 +62,8 @@ export function AppSidebar({ activePath, user, version }: AppSidebarProps) {
       <SidebarHeader>
         <Link
           href="/"
-          className="flex items-center gap-2 px-2 py-1.5"
+          aria-label="Forge"
+          className="flex items-center gap-2 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:px-0"
         >
           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-primary to-primary/70 text-primary-foreground shadow-sm ring-1 ring-primary/20">
             <Hammer className="size-4" />
@@ -115,7 +116,7 @@ export function AppSidebar({ activePath, user, version }: AppSidebarProps) {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="h-auto w-full justify-start gap-2 p-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0"
+              className="h-auto w-full justify-start gap-2 p-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
             >
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground">
                 <User className="size-3.5" />
