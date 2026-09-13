@@ -1,6 +1,6 @@
 # SPEC 21 — Ideas: captura y seguimiento de ideas
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 08 — Resources (patrón de tool CRUD, filtros y tarjetas) · SPEC 02 — CLI Bookmarks (patrón de comandos CRUD sobre `@forge/core`)
 > **Fecha:** 2026-09-12
 > **Objetivo:** Añadir el tool `Ideas` (web en `/ideas` y CLI `forge-cli idea`) para capturar ideas con título, contenido, estado, categoría, tags y enlaces, con CRUD completo, búsqueda y filtros, persistido en InsForge con RLS por usuario.
