@@ -6,7 +6,7 @@
 
 - **Stack:** Next.js 16 (App Router, Server Components, Server Actions) + React 19 + InsForge (Postgres con RLS). Tailwind 4 + shadcn/ui.
 - **Sin TanStack Query:** el server-state se maneja con lecturas en servidor, Server Actions para mutaciones y Route Handlers para polling/paginación de cliente.
-- **Tools activas (14):** Dev Board, Bookmarks, Resources, JSON Formatter, JSON to TypeScript, HTTP Tester, Webhook Inspector, Uptime Monitor, JWT Decoder, Regex Tester, Base64, Mock Data Generator, Password Generator, Image Tools.
+- **Tools activas (15):** Dev Board, Ideas, Bookmarks, Resources, JSON Formatter, JSON to TypeScript, HTTP Tester, Webhook Inspector, Uptime Monitor, JWT Decoder, Regex Tester, Base64, Mock Data Generator, Password Generator, Image Tools.
 - **Eliminado:** 12 utilidades triviales (html-entities, lorem-ipsum, url-encoder, text-manipulator, qr-generator, color-converter, uuid-generator, timestamp-converter, hash-generator, format-converter, diff-tool, file-validator), el residuo `supabase/`, la función Appwrite compilada en `functions/` y las carpetas vacías en `features/`.
 - **Tests:** 277 tests con Vitest (utils puras, servicios con InsForge mockeado, schemas y handlers críticos).
 
