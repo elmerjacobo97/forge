@@ -3,6 +3,7 @@ import {
   createBookmarksService,
   createDevBoardService,
   createForgeClient,
+  createIdeasService,
   createProjectsService,
   createResourcesService,
 } from "@forge/core";
@@ -86,6 +87,11 @@ export async function createAuthedBookmarksService() {
 export async function createAuthedResourcesService() {
   const { client } = await createAuthedClient();
   return createResourcesService({ client });
+}
+
+export async function createAuthedIdeasService() {
+  const { client } = await createAuthedClient();
+  return createIdeasService({ client });
 }
 
 export async function createAuthedDevBoardService() {

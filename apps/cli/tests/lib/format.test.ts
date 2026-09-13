@@ -9,6 +9,10 @@ import {
   formatCommentListText,
   formatCommentText,
   formatDeletedJson,
+  formatIdeaJson,
+  formatIdeaListJson,
+  formatIdeaListText,
+  formatIdeaText,
   formatNextContextJson,
   formatNextContextText,
   formatProjectJson,
@@ -28,6 +32,7 @@ import {
 } from "../../src/format.js";
 import type {
   Bookmark,
+  Idea,
   NextTicketContext,
   Project,
   Resource,
@@ -101,6 +106,17 @@ const sampleResource: Resource = {
   version: "9",
   context: "workspace",
   createdAt: "2026-01-01T00:00:00.000Z",
+};
+
+const sampleIdea: Idea = {
+  id: "i1",
+  title: "Coffee meetup app",
+  content: "Join strangers for coffee at local cafés.",
+  status: "exploring",
+  category: "mobile",
+  tags: ["social", "local"],
+  links: ["https://example.com/inspiration"],
+  createdAt: "2026-09-01T00:00:00.000Z",
 };
 
 describe("formatBookmarkText", () => {
@@ -390,5 +406,41 @@ describe("resource JSON formatters", () => {
   it("emits a parseable resource array", () => {
     const parsed = JSON.parse(formatResourceListJson([sampleResource])) as Resource[];
     expect(parsed).toEqual([sampleResource]);
+  });
+});
+
+describe("formatIdeaText", () => {
+  it("renders a readable idea block", () => {
+    const text = formatIdeaText(sampleIdea);
+    expect(text).toContain("id:          i1");
+    expect(text).toContain("title:       Coffee meetup app");
+    expect(text).toContain("status:      exploring");
+    expect(text).toContain("category:    mobile");
+    expect(text).toContain("tags:        social, local");
+    expect(text).toContain("links:       https://example.com/inspiration");
+  });
+
+  it("shows (none) for empty tags and links", () => {
+    const text = formatIdeaText({ ...sampleIdea, tags: [], links: [] });
+    expect(text).toContain("tags:        (none)");
+    expect(text).toContain("links:       (none)");
+  });
+});
+
+describe("formatIdeaListText", () => {
+  it("handles an empty list", () => {
+    expect(formatIdeaListText([])).toBe("No ideas.");
+  });
+});
+
+describe("idea JSON formatters", () => {
+  it("emits parseable idea JSON", () => {
+    const parsed = JSON.parse(formatIdeaJson(sampleIdea)) as Idea;
+    expect(parsed).toEqual(sampleIdea);
+  });
+
+  it("emits a parseable idea array", () => {
+    const parsed = JSON.parse(formatIdeaListJson([sampleIdea])) as Idea[];
+    expect(parsed).toEqual([sampleIdea]);
   });
 });
