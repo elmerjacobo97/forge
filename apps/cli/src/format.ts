@@ -1,5 +1,6 @@
 import type {
   Bookmark,
+  Idea,
   NextTicketContext,
   Project,
   Resource,
@@ -284,4 +285,42 @@ export function writeResourceListOutput(resources: Resource[], json: boolean): v
   process.stdout.write(
     json ? formatResourceListJson(resources) : `${formatResourceListText(resources)}\n`,
   );
+}
+
+export function formatIdeaText(idea: Idea): string {
+  const tags = idea.tags.length > 0 ? idea.tags.join(", ") : "(none)";
+  const links = idea.links.length > 0 ? idea.links.join(", ") : "(none)";
+  return (
+    `id:          ${idea.id}\n` +
+    `title:       ${idea.title}\n` +
+    `status:      ${idea.status}\n` +
+    `category:    ${idea.category}\n` +
+    `content:     ${idea.content}\n` +
+    `tags:        ${tags}\n` +
+    `links:       ${links}\n` +
+    `createdAt:   ${idea.createdAt}`
+  );
+}
+
+export function formatIdeaListText(ideas: Idea[]): string {
+  if (ideas.length === 0) {
+    return "No ideas.";
+  }
+  return ideas.map(formatIdeaText).join("\n\n");
+}
+
+export function formatIdeaJson(idea: Idea): string {
+  return `${JSON.stringify(idea, null, 2)}\n`;
+}
+
+export function formatIdeaListJson(ideas: Idea[]): string {
+  return `${JSON.stringify(ideas, null, 2)}\n`;
+}
+
+export function writeIdeaOutput(idea: Idea, json: boolean): void {
+  process.stdout.write(json ? formatIdeaJson(idea) : `${formatIdeaText(idea)}\n`);
+}
+
+export function writeIdeaListOutput(ideas: Idea[], json: boolean): void {
+  process.stdout.write(json ? formatIdeaListJson(ideas) : `${formatIdeaListText(ideas)}\n`);
 }

@@ -153,6 +153,31 @@ When `tool` is `other`, pass `--custom-tool`. Config metadata (`--tool`,
 Resources sync to the InsForge `resources` table (same as the web `/resources`
 tool). `--json` applies to `create|list|get|update|delete`.
 
+## Ideas
+
+```bash
+forge-cli idea create \
+  --title "Coffee meetup app" \
+  --content "Join strangers for coffee at local cafés" \
+  --category mobile \
+  --tags social,local \
+  --links https://example.com/inspiration
+
+forge-cli idea list
+forge-cli idea list --json
+forge-cli idea list --limit 10 --offset 10
+forge-cli idea get <id> --json
+forge-cli idea update <id> --status building
+forge-cli idea update <id> --links ""     # clears the links array
+forge-cli idea delete <id>
+```
+
+Statuses: `seed` | `exploring` | `building` | `parked` | `shipped` (default
+`seed`). Categories: `app` | `web` | `mobile` | `business` | `other` (default
+`other`). `--links` takes up to 10 comma-separated URLs. Ideas sync to the
+InsForge `ideas` table (same as the web `/ideas` tool). `--json` applies to
+`create|list|get|update|delete`.
+
 ## Dev Board projects
 
 ```bash
