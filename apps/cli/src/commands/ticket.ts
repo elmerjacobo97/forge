@@ -22,6 +22,7 @@ import {
   parseTicketCreateInput,
   parseTicketMoveInput,
   parseTicketReportInput,
+  parseTicketTimeAdjustInput,
   parseTicketUpdateInput,
   resolveReportWindow,
   type ActivityReport,
@@ -39,6 +40,7 @@ Commands:
   update    Update title/description/priority/handoff
   delete    Delete a ticket by id
   move      Move a ticket to another column
+  adjust-time  Adjust the logged time of a ticket
   next      Show the next pending ticket with context
   comment   Add a comment to a ticket
   comments  List a ticket comments
@@ -84,6 +86,11 @@ move options:
   --clear-branch               Clear the branch
   --clear-pr-url               Clear the PR URL
 
+adjust-time options (exactly one):
+  --set <duration>             Rewrite the last closed session (30m | 1h30m | 90m)
+  --remove-last                Delete the last closed session
+  --stop-at <now|iso>          Stop the running session at that time (now = pause)
+
 comment options:
   --body <text>                Required (1-5000)
   --author <author>            Optional (user | agent, default user)
@@ -98,6 +105,9 @@ Examples:
   forge-cli ticket update <id> --clear-branch --clear-pr-url
   forge-cli ticket move <id> --column validation
   forge-cli ticket move <id> --column review --branch dev/handoff --pr-url https://github.com/acme/forge/pull/17
+  forge-cli ticket adjust-time <id> --set 1h30m
+  forge-cli ticket adjust-time <id> --remove-last
+  forge-cli ticket adjust-time <id> --stop-at now
   forge-cli ticket next --json
   forge-cli ticket comment <id> --body "Moved to review" --author agent
   forge-cli ticket comments <id> --json
@@ -248,6 +258,25 @@ async function runMove(args: string[]): Promise<void> {
   writeTicketOutput(ticket, json);
 }
 
+async function runAdjustTime(args: string[]): Promise<void> {
+  const json = hasFlag(args, "--json");
+  const [id] = getPositionals(args);
+  const input = parseTicketTimeAdjustInput({
+    id: id ?? "",
+    set: getFlagValue(args, "--set"),
+    removeLast: hasFlag(args, "--remove-last") || undefined,
+    stopAt: getFlagValue(args, "--stop-at"),
+  });
+  if ("error" in input) {
+    fail(input.error, json);
+    return;
+  }
+
+  const service = await createAuthedDevBoardService();
+  const ticket = await service.adjustTime(input);
+  writeTicketOutput(ticket, json);
+}
+
 async function runNext(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json");
   const projectId = getFlagValue(args, "--project-id")?.trim();
@@ -364,6 +393,9 @@ export async function runTicket(args: string[]): Promise<void> {
       return;
     case "move":
       await runMove(rest);
+      return;
+    case "adjust-time":
+      await runAdjustTime(rest);
       return;
     case "next":
       await runNext(rest);
