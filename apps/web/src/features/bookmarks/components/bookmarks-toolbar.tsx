@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 
@@ -23,16 +23,36 @@ export function BookmarksToolbar({ filters }: { filters: BookmarkFilters }) {
   const router = useRouter();
   const pathname = usePathname();
   const [search, setSearch] = useState(filters.q);
-  const [syncedQuery, setSyncedQuery] = useState(filters.q);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isNavigating, startNavigating] = useTransition();
   const debouncedSearch = useDebounce(search, 200);
+  const lastSyncedQuery = useRef(filters.q);
+  const pendingQueries = useRef(new Set<string>());
+  const skipNextPush = useRef(false);
 
-  // Adjust local input state when the URL changes externally (back/forward, links).
-  if (filters.q !== syncedQuery) {
-    setSyncedQuery(filters.q);
+  // Adopt URL changes that we did not push ourselves (back/forward, links).
+  useEffect(() => {
+    if (filters.q === lastSyncedQuery.current) {
+      pendingQueries.current.delete(filters.q);
+      return;
+    }
+
+    if (pendingQueries.current.has(filters.q)) {
+      pendingQueries.current.delete(filters.q);
+      return;
+    }
+
+    for (const pending of pendingQueries.current) {
+      if (pending.trim() === filters.q) {
+        pendingQueries.current.delete(pending);
+        return;
+      }
+    }
+
+    skipNextPush.current = true;
+    lastSyncedQuery.current = filters.q;
     setSearch(filters.q);
-  }
+  }, [filters.q]);
 
   const applyFilters = useCallback(
     (next: Partial<BookmarkFilters>) => {
@@ -45,9 +65,17 @@ export function BookmarksToolbar({ filters }: { filters: BookmarkFilters }) {
   );
 
   useEffect(() => {
+    if (skipNextPush.current) {
+      skipNextPush.current = false;
+      return;
+    }
+    if (debouncedSearch !== search) return;
     if (debouncedSearch === filters.q) return;
+    if (debouncedSearch === lastSyncedQuery.current) return;
+    pendingQueries.current.add(debouncedSearch);
+    lastSyncedQuery.current = debouncedSearch;
     applyFilters({ q: debouncedSearch });
-  }, [debouncedSearch, filters.q, applyFilters]);
+  }, [search, debouncedSearch, filters.q, applyFilters]);
 
   return (
     <div className="flex flex-wrap items-center gap-3">
