@@ -117,7 +117,10 @@ export type TicketMoveInput = {
 };
 
 export type TicketTimeAdjustInput =
-  { id: string; set: number } | { id: string; removeLast: true } | { id: string; stopAt: string };
+  | { id: string; set: number }
+  | { id: string; setTotal: number }
+  | { id: string; removeLast: true }
+  | { id: string; stopAt: string };
 
 export const COMMENT_AUTHORS = ["user", "agent"] as const;
 

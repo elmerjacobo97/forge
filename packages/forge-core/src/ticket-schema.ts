@@ -125,12 +125,18 @@ export const ticketTimeAdjustSchema = z
       .trim()
       .min(1, "Duration must not be empty (--set).")
       .optional(),
+    setTotal: z
+      .string({ error: "Duration must be a string (--set-total)." })
+      .trim()
+      .min(1, "Duration must not be empty (--set-total).")
+      .optional(),
     removeLast: z.boolean().optional(),
     stopAt: stopAtSchema.optional(),
   })
   .superRefine((value, context) => {
     const provided = [
       value.set !== undefined,
+      value.setTotal !== undefined,
       value.removeLast === true,
       value.stopAt !== undefined,
     ].filter(Boolean).length;
@@ -138,13 +144,14 @@ export const ticketTimeAdjustSchema = z
     if (provided !== 1) {
       context.addIssue({
         code: "custom",
-        message: "Provide exactly one of --set, --remove-last or --stop-at.",
+        message: "Provide exactly one of --set, --set-total, --remove-last or --stop-at.",
       });
       return;
     }
 
-    if (value.set !== undefined) {
-      const duration = parseDurationMs(value.set);
+    const durationInput = value.set ?? value.setTotal;
+    if (durationInput !== undefined) {
+      const duration = parseDurationMs(durationInput);
       if (typeof duration !== "number") {
         context.addIssue({ code: "custom", message: duration.error });
       }
@@ -217,7 +224,7 @@ export function parseTicketTimeAdjustInput(
     return { error: formatZodError(parsed.error) };
   }
 
-  const { id, set, removeLast, stopAt } = parsed.data;
+  const { id, set, setTotal, removeLast, stopAt } = parsed.data;
 
   if (set !== undefined) {
     const durationMs = parseDurationMs(set);
@@ -225,6 +232,14 @@ export function parseTicketTimeAdjustInput(
       return { error: durationMs.error };
     }
     return { id, set: durationMs };
+  }
+
+  if (setTotal !== undefined) {
+    const durationMs = parseDurationMs(setTotal);
+    if (typeof durationMs !== "number") {
+      return { error: durationMs.error };
+    }
+    return { id, setTotal: durationMs };
   }
 
   if (removeLast === true) {
@@ -235,7 +250,7 @@ export function parseTicketTimeAdjustInput(
     return { id, stopAt: stopAt.toLowerCase() === "now" ? new Date().toISOString() : stopAt };
   }
 
-  return { error: "Provide exactly one of --set, --remove-last or --stop-at." };
+  return { error: "Provide exactly one of --set, --set-total, --remove-last or --stop-at." };
 }
 
 export function parseTicketReportInput(value: unknown): TicketReportInput | { error: string } {

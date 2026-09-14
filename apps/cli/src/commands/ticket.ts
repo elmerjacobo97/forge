@@ -88,6 +88,7 @@ move options:
 
 adjust-time options (exactly one):
   --set <duration>             Rewrite the last closed session (30m | 1h30m | 90m)
+  --set-total <duration>       Set the logged total; only when the ticket has no time entries
   --remove-last                Delete the last closed session
   --stop-at <now|iso>          Stop the running session at that time (now = pause)
 
@@ -106,6 +107,7 @@ Examples:
   forge-cli ticket move <id> --column validation
   forge-cli ticket move <id> --column review --branch dev/handoff --pr-url https://github.com/acme/forge/pull/17
   forge-cli ticket adjust-time <id> --set 1h30m
+  forge-cli ticket adjust-time <id> --set-total 20m
   forge-cli ticket adjust-time <id> --remove-last
   forge-cli ticket adjust-time <id> --stop-at now
   forge-cli ticket next --json
@@ -264,6 +266,7 @@ async function runAdjustTime(args: string[]): Promise<void> {
   const input = parseTicketTimeAdjustInput({
     id: id ?? "",
     set: getFlagValue(args, "--set"),
+    setTotal: getFlagValue(args, "--set-total"),
     removeLast: hasFlag(args, "--remove-last") || undefined,
     stopAt: getFlagValue(args, "--stop-at"),
   });

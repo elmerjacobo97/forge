@@ -209,6 +209,7 @@ forge-cli ticket move <id> --column in_progress
 forge-cli ticket move <id> --column validation
 forge-cli ticket move <id> --column review --branch dev/handoff --pr-url "https://github.com/acme/forge/pull/17"
 forge-cli ticket adjust-time <id> --set 1h30m
+forge-cli ticket adjust-time <id> --set-total 20m
 forge-cli ticket adjust-time <id> --remove-last
 forge-cli ticket adjust-time <id> --stop-at now
 forge-cli ticket next
@@ -229,12 +230,17 @@ Timer-active columns are `in_progress` and `validation`; moving between them
 keeps the timer running, and `review`/`done` stop it.
 
 `adjust-time` fixes logged time with exactly one flag: `--set <duration>`
-rewrites the last closed session, `--remove-last` deletes it, and
-`--stop-at <now|iso>` stops the running session at that time (`now` equals a
-pause). Durations require a unit (`30m`, `90m`, `1h30m`, `2h`; `0m` removes the
-session). With the timer running, `--set` edits the previous closed session;
-use `--stop-at` for the current one. Every duration change leaves an audit
-comment on the ticket (written by the backend).
+rewrites the last closed session, `--set-total <duration>` sets the logged
+total directly (only when the ticket has no time entries; use it to backfill
+time spent before the timer started, e.g. planning), `--remove-last` deletes
+the last session, and `--stop-at <now|iso>` stops the running session at that
+time (`now` equals a pause). Durations require a unit (`30m`, `90m`, `1h30m`,
+`2h`; `0m` removes the session). With the timer running, `--set` edits the
+previous closed session; use `--stop-at` for the current one. Every duration
+change leaves an audit comment on the ticket (written by the backend).
+Because `--set-total` stores the value in the ticket total rather than in a
+time entry, a later `--set`, `--remove-last` or `--stop-at` recomputes the
+total from entries and drops the backfilled time.
 
 `next` returns the best pending `todo` ticket ranked by priority
 (`high → med → low`, ties by board position) plus its project, its comments,
