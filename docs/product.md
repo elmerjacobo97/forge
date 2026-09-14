@@ -20,7 +20,7 @@ Hoy el objetivo no es ser un producto SaaS, sino la herramienta diaria del autor
 
 ### Superficies con datos
 
-- **Dev Board:** kanban por proyecto con columnas fijas, drag & drop, time tracking automático en "In Progress" y analítica (cycle time, tiempo registrado, throughput).
+- **Dev Board:** kanban por proyecto con columnas fijas, drag & drop, time tracking automático en "In Progress", analítica (cycle time, tiempo registrado, throughput) y actualización en vivo vía InsForge realtime (los cambios del CLI se reflejan sin recargar).
 - **Bookmarks:** enlaces con categoría, tags, descripción y generación asistida por IA.
 - **Resources:** notas, prompts, configuraciones y código con metadatos por herramienta.
 - **Ideas:** captura de ideas con título, contenido, estado, categoría, tags y enlaces.

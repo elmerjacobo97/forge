@@ -26,7 +26,7 @@
 
 - **MCP server sobre `forge-cli`/API InsForge:** exponer bookmarks, proyectos, tickets y recursos a agentes de IA.
 - **Búsqueda en server:** mover los filtros de bookmarks/resources a consultas SQL (`ilike`, `eq`) cuando el volumen lo justifique.
-- **Dev Board:** undo de drag fallido con snapshot por columna (hoy revierte solo la columna afectada completa), y refresco remoto (InsForge realtime) para multi-dispositivo.
+- **Dev Board:** undo de drag fallido con snapshot por columna (hoy revierte solo la columna afectada completa).
 
 ### Media
 
