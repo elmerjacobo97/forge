@@ -317,9 +317,11 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
       const params =
         "set" in input
           ? { p_action: "set_last_duration", p_ended_at: null, p_duration_ms: input.set }
-          : "removeLast" in input
-            ? { p_action: "delete_last", p_ended_at: null, p_duration_ms: null }
-            : { p_action: "stop_at", p_ended_at: input.stopAt, p_duration_ms: null };
+          : "setTotal" in input
+            ? { p_action: "set_total", p_ended_at: null, p_duration_ms: input.setTotal }
+            : "removeLast" in input
+              ? { p_action: "delete_last", p_ended_at: null, p_duration_ms: null }
+              : { p_action: "stop_at", p_ended_at: input.stopAt, p_duration_ms: null };
 
       return ticketRpc(
         "adjust_dev_board_ticket_time",

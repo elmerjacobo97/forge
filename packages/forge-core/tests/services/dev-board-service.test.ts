@@ -417,6 +417,23 @@ describe("adjustTime", () => {
     expect(ticket.id).toBe("ticket-1");
   });
 
+  it("sends set_total with the duration and a null end time", async () => {
+    const { client, rpcCalls } = createDevBoardMockClient({
+      rpc: () => ({ data: ticketRow({ id: "ticket-1" }), error: null }),
+    });
+
+    await createDevBoardService({ client }).adjustTime({ id: "ticket-1", setTotal: 1_200_000 });
+
+    expect(rpcCalls).toHaveLength(1);
+    expect(rpcCalls[0].name).toBe("adjust_dev_board_ticket_time");
+    expect(rpcCalls[0].params).toEqual({
+      p_ticket_id: "ticket-1",
+      p_action: "set_total",
+      p_ended_at: null,
+      p_duration_ms: 1_200_000,
+    });
+  });
+
   it("sends delete_last with a null payload", async () => {
     const { client, rpcCalls } = createDevBoardMockClient({
       rpc: () => ({ data: ticketRow({ id: "ticket-1" }), error: null }),

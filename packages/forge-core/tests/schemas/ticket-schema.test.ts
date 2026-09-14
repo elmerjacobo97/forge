@@ -384,6 +384,13 @@ describe("parseTicketTimeAdjustInput", () => {
     });
   });
 
+  it("accepts --set-total and converts the duration to milliseconds", () => {
+    expect(parseTicketTimeAdjustInput({ id: "ticket1", setTotal: "20m" })).toEqual({
+      id: "ticket1",
+      setTotal: 1_200_000,
+    });
+  });
+
   it("accepts --remove-last", () => {
     expect(parseTicketTimeAdjustInput({ id: "ticket1", removeLast: true })).toEqual({
       id: "ticket1",
@@ -411,14 +418,19 @@ describe("parseTicketTimeAdjustInput", () => {
     for (const payload of [
       { id: "ticket1" },
       { id: "ticket1", set: "1h", removeLast: true },
+      { id: "ticket1", setTotal: "20m", removeLast: true },
+      { id: "ticket1", set: "1h", setTotal: "20m" },
       { id: "ticket1", removeLast: true, stopAt: "now" },
       { id: "ticket1", set: "1h", stopAt: "now" },
+      { id: "ticket1", setTotal: "20m", stopAt: "now" },
       { id: "ticket1", set: "1h", removeLast: true, stopAt: "now" },
     ]) {
       const result = parseTicketTimeAdjustInput(payload);
       expect(result).toHaveProperty("error");
       if (!("error" in result)) throw new Error("expected validation error");
-      expect(result.error).toContain("Provide exactly one of --set, --remove-last or --stop-at.");
+      expect(result.error).toContain(
+        "Provide exactly one of --set, --set-total, --remove-last or --stop-at.",
+      );
     }
   });
 
@@ -427,6 +439,11 @@ describe("parseTicketTimeAdjustInput", () => {
     expect(duration).toHaveProperty("error");
     if (!("error" in duration)) throw new Error("expected validation error");
     expect(duration.error).toContain("Duration must look like 1h30m or 90m.");
+
+    const totalDuration = parseTicketTimeAdjustInput({ id: "ticket1", setTotal: "90" });
+    expect(totalDuration).toHaveProperty("error");
+    if (!("error" in totalDuration)) throw new Error("expected validation error");
+    expect(totalDuration.error).toContain("Duration must look like 1h30m or 90m.");
 
     const stopAt = parseTicketTimeAdjustInput({ id: "ticket1", stopAt: "yesterday" });
     expect(stopAt).toHaveProperty("error");
