@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import {
   DndContext,
@@ -20,11 +20,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createTicketAction, deleteTicketAction, updateTicketAction } from "../actions";
+import { useBoardRealtime } from "../hooks/use-board-realtime";
 import type { TicketFormValues } from "../schemas/ticket";
 import { type ColumnId, type ColumnPage, type Ticket, COLUMNS } from "../types/board";
 import type { Project } from "../types/project";
 import {
   appendTickets,
+  applyRealtimeTicket,
   columnTickets,
   incrementCommentCount,
   removeTicket,
@@ -32,6 +34,7 @@ import {
   upsertTicket,
   type ColumnRecord,
 } from "../utils/board-state";
+import type { CommentChange, TicketChange } from "../utils/board-realtime";
 import { checkStaleTickets, loadAlertedTickets, saveAlertedTickets } from "../utils/stale-alert";
 import { staleSessionMsForMove } from "../utils/stale-session";
 import { moveTicket } from "../utils/tickets";
@@ -52,10 +55,11 @@ function isColumnId(value: string): value is ColumnId {
 
 interface ProjectBoardProps {
   project: Project;
+  userId: string;
   initialColumns: ColumnPage[];
 }
 
-export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
+export function ProjectBoard({ project, userId, initialColumns }: ProjectBoardProps) {
   const [columns, setColumns] = useState<ColumnRecord>(() => toColumnRecord(initialColumns));
   const [loadingColumns, setLoadingColumns] = useState<Partial<Record<ColumnId, boolean>>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -89,6 +93,19 @@ export function ProjectBoard({ project, initialColumns }: ProjectBoardProps) {
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor),
   );
+
+  const handleRealtimeTicket = useCallback((change: TicketChange) => {
+    setColumns((current) => applyRealtimeTicket(current, change));
+  }, []);
+
+  const handleRealtimeComment = useCallback((change: CommentChange) => {
+    setColumns((current) => incrementCommentCount(current, change.ticketId));
+  }, []);
+
+  useBoardRealtime(userId, {
+    onTicketChange: handleRealtimeTicket,
+    onCommentChange: handleRealtimeComment,
+  });
 
   const visibleTickets = dragTickets ?? tickets;
   const activeTicket = activeId ? findTicket(visibleTickets, activeId) : undefined;

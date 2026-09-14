@@ -1,4 +1,5 @@
 import { COLUMNS, type ColumnId, type ColumnPage, type Ticket } from "../types/board";
+import type { TicketChange } from "./board-realtime";
 
 export type ColumnRecord = Record<ColumnId, ColumnPage>;
 
@@ -122,4 +123,42 @@ export function appendTickets(
       total,
     },
   };
+}
+
+function findTicketColumn(columns: ColumnRecord, ticketId: string): ColumnId | null {
+  for (const column of COLUMNS) {
+    if (columns[column].tickets.some((ticket) => ticket.id === ticketId)) return column;
+  }
+
+  return null;
+}
+
+function withColumnTotal(columns: ColumnRecord, column: ColumnId, delta: number): ColumnRecord {
+  const page = columns[column];
+  return {
+    ...columns,
+    [column]: { ...page, total: Math.max(0, page.total + delta) },
+  };
+}
+
+/**
+ * Applies a realtime ticket event on top of the columns loaded in the board.
+ * Tickets outside the loaded pages still adjust the affected column totals.
+ */
+export function applyRealtimeTicket(columns: ColumnRecord, change: TicketChange): ColumnRecord {
+  const { action, ticket, fromColumn } = change;
+
+  if (action === "delete") {
+    if (findTicketColumn(columns, ticket.id) !== null) return removeTicket(columns, ticket);
+    return withColumnTotal(columns, ticket.column, -1);
+  }
+
+  const previousColumn = findTicketColumn(columns, ticket.id);
+  const next = upsertTicket(columns, ticket);
+
+  if (previousColumn === null && fromColumn !== null && fromColumn !== ticket.column) {
+    return withColumnTotal(next, fromColumn, -1);
+  }
+
+  return next;
 }

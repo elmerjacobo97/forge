@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { ColumnId, Ticket } from "../types/board";
+import type { TicketChange } from "./board-realtime";
 import {
   appendTickets,
+  applyRealtimeTicket,
   columnTickets,
   incrementCommentCount,
   removeTicket,
@@ -237,5 +239,145 @@ describe("board-state", () => {
     );
 
     expect(next.backlog.tickets.map((item) => item.id)).toEqual(["t2", "t1"]);
+  });
+
+  describe("applyRealtimeTicket", () => {
+    function change(overrides: Partial<TicketChange> & Pick<TicketChange, "action" | "ticket">) {
+      return { fromColumn: null, ...overrides } satisfies TicketChange;
+    }
+
+    it("adds a newly created ticket to its column", () => {
+      const columns = toColumnRecord([
+        { column: "backlog", tickets: [], total: 2, nextCursor: null },
+      ]);
+
+      const next = applyRealtimeTicket(
+        columns,
+        change({ action: "insert", ticket: ticket({ id: "t1", column: "backlog" }) }),
+      );
+
+      expect(next.backlog.tickets.map((item) => item.id)).toEqual(["t1"]);
+      expect(next.backlog.total).toBe(3);
+    });
+
+    it("ignores an echoed insert for a ticket already loaded", () => {
+      const columns = toColumnRecord([
+        {
+          column: "backlog",
+          tickets: [ticket({ id: "t1", column: "backlog" })],
+          total: 1,
+          nextCursor: null,
+        },
+      ]);
+
+      const next = applyRealtimeTicket(
+        columns,
+        change({ action: "insert", ticket: ticket({ id: "t1", column: "backlog" }) }),
+      );
+
+      expect(next.backlog.total).toBe(1);
+      expect(next.backlog.tickets).toHaveLength(1);
+    });
+
+    it("moves a loaded ticket between columns", () => {
+      const columns = toColumnRecord([
+        {
+          column: "todo",
+          tickets: [ticket({ id: "t1", column: "todo" })],
+          total: 1,
+          nextCursor: null,
+        },
+        { column: "review", tickets: [], total: 4, nextCursor: null },
+      ]);
+
+      const next = applyRealtimeTicket(
+        columns,
+        change({
+          action: "update",
+          fromColumn: "todo",
+          ticket: ticket({ id: "t1", column: "review" }),
+        }),
+      );
+
+      expect(next.todo.tickets).toEqual([]);
+      expect(next.todo.total).toBe(0);
+      expect(next.review.tickets.map((item) => item.id)).toEqual(["t1"]);
+      expect(next.review.total).toBe(5);
+    });
+
+    it("adjusts totals when the ticket moved from an unloaded page", () => {
+      const columns = toColumnRecord([
+        { column: "backlog", tickets: [], total: 40, nextCursor: "25" },
+        { column: "done", tickets: [], total: 3, nextCursor: null },
+      ]);
+
+      const next = applyRealtimeTicket(
+        columns,
+        change({
+          action: "update",
+          fromColumn: "backlog",
+          ticket: ticket({ id: "t9", column: "done" }),
+        }),
+      );
+
+      expect(next.backlog.total).toBe(39);
+      expect(next.done.tickets.map((item) => item.id)).toEqual(["t9"]);
+      expect(next.done.total).toBe(4);
+    });
+
+    it("updates fields in place without touching totals", () => {
+      const columns = toColumnRecord([
+        {
+          column: "todo",
+          tickets: [ticket({ id: "t1", column: "todo", commentCount: 2 })],
+          total: 1,
+          nextCursor: null,
+        },
+      ]);
+
+      const next = applyRealtimeTicket(
+        columns,
+        change({
+          action: "update",
+          ticket: ticket({ id: "t1", column: "todo", title: "Renamed", commentCount: 2 }),
+        }),
+      );
+
+      expect(next.todo.tickets[0]?.title).toBe("Renamed");
+      expect(next.todo.total).toBe(1);
+    });
+
+    it("removes a loaded ticket and decrements its column", () => {
+      const columns = toColumnRecord([
+        {
+          column: "done",
+          tickets: [ticket({ id: "t1", column: "done" })],
+          total: 1,
+          nextCursor: null,
+        },
+      ]);
+
+      const next = applyRealtimeTicket(
+        columns,
+        change({ action: "delete", ticket: ticket({ id: "t1", column: "done" }) }),
+      );
+
+      expect(next.done.tickets).toEqual([]);
+      expect(next.done.total).toBe(0);
+    });
+
+    it("decrements the total for a deleted ticket outside the loaded page", () => {
+      const columns = toColumnRecord([
+        { column: "done", tickets: [], total: 10, nextCursor: "25" },
+      ]);
+
+      const next = applyRealtimeTicket(
+        columns,
+        change({ action: "delete", ticket: ticket({ id: "t9", column: "done" }) }),
+      );
+
+      expect(next.done.tickets).toEqual([]);
+      expect(next.done.total).toBe(9);
+    });
   });
 });
