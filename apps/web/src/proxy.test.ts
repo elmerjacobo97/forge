@@ -9,7 +9,8 @@ import { proxy } from "./proxy";
 
 describe("proxy", () => {
   beforeEach(() => {
-    updateSession.mockClear();
+    updateSession.mockReset();
+    updateSession.mockResolvedValue(undefined);
   });
 
   it("redirects unauthenticated requests for protected routes", async () => {
@@ -39,4 +40,38 @@ describe("proxy", () => {
       expect(updateSession).toHaveBeenCalledOnce();
     },
   );
+
+  it("forwards refreshed request cookies to the current request", async () => {
+    updateSession.mockImplementationOnce(async ({ requestCookies, responseCookies }) => {
+      requestCookies.set("insforge_access_token", "fresh-token", { path: "/" });
+      responseCookies.set("insforge_access_token", "fresh-token", { path: "/" });
+    });
+
+    const request = new NextRequest("http://localhost/dev-board", {
+      headers: { cookie: "insforge_refresh_token=refresh-token" },
+    });
+    const response = await proxy(request);
+
+    expect(response.headers.get("x-middleware-request-cookie")).toContain(
+      "insforge_access_token=fresh-token",
+    );
+    expect(response.headers.getSetCookie()).toEqual(
+      expect.arrayContaining([expect.stringContaining("insforge_access_token=fresh-token")]),
+    );
+  });
+
+  it("replays cleared session cookies on the response", async () => {
+    updateSession.mockImplementationOnce(async ({ responseCookies }) => {
+      responseCookies.set("insforge_access_token", "", { maxAge: 0, path: "/" });
+    });
+
+    const request = new NextRequest("http://localhost/dev-board", {
+      headers: { cookie: "insforge_refresh_token=refresh-token" },
+    });
+    const response = await proxy(request);
+
+    expect(response.headers.getSetCookie()).toEqual(
+      expect.arrayContaining([expect.stringMatching(/insforge_access_token=.*Max-Age=0/)]),
+    );
+  });
 });
