@@ -44,18 +44,22 @@ function requestCookieAdapter(request: NextRequest): CookieStore {
   };
 }
 
-function responseCookieAdapter(response: NextResponse): CookieStore {
+type RecordedCookie = { name: string; value: string; options?: CookieOptions };
+
+function recordingCookieStore(recorded: RecordedCookie[]): CookieStore {
   return {
-    get: (name) => response.cookies.get(name),
+    get: () => undefined,
     set: (...args: [string, string, CookieOptions?] | [CookieInput]) => {
       if (typeof args[0] === "string") {
-        const value = args[1];
-        if (value !== undefined) response.cookies.set(args[0], value, args[2]);
-      } else response.cookies.set(args[0]);
+        recorded.push({ name: args[0], value: args[1] ?? "", options: args[2] });
+      } else {
+        const { name, value, ...options } = args[0];
+        recorded.push({ name, value, options });
+      }
     },
     delete: (...args: [string] | [CookieDeleteInput]) => {
-      if (typeof args[0] === "string") response.cookies.delete(args[0]);
-      else response.cookies.delete({ name: args[0].name, path: args[0].path });
+      const name = typeof args[0] === "string" ? args[0] : args[0].name;
+      recorded.push({ name, value: "", options: { maxAge: 0 } });
     },
   };
 }
@@ -74,11 +78,16 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const response = NextResponse.next({ request });
+  const recordedCookies: RecordedCookie[] = [];
   await updateSession({
     requestCookies: requestCookieAdapter(request),
-    responseCookies: responseCookieAdapter(response),
+    responseCookies: recordingCookieStore(recordedCookies),
   });
+
+  const response = NextResponse.next({ request });
+  for (const cookie of recordedCookies) {
+    response.cookies.set({ name: cookie.name, value: cookie.value, ...cookie.options });
+  }
   return response;
 }
 
