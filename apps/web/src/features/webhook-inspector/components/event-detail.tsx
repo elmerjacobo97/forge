@@ -88,10 +88,10 @@ export function EventDetail({ event }: EventDetailProps) {
                     data-icon="inline-start"
                   />
                 )}
-                {curlCopy.copied ? "Copied" : "Copy01Icon as cURL"}
+                {curlCopy.copied ? "Copied" : "Copy as cURL"}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Copy01Icon a curl command for this request</TooltipContent>
+            <TooltipContent>Copy a curl command for this request</TooltipContent>
           </Tooltip>
         </div>
 
@@ -119,7 +119,7 @@ export function EventDetail({ event }: EventDetailProps) {
                   data-icon="inline-start"
                 />
               )}
-              Copy01Icon
+              Copy
             </Button>
           </div>
           <div className=" border border-input/60 bg-background/60 p-2 font-mono text-[11px]">
@@ -158,7 +158,7 @@ export function EventDetail({ event }: EventDetailProps) {
                 strokeWidth={2}
                 data-icon="inline-start"
               />
-              Copy01Icon
+              Copy
             </Button>
           </div>
           <pre className="min-h-32 whitespace-pre-wrap break-all border border-input/60 bg-background/60 p-3 font-mono text-[11px]">

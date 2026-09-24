@@ -66,9 +66,9 @@ export function ProjectListToolbar({ filters }: { filters: ProjectFilters }) {
           type="search"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search01Icon projects…"
+          placeholder="Search projects…"
           className="pl-8"
-          aria-label="Search01Icon projects"
+          aria-label="Search projects"
           aria-busy={isNavigating}
         />
       </div>

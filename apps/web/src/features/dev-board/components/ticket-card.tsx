@@ -197,7 +197,7 @@ export function TicketCard({
                   className="size-3"
                 />
               )}
-              Copy01Icon ID
+              Copy ID
             </DropdownMenuItem>
             {timerActive && (
               <DropdownMenuItem
@@ -225,7 +225,7 @@ export function TicketCard({
                       strokeWidth={2}
                       className="size-3"
                     />
-                    PauseIcon
+                    Pause
                   </>
                 )}
               </DropdownMenuItem>

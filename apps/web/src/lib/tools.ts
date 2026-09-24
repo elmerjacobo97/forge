@@ -45,7 +45,7 @@ export const tools: ToolDef[] = [
   {
     id: "webhook-inspector",
     path: "/webhook-inspector",
-    name: "WebhookIcon Inspector",
+    name: "Webhook Inspector",
     description: "Create temporary URLs that capture and inspect incoming HTTP requests",
     icon: WebhookIcon,
     category: "Network",
