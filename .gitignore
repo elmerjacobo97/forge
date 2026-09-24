@@ -51,3 +51,4 @@ graphify-out/
 # skill-registry generated index (local only; synced to Engram)
 .atl/
 
+.cursor/

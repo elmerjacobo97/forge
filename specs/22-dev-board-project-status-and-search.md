@@ -1,6 +1,6 @@
 # SPEC 22 — Estados, búsqueda y filtros de proyectos
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 04 — Proyectos en Dev Board
 > **Fecha:** 2026-09-23
 > **Objetivo:** Añadir estados manuales, búsqueda y filtros en una tabla web adaptable para organizar proyectos del Dev Board.
@@ -95,8 +95,8 @@ export type ProjectUpdateInput = Partial<ProjectCreateInput>;
 
 **Datos**
 
-- [ ] `dev_board_projects.status` acepta solo los cinco estados y tiene valor por defecto `planned`; proyectos existentes quedan en `planned`.
-- [ ] Crear o actualizar estado inválido falla; políticas RLS y protección de borrado con tickets siguen vigentes.
+- [x] `dev_board_projects.status` acepta solo los cinco estados y tiene valor por defecto `planned`; proyectos existentes quedan en `planned`.
+- [x] Crear o actualizar estado inválido falla; políticas RLS y protección de borrado con tickets siguen vigentes.
 
 **Web**
 
@@ -112,7 +112,7 @@ export type ProjectUpdateInput = Partial<ProjectCreateInput>;
 
 - [x] Tests del feature Dev Board pasan con `pnpm --filter @forge/web exec vitest run --config tests.config.ts src/features/dev-board`.
 - [x] `pnpm build:web` y `pnpm lint` pasan.
-- [ ] Smoke manual confirma migración, búsqueda, filtros, orden, edición de estado y persistencia tras recargar.
+- [x] Smoke manual confirma migración, búsqueda, filtros, orden, edición de estado y persistencia tras recargar.
 
 ## Decisiones
 
