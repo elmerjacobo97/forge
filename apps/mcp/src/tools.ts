@@ -3,9 +3,11 @@ import type {
   ActivityReport,
   ColumnId,
   NextTicketContext,
+  Priority,
   Project,
   Ticket,
   TicketComment,
+  TicketUpdateInput,
 } from "@forge/core";
 import type { ForgeServices } from "./services.js";
 
@@ -15,6 +17,22 @@ export interface TicketReportArgs {
   until?: string;
   projectId?: string;
   columns?: ColumnId[];
+}
+
+interface TicketHandoffArgs {
+  branch?: string;
+  prUrl?: string;
+  clearBranch?: boolean;
+  clearPrUrl?: boolean;
+}
+
+function handoffFields(input: TicketHandoffArgs): TicketUpdateInput {
+  return {
+    ...(input.branch !== undefined ? { branch: input.branch } : {}),
+    ...(input.prUrl !== undefined ? { prUrl: input.prUrl } : {}),
+    ...(input.clearBranch !== undefined ? { clearBranch: input.clearBranch } : {}),
+    ...(input.clearPrUrl !== undefined ? { clearPrUrl: input.clearPrUrl } : {}),
+  };
 }
 
 export function createToolHandlers(services: ForgeServices) {
@@ -67,6 +85,46 @@ export function createToolHandlers(services: ForgeServices) {
     }),
 
     activityReport,
+
+    createTicket: async (input: {
+      projectId: string;
+      title: string;
+      description: string;
+      column: ColumnId;
+      priority: Priority;
+    }): Promise<Ticket> => {
+      await services.projects.get(input.projectId);
+      return services.board.create(input);
+    },
+
+    moveTicket: (
+      input: { ticketId: string; column: ColumnId } & TicketHandoffArgs,
+    ): Promise<Ticket> =>
+      services.board.move({
+        id: input.ticketId,
+        column: input.column,
+        ...handoffFields(input),
+      }),
+
+    updateTicket: ({
+      ticketId,
+      ...handoff
+    }: { ticketId: string } & TicketHandoffArgs): Promise<Ticket> =>
+      services.board.update(ticketId, handoffFields(handoff)),
+
+    addTicketComment: ({
+      ticketId,
+      body,
+    }: {
+      ticketId: string;
+      body: string;
+    }): Promise<TicketComment> => services.board.addComment(ticketId, body, "agent"),
+
+    pauseTicket: ({ ticketId }: { ticketId: string }): Promise<Ticket> =>
+      services.board.pauseTimer(ticketId),
+
+    resumeTicket: ({ ticketId }: { ticketId: string }): Promise<Ticket> =>
+      services.board.resumeTimer(ticketId),
   };
 }
 

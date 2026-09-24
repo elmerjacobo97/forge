@@ -1,6 +1,6 @@
 # `@forge/mcp` — Forge remote MCP server
 
-Cloudflare Worker that exposes the Forge Dev Board to MCP clients (Claude web/mobile, Claude Code, opencode, Cursor, MCP Inspector) over a remote Model Context Protocol endpoint. It is **read-only**: the tools query InsForge with the owner's session and never mutate the board.
+Cloudflare Worker that exposes the Forge Dev Board to MCP clients (Claude web/mobile, Claude Code, opencode, Cursor, MCP Inspector) over a remote Model Context Protocol endpoint. Read tools query InsForge with the owner's session. Write tools create, move, update handoff, comment, pause, and resume tickets. They do not delete.
 
 - Production endpoint: `https://forge-mcp.ejacobotiniano.workers.dev/mcp`
 - Auth: OAuth 2.1 via GitHub (`@cloudflare/workers-oauth-provider`) with a single allowed login (`ALLOWED_GITHUB_LOGIN`)
@@ -10,14 +10,20 @@ Full from-scratch walkthrough (accounts, OAuth App, KV, secrets, deploy, clients
 
 ## Tools
 
-| Tool                    | Input                                             | Returns                                                      |
-| ----------------------- | ------------------------------------------------- | ------------------------------------------------------------ |
-| `forge_list_projects`   | `{}`                                              | `Project[]`                                                  |
-| `forge_get_project`     | `{ projectId }`                                   | `Project`                                                    |
-| `forge_list_tickets`    | `{ projectId, column? }`                          | `TicketSummary[]` (no description)                           |
-| `forge_next_ticket`     | `{ projectId? }`                                  | `NextTicketContext` (ticket, project, comments, in progress) |
-| `forge_get_ticket`      | `{ ticketId }`                                    | `{ ticket, comments }`                                       |
-| `forge_activity_report` | `{ days?, since?, until?, projectId?, columns? }` | `ActivityReport`                                             |
+| Tool                       | Input                                                                             | Returns                                                      |
+| -------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `forge_list_projects`      | `{}`                                                                              | `Project[]`                                                  |
+| `forge_get_project`        | `{ projectId }`                                                                   | `Project`                                                    |
+| `forge_list_tickets`       | `{ projectId, column? }`                                                          | `TicketSummary[]` (no description)                           |
+| `forge_next_ticket`        | `{ projectId? }`                                                                  | `NextTicketContext` (ticket, project, comments, in progress) |
+| `forge_get_ticket`         | `{ ticketId }`                                                                    | `{ ticket, comments }`                                       |
+| `forge_activity_report`    | `{ days?, since?, until?, projectId?, columns? }`                                 | `ActivityReport`                                             |
+| `forge_create_ticket`      | `{ projectId, title, description?, column?, priority? }`                          | `Ticket`                                                     |
+| `forge_move_ticket`        | `{ ticketId, column, branch?, prUrl?, clearBranch?, clearPrUrl? }`                | `Ticket`                                                     |
+| `forge_update_ticket`      | `{ ticketId, branch?, prUrl?, clearBranch?, clearPrUrl? }` (at least one handoff) | `Ticket`                                                     |
+| `forge_add_ticket_comment` | `{ ticketId, body }`                                                              | `TicketComment`                                              |
+| `forge_pause_ticket`       | `{ ticketId }`                                                                    | `Ticket`                                                     |
+| `forge_resume_ticket`      | `{ ticketId }`                                                                    | `Ticket`                                                     |
 
 Business errors come back as `isError: true` with the exact core message (for example `Project not found.`). Input validation is handled by Zod schemas before the handler runs.
 
@@ -150,4 +156,4 @@ npx @modelcontextprotocol/inspector@latest
 - `/mcp` rejects any caller without the GitHub allowlist; there is no anonymous mode.
 - Secrets live only in `.dev.vars` (ignored) or Cloudflare secrets; never commit them.
 - The Worker keeps its own Forge session and never exposes the refresh token to MCP clients.
-- Tools are read-only by design; mutations stay in `forge-cli` and the web app.
+- Ticket writes are create, move, handoff update, agent comment, pause, and resume. Delete, time adjustment, and title, description, or priority edits stay in `forge-cli` and the web app.

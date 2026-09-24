@@ -134,4 +134,111 @@ describe("createToolHandlers", () => {
     expect(services.projects.list).not.toHaveBeenCalled();
     expect(report.tickets.map((entry) => entry.ticket.id)).toEqual(["t2"]);
   });
+
+  it("creates a ticket after the project exists", async () => {
+    const created = ticket("t1", { title: "Ship it", column: "backlog" });
+    const services = createMockServices();
+    services.projects.get.mockResolvedValue(project("p1"));
+    services.board.create.mockResolvedValue(created);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(
+      handlers.createTicket({
+        projectId: "p1",
+        title: "Ship it",
+        description: "",
+        column: "backlog",
+        priority: "med",
+      }),
+    ).resolves.toEqual(created);
+    expect(services.projects.get).toHaveBeenCalledWith("p1");
+    expect(services.board.create).toHaveBeenCalledWith({
+      projectId: "p1",
+      title: "Ship it",
+      description: "",
+      column: "backlog",
+      priority: "med",
+    });
+  });
+
+  it("propagates Project not found and does not create", async () => {
+    const services = createMockServices();
+    services.projects.get.mockRejectedValue(new Error("Project not found."));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(
+      handlers.createTicket({
+        projectId: "missing",
+        title: "Ship it",
+        description: "",
+        column: "backlog",
+        priority: "med",
+      }),
+    ).rejects.toThrow("Project not found.");
+    expect(services.board.create).not.toHaveBeenCalled();
+  });
+
+  it("moves a ticket and forwards handoff only when present", async () => {
+    const moved = ticket("t1", { column: "in_progress", branch: "feat/mcp" });
+    const services = createMockServices();
+    services.board.move.mockResolvedValue(moved);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(
+      handlers.moveTicket({ ticketId: "t1", column: "in_progress", branch: "feat/mcp" }),
+    ).resolves.toEqual(moved);
+    expect(services.board.move).toHaveBeenCalledWith({
+      id: "t1",
+      column: "in_progress",
+      branch: "feat/mcp",
+    });
+
+    await handlers.moveTicket({ ticketId: "t1", column: "done" });
+    expect(services.board.move).toHaveBeenLastCalledWith({ id: "t1", column: "done" });
+  });
+
+  it("updates only handoff fields", async () => {
+    const updated = ticket("t1", { prUrl: "https://github.com/org/repo/pull/1" });
+    const services = createMockServices();
+    services.board.update.mockResolvedValue(updated);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(
+      handlers.updateTicket({
+        ticketId: "t1",
+        prUrl: "https://github.com/org/repo/pull/1",
+        clearBranch: true,
+      }),
+    ).resolves.toEqual(updated);
+    expect(services.board.update).toHaveBeenCalledWith("t1", {
+      prUrl: "https://github.com/org/repo/pull/1",
+      clearBranch: true,
+    });
+  });
+
+  it("adds a comment as the agent", async () => {
+    const created = comment("c1", "t1", "2026-09-10T00:00:00.000Z");
+    const services = createMockServices();
+    services.board.addComment.mockResolvedValue(created);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.addTicketComment({ ticketId: "t1", body: "noted" })).resolves.toEqual(
+      created,
+    );
+    expect(services.board.addComment).toHaveBeenCalledWith("t1", "noted", "agent");
+  });
+
+  it("pauses and resumes the ticket timer", async () => {
+    const paused = ticket("t1", { isPaused: true });
+    const resumed = ticket("t1", { isPaused: false });
+    const services = createMockServices();
+    services.board.pauseTimer.mockResolvedValue(paused);
+    services.board.resumeTimer.mockResolvedValue(resumed);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.pauseTicket({ ticketId: "t1" })).resolves.toEqual(paused);
+    await expect(handlers.resumeTicket({ ticketId: "t1" })).resolves.toEqual(resumed);
+    expect(services.board.pauseTimer).toHaveBeenCalledWith("t1");
+    expect(services.board.resumeTimer).toHaveBeenCalledWith("t1");
+  });
 });

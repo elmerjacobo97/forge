@@ -7,10 +7,15 @@ import githubHandler from "./github-handler.js";
 import { createForgeServices } from "./services.js";
 import {
   activityReportInput,
+  addTicketCommentInput,
+  createTicketInput,
   getProjectInput,
   getTicketInput,
   listTicketsInput,
+  moveTicketInput,
   nextTicketInput,
+  ticketIdInput,
+  updateTicketInput,
 } from "./tool-schemas.js";
 import { toToolError, toToolResult } from "./tool-result.js";
 import { createToolHandlers, type ToolHandlers } from "./tools.js";
@@ -95,6 +100,64 @@ export class ForgeMcp extends McpAgent<Env> {
         inputSchema: activityReportInput,
       },
       (args) => run((handlers) => handlers.activityReport(args)),
+    );
+
+    this.server.registerTool(
+      "forge_create_ticket",
+      {
+        description:
+          "Create a Dev Board ticket. Requires projectId and title. description defaults to empty, column to backlog, and priority to med.",
+        inputSchema: createTicketInput,
+      },
+      (args) => run((handlers) => handlers.createTicket(args)),
+    );
+
+    this.server.registerTool(
+      "forge_move_ticket",
+      {
+        description:
+          "Move a ticket to a column. Optional handoff: branch, prUrl, clearBranch, clearPrUrl. Moving to in_progress or validation starts the timer inside move_dev_board_ticket.",
+        inputSchema: moveTicketInput,
+      },
+      (args) => run((handlers) => handlers.moveTicket(args)),
+    );
+
+    this.server.registerTool(
+      "forge_update_ticket",
+      {
+        description:
+          "Update ticket handoff only: branch, prUrl, clearBranch, or clearPrUrl. At least one is required. Does not change title, description, or priority.",
+        inputSchema: updateTicketInput,
+      },
+      (args) => run((handlers) => handlers.updateTicket(args)),
+    );
+
+    this.server.registerTool(
+      "forge_add_ticket_comment",
+      {
+        description:
+          "Add a comment to a ticket. The author is always agent. body is 1 to 5000 characters.",
+        inputSchema: addTicketCommentInput,
+      },
+      (args) => run((handlers) => handlers.addTicketComment(args)),
+    );
+
+    this.server.registerTool(
+      "forge_pause_ticket",
+      {
+        description: "Pause the timer of an in-progress or validation ticket.",
+        inputSchema: ticketIdInput,
+      },
+      (args) => run((handlers) => handlers.pauseTicket(args)),
+    );
+
+    this.server.registerTool(
+      "forge_resume_ticket",
+      {
+        description: "Resume the timer of a paused in-progress or validation ticket.",
+        inputSchema: ticketIdInput,
+      },
+      (args) => run((handlers) => handlers.resumeTicket(args)),
     );
   }
 }

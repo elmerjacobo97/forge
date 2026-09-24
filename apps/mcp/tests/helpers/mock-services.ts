@@ -4,14 +4,36 @@ import type { ForgeServices } from "../../src/services.js";
 
 export interface MockServices {
   projects: { list: Mock; get: Mock };
-  board: { list: Mock; get: Mock; next: Mock; listComments: Mock };
+  board: {
+    list: Mock;
+    get: Mock;
+    next: Mock;
+    listComments: Mock;
+    create: Mock;
+    move: Mock;
+    update: Mock;
+    addComment: Mock;
+    pauseTimer: Mock;
+    resumeTimer: Mock;
+  };
   activity: { listEvents: Mock; listCommentsInRange: Mock };
 }
 
 export function createMockServices(): MockServices {
   return {
     projects: { list: vi.fn(), get: vi.fn() },
-    board: { list: vi.fn(), get: vi.fn(), next: vi.fn(), listComments: vi.fn() },
+    board: {
+      list: vi.fn(),
+      get: vi.fn(),
+      next: vi.fn(),
+      listComments: vi.fn(),
+      create: vi.fn(),
+      move: vi.fn(),
+      update: vi.fn(),
+      addComment: vi.fn(),
+      pauseTimer: vi.fn(),
+      resumeTimer: vi.fn(),
+    },
     activity: { listEvents: vi.fn(), listCommentsInRange: vi.fn() },
   };
 }
