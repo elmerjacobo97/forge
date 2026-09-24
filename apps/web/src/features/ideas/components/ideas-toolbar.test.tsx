@@ -37,6 +37,22 @@ afterEach(() => {
 });
 
 describe("IdeasToolbar search", () => {
+  it("uses the default input and select sizes", () => {
+    render(
+      <IdeasToolbar
+        filters={makeFilters()}
+        tags={[]}
+      />,
+    );
+
+    expect(getInput().classList.contains("text-xs")).toBe(false);
+    for (const label of ["Filter by status", "Filter by category", "Filter by tag"]) {
+      expect(screen.getByRole("combobox", { name: label }).getAttribute("data-size")).toBe(
+        "default",
+      );
+    }
+  });
+
   it("navigates once with the final query after typing", () => {
     render(
       <IdeasToolbar

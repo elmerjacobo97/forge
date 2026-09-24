@@ -56,7 +56,7 @@ export function IdeasToolbar({ filters, tags }: { filters: IdeaFilters; tags: st
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search ideas…"
-          className="h-8 pl-8 text-xs"
+          className="pl-8"
           type="search"
           aria-busy={isNavigating}
         />
@@ -77,7 +77,6 @@ export function IdeasToolbar({ filters, tags }: { filters: IdeaFilters; tags: st
           onValueChange={(value) => applyFilters({ status: value as IdeaStatus | "all" })}
         >
           <SelectTrigger
-            size="sm"
             className="min-w-32"
             aria-label="Filter by status"
           >
@@ -100,7 +99,6 @@ export function IdeasToolbar({ filters, tags }: { filters: IdeaFilters; tags: st
           onValueChange={(value) => applyFilters({ category: value as IdeaCategory | "all" })}
         >
           <SelectTrigger
-            size="sm"
             className="min-w-32"
             aria-label="Filter by category"
           >
@@ -123,7 +121,6 @@ export function IdeasToolbar({ filters, tags }: { filters: IdeaFilters; tags: st
           onValueChange={(value) => applyFilters({ tag: value })}
         >
           <SelectTrigger
-            size="sm"
             className="min-w-32"
             aria-label="Filter by tag"
           >

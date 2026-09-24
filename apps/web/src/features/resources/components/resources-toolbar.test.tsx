@@ -37,6 +37,12 @@ afterEach(() => {
 });
 
 describe("ResourcesToolbar search", () => {
+  it("uses the default input text size", () => {
+    render(<ResourcesToolbar filters={makeFilters()} />);
+
+    expect(getInput().classList.contains("text-xs")).toBe(false);
+  });
+
   it("navigates once with the final query after typing", () => {
     render(<ResourcesToolbar filters={makeFilters()} />);
     const input = getInput();

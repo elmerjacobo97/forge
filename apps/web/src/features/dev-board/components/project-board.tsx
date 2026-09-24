@@ -17,13 +17,15 @@ import {
 import { ArrowLeft, BarChart3, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createTicketAction, deleteTicketAction, updateTicketAction } from "../actions";
 import { useBoardRealtime } from "../hooks/use-board-realtime";
 import type { TicketFormValues } from "../schemas/ticket";
 import { type ColumnId, type ColumnPage, type Ticket, COLUMNS } from "../types/board";
-import type { Project } from "../types/project";
+import { PROJECT_STATUS_LABELS } from "../types/project";
+import type { Project, ProjectStatus } from "../types/project";
 import {
   appendTickets,
   applyRealtimeTicket,
@@ -52,6 +54,14 @@ function findTicket(tickets: Ticket[], id: string): Ticket | undefined {
 function isColumnId(value: string): value is ColumnId {
   return (COLUMNS as readonly string[]).includes(value);
 }
+
+const PROJECT_STATUS_BADGE_STYLES: Record<ProjectStatus, string> = {
+  planned: "border-border bg-muted/60 text-muted-foreground",
+  in_progress: "border-primary/30 bg-primary/10 text-primary",
+  paused: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  completed: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  archived: "border-border bg-transparent text-muted-foreground",
+};
 
 interface ProjectBoardProps {
   project: Project;
@@ -346,9 +356,19 @@ export function ProjectBoard({ project, userId, initialColumns }: ProjectBoardPr
               Projects
             </Link>
           </Button>
-          <h1 className="truncate font-heading text-lg font-medium tracking-tight">
-            {project.name}
-          </h1>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <h1 className="min-w-0 truncate font-heading text-lg font-medium tracking-tight">
+              {project.name}
+            </h1>
+            <Badge
+              variant="outline"
+              role="status"
+              aria-label={`Project status: ${PROJECT_STATUS_LABELS[project.status]}`}
+              className={PROJECT_STATUS_BADGE_STYLES[project.status]}
+            >
+              {PROJECT_STATUS_LABELS[project.status]}
+            </Badge>
+          </div>
           <p className="text-xs text-muted-foreground">
             {ticketCount} ticket{ticketCount === 1 ? "" : "s"} · drag to move · timer starts in
             &quot;In Progress&quot;

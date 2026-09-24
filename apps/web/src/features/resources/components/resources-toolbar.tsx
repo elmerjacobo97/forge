@@ -47,7 +47,7 @@ export function ResourcesToolbar({ filters }: { filters: ResourceFilters }) {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search resources..."
-          className="h-8 pl-8 text-xs"
+          className="pl-8"
           type="search"
           aria-busy={isNavigating}
         />

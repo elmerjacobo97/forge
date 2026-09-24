@@ -13,6 +13,13 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
@@ -20,7 +27,12 @@ import {
 } from "@/components/ui/input-group";
 
 import { type ProjectFormValues, projectSchema } from "../schemas/project";
-import type { Project } from "../types/project";
+import {
+  PROJECT_STATUSES,
+  PROJECT_STATUS_LABELS,
+  type Project,
+  type ProjectStatus,
+} from "../types/project";
 
 interface ProjectFormProps {
   open: boolean;
@@ -41,6 +53,7 @@ export function ProjectForm({
     defaultValues: {
       name: "",
       description: "",
+      status: "planned" as ProjectStatus,
     },
     validators: {
       onSubmit: projectSchema,
@@ -55,8 +68,12 @@ export function ProjectForm({
     if (open) {
       form.reset(
         editProject
-          ? { name: editProject.name, description: editProject.description }
-          : { name: "", description: "" },
+          ? {
+              name: editProject.name,
+              description: editProject.description,
+              status: editProject.status,
+            }
+          : { name: "", description: "", status: "planned" },
       );
     }
   }, [open, editProject, form]);
@@ -74,7 +91,7 @@ export function ProjectForm({
           <DialogTitle>{isEdit ? "Edit project" : "New project"}</DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Update the project name or description."
+              ? "Update the project name, description, or status."
               : "Create a project to organize tickets on its own board."}
           </DialogDescription>
         </DialogHeader>
@@ -109,6 +126,35 @@ export function ProjectForm({
                   </Field>
                 );
               }}
+            </form.Field>
+
+            <form.Field name="status">
+              {(field) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name}>Status</FieldLabel>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value as ProjectStatus)}
+                  >
+                    <SelectTrigger
+                      id={field.name}
+                      aria-label="Status"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PROJECT_STATUSES.map((status) => (
+                        <SelectItem
+                          key={status}
+                          value={status}
+                        >
+                          {PROJECT_STATUS_LABELS[status]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
             </form.Field>
 
             <form.Field name="description">

@@ -21,13 +21,48 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { createProjectAction, updateProjectAction } from "../actions";
 import type { ProjectFormValues } from "../schemas/project";
-import type { Project } from "../types/project";
+import type { ProjectFilters } from "../schemas/project-filters";
+import { PROJECT_STATUSES, PROJECT_STATUS_LABELS } from "../types/project";
+import type { Project, ProjectStatus } from "../types/project";
 import { DeleteProjectDialog } from "./delete-project-dialog";
 import { ProjectForm } from "./project-form";
+import { ProjectListToolbar } from "./project-list-toolbar";
 
-export function ProjectList({ projects }: { projects: Project[] }) {
+const STATUS_TRIGGER_STYLES: Record<ProjectStatus, string> = {
+  planned: "border-border bg-muted/60 text-muted-foreground",
+  in_progress: "border-primary/30 bg-primary/10 text-primary",
+  paused: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  completed: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  archived: "border-border bg-transparent text-muted-foreground",
+};
+
+export function ProjectList({
+  projects,
+  filters,
+  hasAnyProjects,
+}: {
+  projects: Project[];
+  filters: ProjectFilters;
+  hasAnyProjects: boolean;
+}) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
@@ -61,6 +96,25 @@ export function ProjectList({ projects }: { projects: Project[] }) {
     });
   }
 
+  function handleStatusChange(project: Project, status: ProjectStatus) {
+    if (status === project.status) return;
+
+    startMutating(async () => {
+      const result = await updateProjectAction(project.id, {
+        name: project.name,
+        description: project.description,
+        status,
+      });
+
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success("Project status updated.");
+    });
+  }
+
   return (
     <div className="flex h-full flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
@@ -70,7 +124,7 @@ export function ProjectList({ projects }: { projects: Project[] }) {
             Each project has its own kanban board and analytics.
           </p>
         </div>
-        {projects.length > 0 ? (
+        {hasAnyProjects ? (
           <Button
             size="sm"
             onClick={openCreate}
@@ -82,34 +136,103 @@ export function ProjectList({ projects }: { projects: Project[] }) {
         ) : null}
       </div>
 
+      <ProjectListToolbar filters={filters} />
+
       {projects.length === 0 ? (
         <Empty className="border border-dashed">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <FolderKanban />
             </EmptyMedia>
-            <EmptyTitle>No projects yet</EmptyTitle>
+            <EmptyTitle>
+              {hasAnyProjects ? "No projects match your filters" : "No projects yet"}
+            </EmptyTitle>
             <EmptyDescription>
-              Create a project to start tracking tickets on a dedicated board.
+              {hasAnyProjects
+                ? filters.status === "all" && !filters.q
+                  ? "Archived projects are hidden by default. Choose Archived in the status filter to find them."
+                  : "Try another search or status filter."
+                : "Create a project to start tracking tickets on a dedicated board."}
             </EmptyDescription>
           </EmptyHeader>
-          <EmptyContent>
-            <Button
-              size="sm"
-              onClick={openCreate}
-              className="gap-1.5"
-            >
-              <Plus className="size-3.5" />
-              Create project
-            </Button>
-          </EmptyContent>
+          {!hasAnyProjects ? (
+            <EmptyContent>
+              <Button
+                size="sm"
+                onClick={openCreate}
+                className="gap-1.5"
+              >
+                <Plus className="size-3.5" />
+                Create project
+              </Button>
+            </EmptyContent>
+          ) : null}
         </Empty>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {projects.map((project) => (
-            <li key={project.id}>
-              <article className="group relative flex h-full flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/20">
-                <div className="absolute right-2 top-2">
+        <Table className="table-fixed">
+          <TableHeader className="sr-only sm:not-sr-only">
+            <TableRow>
+              <TableHead className="w-[55%]">Project</TableHead>
+              <TableHead className="w-40">Status</TableHead>
+              <TableHead className="hidden w-36 sm:table-cell">Created</TableHead>
+              <TableHead className="w-12 text-right">
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {projects.map((project) => (
+              <TableRow
+                key={project.id}
+                className="group/row"
+              >
+                <TableCell className="max-w-0 whitespace-normal py-2.5 sm:py-3">
+                  <Link
+                    href={`/dev-board/${project.id}`}
+                    className="block min-w-0"
+                  >
+                    <span className="block truncate font-heading text-sm font-medium group-hover/row:underline">
+                      {project.name}
+                    </span>
+                    <span className="mt-0.5 block line-clamp-1 text-xs text-muted-foreground">
+                      {project.description || "No description"}
+                    </span>
+                    <span className="mt-1 block text-[10px] text-muted-foreground sm:hidden">
+                      Created {format(new Date(project.createdAt), "MMM d, yyyy")}
+                    </span>
+                  </Link>
+                </TableCell>
+                <TableCell className="whitespace-normal px-1.5 sm:px-2">
+                  <Select
+                    value={project.status}
+                    onValueChange={(value) => handleStatusChange(project, value as ProjectStatus)}
+                  >
+                    <SelectTrigger
+                      size="sm"
+                      aria-label={`Change status for ${project.name}`}
+                      className={cn(
+                        "h-6 w-fit max-w-full gap-1 rounded-full border px-2 py-0 text-[10px] sm:text-xs",
+                        STATUS_TRIGGER_STYLES[project.status],
+                      )}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PROJECT_STATUSES.map((status) => (
+                        <SelectItem
+                          key={status}
+                          value={status}
+                        >
+                          {PROJECT_STATUS_LABELS[status]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell className="hidden whitespace-nowrap text-xs text-muted-foreground sm:table-cell">
+                  {format(new Date(project.createdAt), "MMM d, yyyy")}
+                </TableCell>
+                <TableCell className="px-1 text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -135,26 +258,11 @@ export function ProjectList({ projects }: { projects: Project[] }) {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </div>
-
-                <Link
-                  href={`/dev-board/${project.id}`}
-                  className="flex min-h-24 flex-1 flex-col pr-8"
-                >
-                  <h2 className="font-heading text-base font-medium leading-snug group-hover:underline">
-                    {project.name}
-                  </h2>
-                  <p className="mt-1.5 line-clamp-3 text-sm text-muted-foreground">
-                    {project.description || "No description"}
-                  </p>
-                  <p className="mt-auto pt-3 text-[11px] text-muted-foreground">
-                    Created {format(new Date(project.createdAt), "MMM d, yyyy")}
-                  </p>
-                </Link>
-              </article>
-            </li>
-          ))}
-        </ul>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       <ProjectForm

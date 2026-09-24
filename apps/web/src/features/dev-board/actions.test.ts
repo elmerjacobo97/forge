@@ -3,19 +3,27 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const getCurrentUser = vi.hoisted(() => vi.fn());
 vi.mock("@/features/auth/server", () => ({ getCurrentUser }));
 
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+const revalidatePath = vi.hoisted(() => vi.fn());
+vi.mock("next/cache", () => ({ revalidatePath }));
 
 const createComment = vi.hoisted(() => vi.fn());
 const adjustTicketTime = vi.hoisted(() => vi.fn());
 const lastTimeEntry = vi.hoisted(() => vi.fn());
+const createProject = vi.hoisted(() => vi.fn());
+const updateProject = vi.hoisted(() => vi.fn());
 vi.mock("./services/dev-board-service", () => ({
   devBoardService: { createComment, adjustTicketTime, lastTimeEntry },
+}));
+vi.mock("./services/projects-service", () => ({
+  projectsService: { createProject, updateProject },
 }));
 
 import {
   adjustTicketTimeAction,
+  createProjectAction,
   createTicketCommentAction,
   getLastTimeEntryAction,
+  updateProjectAction,
 } from "./actions";
 import type { Ticket } from "./types/board";
 
@@ -29,6 +37,60 @@ const comment = {
 };
 
 beforeEach(() => vi.clearAllMocks());
+
+const projectId = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+
+describe("project actions", () => {
+  it("requires a session before creating or updating a project", async () => {
+    getCurrentUser.mockResolvedValue(null);
+
+    await expect(
+      createProjectAction({ name: "Forge", description: "", status: "planned" }),
+    ).resolves.toMatchObject({ ok: false });
+    await expect(
+      updateProjectAction(projectId, { name: "Forge", description: "", status: "planned" }),
+    ).resolves.toMatchObject({ ok: false });
+    expect(createProject).not.toHaveBeenCalled();
+    expect(updateProject).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid states at the action boundary", async () => {
+    getCurrentUser.mockResolvedValue({ id: "user-1" });
+
+    await expect(
+      createProjectAction({ name: "Forge", description: "", status: "unknown" }),
+    ).resolves.toMatchObject({ ok: false });
+    await expect(
+      updateProjectAction(projectId, { name: "Forge", description: "", status: "unknown" }),
+    ).resolves.toMatchObject({ ok: false });
+    expect(createProject).not.toHaveBeenCalled();
+    expect(updateProject).not.toHaveBeenCalled();
+  });
+
+  it("forwards valid status values to project persistence", async () => {
+    getCurrentUser.mockResolvedValue({ id: "user-1" });
+    const project = {
+      id: projectId,
+      name: "Forge",
+      description: "Dev tools",
+      status: "in_progress",
+      createdAt: "2026-09-23T00:00:00.000Z",
+    };
+    createProject.mockResolvedValue(project);
+    updateProject.mockResolvedValue(project);
+
+    const input = { name: "Forge", description: "Dev tools", status: "in_progress" };
+    await expect(createProjectAction(input)).resolves.toEqual({ ok: true, data: project });
+    await expect(updateProjectAction(projectId, input)).resolves.toEqual({
+      ok: true,
+      data: project,
+    });
+    expect(createProject).toHaveBeenCalledWith(input);
+    expect(updateProject).toHaveBeenCalledWith(projectId, input);
+    expect(revalidatePath).toHaveBeenNthCalledWith(1, "/dev-board", "layout");
+    expect(revalidatePath).toHaveBeenNthCalledWith(2, "/dev-board", "layout");
+  });
+});
 
 describe("createTicketCommentAction", () => {
   it("requires a session", async () => {
