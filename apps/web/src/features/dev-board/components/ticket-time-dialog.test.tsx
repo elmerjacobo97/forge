@@ -149,7 +149,11 @@ describe("TicketTimeDialog", () => {
       });
     });
 
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Saving…" })).toBeNull();
+    });
     fireEvent.click(screen.getByRole("button", { name: "Remove last session" }));
+    await screen.findByRole("button", { name: "Confirm remove" });
     fireEvent.click(screen.getByRole("button", { name: "Confirm remove" }));
 
     await waitFor(() => {
