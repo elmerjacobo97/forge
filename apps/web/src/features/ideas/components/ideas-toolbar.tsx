@@ -60,7 +60,7 @@ export function IdeasToolbar({ filters, tags }: { filters: IdeaFilters; tags: st
         <Input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search01Icon ideas…"
+          placeholder="Search ideas…"
           className="pl-8"
           type="search"
           aria-busy={isNavigating}

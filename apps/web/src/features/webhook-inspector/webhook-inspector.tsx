@@ -83,7 +83,7 @@ export function WebhookInspector({ initialEndpoints }: { initialEndpoints: Webho
         return;
       }
 
-      toast.success("WebhookIcon endpoint deleted.");
+      toast.success("Webhook endpoint deleted.");
       setDeleteTarget(null);
       if (deletingSelected) {
         setSelectedEndpointId(null);
@@ -96,7 +96,7 @@ export function WebhookInspector({ initialEndpoints }: { initialEndpoints: Webho
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="font-heading text-lg font-medium tracking-tight">WebhookIcon endpoints</h1>
+          <h1 className="font-heading text-lg font-medium tracking-tight">Webhook endpoints</h1>
           <p className="text-xs text-muted-foreground">
             Create temporary URLs that capture and inspect incoming HTTP requests. {activeCount}/
             {WEBHOOK_MAX_ENDPOINTS_PER_USER} active.

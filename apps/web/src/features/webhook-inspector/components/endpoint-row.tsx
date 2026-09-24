@@ -107,10 +107,10 @@ export function EndpointRow({ endpoint, selected = false, onSelect, onDelete }: 
                   data-icon="inline-start"
                 />
               )}
-              {copied ? "Copied" : "Copy01Icon URL"}
+              {copied ? "Copied" : "Copy URL"}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Copy01Icon public webhook URL</TooltipContent>
+          <TooltipContent>Copy public webhook URL</TooltipContent>
         </Tooltip>
 
         <Tooltip>
