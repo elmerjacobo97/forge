@@ -6,19 +6,17 @@ Full project conventions live in `AGENTS.md` — read it, it is authoritative. T
 
 ## Commands
 
-Run from the repo root (pnpm workspace, one app: `@forge/web` in `apps/web`).
+Run from the repo root. Command scope and single-file invocations live in `AGENTS.md`; root scripts live in `package.json`.
 
-- `pnpm install` — install all workspace dependencies
 - `pnpm dev` — start the Next.js development server
-- `pnpm build` — build Next.js and the CLI
-- `pnpm test` — run the web and CLI test suites (Vitest) once
-- `pnpm test:watch` — run both suites in watch mode (parallel)
-- `pnpm test:coverage` — run both suites with V8 coverage
+- `pnpm dev:mcp` — start the MCP Worker locally
+- `pnpm build` — build core, then web and the CLI
+- `pnpm test` — run core, web, CLI, and MCP once
+- `pnpm test:watch` — watch core, web, and CLI in parallel
+- `pnpm test:coverage` — V8 coverage for core, web, and CLI
 - `pnpm lint` / `pnpm lint:fix` — ESLint (flat config at repo root)
 - `pnpm format` / `pnpm format:check` — Prettier (`.prettierrc`)
 - `pnpm doctor` — run React Doctor against the web app
-
-Single test file: `pnpm --filter @forge/web exec vitest run --config tests.config.ts <path>` (or omit `run` to watch). Web Vitest configuration lives in `apps/web/tests.config.ts`; CLI configuration lives in `apps/cli/vitest.config.ts`.
 
 Linting uses ESLint + Prettier (not Biome). Config lives at the workspace root for the monorepo.
 
@@ -28,7 +26,7 @@ Linting uses ESLint + Prettier (not Biome). Config lives at the workspace root f
 
 **Feature-first structure**: `apps/web/src/features/<feature>/` owns each feature's `components/`, `hooks/`, `services/`, `schemas/`, `types/`, `utils/`, and `actions.ts`. Active product features: `dev-board`, `ideas`, `resources`, `uptime-monitor`, `webhook-inspector`, and `auth`. Keep feature logic inside its feature folder unless it is genuinely shared.
 
-**Tests**: web tests are colocated with the module they cover (`<module>.test.ts(x)`), with shared setup in `apps/web/src/test/setup.ts`. CLI tests live in `apps/cli/tests/` grouped by kind (`schemas/`, `services/`, `lib/`, `commands/`), with shared mocks in `apps/cli/tests/helpers/`.
+**Tests**: web tests are colocated with the module they cover (`<module>.test.ts(x)`), with shared setup in `apps/web/src/test/setup.ts`. CLI-only tests live in `apps/cli/tests/lib/`. Schema and service tests live in `packages/forge-core/tests/`. MCP tests live in `apps/mcp/tests/`.
 
 **Routing**: Next.js App Router under `apps/web/src/app/`. `(auth)` holds login/register and `(authenticated)` performs the server-side session guard. Keep pages thin.
 
