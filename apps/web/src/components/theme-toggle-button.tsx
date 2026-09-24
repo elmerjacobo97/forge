@@ -1,7 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { Moon, Sun } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Moon01Icon, Sun01Icon } from "@hugeicons/core-free-icons";
 import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 const emptySubscribe = () => () => {};
 
 function useIsClient() {
-  return useSyncExternalStore(emptySubscribe, () => true, () => false);
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
 }
 
 export function ThemeToggleButton() {
@@ -30,11 +35,22 @@ export function ThemeToggleButton() {
           disabled={!isClient}
         >
           {!isClient ? (
-            <span className="size-4" aria-hidden />
+            <span
+              className="size-4"
+              aria-hidden
+            />
           ) : isDark ? (
-            <Sun className="size-4" />
+            <HugeiconsIcon
+              icon={Sun01Icon}
+              strokeWidth={2}
+              className="size-4"
+            />
           ) : (
-            <Moon className="size-4" />
+            <HugeiconsIcon
+              icon={Moon01Icon}
+              strokeWidth={2}
+              className="size-4"
+            />
           )}
         </Button>
       </TooltipTrigger>

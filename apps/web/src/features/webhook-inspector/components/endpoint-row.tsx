@@ -1,15 +1,12 @@
 "use client";
 
 import { format, formatDistanceToNow } from "date-fns";
-import { Check, Copy, Trash2, Webhook } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Copy01Icon, Delete02Icon, Tick02Icon, WebhookIcon } from "@hugeicons/core-free-icons";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCopy } from "@/lib/hooks/use-copy";
 import { cn } from "@/lib/utils";
 import type { WebhookEndpoint } from "../types";
@@ -24,17 +21,11 @@ type EndpointRowProps = {
 };
 
 function publicUrl(token: string): string {
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : undefined;
+  const origin = typeof window !== "undefined" ? window.location.origin : undefined;
   return buildWebhookPublicUrl(token, origin);
 }
 
-export function EndpointRow({
-  endpoint,
-  selected = false,
-  onSelect,
-  onDelete,
-}: EndpointRowProps) {
+export function EndpointRow({ endpoint, selected = false, onSelect, onDelete }: EndpointRowProps) {
   const { copied, copy } = useCopy();
   const expired = isEndpointExpired(endpoint.expiresAt);
   const url = publicUrl(endpoint.token);
@@ -53,14 +44,18 @@ export function EndpointRow({
         }
       }}
       className={cn(
-        "flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors sm:flex-row sm:items-center",
+        "flex flex-col gap-3 border border-border bg-card p-4 transition-colors sm:flex-row sm:items-center",
         onSelect && "cursor-pointer hover:bg-accent/30",
         selected && "border-primary/40 bg-accent/40",
       )}
     >
       <div className="flex min-w-0 flex-1 items-start gap-3">
-        <div className="mt-0.5 rounded-md border border-border bg-muted/40 p-2 text-muted-foreground">
-          <Webhook className="size-4" />
+        <div className="mt-0.5 border border-border bg-muted/40 p-2 text-muted-foreground">
+          <HugeiconsIcon
+            icon={WebhookIcon}
+            strokeWidth={2}
+            className="size-4"
+          />
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -71,7 +66,10 @@ export function EndpointRow({
               <Badge variant="secondary">Active</Badge>
             )}
           </div>
-          <p className="truncate font-mono text-xs text-muted-foreground" title={url}>
+          <p
+            className="truncate font-mono text-xs text-muted-foreground"
+            title={url}
+          >
             {url}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -97,14 +95,22 @@ export function EndpointRow({
               }}
             >
               {copied ? (
-                <Check data-icon="inline-start" />
+                <HugeiconsIcon
+                  icon={Tick02Icon}
+                  strokeWidth={2}
+                  data-icon="inline-start"
+                />
               ) : (
-                <Copy data-icon="inline-start" />
+                <HugeiconsIcon
+                  icon={Copy01Icon}
+                  strokeWidth={2}
+                  data-icon="inline-start"
+                />
               )}
-              {copied ? "Copied" : "Copy URL"}
+              {copied ? "Copied" : "Copy01Icon URL"}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Copy public webhook URL</TooltipContent>
+          <TooltipContent>Copy01Icon public webhook URL</TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -119,7 +125,10 @@ export function EndpointRow({
                 onDelete(endpoint);
               }}
             >
-              <Trash2 />
+              <HugeiconsIcon
+                icon={Delete02Icon}
+                strokeWidth={2}
+              />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Delete endpoint</TooltipContent>

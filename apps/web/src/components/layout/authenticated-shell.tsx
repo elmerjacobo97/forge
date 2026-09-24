@@ -60,7 +60,7 @@ export function AuthenticatedShell({
               tool={tool}
               onOpenPalette={() => setPaletteOpen(true)}
             />
-            <main className="min-h-0 flex-1 p-4 md:p-5">{children}</main>
+            <main className="flex min-h-0 flex-1 flex-col gap-4 p-4">{children}</main>
           </SidebarInset>
           <CommandPalette
             open={paletteOpen}

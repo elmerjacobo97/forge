@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Hammer, LayoutDashboard, SearchX } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  ArrowLeft01Icon,
+  HammerIcon,
+  LayoutDashboardIcon,
+  SearchXIcon,
+} from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
 
@@ -18,7 +24,7 @@ export default function NotFound() {
     <main className="relative flex min-h-dvh items-center overflow-hidden bg-background px-4 py-16 sm:px-6">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-48 left-1/2 size-[36rem] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,color-mix(in_oklch,var(--primary)_20%,transparent),transparent_68%)]"
+        className="pointer-events-none absolute -top-48 left-1/2 size-[36rem] -translate-x-1/2 bg-[radial-gradient(circle,color-mix(in_oklch,var(--primary)_20%,transparent),transparent_68%)]"
       />
       <div
         aria-hidden
@@ -29,14 +35,16 @@ export default function NotFound() {
         <div className="relative mx-auto flex aspect-square w-full max-w-sm items-center justify-center">
           <div
             aria-hidden
-            className="absolute inset-8 rotate-3 rounded-[2rem] border border-primary/25 bg-primary/8"
+            className="absolute inset-8 rotate-3 border border-primary/25 bg-primary/8"
           />
-          <div className="relative flex size-56 -rotate-3 flex-col items-center justify-center rounded-3xl border border-border bg-card shadow-xl sm:size-64">
+          <div className="relative flex size-56 -rotate-3 flex-col items-center justify-center border border-border bg-card shadow-xl sm:size-64">
             <span className="font-mono text-[5.5rem] font-semibold leading-none tracking-[-0.12em] text-primary sm:text-[6.5rem]">
               404
             </span>
             <span className="mt-3 flex items-center gap-2 font-mono text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
-              <SearchX
+              <HugeiconsIcon
+                icon={SearchXIcon}
+                strokeWidth={2}
                 className="size-3.5"
                 aria-hidden="true"
               />
@@ -45,15 +53,19 @@ export default function NotFound() {
           </div>
           <div
             aria-hidden
-            className="absolute right-1 bottom-8 flex size-14 rotate-6 items-center justify-center rounded-xl border border-border/60 bg-card text-primary shadow-xl sm:right-5"
+            className="absolute right-1 bottom-8 flex size-14 rotate-6 items-center justify-center border border-border/60 bg-card text-primary shadow-xl sm:right-5"
           >
-            <Hammer className="size-6" />
+            <HugeiconsIcon
+              icon={HammerIcon}
+              strokeWidth={2}
+              className="size-6"
+            />
           </div>
         </div>
 
         <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-3 py-1 text-[11px] font-medium tracking-widest text-primary uppercase">
-            <span className="size-1.5 rounded-full bg-primary" />
+          <span className="inline-flex items-center gap-2 border border-primary/25 bg-primary/8 px-3 py-1 text-[11px] font-medium tracking-widest text-primary uppercase">
+            <span className="size-1.5 bg-primary" />
             Broken link in the chain
           </span>
           <h1 className="mt-6 max-w-xl font-heading text-4xl font-semibold leading-tight tracking-tight text-balance sm:text-5xl">
@@ -70,7 +82,11 @@ export default function NotFound() {
               asChild
             >
               <Link href="/">
-                <ArrowLeft data-icon="inline-start" />
+                <HugeiconsIcon
+                  icon={ArrowLeft01Icon}
+                  strokeWidth={2}
+                  data-icon="inline-start"
+                />
                 Return home
               </Link>
             </Button>
@@ -81,7 +97,11 @@ export default function NotFound() {
               asChild
             >
               <Link href="/dev-board">
-                <LayoutDashboard data-icon="inline-start" />
+                <HugeiconsIcon
+                  icon={LayoutDashboardIcon}
+                  strokeWidth={2}
+                  data-icon="inline-start"
+                />
                 Open workspace
               </Link>
             </Button>

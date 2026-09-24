@@ -1,18 +1,19 @@
 /* eslint-disable react-hooks/refs -- @dnd-kit/sortable exposes refs/listeners that must be applied during render */
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Clock,
-  Copy,
-  Check,
-  GripVertical,
-  MessageSquare,
-  MoreHorizontal,
-  Pencil,
-  Pause,
-  Play,
-  Trash2,
-} from "lucide-react";
+  Clock01Icon,
+  Copy01Icon,
+  Delete02Icon,
+  GripVerticalIcon,
+  Message01Icon,
+  MoreHorizontalIcon,
+  PauseIcon,
+  PencilEdit01Icon,
+  PlayIcon,
+  Tick02Icon,
+} from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -84,7 +85,7 @@ export function TicketCard({
       ref={sortable.setNodeRef}
       style={style}
       className={cn(
-        "group rounded-xl border border-input/50 bg-card p-2.5 shadow-sm transition-shadow",
+        "group border border-input/50 bg-card p-2.5 shadow-sm transition-shadow",
         sortable.isDragging && "opacity-30",
         timerRunning && "border-primary/40 bg-primary/5",
       )}
@@ -97,7 +98,11 @@ export function TicketCard({
           {...sortable.attributes}
           {...sortable.listeners}
         >
-          <GripVertical className="size-3.5" />
+          <HugeiconsIcon
+            icon={GripVerticalIcon}
+            strokeWidth={2}
+            className="size-3.5"
+          />
         </button>
 
         <div className="min-w-0 flex-1">
@@ -110,7 +115,9 @@ export function TicketCard({
 
           {(timerActive || ticket.totalElapsedMs > 0) && (
             <div className="mt-2 flex items-center gap-1.5">
-              <Clock
+              <HugeiconsIcon
+                icon={Clock01Icon}
+                strokeWidth={2}
                 className={cn(
                   "size-3",
                   timerRunning && "text-primary animate-pulse",
@@ -139,7 +146,11 @@ export function TicketCard({
               className="shrink-0 opacity-0 group-hover:opacity-100"
               aria-label="Ticket actions"
             >
-              <MoreHorizontal className="size-3.5" />
+              <HugeiconsIcon
+                icon={MoreHorizontalIcon}
+                strokeWidth={2}
+                className="size-3.5"
+              />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -147,11 +158,19 @@ export function TicketCard({
             className="w-40"
           >
             <DropdownMenuItem onClick={() => onEdit(ticket)}>
-              <Pencil className="size-3" />
+              <HugeiconsIcon
+                icon={PencilEdit01Icon}
+                strokeWidth={2}
+                className="size-3"
+              />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onComments(ticket)}>
-              <MessageSquare className="size-3" />
+              <HugeiconsIcon
+                icon={Message01Icon}
+                strokeWidth={2}
+                className="size-3"
+              />
               Comments
               {(ticket.commentCount ?? 0) > 0 && (
                 <span className="ml-auto text-[10px] text-muted-foreground">
@@ -165,8 +184,20 @@ export function TicketCard({
                 toast.success("Ticket ID copied.");
               }}
             >
-              {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
-              Copy ID
+              {copied ? (
+                <HugeiconsIcon
+                  icon={Tick02Icon}
+                  strokeWidth={2}
+                  className="size-3"
+                />
+              ) : (
+                <HugeiconsIcon
+                  icon={Copy01Icon}
+                  strokeWidth={2}
+                  className="size-3"
+                />
+              )}
+              Copy01Icon ID
             </DropdownMenuItem>
             {timerActive && (
               <DropdownMenuItem
@@ -180,20 +211,32 @@ export function TicketCard({
               >
                 {timerPaused ? (
                   <>
-                    <Play className="size-3" />
+                    <HugeiconsIcon
+                      icon={PlayIcon}
+                      strokeWidth={2}
+                      className="size-3"
+                    />
                     Resume
                   </>
                 ) : (
                   <>
-                    <Pause className="size-3" />
-                    Pause
+                    <HugeiconsIcon
+                      icon={PauseIcon}
+                      strokeWidth={2}
+                      className="size-3"
+                    />
+                    PauseIcon
                   </>
                 )}
               </DropdownMenuItem>
             )}
             {(timerActive || ticket.totalElapsedMs > 0) && (
               <DropdownMenuItem onClick={() => onAdjust(ticket)}>
-                <Clock className="size-3" />
+                <HugeiconsIcon
+                  icon={Clock01Icon}
+                  strokeWidth={2}
+                  className="size-3"
+                />
                 Adjust time
               </DropdownMenuItem>
             )}
@@ -222,7 +265,7 @@ export function TicketCard({
                     key={p}
                     onClick={() => onUpdate({ ...ticket, priority: p })}
                   >
-                    <span className={cn("size-2 rounded-full", PRIORITY_COLORS[p])} />
+                    <span className={cn("size-2", PRIORITY_COLORS[p])} />
                     {PRIORITY_LABELS[p]}
                     {ticket.priority === p && " ✓"}
                   </DropdownMenuItem>
@@ -234,7 +277,11 @@ export function TicketCard({
               onClick={() => onDelete(ticket)}
               className="text-destructive focus:text-destructive"
             >
-              <Trash2 className="size-3" />
+              <HugeiconsIcon
+                icon={Delete02Icon}
+                strokeWidth={2}
+                className="size-3"
+              />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -243,7 +290,7 @@ export function TicketCard({
 
       <div className="mt-2 flex items-center gap-1.5">
         <span
-          className={cn("size-1.5 rounded-full", PRIORITY_COLORS[ticket.priority])}
+          className={cn("size-1.5", PRIORITY_COLORS[ticket.priority])}
           aria-label={`${PRIORITY_LABELS[ticket.priority]} priority`}
         />
         {(ticket.commentCount ?? 0) > 0 && (
@@ -251,7 +298,11 @@ export function TicketCard({
             className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground"
             aria-label={`${ticket.commentCount} comment${ticket.commentCount === 1 ? "" : "s"}`}
           >
-            <MessageSquare className="size-3" />
+            <HugeiconsIcon
+              icon={Message01Icon}
+              strokeWidth={2}
+              className="size-3"
+            />
             {ticket.commentCount}
           </span>
         )}

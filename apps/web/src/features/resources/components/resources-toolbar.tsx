@@ -2,7 +2,8 @@
 
 import { useCallback, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Plus, Search } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PlusSignIcon, Search01Icon } from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,11 +43,15 @@ export function ResourcesToolbar({ filters }: { filters: ResourceFilters }) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="relative w-full sm:w-64">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <HugeiconsIcon
+          icon={Search01Icon}
+          strokeWidth={2}
+          className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+        />
         <Input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search resources..."
+          placeholder="Search01Icon resources..."
           className="pl-8"
           type="search"
           aria-busy={isNavigating}
@@ -60,7 +65,7 @@ export function ResourcesToolbar({ filters }: { filters: ResourceFilters }) {
             type="button"
             onClick={() => applyFilters({ category: category.value })}
             className={cn(
-              "rounded-md px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-colors",
+              " px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-colors",
               filters.category === category.value
                 ? "bg-accent text-accent-foreground"
                 : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
@@ -76,7 +81,11 @@ export function ResourcesToolbar({ filters }: { filters: ResourceFilters }) {
         onClick={() => setIsAddDialogOpen(true)}
         className="ml-auto"
       >
-        <Plus className="size-3.5" />
+        <HugeiconsIcon
+          icon={PlusSignIcon}
+          strokeWidth={2}
+          className="size-3.5"
+        />
         Add
       </Button>
 

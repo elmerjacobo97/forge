@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useForm } from "@tanstack/react-form";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Mail01Icon, SquareLock01Icon, ViewIcon, ViewOffIcon } from "@hugeicons/core-free-icons";
 
 import { signInAction } from "@/features/auth/actions";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,11 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
                     <InputGroup>
                       <InputGroupAddon>
                         <InputGroupText>
-                          <Mail className="size-3.5" />
+                          <HugeiconsIcon
+                            icon={Mail01Icon}
+                            strokeWidth={2}
+                            className="size-3.5"
+                          />
                         </InputGroupText>
                       </InputGroupAddon>
                       <InputGroupInput
@@ -102,7 +107,11 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
                     <InputGroup>
                       <InputGroupAddon>
                         <InputGroupText>
-                          <Lock className="size-3.5" />
+                          <HugeiconsIcon
+                            icon={SquareLock01Icon}
+                            strokeWidth={2}
+                            className="size-3.5"
+                          />
                         </InputGroupText>
                       </InputGroupAddon>
                       <InputGroupInput
@@ -126,12 +135,16 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
                           disabled={isPending}
                         >
                           {showPassword ? (
-                            <EyeOff
+                            <HugeiconsIcon
+                              icon={ViewOffIcon}
+                              strokeWidth={2}
                               className="size-3.5"
                               aria-hidden="true"
                             />
                           ) : (
-                            <Eye
+                            <HugeiconsIcon
+                              icon={ViewIcon}
+                              strokeWidth={2}
                               className="size-3.5"
                               aria-hidden="true"
                             />

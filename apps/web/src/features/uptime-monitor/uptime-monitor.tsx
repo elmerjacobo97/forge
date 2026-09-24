@@ -1,4 +1,5 @@
-import { Activity } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Activity01Icon } from "@hugeicons/core-free-icons";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -40,10 +41,14 @@ export function UptimeMonitor({
         </Alert>
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-input/60">
+      <div className="min-h-0 flex-1 overflow-y-auto border border-input/60">
         {rows.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 p-10 text-center">
-            <Activity className="size-8 text-muted-foreground/40" />
+            <HugeiconsIcon
+              icon={Activity01Icon}
+              strokeWidth={2}
+              className="size-8 text-muted-foreground/40"
+            />
             <p className="text-sm font-medium">No monitors yet</p>
             <p className="max-w-sm text-xs text-muted-foreground">
               Create a monitor to check one of your URLs on a schedule and get alerted on Telegram

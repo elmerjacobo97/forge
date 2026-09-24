@@ -7,28 +7,31 @@ import { Button } from "@/components/ui/button";
 
 export default function RootError({
   error,
-  reset,
+  unstable_retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  unstable_retry: () => void;
 }) {
   useEffect(() => {
     console.error(error);
   }, [error]);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center p-6">
+    <div className="flex min-h-dvh items-center justify-center bg-background p-6">
       <Alert
         variant="destructive"
         className="max-w-md"
       >
         <AlertTitle>Something went wrong</AlertTitle>
         <AlertDescription className="flex flex-col gap-3">
-          <span>{error.message || "Unexpected error."}</span>
+          <span>The page could not finish loading.</span>
+          {error.digest ? (
+            <span className="font-mono text-xs">Reference {error.digest}</span>
+          ) : null}
           <Button
             size="sm"
             variant="outline"
-            onClick={reset}
+            onClick={() => unstable_retry()}
             className="w-fit"
           >
             Try again

@@ -1,4 +1,5 @@
-import { Globe } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Globe02Icon } from "@hugeicons/core-free-icons";
 
 import { ListPagination } from "@/components/list-pagination";
 import { ResourceCard } from "./components/resource-card";
@@ -17,12 +18,23 @@ export function Resources({
 }) {
   return (
     <div className="flex h-full flex-col gap-4">
+      <div>
+        <h1 className="font-heading text-lg font-medium tracking-tight">Resources</h1>
+        <p className="text-xs text-muted-foreground">
+          Save and organize developer links and references.
+        </p>
+      </div>
+
       <ResourcesToolbar filters={filters} />
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {resources.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-            <Globe className="size-8 text-muted-foreground/40" />
+            <HugeiconsIcon
+              icon={Globe02Icon}
+              strokeWidth={2}
+              className="size-8 text-muted-foreground/40"
+            />
             <p className="text-sm font-medium">No resources found</p>
             <p className="text-xs text-muted-foreground">
               Refine your search or add a new resource.

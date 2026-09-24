@@ -1,11 +1,18 @@
-import { LucideIcon, Bookmark, Lightbulb, Columns3, Webhook, Activity } from "lucide-react";
+import type { IconSvgElement } from "@hugeicons/react";
+import {
+  Activity01Icon,
+  Bookmark01Icon,
+  Idea01Icon,
+  LayoutThreeColumnIcon,
+  WebhookIcon,
+} from "@hugeicons/core-free-icons";
 
 export interface ToolDef {
   id: string;
   path: string;
   name: string;
   description: string;
-  icon: LucideIcon;
+  icon: IconSvgElement;
   category: string;
 }
 
@@ -16,7 +23,7 @@ export const tools: ToolDef[] = [
     path: "/dev-board",
     name: "Dev Board",
     description: "Kanban board with auto time tracking for dev tasks",
-    icon: Columns3,
+    icon: LayoutThreeColumnIcon,
     category: "Productivity",
   },
   {
@@ -24,7 +31,7 @@ export const tools: ToolDef[] = [
     path: "/ideas",
     name: "Ideas",
     description: "Capture and track product, app, and business ideas",
-    icon: Lightbulb,
+    icon: Idea01Icon,
     category: "Productivity",
   },
   {
@@ -32,15 +39,15 @@ export const tools: ToolDef[] = [
     path: "/resources",
     name: "Resources",
     description: "Save and organize developer links and references",
-    icon: Bookmark,
+    icon: Bookmark01Icon,
     category: "Resources",
   },
   {
     id: "webhook-inspector",
     path: "/webhook-inspector",
-    name: "Webhook Inspector",
+    name: "WebhookIcon Inspector",
     description: "Create temporary URLs that capture and inspect incoming HTTP requests",
-    icon: Webhook,
+    icon: WebhookIcon,
     category: "Network",
   },
   {
@@ -48,7 +55,7 @@ export const tools: ToolDef[] = [
     path: "/uptime-monitor",
     name: "Uptime Monitor",
     description: "Monitor your URLs with scheduled HTTP checks and Telegram alerts",
-    icon: Activity,
+    icon: Activity01Icon,
     category: "Network",
   },
 ];

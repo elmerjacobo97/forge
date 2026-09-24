@@ -3,7 +3,14 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { FolderKanban, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Delete02Icon,
+  KanbanIcon,
+  MoreHorizontalIcon,
+  PencilEdit01Icon,
+  PlusSignIcon,
+} from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -130,7 +137,11 @@ export function ProjectList({
             onClick={openCreate}
             className="gap-1.5"
           >
-            <Plus className="size-3.5" />
+            <HugeiconsIcon
+              icon={PlusSignIcon}
+              strokeWidth={2}
+              className="size-3.5"
+            />
             New project
           </Button>
         ) : null}
@@ -142,7 +153,10 @@ export function ProjectList({
         <Empty className="border border-dashed">
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <FolderKanban />
+              <HugeiconsIcon
+                icon={KanbanIcon}
+                strokeWidth={2}
+              />
             </EmptyMedia>
             <EmptyTitle>
               {hasAnyProjects ? "No projects match your filters" : "No projects yet"}
@@ -162,7 +176,11 @@ export function ProjectList({
                 onClick={openCreate}
                 className="gap-1.5"
               >
-                <Plus className="size-3.5" />
+                <HugeiconsIcon
+                  icon={PlusSignIcon}
+                  strokeWidth={2}
+                  className="size-3.5"
+                />
                 Create project
               </Button>
             </EmptyContent>
@@ -211,7 +229,7 @@ export function ProjectList({
                       size="sm"
                       aria-label={`Change status for ${project.name}`}
                       className={cn(
-                        "h-6 w-fit max-w-full gap-1 rounded-full border px-2 py-0 text-[10px] sm:text-xs",
+                        "h-6 w-fit max-w-full gap-1 border px-2 py-0 text-[10px] sm:text-xs",
                         STATUS_TRIGGER_STYLES[project.status],
                       )}
                     >
@@ -241,19 +259,31 @@ export function ProjectList({
                         className="text-muted-foreground"
                         aria-label={`Actions for ${project.name}`}
                       >
-                        <MoreHorizontal className="size-3.5" />
+                        <HugeiconsIcon
+                          icon={MoreHorizontalIcon}
+                          strokeWidth={2}
+                          className="size-3.5"
+                        />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => openEdit(project)}>
-                        <Pencil className="size-3.5" />
+                        <HugeiconsIcon
+                          icon={PencilEdit01Icon}
+                          strokeWidth={2}
+                          className="size-3.5"
+                        />
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={() => setDeleteTarget(project)}
                       >
-                        <Trash2 className="size-3.5" />
+                        <HugeiconsIcon
+                          icon={Delete02Icon}
+                          strokeWidth={2}
+                          className="size-3.5"
+                        />
                         Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>

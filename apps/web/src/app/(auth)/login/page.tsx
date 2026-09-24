@@ -15,7 +15,7 @@ async function LoginContent({ searchParams }: PageProps<"/login">) {
 
 export default function LoginPage(props: PageProps<"/login">) {
   return (
-    <Suspense fallback={<div className="h-96 w-full max-w-sm animate-pulse rounded-xl bg-muted" />}>
+    <Suspense fallback={<div className="h-96 w-full max-w-sm animate-pulse bg-muted" />}>
       <LoginContent {...props} />
     </Suspense>
   );

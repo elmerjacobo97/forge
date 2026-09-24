@@ -1,6 +1,7 @@
 "use client";
 
-import { Activity } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Activity01Icon } from "@hugeicons/core-free-icons";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import {
@@ -94,7 +95,10 @@ export function LatencyChart({ buckets, range, onRangeChange, loading }: Latency
           <Empty className="min-h-50 border-0">
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <Activity />
+                <HugeiconsIcon
+                  icon={Activity01Icon}
+                  strokeWidth={2}
+                />
               </EmptyMedia>
               <EmptyTitle>No latency data yet</EmptyTitle>
               <EmptyDescription>

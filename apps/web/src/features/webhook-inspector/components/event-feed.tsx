@@ -2,7 +2,8 @@
 
 import { Fragment } from "react";
 import { format } from "date-fns";
-import { Inbox } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { InboxIcon } from "@hugeicons/core-free-icons";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -31,17 +32,18 @@ type EventFeedProps = {
   isLoading?: boolean;
 };
 
-export function EventFeed({
-  events,
-  selectedId,
-  onSelect,
-  isLoading = false,
-}: EventFeedProps) {
+export function EventFeed({ events, selectedId, onSelect, isLoading = false }: EventFeedProps) {
   if (isLoading) {
     return (
-      <ItemGroup className="gap-2 p-3" data-size="sm">
+      <ItemGroup
+        className="gap-2 p-3"
+        data-size="sm"
+      >
         {[1, 2, 3, 4].map((index) => (
-          <Skeleton key={index} className="h-14 w-full rounded-lg" />
+          <Skeleton
+            key={index}
+            className="h-14 w-full "
+          />
         ))}
       </ItemGroup>
     );
@@ -52,12 +54,15 @@ export function EventFeed({
       <Empty className="h-full border-0">
         <EmptyHeader>
           <EmptyMedia variant="icon">
-            <Inbox />
+            <HugeiconsIcon
+              icon={InboxIcon}
+              strokeWidth={2}
+            />
           </EmptyMedia>
           <EmptyTitle>No events yet</EmptyTitle>
           <EmptyDescription className="text-xs">
-            Send a request to this endpoint URL. New events appear here within
-            about 2 seconds while this tab is visible.
+            Send a request to this endpoint URL. New events appear here within about 2 seconds while
+            this tab is visible.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -66,7 +71,10 @@ export function EventFeed({
 
   return (
     <ScrollArea className="h-full">
-      <ItemGroup className="gap-0 p-2" data-size="sm">
+      <ItemGroup
+        className="gap-0 p-2"
+        data-size="sm"
+      >
         {events.map((event, index) => {
           const selected = event.id === selectedId;
           return (
@@ -77,10 +85,16 @@ export function EventFeed({
                 size="sm"
                 className="cursor-pointer hover:bg-accent/40"
               >
-                <button type="button" onClick={() => onSelect(event)}>
+                <button
+                  type="button"
+                  onClick={() => onSelect(event)}
+                >
                   <ItemContent>
                     <ItemTitle className="w-full max-w-full">
-                      <Badge variant="outline" className="font-mono text-[10px]">
+                      <Badge
+                        variant="outline"
+                        className="font-mono text-[10px]"
+                      >
                         {event.method}
                       </Badge>
                       <span className="truncate font-mono text-xs font-normal text-muted-foreground">
@@ -93,9 +107,7 @@ export function EventFeed({
                   </ItemContent>
                 </button>
               </Item>
-              {index < events.length - 1 ? (
-                <ItemSeparator className="my-1" />
-              ) : null}
+              {index < events.length - 1 ? <ItemSeparator className="my-1" /> : null}
             </Fragment>
           );
         })}

@@ -57,18 +57,14 @@ const components: Components = {
     const isBlock = typeof className === "string" && className.startsWith("language-");
     return (
       <code
-        className={cn(
-          "font-mono text-[10px]",
-          !isBlock && "rounded bg-muted px-1 py-0.5",
-          className,
-        )}
+        className={cn("font-mono text-[10px]", !isBlock && " bg-muted px-1 py-0.5", className)}
         {...props}
       />
     );
   },
   pre: ({ node: _node, ...props }) => (
     <pre
-      className="my-1 overflow-x-auto rounded-md bg-muted/60 p-2 font-mono text-[10px]"
+      className="my-1 overflow-x-auto bg-muted/60 p-2 font-mono text-[10px]"
       {...props}
     />
   ),

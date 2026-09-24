@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { Link2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Delete02Icon,
+  Link01Icon,
+  MoreHorizontalIcon,
+  PencilEdit01Icon,
+} from "@hugeicons/core-free-icons";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,7 +54,11 @@ export function IdeaRow({ idea }: { idea: Idea }) {
           ) : null}
           {idea.links.length ? (
             <span className="inline-flex items-center gap-1">
-              <Link2 className="size-3" />
+              <HugeiconsIcon
+                icon={Link01Icon}
+                strokeWidth={2}
+                className="size-3"
+              />
               {idea.links.length}
             </span>
           ) : null}
@@ -64,19 +74,31 @@ export function IdeaRow({ idea }: { idea: Idea }) {
             className="text-muted-foreground"
             aria-label={`Actions for ${idea.title}`}
           >
-            <MoreHorizontal className="size-3.5" />
+            <HugeiconsIcon
+              icon={MoreHorizontalIcon}
+              strokeWidth={2}
+              className="size-3.5"
+            />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
-            <Pencil className="size-3.5" />
+            <HugeiconsIcon
+              icon={PencilEdit01Icon}
+              strokeWidth={2}
+              className="size-3.5"
+            />
             Edit
           </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"
             onClick={() => setIsDeleteOpen(true)}
           >
-            <Trash2 className="size-3.5" />
+            <HugeiconsIcon
+              icon={Delete02Icon}
+              strokeWidth={2}
+              className="size-3.5"
+            />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>

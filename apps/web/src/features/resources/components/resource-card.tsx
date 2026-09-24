@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Delete02Icon,
+  LinkSquare02Icon,
+  MoreHorizontalIcon,
+  PencilEdit01Icon,
+} from "@hugeicons/core-free-icons";
 import { format } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +27,7 @@ export function ResourceCard({ resource }: { resource: Resource }) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   return (
-    <div className="group flex flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/20">
+    <div className="group flex flex-col border border-border bg-card p-4 transition-colors hover:border-foreground/20">
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
@@ -45,19 +51,31 @@ export function ResourceCard({ resource }: { resource: Resource }) {
               className="text-muted-foreground"
               aria-label={`Actions for ${resource.title}`}
             >
-              <MoreHorizontal className="size-3.5" />
+              <HugeiconsIcon
+                icon={MoreHorizontalIcon}
+                strokeWidth={2}
+                className="size-3.5"
+              />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
-              <Pencil className="size-3.5" />
+              <HugeiconsIcon
+                icon={PencilEdit01Icon}
+                strokeWidth={2}
+                className="size-3.5"
+              />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
               onClick={() => setIsDeleteOpen(true)}
             >
-              <Trash2 className="size-3.5" />
+              <HugeiconsIcon
+                icon={Delete02Icon}
+                strokeWidth={2}
+                className="size-3.5"
+              />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -87,7 +105,11 @@ export function ResourceCard({ resource }: { resource: Resource }) {
           onClick={() => window.open(resource.url, "_blank")}
         >
           Open
-          <ExternalLink className="size-3.5" />
+          <HugeiconsIcon
+            icon={LinkSquare02Icon}
+            strokeWidth={2}
+            className="size-3.5"
+          />
         </Button>
       </div>
 

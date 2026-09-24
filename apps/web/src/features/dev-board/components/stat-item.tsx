@@ -11,7 +11,7 @@ export function StatItem({ icon, label, value }: StatItemProps) {
     <Item size="sm">
       <ItemMedia
         variant="icon"
-        className="size-8 rounded-full bg-muted text-muted-foreground"
+        className="size-8 bg-muted text-muted-foreground"
       >
         {icon}
       </ItemMedia>

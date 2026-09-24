@@ -1,6 +1,7 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import {
   Command,
@@ -11,20 +12,20 @@ import {
   CommandItem,
   CommandList,
   CommandShortcut,
-} from "@/components/ui/command"
-import { tools } from "@/lib/tools"
+} from "@/components/ui/command";
+import { tools } from "@/lib/tools";
 
 interface CommandPaletteProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
-  const router = useRouter()
+  const router = useRouter();
 
   function selectTool(path: string) {
-    router.push(path)
-    onOpenChange(false)
+    router.push(path);
+    onOpenChange(false);
   }
 
   return (
@@ -46,7 +47,11 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 value={`${tool.id} ${tool.name} ${tool.category}`}
                 onSelect={() => selectTool(tool.path)}
               >
-                <tool.icon className="size-4 shrink-0" />
+                <HugeiconsIcon
+                  icon={tool.icon}
+                  strokeWidth={2}
+                  className="size-4 shrink-0"
+                />
                 <span className="flex-1 truncate">{tool.name}</span>
                 <CommandShortcut>{tool.category}</CommandShortcut>
               </CommandItem>
@@ -55,5 +60,5 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         </CommandList>
       </Command>
     </CommandDialog>
-  )
+  );
 }

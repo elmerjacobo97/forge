@@ -31,7 +31,7 @@ const shortcuts: ShortcutDef[] = [
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex min-w-[1.5rem] items-center justify-center rounded border bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+    <kbd className="inline-flex min-w-[1.5rem] items-center justify-center border bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
       {children}
     </kbd>
   );
@@ -58,7 +58,7 @@ export function KeyboardShortcuts({ open, onOpenChange }: KeyboardShortcutsProps
           {shortcuts.map((shortcut) => (
             <div
               key={shortcut.description}
-              className="flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-muted/50"
+              className="flex items-center justify-between px-2 py-1.5 hover:bg-muted/50"
             >
               <span className="text-sm">{shortcut.description}</span>
               <span className="flex items-center gap-1">

@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 
 export default function AuthenticatedError({
   error,
-  reset,
+  unstable_retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  unstable_retry: () => void;
 }) {
   useEffect(() => {
     console.error(error);
@@ -24,11 +24,14 @@ export default function AuthenticatedError({
       >
         <AlertTitle>Something went wrong</AlertTitle>
         <AlertDescription className="flex flex-col gap-3">
-          <span>{error.message || "Unexpected error."}</span>
+          <span>This page could not finish loading.</span>
+          {error.digest ? (
+            <span className="font-mono text-xs">Reference {error.digest}</span>
+          ) : null}
           <Button
             size="sm"
             variant="outline"
-            onClick={reset}
+            onClick={() => unstable_retry()}
             className="w-fit"
           >
             Try again

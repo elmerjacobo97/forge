@@ -14,7 +14,13 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { ArrowLeft, BarChart3, Plus, RefreshCw } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Analytics01Icon,
+  ArrowLeft01Icon,
+  PlusSignIcon,
+  RefreshIcon,
+} from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -352,7 +358,11 @@ export function ProjectBoard({ project, userId, initialColumns }: ProjectBoardPr
             className="-ml-2 mb-1 h-7 gap-1.5 px-2"
           >
             <Link href="/dev-board">
-              <ArrowLeft className="size-3.5" />
+              <HugeiconsIcon
+                icon={ArrowLeft01Icon}
+                strokeWidth={2}
+                className="size-3.5"
+              />
               Projects
             </Link>
           </Button>
@@ -384,7 +394,11 @@ export function ProjectBoard({ project, userId, initialColumns }: ProjectBoardPr
             aria-label="Refresh board"
             title="Refresh board"
           >
-            <RefreshCw className={cn("size-3.5", isRefreshing && "animate-spin")} />
+            <HugeiconsIcon
+              icon={RefreshIcon}
+              strokeWidth={2}
+              className={cn("size-3.5", isRefreshing && "animate-spin")}
+            />
           </Button>
           <Button
             asChild
@@ -392,7 +406,11 @@ export function ProjectBoard({ project, userId, initialColumns }: ProjectBoardPr
             variant="outline"
           >
             <Link href={`/dev-board/${project.id}/analytics`}>
-              <BarChart3 className="size-3.5" />
+              <HugeiconsIcon
+                icon={Analytics01Icon}
+                strokeWidth={2}
+                className="size-3.5"
+              />
               Analytics
             </Link>
           </Button>
@@ -401,7 +419,11 @@ export function ProjectBoard({ project, userId, initialColumns }: ProjectBoardPr
             onClick={openNewTicket}
             className="gap-1.5"
           >
-            <Plus className="size-3.5" />
+            <HugeiconsIcon
+              icon={PlusSignIcon}
+              strokeWidth={2}
+              className="size-3.5"
+            />
             New Ticket
           </Button>
         </div>

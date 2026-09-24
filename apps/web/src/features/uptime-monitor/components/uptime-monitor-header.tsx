@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, Hash, Plus, Send } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  HashtagIcon,
+  Notification01Icon,
+  PlusSignIcon,
+  SentIcon,
+} from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -38,9 +44,10 @@ export function UptimeMonitorHeader({
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="min-w-0">
-        <h2 className="text-sm font-medium">Uptime monitors</h2>
+        <h1 className="font-heading text-lg font-medium tracking-tight">Uptime monitors</h1>
         <p className="text-xs text-muted-foreground">
-          {monitorCount}/{UPTIME_MAX_MONITORS_PER_USER} monitors
+          Monitor your URLs with scheduled HTTP checks and Telegram alerts. {monitorCount}/
+          {UPTIME_MAX_MONITORS_PER_USER} monitors.
         </p>
       </div>
       <div className="ml-auto flex items-center gap-2">
@@ -51,18 +58,27 @@ export function UptimeMonitorHeader({
               variant="outline"
               aria-label="Notification settings"
             >
-              <Bell />
+              <HugeiconsIcon
+                icon={Notification01Icon}
+                strokeWidth={2}
+              />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setIsTelegramSettingsOpen(true)}>
-              <Send />
+              <HugeiconsIcon
+                icon={SentIcon}
+                strokeWidth={2}
+              />
               Telegram
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setIsSlackSettingsOpen(true)}>
-              <Hash />
+              <HugeiconsIcon
+                icon={HashtagIcon}
+                strokeWidth={2}
+              />
               Slack
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -75,7 +91,11 @@ export function UptimeMonitorHeader({
             atLimit ? `You can have at most ${UPTIME_MAX_MONITORS_PER_USER} monitors.` : undefined
           }
         >
-          <Plus data-icon="inline-start" />
+          <HugeiconsIcon
+            icon={PlusSignIcon}
+            strokeWidth={2}
+            data-icon="inline-start"
+          />
           Create monitor
         </Button>
       </div>

@@ -1,4 +1,5 @@
-import { Plus, Trash2 } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Delete02Icon, PlusSignIcon } from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -74,7 +75,11 @@ export function MonitorHeadersEditor({
             onClick={() => onChange([...value, { name: "", value: "" }])}
             disabled={disabled || value.length >= UPTIME_REQUEST_HEADERS_MAX}
           >
-            <Plus data-icon="inline-start" />
+            <HugeiconsIcon
+              icon={PlusSignIcon}
+              strokeWidth={2}
+              data-icon="inline-start"
+            />
             Add header
           </Button>
         </div>
@@ -98,7 +103,7 @@ export function MonitorHeadersEditor({
             return (
               <div
                 key={index}
-                className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-lg border p-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_auto]"
+                className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 border p-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_auto]"
               >
                 <Field data-invalid={nameInvalid}>
                   <FieldLabel htmlFor={nameId}>Name</FieldLabel>
@@ -155,7 +160,10 @@ export function MonitorHeadersEditor({
                   disabled={disabled}
                   aria-label={`Remove ${header.name || `header ${index + 1}`}`}
                 >
-                  <Trash2 />
+                  <HugeiconsIcon
+                    icon={Delete02Icon}
+                    strokeWidth={2}
+                  />
                 </Button>
               </div>
             );

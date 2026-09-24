@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Plus, Webhook } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PlusSignIcon, WebhookIcon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -82,7 +83,7 @@ export function WebhookInspector({ initialEndpoints }: { initialEndpoints: Webho
         return;
       }
 
-      toast.success("Webhook endpoint deleted.");
+      toast.success("WebhookIcon endpoint deleted.");
       setDeleteTarget(null);
       if (deletingSelected) {
         setSelectedEndpointId(null);
@@ -93,16 +94,17 @@ export function WebhookInspector({ initialEndpoints }: { initialEndpoints: Webho
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-sm font-medium">Webhook endpoints</h2>
+          <h1 className="font-heading text-lg font-medium tracking-tight">WebhookIcon endpoints</h1>
           <p className="text-xs text-muted-foreground">
-            {activeCount}/{WEBHOOK_MAX_ENDPOINTS_PER_USER} active · expire after 7 days
+            Create temporary URLs that capture and inspect incoming HTTP requests. {activeCount}/
+            {WEBHOOK_MAX_ENDPOINTS_PER_USER} active.
           </p>
         </div>
         <Button
           size="sm"
-          className="ml-auto"
+          className="shrink-0 gap-1.5"
           onClick={() => setIsCreateOpen(true)}
           disabled={atLimit}
           title={
@@ -111,7 +113,11 @@ export function WebhookInspector({ initialEndpoints }: { initialEndpoints: Webho
               : undefined
           }
         >
-          <Plus data-icon="inline-start" />
+          <HugeiconsIcon
+            icon={PlusSignIcon}
+            strokeWidth={2}
+            className="size-3.5"
+          />
           Create
         </Button>
       </div>
@@ -137,10 +143,14 @@ export function WebhookInspector({ initialEndpoints }: { initialEndpoints: Webho
         >
           <div className="flex h-full min-h-0 flex-col gap-1.5">
             <Label className="text-xs font-medium text-muted-foreground">Endpoints</Label>
-            <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-input/60 bg-muted/20 p-2">
+            <div className="min-h-0 flex-1 overflow-y-auto border border-input/60 bg-muted/20 p-2">
               {endpoints.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-                  <Webhook className="size-8 text-muted-foreground/40" />
+                  <HugeiconsIcon
+                    icon={WebhookIcon}
+                    strokeWidth={2}
+                    className="size-8 text-muted-foreground/40"
+                  />
                   <p className="text-sm font-medium">No webhook endpoints yet</p>
                   <p className="max-w-sm text-xs text-muted-foreground">
                     Create an endpoint to get a public URL that captures incoming HTTP requests.
@@ -149,7 +159,11 @@ export function WebhookInspector({ initialEndpoints }: { initialEndpoints: Webho
                     size="sm"
                     onClick={() => setIsCreateOpen(true)}
                   >
-                    <Plus data-icon="inline-start" />
+                    <HugeiconsIcon
+                      icon={PlusSignIcon}
+                      strokeWidth={2}
+                      data-icon="inline-start"
+                    />
                     Create endpoint
                   </Button>
                 </div>
@@ -199,7 +213,7 @@ export function WebhookInspector({ initialEndpoints }: { initialEndpoints: Webho
                     minSize={20}
                     className="pr-2"
                   >
-                    <div className="h-full min-h-0 overflow-hidden rounded-xl border border-input/60 bg-muted/20">
+                    <div className="h-full min-h-0 overflow-hidden border border-input/60 bg-muted/20">
                       <EventFeed
                         events={events}
                         selectedId={activeEventId}
@@ -219,7 +233,7 @@ export function WebhookInspector({ initialEndpoints }: { initialEndpoints: Webho
                     minSize={30}
                     className="pl-2"
                   >
-                    <div className="h-full min-h-0 overflow-hidden rounded-xl border border-input/60 bg-muted/20">
+                    <div className="h-full min-h-0 overflow-hidden border border-input/60 bg-muted/20">
                       <EventDetail event={selectedEvent} />
                     </div>
                   </ResizablePanel>
@@ -229,8 +243,12 @@ export function WebhookInspector({ initialEndpoints }: { initialEndpoints: Webho
           ) : (
             <div className="flex h-full min-h-0 flex-col gap-1.5 p-2 pt-0">
               <Label className="text-xs font-medium text-muted-foreground">Events</Label>
-              <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-input/40 bg-muted/10 p-6 text-center">
-                <Webhook className="size-8 text-muted-foreground/40" />
+              <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 border border-dashed border-input/40 bg-muted/10 p-6 text-center">
+                <HugeiconsIcon
+                  icon={WebhookIcon}
+                  strokeWidth={2}
+                  className="size-8 text-muted-foreground/40"
+                />
                 <p className="text-sm font-medium">Select an endpoint</p>
                 <p className="max-w-sm text-xs text-muted-foreground">
                   Choose a webhook endpoint above to inspect captured HTTP requests.

@@ -13,7 +13,8 @@ import {
 import type { BarShapeProps } from "recharts";
 import type { ReactNode } from "react";
 import { format, parseISO } from "date-fns";
-import { Inbox } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { InboxIcon } from "@hugeicons/core-free-icons";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -328,7 +329,7 @@ function ChartCard({
         <CardTitle className="flex items-center gap-2 text-base">
           <span
             aria-hidden
-            className="size-2 shrink-0 rounded-full"
+            className="size-2 shrink-0 "
             style={{ backgroundColor: swatch }}
           />
           {title}
@@ -339,7 +340,11 @@ function ChartCard({
         {isEmpty ? (
           <Empty className="h-65">
             <EmptyMedia variant="icon">
-              <Inbox className="size-4" />
+              <HugeiconsIcon
+                icon={InboxIcon}
+                strokeWidth={2}
+                className="size-4"
+              />
             </EmptyMedia>
             <EmptyTitle>Nothing here yet</EmptyTitle>
             <EmptyDescription>{emptyLabel}</EmptyDescription>

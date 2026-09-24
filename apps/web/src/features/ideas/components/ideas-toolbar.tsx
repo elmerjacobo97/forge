@@ -2,7 +2,8 @@
 
 import { useCallback, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Plus, Search } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PlusSignIcon, Search01Icon } from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,11 +52,15 @@ export function IdeasToolbar({ filters, tags }: { filters: IdeaFilters; tags: st
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="relative w-full sm:order-1 sm:w-72">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <HugeiconsIcon
+          icon={Search01Icon}
+          strokeWidth={2}
+          className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+        />
         <Input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search ideas…"
+          placeholder="Search01Icon ideas…"
           className="pl-8"
           type="search"
           aria-busy={isNavigating}
@@ -67,7 +72,11 @@ export function IdeasToolbar({ filters, tags }: { filters: IdeaFilters; tags: st
         onClick={() => setIsAddDialogOpen(true)}
         className="ml-auto sm:order-3"
       >
-        <Plus className="size-3.5" />
+        <HugeiconsIcon
+          icon={PlusSignIcon}
+          strokeWidth={2}
+          className="size-3.5"
+        />
         Add idea
       </Button>
 

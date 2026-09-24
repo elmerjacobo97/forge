@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { Plus } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PlusSignIcon } from "@hugeicons/core-free-icons";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -77,7 +78,7 @@ export function ColumnView({
   return (
     <div
       className={cn(
-        "flex h-full w-72 shrink-0 flex-col rounded-xl border border-t-2 border-input/40 bg-muted/20 transition-colors",
+        "flex h-full w-72 shrink-0 flex-col border border-t-2 border-input/40 bg-muted/20 transition-colors",
         COLUMN_ACCENT[columnId],
         isHighlighted && "border-primary/40 bg-primary/5 ring-1 ring-primary/30",
       )}
@@ -125,7 +126,7 @@ export function ColumnView({
           {colTickets.length === 0 && (
             <div
               className={cn(
-                "flex h-24 items-center justify-center rounded-lg border border-dashed text-[11px] transition-colors",
+                "flex h-24 items-center justify-center border border-dashed text-[11px] transition-colors",
                 isHighlighted
                   ? "border-primary/50 bg-primary/5 text-primary"
                   : "border-input/30 text-muted-foreground",
@@ -154,7 +155,11 @@ export function ColumnView({
               onClick={onAddTicket}
               className="h-7 w-full justify-start gap-1.5 text-[11px] text-muted-foreground"
             >
-              <Plus className="size-3" />
+              <HugeiconsIcon
+                icon={PlusSignIcon}
+                strokeWidth={2}
+                className="size-3"
+              />
               Add ticket
             </Button>
           )}

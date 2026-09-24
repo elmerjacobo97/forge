@@ -2,7 +2,8 @@
 
 import { useCallback, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,14 +57,18 @@ export function ProjectListToolbar({ filters }: { filters: ProjectFilters }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <div className="relative min-w-48 flex-1 sm:max-w-sm">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <HugeiconsIcon
+          icon={Search01Icon}
+          strokeWidth={2}
+          className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+        />
         <Input
           type="search"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search projects…"
+          placeholder="Search01Icon projects…"
           className="pl-8"
-          aria-label="Search projects"
+          aria-label="Search01Icon projects"
           aria-busy={isNavigating}
         />
       </div>
@@ -120,7 +125,11 @@ export function ProjectListToolbar({ filters }: { filters: ProjectFilters }) {
           className="h-7 gap-1 px-2 text-xs text-muted-foreground"
           onClick={() => applyFilters({ q: "", status: "all", sort: "status" })}
         >
-          <X className="size-3" />
+          <HugeiconsIcon
+            icon={Cancel01Icon}
+            strokeWidth={2}
+            className="size-3"
+          />
           Clear filters
         </Button>
       ) : null}

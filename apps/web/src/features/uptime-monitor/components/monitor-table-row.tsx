@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { Pencil, Trash2 } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Delete02Icon, PencilEdit01Icon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,10 @@ export function MonitorTableRow({ row }: { row: MonitorRowData }) {
             onClick={() => setIsEditOpen(true)}
             aria-label="Edit monitor"
           >
-            <Pencil />
+            <HugeiconsIcon
+              icon={PencilEdit01Icon}
+              strokeWidth={2}
+            />
           </Button>
           <Button
             size="icon-sm"
@@ -90,7 +94,10 @@ export function MonitorTableRow({ row }: { row: MonitorRowData }) {
             onClick={() => setIsDeleteOpen(true)}
             aria-label="Delete monitor"
           >
-            <Trash2 />
+            <HugeiconsIcon
+              icon={Delete02Icon}
+              strokeWidth={2}
+            />
           </Button>
         </div>
       </TableCell>

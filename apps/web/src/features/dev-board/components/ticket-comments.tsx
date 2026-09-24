@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Send } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { SentIcon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -65,12 +66,12 @@ export function TicketComments({ ticketId, onCommentCreated }: TicketCommentsPro
           {comments.map((comment) => (
             <li
               key={comment.id}
-              className="rounded-lg border border-input/50 bg-muted/30 p-2"
+              className=" border border-input/50 bg-muted/30 p-2"
             >
               <div className="flex items-center justify-between gap-2">
                 <span
                   className={cn(
-                    "rounded-full px-1.5 py-0.5 text-[10px] font-medium",
+                    " px-1.5 py-0.5 text-[10px] font-medium",
                     comment.author === "agent"
                       ? "bg-primary/10 text-primary"
                       : "bg-muted text-muted-foreground",
@@ -112,7 +113,11 @@ export function TicketComments({ ticketId, onCommentCreated }: TicketCommentsPro
             onClick={() => void handleSubmit()}
             disabled={isSubmitting || body.trim().length === 0}
           >
-            <Send className="size-3" />
+            <HugeiconsIcon
+              icon={SentIcon}
+              strokeWidth={2}
+              className="size-3"
+            />
             Comment
           </Button>
         </InputGroupAddon>

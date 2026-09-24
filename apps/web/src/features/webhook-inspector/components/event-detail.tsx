@@ -1,15 +1,12 @@
 "use client";
 
 import { format } from "date-fns";
-import { Check, Copy, Terminal } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Copy01Icon, TerminalIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCopy } from "@/lib/hooks/use-copy";
 import type { WebhookEvent } from "../types";
 import { eventToCurl } from "../utils/curl";
@@ -38,20 +35,19 @@ export function EventDetail({ event }: EventDetailProps) {
     );
   }
 
-  const headerEntries = [...Object.entries(event.headers)].sort(([a], [b]) =>
-    a.localeCompare(b),
-  );
+  const headerEntries = [...Object.entries(event.headers)].sort(([a], [b]) => a.localeCompare(b));
 
   return (
     <div className="h-full min-h-0 overflow-y-auto">
       <div className="flex flex-col gap-3 p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline" className="font-mono">
+          <Badge
+            variant="outline"
+            className="font-mono"
+          >
             {event.method}
           </Badge>
-          <span className="truncate font-mono text-xs text-muted-foreground">
-            {event.path}
-          </span>
+          <span className="truncate font-mono text-xs text-muted-foreground">{event.path}</span>
           <span className="ml-auto text-[11px] text-muted-foreground">
             {format(new Date(event.receivedAt), "MMM d, yyyy HH:mm:ss")}
           </span>
@@ -60,13 +56,14 @@ export function EventDetail({ event }: EventDetailProps) {
         <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
           {event.sourceIp ? <span>IP {event.sourceIp}</span> : null}
           {event.userAgent ? (
-            <span className="truncate" title={event.userAgent}>
+            <span
+              className="truncate"
+              title={event.userAgent}
+            >
               UA {event.userAgent}
             </span>
           ) : null}
-          {event.bodyTruncated ? (
-            <Badge variant="secondary">Body truncated</Badge>
-          ) : null}
+          {event.bodyTruncated ? <Badge variant="secondary">Body truncated</Badge> : null}
         </div>
 
         <div className="flex items-center gap-2">
@@ -79,14 +76,22 @@ export function EventDetail({ event }: EventDetailProps) {
                 onClick={() => curlCopy.copy(eventToCurl(event, appOrigin()))}
               >
                 {curlCopy.copied ? (
-                  <Check data-icon="inline-start" />
+                  <HugeiconsIcon
+                    icon={Tick02Icon}
+                    strokeWidth={2}
+                    data-icon="inline-start"
+                  />
                 ) : (
-                  <Terminal data-icon="inline-start" />
+                  <HugeiconsIcon
+                    icon={TerminalIcon}
+                    strokeWidth={2}
+                    data-icon="inline-start"
+                  />
                 )}
-                {curlCopy.copied ? "Copied" : "Copy as cURL"}
+                {curlCopy.copied ? "Copied" : "Copy01Icon as cURL"}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Copy a curl command for this request</TooltipContent>
+            <TooltipContent>Copy01Icon a curl command for this request</TooltipContent>
           </Tooltip>
         </div>
 
@@ -99,19 +104,25 @@ export function EventDetail({ event }: EventDetailProps) {
               type="button"
               size="sm"
               variant="ghost"
-              onClick={() =>
-                payloadCopy.copy(JSON.stringify(event.headers, null, 2))
-              }
+              onClick={() => payloadCopy.copy(JSON.stringify(event.headers, null, 2))}
             >
               {payloadCopy.copied ? (
-                <Check data-icon="inline-start" />
+                <HugeiconsIcon
+                  icon={Tick02Icon}
+                  strokeWidth={2}
+                  data-icon="inline-start"
+                />
               ) : (
-                <Copy data-icon="inline-start" />
+                <HugeiconsIcon
+                  icon={Copy01Icon}
+                  strokeWidth={2}
+                  data-icon="inline-start"
+                />
               )}
-              Copy
+              Copy01Icon
             </Button>
           </div>
-          <div className="rounded-lg border border-input/60 bg-background/60 p-2 font-mono text-[11px]">
+          <div className=" border border-input/60 bg-background/60 p-2 font-mono text-[11px]">
             {headerEntries.length === 0 ? (
               <p className="text-muted-foreground">No headers</p>
             ) : (
@@ -142,14 +153,16 @@ export function EventDetail({ event }: EventDetailProps) {
               disabled={!event.body}
               onClick={() => payloadCopy.copy(event.body)}
             >
-              <Copy data-icon="inline-start" />
-              Copy
+              <HugeiconsIcon
+                icon={Copy01Icon}
+                strokeWidth={2}
+                data-icon="inline-start"
+              />
+              Copy01Icon
             </Button>
           </div>
-          <pre className="min-h-32 whitespace-pre-wrap break-all rounded-lg border border-input/60 bg-background/60 p-3 font-mono text-[11px]">
-            {event.body || (
-              <span className="text-muted-foreground">(empty)</span>
-            )}
+          <pre className="min-h-32 whitespace-pre-wrap break-all border border-input/60 bg-background/60 p-3 font-mono text-[11px]">
+            {event.body || <span className="text-muted-foreground">(empty)</span>}
           </pre>
         </section>
       </div>

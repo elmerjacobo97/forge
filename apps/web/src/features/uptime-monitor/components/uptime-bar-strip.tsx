@@ -1,6 +1,7 @@
 "use client";
 
-import { CalendarDays } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Calendar03Icon } from "@hugeicons/core-free-icons";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -51,7 +52,10 @@ export function UptimeBarStrip({ days, loading }: UptimeBarStripProps) {
           <Empty className="min-h-16 border-0 py-4">
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <CalendarDays />
+                <HugeiconsIcon
+                  icon={Calendar03Icon}
+                  strokeWidth={2}
+                />
               </EmptyMedia>
               <EmptyTitle>No uptime history yet</EmptyTitle>
               <EmptyDescription>
@@ -68,7 +72,7 @@ export function UptimeBarStrip({ days, loading }: UptimeBarStripProps) {
                     <button
                       type="button"
                       className={cn(
-                        "min-w-0 flex-1 rounded-sm outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring",
+                        "min-w-0 flex-1 outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring",
                         LEVEL_CLASS[point.level],
                       )}
                       aria-label={`${formatDailyUptimeTooltip(point.date)}: ${formatUptimePercentage(point.uptimePercentage)}`}

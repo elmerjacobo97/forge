@@ -4,7 +4,8 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { format } from "date-fns";
-import { ArrowLeft, History, ShieldAlert } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon, HistoryIcon, ShieldAlertIcon } from "@hugeicons/core-free-icons";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +51,11 @@ function BackToMonitorsButton() {
       className="w-fit"
     >
       <Link href="/uptime-monitor">
-        <ArrowLeft data-icon="inline-start" />
+        <HugeiconsIcon
+          icon={ArrowLeft01Icon}
+          strokeWidth={2}
+          data-icon="inline-start"
+        />
         Back to monitors
       </Link>
     </Button>
@@ -133,7 +138,7 @@ export function MonitorDetail({ monitor, initialDetail }: MonitorDetailProps) {
       <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="flex min-h-0 flex-col gap-1.5">
           <span className="text-xs font-medium text-muted-foreground">Check history</span>
-          <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-input/60">
+          <div className="min-h-0 flex-1 overflow-y-auto border border-input/60">
             {isLoading ? (
               <div className="flex flex-col gap-2 p-2">
                 {[1, 2, 3].map((index) => (
@@ -147,7 +152,10 @@ export function MonitorDetail({ monitor, initialDetail }: MonitorDetailProps) {
               <Empty className="h-full border-0">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
-                    <History />
+                    <HugeiconsIcon
+                      icon={HistoryIcon}
+                      strokeWidth={2}
+                    />
                   </EmptyMedia>
                   <EmptyTitle>No checks yet</EmptyTitle>
                   <EmptyDescription className="text-xs">
@@ -198,7 +206,7 @@ export function MonitorDetail({ monitor, initialDetail }: MonitorDetailProps) {
 
         <div className="flex min-h-0 flex-col gap-1.5">
           <span className="text-xs font-medium text-muted-foreground">Recent incidents</span>
-          <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-input/60">
+          <div className="min-h-0 flex-1 overflow-y-auto border border-input/60">
             {isLoading ? (
               <div className="flex flex-col gap-2 p-2">
                 {[1, 2].map((index) => (
@@ -212,7 +220,10 @@ export function MonitorDetail({ monitor, initialDetail }: MonitorDetailProps) {
               <Empty className="h-full border-0">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
-                    <ShieldAlert />
+                    <HugeiconsIcon
+                      icon={ShieldAlertIcon}
+                      strokeWidth={2}
+                    />
                   </EmptyMedia>
                   <EmptyTitle>No incidents</EmptyTitle>
                   <EmptyDescription className="text-xs">
@@ -263,7 +274,7 @@ function StatChip({
   loading: boolean;
 }) {
   return (
-    <div className="flex items-baseline gap-1.5 rounded-lg border border-input/60 px-2.5 py-1.5">
+    <div className="flex items-baseline gap-1.5 border border-input/60 px-2.5 py-1.5">
       <span className="text-muted-foreground">{label}</span>
       {loading ? (
         <Skeleton className="h-4 w-10" />

@@ -1,4 +1,5 @@
-import { Clock } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Clock01Icon } from "@hugeicons/core-free-icons";
 
 import { cn } from "@/lib/utils";
 
@@ -17,7 +18,7 @@ export function TicketDragOverlay({ ticket }: TicketDragOverlayProps) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-input/50 bg-card p-2.5 shadow-lg ring-1 ring-primary/20",
+        " border border-input/50 bg-card p-2.5 shadow-lg ring-1 ring-primary/20",
         timerRunning && "border-primary/40 bg-primary/5",
       )}
     >
@@ -27,7 +28,11 @@ export function TicketDragOverlay({ ticket }: TicketDragOverlayProps) {
       )}
       {(isTimerColumn(ticket.column) || ticket.totalElapsedMs > 0) && (
         <div className="mt-2 flex items-center gap-1.5 text-muted-foreground">
-          <Clock className="size-3" />
+          <HugeiconsIcon
+            icon={Clock01Icon}
+            strokeWidth={2}
+            className="size-3"
+          />
           <span className="font-mono text-[11px]">{formatDuration(computeElapsed(ticket))}</span>
         </div>
       )}

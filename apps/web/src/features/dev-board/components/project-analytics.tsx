@@ -5,17 +5,18 @@ import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { endOfDay, format, startOfDay, subDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Activity,
-  ArrowLeft,
-  CalendarDays,
-  Download,
-  Gauge,
-  ListChecks,
-  PauseCircle,
-  Timer,
-  Trophy,
-} from "lucide-react";
+  Activity01Icon,
+  ArrowLeft01Icon,
+  Calendar03Icon,
+  Download01Icon,
+  GaugeIcon,
+  ListChecksIcon,
+  PauseCircleIcon,
+  Timer01Icon,
+  TrophyIcon,
+} from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -116,7 +117,11 @@ export function ProjectAnalytics({
             variant="outline"
           >
             <Link href={`/dev-board/${project.id}`}>
-              <ArrowLeft className="size-3.5" />
+              <HugeiconsIcon
+                icon={ArrowLeft01Icon}
+                strokeWidth={2}
+                className="size-3.5"
+              />
               Board
             </Link>
           </Button>
@@ -125,7 +130,11 @@ export function ProjectAnalytics({
             onClick={() => summary && downloadCsv(analyticsCsv(summary))}
             disabled={!summary}
           >
-            <Download className="size-3.5" />
+            <HugeiconsIcon
+              icon={Download01Icon}
+              strokeWidth={2}
+              className="size-3.5"
+            />
             Export CSV
           </Button>
         </div>
@@ -156,7 +165,11 @@ export function ProjectAnalytics({
                   size="sm"
                   className="min-w-56 justify-start text-left font-normal"
                 >
-                  <CalendarDays className="size-3.5" />
+                  <HugeiconsIcon
+                    icon={Calendar03Icon}
+                    strokeWidth={2}
+                    className="size-3.5"
+                  />
                   {formatCustomRange(customRange)}
                 </Button>
               </PopoverTrigger>
@@ -198,27 +211,57 @@ export function ProjectAnalytics({
               <Card>
                 <CardContent className="grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0 xl:grid-cols-5">
                   <StatItem
-                    icon={<ListChecks className="size-4" />}
+                    icon={
+                      <HugeiconsIcon
+                        icon={ListChecksIcon}
+                        strokeWidth={2}
+                        className="size-4"
+                      />
+                    }
                     label="Completed"
                     value={summary.completed}
                   />
                   <StatItem
-                    icon={<Timer className="size-4" />}
+                    icon={
+                      <HugeiconsIcon
+                        icon={Timer01Icon}
+                        strokeWidth={2}
+                        className="size-4"
+                      />
+                    }
                     label="Time logged"
                     value={formatDuration(summary.loggedMs)}
                   />
                   <StatItem
-                    icon={<Gauge className="size-4" />}
+                    icon={
+                      <HugeiconsIcon
+                        icon={GaugeIcon}
+                        strokeWidth={2}
+                        className="size-4"
+                      />
+                    }
                     label="Average cycle"
                     value={summary.averageCycleMs ? formatDuration(summary.averageCycleMs) : "–"}
                   />
                   <StatItem
-                    icon={<Activity className="size-4" />}
+                    icon={
+                      <HugeiconsIcon
+                        icon={Activity01Icon}
+                        strokeWidth={2}
+                        className="size-4"
+                      />
+                    }
                     label="Active"
                     value={summary.active}
                   />
                   <StatItem
-                    icon={<PauseCircle className="size-4" />}
+                    icon={
+                      <HugeiconsIcon
+                        icon={PauseCircleIcon}
+                        strokeWidth={2}
+                        className="size-4"
+                      />
+                    }
                     label="Paused"
                     value={summary.paused}
                   />
@@ -238,7 +281,11 @@ export function ProjectAnalytics({
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <Trophy className="size-4 text-muted-foreground" />
+                    <HugeiconsIcon
+                      icon={TrophyIcon}
+                      strokeWidth={2}
+                      className="size-4 text-muted-foreground"
+                    />
                     Longest tickets
                   </CardTitle>
                   <CardDescription>
@@ -256,7 +303,7 @@ export function ProjectAnalytics({
                           variant="outline"
                         >
                           <ItemMedia>
-                            <span className="flex size-6 items-center justify-center rounded-full bg-muted font-mono text-xs tabular-nums">
+                            <span className="flex size-6 items-center justify-center bg-muted font-mono text-xs tabular-nums">
                               {index + 1}
                             </span>
                           </ItemMedia>
@@ -264,7 +311,7 @@ export function ProjectAnalytics({
                             <ItemTitle>
                               <span
                                 aria-hidden
-                                className={`size-1.5 shrink-0 rounded-full ${PRIORITY_COLORS[ticket.priority]}`}
+                                className={`size-1.5 shrink-0 ${PRIORITY_COLORS[ticket.priority]}`}
                               />
                               {ticket.title}
                             </ItemTitle>
@@ -284,7 +331,11 @@ export function ProjectAnalytics({
                   ) : (
                     <Empty>
                       <EmptyMedia variant="icon">
-                        <Trophy className="size-4" />
+                        <HugeiconsIcon
+                          icon={TrophyIcon}
+                          strokeWidth={2}
+                          className="size-4"
+                        />
                       </EmptyMedia>
                       <EmptyTitle>No time entries yet</EmptyTitle>
                       <EmptyDescription>
