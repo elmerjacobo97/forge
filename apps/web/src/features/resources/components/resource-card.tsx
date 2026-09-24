@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ExternalLink, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
@@ -12,29 +12,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useCopy } from "@/lib/hooks/use-copy";
-import { FORMATS, TOOLS } from "../constants";
-import type { Resource } from "../types";
 import { DeleteResourceDialog } from "./delete-resource-dialog";
 import { EditResourceDialog } from "./edit-resource-dialog";
-
-function getToolLabel(resource: Resource): string | null {
-  if (!resource.tool) return null;
-  if (resource.tool === "other") return resource.customTool || "Other";
-  return TOOLS.find((tool) => tool.value === resource.tool)?.label ?? resource.tool;
-}
-
-function getFormatLabel(language: string | null): string | null {
-  if (!language) return null;
-  return FORMATS.find((format) => format.value === language.toLowerCase())?.label ?? language;
-}
+import type { Resource } from "../types";
 
 export function ResourceCard({ resource }: { resource: Resource }) {
-  const { copied, copy } = useCopy();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const toolLabel = getToolLabel(resource);
-  const formatLabel = getFormatLabel(resource.language);
 
   return (
     <div className="group flex flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/20">
@@ -45,20 +29,13 @@ export function ResourceCard({ resource }: { resource: Resource }) {
               variant="outline"
               className="capitalize"
             >
-              {resource.kind}
+              {resource.category}
             </Badge>
             <span className="text-xs text-muted-foreground">
               {format(new Date(resource.createdAt), "MMM d, yyyy")}
             </span>
           </div>
           <h3 className="font-heading text-base font-medium leading-snug">{resource.title}</h3>
-          {toolLabel || resource.version || formatLabel ? (
-            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-              {toolLabel ? <span>Tool: {toolLabel}</span> : null}
-              {resource.version ? <span>Version: {resource.version}</span> : null}
-              {formatLabel ? <span>Format: {formatLabel}</span> : null}
-            </div>
-          ) : null}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -88,22 +65,18 @@ export function ResourceCard({ resource }: { resource: Resource }) {
       </div>
 
       <div className="mt-3 flex-1 space-y-3">
-        <pre className="max-h-32 overflow-y-auto rounded-lg bg-muted/30 p-2 font-mono text-xs whitespace-pre-wrap break-all">
-          {resource.content}
-        </pre>
-        {resource.tags.length ? (
-          <div className="flex flex-wrap gap-1.5">
-            {resource.tags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="text-xs font-mono"
-              >
-                #{tag}
-              </Badge>
-            ))}
-          </div>
-        ) : null}
+        <p className="text-sm text-muted-foreground">{resource.description}</p>
+        <div className="flex flex-wrap gap-1.5">
+          {resource.tags.map((t) => (
+            <Badge
+              key={t}
+              variant="secondary"
+              className="text-xs font-mono"
+            >
+              #{t}
+            </Badge>
+          ))}
+        </div>
       </div>
 
       <div className="mt-4 border-t border-border pt-3">
@@ -111,19 +84,10 @@ export function ResourceCard({ resource }: { resource: Resource }) {
           variant="outline"
           size="sm"
           className="w-full"
-          onClick={() => copy(resource.content)}
+          onClick={() => window.open(resource.url, "_blank")}
         >
-          {copied ? (
-            <>
-              <Check className="size-3.5" />
-              Copied!
-            </>
-          ) : (
-            <>
-              <Copy className="size-3.5" />
-              Copy
-            </>
-          )}
+          Open
+          <ExternalLink className="size-3.5" />
         </Button>
       </div>
 

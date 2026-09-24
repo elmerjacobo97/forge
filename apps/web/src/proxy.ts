@@ -5,20 +5,10 @@ type CookieInput = { name: string; value: string } & CookieOptions;
 type CookieDeleteInput = { name: string } & CookieOptions;
 
 const protectedPathPrefixes = [
-  "/base64",
   "/bookmarks",
   "/dev-board",
-  "/http-tester",
   "/ideas",
-  "/image-tools",
-  "/json-formatter",
-  "/json-to-typescript",
-  "/jwt-decoder",
-  "/mock-data-generator",
-  "/password-generator",
-  "/regex-tester",
   "/resources",
-  "/settings",
   "/uptime-monitor",
   "/webhook-inspector",
 ] as const;

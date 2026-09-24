@@ -4,7 +4,7 @@
 
 ## Qué es
 
-Forge nació como colección de utilidades para desarrolladores y evolucionó a un workspace personal: además de las herramientas de cómputo puro (que corren 100% en el navegador), incluye superficies conectadas que guardan datos en una cuenta propia — bookmarks, recursos, ideas, un kanban con time tracking, uptime monitor y webhook inspector — más un CLI que opera sobre los mismos datos desde la terminal.
+Forge es un workspace personal de desarrollo con Dev Board, Ideas y Resources para enlaces de programación. También conserva Uptime Monitor y Webhook Inspector. Web, CLI y MCP comparten datos de InsForge.
 
 Hoy el objetivo no es ser un producto SaaS, sino la herramienta diaria del autor: rápida, privada y útil sin fricción.
 
@@ -12,7 +12,7 @@ Hoy el objetivo no es ser un producto SaaS, sino la herramienta diaria del autor
 
 - **Simplicidad:** cada herramienta resuelve un problema concreto; si no se usa, se poda.
 - **Server-first, cliente mínimo:** las vistas de datos se renderizan en el servidor; el estado de cliente queda en las islas interactivas (filtros en URL, arrastrar, diálogos).
-- **Privacidad:** las herramientas de cómputo puro no envían datos a ningún servidor. Lo persistente vive en el InsForge propio con RLS por usuario.
+- **Privacidad:** datos persistentes viven en el InsForge propio con RLS por usuario.
 - **Browser-only:** sin Tauri, Rust ni IPC nativo. Si el navegador no puede, no entra.
 - **Criterio antes que volumen:** pocas herramientas, bien hechas. Cada feature nueva debe ganarse su lugar.
 
@@ -21,19 +21,18 @@ Hoy el objetivo no es ser un producto SaaS, sino la herramienta diaria del autor
 ### Superficies con datos
 
 - **Dev Board:** kanban por proyecto con columnas fijas, drag & drop, time tracking automático en "In Progress", analítica (cycle time, tiempo registrado, throughput) y actualización en vivo vía InsForge realtime (los cambios del CLI se reflejan sin recargar).
-- **Bookmarks:** enlaces con categoría, tags, descripción y generación asistida por IA.
-- **Resources:** notas, prompts, configuraciones y código con metadatos por herramienta.
+- **Resources:** enlaces con categoría, tags y descripción. Web y CLI usan misma tabla `resources`.
 - **Ideas:** captura de ideas con título, contenido, estado, categoría, tags y enlaces.
 - **Webhook Inspector:** URLs temporales que capturan requests entrantes para inspección.
 - **Uptime Monitor:** chequeos programados por HTTP con alertas a Telegram y Slack, latencia e historial.
 
-### Utilidades de navegador
-
-JSON Formatter, JSON to TypeScript, JWT Decoder, Regex Tester, Base64, Mock Data Generator, Password Generator, Image Tools y HTTP Tester.
-
 ### CLI (`forge-cli`)
 
-CRUD de bookmarks, proyectos, tickets, recursos e ideas sobre las mismas tablas InsForge, pensado para terminal y agentes.
+CRUD de recursos, ideas, proyectos y tickets. `bookmark` queda como alias de `resource`.
+
+### MCP remoto
+
+Seis herramientas para consultar y operar Dev Board. MCP queda independiente de Resources.
 
 ## Arquitectura
 

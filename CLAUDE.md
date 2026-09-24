@@ -24,15 +24,15 @@ Linting uses ESLint + Prettier (not Biome). Config lives at the workspace root f
 
 ## Architecture
 
-**Workspace**: pnpm workspace with `apps/web` (Next.js 16) and `apps/cli` (`forge-cli`). Both use the same InsForge backend. `packages/*` remains reserved; do not create packages speculatively.
+**Workspace**: pnpm workspace with `apps/web` (Next.js 16), `apps/cli` (`forge-cli`), and `apps/mcp` (remote Cloudflare Worker). They share InsForge backend data. `packages/forge-core` contains shared CLI/MCP services.
 
-**Feature-first structure**: `apps/web/src/features/<feature>/` owns everything for that feature — `components/`, `hooks/`, `services/`, `schemas/`, `types/`, `utils/`. There are ~25 features, mostly standalone dev-utility tools (JSON formatter, JWT decoder, hash generator, etc.) plus larger stateful features (`dev-board`, `bookmarks`, `resources`, `auth`, `settings`). Keep feature logic inside its feature folder unless it's genuinely shared.
+**Feature-first structure**: `apps/web/src/features/<feature>/` owns each feature's `components/`, `hooks/`, `services/`, `schemas/`, `types/`, `utils/`, and `actions.ts`. Active product features: `dev-board`, `ideas`, `resources`, `uptime-monitor`, `webhook-inspector`, and `auth`. Keep feature logic inside its feature folder unless it is genuinely shared.
 
 **Tests**: web tests are colocated with the module they cover (`<module>.test.ts(x)`), with shared setup in `apps/web/src/test/setup.ts`. CLI tests live in `apps/cli/tests/` grouped by kind (`schemas/`, `services/`, `lib/`, `commands/`), with shared mocks in `apps/cli/tests/helpers/`.
 
 **Routing**: Next.js App Router under `apps/web/src/app/`. `(auth)` holds login/register and `(authenticated)` performs the server-side session guard. Keep pages thin.
 
-**Tool registry**: `apps/web/src/lib/tools.ts` is the single source of truth for the tool catalog (id, route path, name, description, icon, category) that drives the home page and navigation. Adding a new dev-utility tool means: add a feature folder, add a route in `_authenticated/`, and register it in `tools.ts`.
+**Tool registry**: `apps/web/src/lib/tools.ts` drives sidebar and command palette. It lists Dev Board, Ideas, Resources, Uptime Monitor, and Webhook Inspector.
 
 **Data**: InsForge Postgres schema is versioned in root `migrations/`. User-owned rows are protected with RLS. Dev Board transitions use RPC functions so tickets, events, and time entries update atomically.
 
@@ -42,4 +42,4 @@ Linting uses ESLint + Prettier (not Biome). Config lives at the workspace root f
 
 **Styling**: Tailwind v4, theme tokens in `apps/web/src/index.css` (no separate `tailwind.config`). shadcn components in `apps/web/src/components/ui`, config in `apps/web/components.json`.
 
-**Env**: `NEXT_PUBLIC_INSFORGE_URL` and `NEXT_PUBLIC_INSFORGE_ANON_KEY` are public. `GROQ_API_KEY` is server-only.
+**Env**: `NEXT_PUBLIC_INSFORGE_URL` and `NEXT_PUBLIC_INSFORGE_ANON_KEY` are public. `INSFORGE_API_KEY` and `CRON_TOKEN` stay server-only for Uptime Monitor and Webhook Inspector.

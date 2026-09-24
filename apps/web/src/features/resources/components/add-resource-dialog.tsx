@@ -9,15 +9,21 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Field, FieldLabel, FieldError, FieldGroup } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupTextarea } from "@/components/ui/input-group";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useForm } from "@tanstack/react-form";
-import { useSelector } from "@tanstack/react-store";
-import { aiGenerationService } from "@/features/ai-generation/services/ai-generation-service";
 import { tagsFromString } from "@/lib/tags";
 import { createResourceAction } from "../actions";
-import { resourceSchema, ResourceSchema } from "../schemas/resource-schema";
-import { toFormatValue } from "../utils/resource-form";
-import { ResourceFormFields, type ResourceFormApi } from "./resource-form-fields";
+import { resourcesSchema, ResourcesSchema } from "../schemas/resources-schema";
 
 interface AddResourceDialogProps {
   isOpen: boolean;
@@ -26,52 +32,31 @@ interface AddResourceDialogProps {
 
 export function AddResourceDialog({ isOpen, onOpenChange }: AddResourceDialogProps) {
   const [isSaving, startSaving] = useTransition();
-  const [isGenerating, startGenerating] = useTransition();
 
   const form = useForm({
     defaultValues: {
       title: "",
-      kind: "note" as "note" | "prompt" | "config" | "code",
-      content: "",
-      language: "",
+      url: "",
+      category: "docs" as "docs" | "git" | "tool" | "article" | "other",
+      description: "",
       tagsString: "",
-      tool: "",
-      customTool: "",
-      version: "",
-      context: "",
     },
     validators: {
-      onSubmit: resourceSchema,
+      onSubmit: resourcesSchema,
     },
     onSubmit: async ({ value }) => {
-      addResource(value as ResourceSchema);
+      addResource(value as ResourcesSchema);
     },
   });
-  const generationTitle = useSelector(form.store, (state) => state.values.title);
-  const selectedKind = useSelector(form.store, (state) => state.values.kind);
-  const selectedTool = useSelector(form.store, (state) => state.values.tool);
-  const isConfig = selectedKind === "config";
 
-  function addResource(data: ResourceSchema) {
-    const tags = tagsFromString(data.tagsString);
-
-    const language = data.language.trim() || null;
-    const tool = data.tool || null;
-    const customTool = tool === "other" ? data.customTool.trim() || null : null;
-    const version = data.version.trim() || null;
-    const context = data.context.trim() || null;
-
+  function addResource(data: ResourcesSchema) {
     startSaving(async () => {
       const result = await createResourceAction({
         title: data.title,
-        kind: data.kind,
-        content: data.content,
-        language,
-        tags,
-        tool,
-        customTool,
-        version,
-        context,
+        url: data.url,
+        category: data.category,
+        description: data.description,
+        tags: tagsFromString(data.tagsString),
       });
 
       if (!result.ok) {
@@ -85,65 +70,158 @@ export function AddResourceDialog({ isOpen, onOpenChange }: AddResourceDialogPro
     });
   }
 
-  function generateResource(title: string) {
-    if (title.trim().length < 2) return;
-
-    startGenerating(async () => {
-      try {
-        const response = await aiGenerationService.generate({
-          type: "resource",
-          title: title.trim(),
-        });
-        if (response.type !== "resource") return;
-
-        form.setFieldValue("kind", response.data.kind);
-        form.setFieldValue("content", response.data.content);
-        form.setFieldValue("language", toFormatValue(response.data.language));
-        form.setFieldValue("tagsString", response.data.tags.join(", "));
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to generate resource details.",
-        );
-      }
-    });
-  }
-
   return (
     <Dialog
       open={isOpen}
       onOpenChange={onOpenChange}
     >
       <DialogContent
-        className="max-h-[90vh] max-w-md grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden"
-        style={{ pointerEvents: "auto" }}
         onInteractOutside={(event) => event.preventDefault()}
+        className="max-h-[90vh] max-w-md grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden"
       >
         <DialogHeader>
           <DialogTitle>Add Resource</DialogTitle>
           <DialogDescription>
-            Save a note, prompt, code sample, or reusable configuration.
+            Save a reference to documentation, repositories, or articles.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="-mx-4 min-h-0 max-h-[50vh] overflow-y-auto px-4 py-1">
-          <form
-            id="form-add-resource"
-            onSubmit={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              form.handleSubmit();
-            }}
-          >
-            <ResourceFormFields
-              form={form as unknown as ResourceFormApi}
-              isConfig={isConfig}
-              selectedTool={selectedTool}
-              generationTitle={generationTitle}
-              isGenerating={isGenerating}
-              onGenerate={generateResource}
-            />
-          </form>
-        </div>
+        <form
+          className="-m-1 min-h-0 overflow-y-auto p-1"
+          id="form-add-resource"
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+        >
+          <FieldGroup>
+            <form.Field name="title">
+              {(field) => {
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name}>Title</FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="e.g. Tailwind v4 Release Notes"
+                      autoComplete="off"
+                      aria-invalid={isInvalid}
+                    />
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                );
+              }}
+            </form.Field>
+
+            <form.Field name="url">
+              {(field) => {
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name}>URL</FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="https://…"
+                      type="url"
+                      autoComplete="off"
+                      aria-invalid={isInvalid}
+                    />
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                );
+              }}
+            </form.Field>
+
+            <div className="grid grid-cols-2 gap-4">
+              <form.Field name="category">
+                {(field) => {
+                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>Category</FieldLabel>
+                      <Select
+                        value={field.state.value}
+                        onValueChange={(val) =>
+                          field.handleChange(val as ResourcesSchema["category"])
+                        }
+                      >
+                        <SelectTrigger
+                          id={field.name}
+                          aria-invalid={isInvalid}
+                        >
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="docs">Docs</SelectItem>
+                          <SelectItem value="git">Git Repo</SelectItem>
+                          <SelectItem value="tool">Tool</SelectItem>
+                          <SelectItem value="article">Article</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                    </Field>
+                  );
+                }}
+              </form.Field>
+
+              <form.Field name="tagsString">
+                {(field) => {
+                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>Tags</FieldLabel>
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="css, react, web"
+                        aria-invalid={isInvalid}
+                      />
+                      {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                    </Field>
+                  );
+                }}
+              </form.Field>
+            </div>
+
+            <form.Field name="description">
+              {(field) => {
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+                    <InputGroup>
+                      <InputGroupTextarea
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="What is this link about?"
+                        rows={2}
+                        className="max-h-48 resize-y overflow-y-auto"
+                        aria-invalid={isInvalid}
+                      />
+                    </InputGroup>
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                );
+              }}
+            </form.Field>
+          </FieldGroup>
+        </form>
 
         <DialogFooter>
           <Button

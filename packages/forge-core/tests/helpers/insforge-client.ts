@@ -8,7 +8,7 @@ export function createListClient(data: unknown) {
   const order = vi.fn(() => ordered);
   const select = vi.fn(() => ({ order }));
   const from = vi.fn(() => ({ select }));
-  return { client: { database: { from } } as unknown as InsForgeClient, range };
+  return { client: { database: { from } } as unknown as InsForgeClient, from, range };
 }
 
 type Row = Record<string, unknown>;

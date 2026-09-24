@@ -9,32 +9,29 @@ Forge es browser-only (ver `AGENTS.md`): nada de Tauri/Rust/native-IPC. Stack ac
 ## Ya hecho (dejar de tratar como idea)
 
 - **Auth + sesión** — `features/auth`, login/logout sobre InsForge (registro deshabilitado: herramienta personal); refresh en `src/proxy.ts`.
-- **Cloud sync de bookmarks / resources** — viven en InsForge con RLS por usuario.
+- **Resources** — enlaces viven en InsForge con RLS por usuario; web y CLI comparten filas.
 - **Dev Board** — kanban con time tracking, analítica y CLI (`forge-cli ticket ...`).
 - **Ideas** — captura de ideas con estado, categoría, tags y enlaces (web + CLI).
 - **Uptime Monitor** — chequeos programados, latencia, historial y alertas Telegram/Slack.
 - **Webhook Inspector** — URLs temporales con captura e inspección de requests.
-- **CLI** (`forge-cli`) — CRUD de bookmarks, proyectos, tickets y recursos.
-- **Generación asistida por IA** — `/api/ai-content` (Groq) integrada en bookmarks y resources.
-- **Image Tools** — compresión y conversión local en el navegador.
-- **HTTP Tester** — requests reales desde el servidor, sin CORS.
+- **CLI** (`forge-cli`) — CRUD de recursos, ideas, proyectos y tickets; `bookmark` es alias de `resource`.
 
 ---
 
-## IA, con infraestructura lista (`/api/ai-content`)
+## Ideas futuras fuera de alcance actual
 
 - **Regex Tester:** explicación del patrón en lenguaje natural.
 - **cURL ↔ código:** generación asistida (fetch/axios/httpie), no solo parsing determinista.
 - **Mock Data Generator:** describir el shape deseado en lenguaje natural → schema JSON.
-- **Auto-resumen / auto-tag:** extender el autocompletado ya usado en bookmarks/resources.
+- **Auto-resumen / auto-tag:** evaluar generación para Resources si vuelve a ser necesaria.
 
 ---
 
 ## Con backend (UI-first, conectar después)
 
-### MCP server sobre forge-cli / API InsForge
+### MCP: escritura en Dev Board
 
-Mismo API que ya consume `forge-cli`, expuesto como MCP stdio. Permite que agentes de IA operen bookmarks/proyectos/tickets/recursos directamente.
+El MCP remoto actual expone consultas de Dev Board. Evaluar mutaciones después si hacen falta.
 
 ### Saved HTTP requests collections
 

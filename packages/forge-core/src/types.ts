@@ -9,29 +9,9 @@ export type ForgeSession = {
   refreshToken: string;
 };
 
-export const CATEGORIES = ["docs", "git", "tool", "article", "other"] as const;
+export const RESOURCE_CATEGORIES = ["docs", "git", "tool", "article", "other"] as const;
 
-export type Category = (typeof CATEGORIES)[number];
-
-export type Bookmark = {
-  id: string;
-  title: string;
-  url: string;
-  category: Category;
-  description: string;
-  tags: string[];
-  createdAt: string;
-};
-
-export type BookmarkCreateInput = {
-  title: string;
-  url: string;
-  category: Category;
-  description: string;
-  tags: string[];
-};
-
-export type BookmarkUpdateInput = Partial<BookmarkCreateInput>;
+export type ResourceCategory = (typeof RESOURCE_CATEGORIES)[number];
 
 export const COLUMNS = ["backlog", "todo", "in_progress", "validation", "review", "done"] as const;
 
@@ -191,45 +171,22 @@ export type TicketReportInput = {
   columns?: ColumnId[];
 };
 
-export const RESOURCE_KINDS = ["note", "prompt", "config", "code"] as const;
-
-export type ResourceKind = (typeof RESOURCE_KINDS)[number];
-
-export const RESOURCE_TOOLS = [
-  "react-native",
-  "vscode",
-  "cursor",
-  "opencode",
-  "claude-code",
-  "other",
-] as const;
-
-export type ResourceTool = (typeof RESOURCE_TOOLS)[number];
-
 export type Resource = {
   id: string;
   title: string;
-  kind: ResourceKind;
-  content: string;
-  language: string | null;
+  url: string;
+  category: ResourceCategory;
+  description: string;
   tags: string[];
-  tool: ResourceTool | null;
-  customTool: string | null;
-  version: string | null;
-  context: string | null;
   createdAt: string;
 };
 
 export type ResourceCreateInput = {
   title: string;
-  kind: ResourceKind;
-  content: string;
-  language: string | null;
+  url: string;
+  category: ResourceCategory;
+  description: string;
   tags: string[];
-  tool: ResourceTool | null;
-  customTool: string | null;
-  version: string | null;
-  context: string | null;
 };
 
 export type ResourceUpdateInput = Partial<ResourceCreateInput>;

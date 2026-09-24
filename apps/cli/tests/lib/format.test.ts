@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  formatBookmarkJson,
-  formatBookmarkListJson,
-  formatBookmarkListText,
-  formatBookmarkText,
   formatCommentJson,
   formatCommentListJson,
   formatCommentListText,
@@ -31,7 +27,6 @@ import {
   writeErrorOutput,
 } from "../../src/format.js";
 import type {
-  Bookmark,
   Idea,
   NextTicketContext,
   Project,
@@ -39,16 +34,6 @@ import type {
   Ticket,
   TicketComment,
 } from "@forge/core";
-
-const sampleBookmark: Bookmark = {
-  id: "row1",
-  title: "React docs",
-  url: "https://react.dev",
-  category: "docs",
-  description: "Official React documentation",
-  tags: ["react", "docs"],
-  createdAt: "2026-01-01T00:00:00.000Z",
-};
 
 const sampleTicket: Ticket = {
   id: "t1",
@@ -96,15 +81,11 @@ const sampleProject: Project = {
 
 const sampleResource: Resource = {
   id: "r1",
-  title: "ESLint flat",
-  kind: "config",
-  content: "{}",
-  language: "json",
-  tags: ["eslint"],
-  tool: "vscode",
-  customTool: null,
-  version: "9",
-  context: "workspace",
+  title: "React docs",
+  url: "https://react.dev",
+  category: "docs",
+  description: "Official React documentation",
+  tags: ["react", "docs"],
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
@@ -118,37 +99,6 @@ const sampleIdea: Idea = {
   links: ["https://example.com/inspiration"],
   createdAt: "2026-09-01T00:00:00.000Z",
 };
-
-describe("formatBookmarkText", () => {
-  it("renders a readable bookmark block", () => {
-    const text = formatBookmarkText(sampleBookmark);
-    expect(text).toContain("id:          row1");
-    expect(text).toContain("title:       React docs");
-    expect(text).toContain("tags:        react, docs");
-  });
-
-  it("shows (none) when tags are empty", () => {
-    expect(formatBookmarkText({ ...sampleBookmark, tags: [] })).toContain("tags:        (none)");
-  });
-});
-
-describe("formatBookmarkListText", () => {
-  it("handles an empty list", () => {
-    expect(formatBookmarkListText([])).toBe("No bookmarks.");
-  });
-});
-
-describe("bookmark JSON formatters", () => {
-  it("emits parseable bookmark JSON", () => {
-    const parsed = JSON.parse(formatBookmarkJson(sampleBookmark)) as Bookmark;
-    expect(parsed).toEqual(sampleBookmark);
-  });
-
-  it("emits a parseable bookmark array", () => {
-    const parsed = JSON.parse(formatBookmarkListJson([sampleBookmark])) as Bookmark[];
-    expect(parsed).toEqual([sampleBookmark]);
-  });
-});
 
 describe("formatTicketText", () => {
   it("renders id, projectId, title, column, priority, and timer summary", () => {
@@ -370,24 +320,10 @@ describe("formatResourceText", () => {
   it("renders a readable resource block", () => {
     const text = formatResourceText(sampleResource);
     expect(text).toContain("id:          r1");
-    expect(text).toContain("title:       ESLint flat");
-    expect(text).toContain("kind:        config");
-    expect(text).toContain("tool:        vscode");
-    expect(text).toContain("tags:        eslint");
-  });
-
-  it("shows (none) for empty optional fields", () => {
-    expect(
-      formatResourceText({
-        ...sampleResource,
-        language: null,
-        tags: [],
-        tool: null,
-        customTool: null,
-        version: null,
-        context: null,
-      }),
-    ).toContain("language:    (none)");
+    expect(text).toContain("title:       React docs");
+    expect(text).toContain("url:         https://react.dev");
+    expect(text).toContain("category:    docs");
+    expect(text).toContain("tags:        react, docs");
   });
 });
 

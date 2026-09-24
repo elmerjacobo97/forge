@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const bookmarksSchema = z.object({
+export const resourcesSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
   url: z.url("Must be a valid URL."),
   category: z.enum(["docs", "git", "tool", "article", "other"]),
@@ -11,9 +11,9 @@ export const bookmarksSchema = z.object({
   tagsString: z.string(),
 });
 
-export type BookmarksSchema = z.infer<typeof bookmarksSchema>;
+export type ResourcesSchema = z.infer<typeof resourcesSchema>;
 
-export const bookmarkInputSchema = z.object({
+export const resourceInputSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
   url: z.url("Must be a valid URL."),
   category: z.enum(["docs", "git", "tool", "article", "other"]),
@@ -24,21 +24,21 @@ export const bookmarkInputSchema = z.object({
   tags: z.array(z.string()),
 });
 
-const bookmarkCategorySchema = z.enum(["docs", "git", "tool", "article", "other"]);
+const resourceCategorySchema = z.enum(["docs", "git", "tool", "article", "other"]);
 
-export const bookmarkFiltersSchema = z.object({
+export const resourceFiltersSchema = z.object({
   q: z.string().trim(),
-  category: z.union([bookmarkCategorySchema, z.literal("all")]),
+  category: z.union([resourceCategorySchema, z.literal("all")]),
 });
 
-export type BookmarkFilters = z.infer<typeof bookmarkFiltersSchema>;
+export type ResourceFilters = z.infer<typeof resourceFiltersSchema>;
 
-export function parseBookmarkFilters(
+export function parseResourceFilters(
   searchParams: Record<string, string | string[] | undefined>,
-): BookmarkFilters {
+): ResourceFilters {
   const q = typeof searchParams.q === "string" ? searchParams.q : "";
   const category = typeof searchParams.category === "string" ? searchParams.category : "all";
 
-  const parsed = bookmarkFiltersSchema.safeParse({ q, category });
+  const parsed = resourceFiltersSchema.safeParse({ q, category });
   return parsed.success ? parsed.data : { q: "", category: "all" };
 }

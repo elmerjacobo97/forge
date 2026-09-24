@@ -1,32 +1,19 @@
 import type { InsForgeClient } from "@insforge/sdk";
 import { asRecord, asRows, stringField, throwIfError } from "./insforge-data.js";
-import { RESOURCE_KINDS, RESOURCE_TOOLS } from "./types.js";
+import { RESOURCE_CATEGORIES } from "./types.js";
 import type {
   ListOptions,
   Resource,
   ResourceCreateInput,
-  ResourceKind,
-  ResourceTool,
+  ResourceCategory,
   ResourceUpdateInput,
 } from "./types.js";
 
 const TABLE = "resources";
-const COLUMNS = "id,title,kind,content,language,tags,tool,custom_tool,version,context,created_at";
+const COLUMNS = "id,title,url,category,description,tags,created_at";
 
-function isResourceKind(value: unknown): value is ResourceKind {
-  return typeof value === "string" && (RESOURCE_KINDS as readonly string[]).includes(value);
-}
-
-function isResourceTool(value: unknown): value is ResourceTool {
-  return typeof value === "string" && (RESOURCE_TOOLS as readonly string[]).includes(value);
-}
-
-function nullableString(value: unknown): string | null {
-  if (value === null) return null;
-  if (typeof value !== "string") {
-    throw new Error("Invalid resource row: expected nullable string field.");
-  }
-  return value;
+function isResourceCategory(value: unknown): value is ResourceCategory {
+  return typeof value === "string" && (RESOURCE_CATEGORIES as readonly string[]).includes(value);
 }
 
 function asTags(value: unknown): string[] {
@@ -38,27 +25,20 @@ function asTags(value: unknown): string[] {
 
 export function mapRowToResource(value: unknown): Resource {
   const row = asRecord(value, "resource row");
-  const kind = row.kind;
-  if (!isResourceKind(kind)) {
-    throw new Error(`Invalid resource row: kind must be one of ${RESOURCE_KINDS.join(", ")}.`);
-  }
-
-  const tool = row.tool;
-  if (tool !== null && !isResourceTool(tool)) {
-    throw new Error(`Invalid resource row: tool must be one of ${RESOURCE_TOOLS.join(", ")}.`);
+  const category = row.category;
+  if (!isResourceCategory(category)) {
+    throw new Error(
+      `Invalid resource row: category must be one of ${RESOURCE_CATEGORIES.join(", ")}.`,
+    );
   }
 
   return {
     id: stringField(row, "id", "resource row"),
     title: stringField(row, "title", "resource row"),
-    kind,
-    content: stringField(row, "content", "resource row"),
-    language: nullableString(row.language),
+    url: stringField(row, "url", "resource row"),
+    category,
+    description: stringField(row, "description", "resource row"),
     tags: asTags(row.tags),
-    tool,
-    customTool: nullableString(row.custom_tool),
-    version: nullableString(row.version),
-    context: nullableString(row.context),
     createdAt: stringField(row, "created_at", "resource row"),
   };
 }
@@ -66,14 +46,10 @@ export function mapRowToResource(value: unknown): Resource {
 function toResourcePayload(input: ResourceCreateInput) {
   return {
     title: input.title,
-    kind: input.kind,
-    content: input.content,
-    language: input.language,
+    url: input.url,
+    category: input.category,
+    description: input.description,
     tags: input.tags,
-    tool: input.tool,
-    custom_tool: input.customTool,
-    version: input.version,
-    context: input.context,
   };
 }
 
@@ -120,14 +96,10 @@ export function createResourcesService({ client }: ResourcesServiceDeps) {
     async update(id: string, input: ResourceUpdateInput): Promise<Resource> {
       const changes: Record<string, unknown> = {};
       if (input.title !== undefined) changes.title = input.title;
-      if (input.kind !== undefined) changes.kind = input.kind;
-      if (input.content !== undefined) changes.content = input.content;
-      if (input.language !== undefined) changes.language = input.language;
+      if (input.url !== undefined) changes.url = input.url;
+      if (input.category !== undefined) changes.category = input.category;
+      if (input.description !== undefined) changes.description = input.description;
       if (input.tags !== undefined) changes.tags = input.tags;
-      if (input.tool !== undefined) changes.tool = input.tool;
-      if (input.customTool !== undefined) changes.custom_tool = input.customTool;
-      if (input.version !== undefined) changes.version = input.version;
-      if (input.context !== undefined) changes.context = input.context;
       if (Object.keys(changes).length === 0) {
         throw new Error("Nothing to update. Provide at least one field.");
       }

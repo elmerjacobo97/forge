@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getCurrentUser } from "@/features/auth/server";
-import { resourceInputSchema } from "./schemas/resource-schema";
+import { resourceInputSchema } from "./schemas/resources-schema";
 import { resourcesService } from "./services/resources-service";
 
 export type ResourceActionResult = { ok: true } | { ok: false; message: string };

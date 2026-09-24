@@ -1,6 +1,6 @@
 # `@codigoconelmer/forge-cli` (`forge-cli`)
 
-Node CLI for Forge bookmarks, resources, Dev Board projects, and tickets against the linked Forge InsForge backend.
+Node CLI for Forge resources, ideas, and Dev Board against the linked Forge InsForge backend.
 
 npm package: **`@codigoconelmer/forge-cli`**. Binary name is **`forge-cli`** (not `forge`) to avoid clashing with Laravel Forge CLI / Herd.
 
@@ -108,50 +108,31 @@ the InsForge URL and public anon key. Session stores user ID plus Node/mobile
 access and refresh tokens; authenticated commands refresh and rotate these
 tokens before database access.
 
-## Bookmarks
+## Resources
 
 ```bash
-forge-cli bookmark create \
+forge-cli resource create \
   --title "React docs" \
   --url "https://react.dev" \
   --category docs \
   --description "Official React documentation" \
   --tags react,docs
 
-forge-cli bookmark list
-forge-cli bookmark list --json
-forge-cli bookmark get <id> --json
-forge-cli bookmark update <id> --title "New title"
-forge-cli bookmark delete <id>
-```
-
-Categories: `docs` | `git` | `tool` | `article` | `other`.
-
-## Resources
-
-```bash
-forge-cli resource create \
-  --title "ESLint flat" \
-  --kind config \
-  --content "{}" \
-  --language json \
-  --tool vscode \
-  --version "9" \
-  --tags eslint,lint
-
 forge-cli resource list
 forge-cli resource list --json
 forge-cli resource get <id> --json
 forge-cli resource update <id> --title "New title"
 forge-cli resource delete <id>
+
+# Backward-compatible alias; shares the same resources table
+forge-cli bookmark list --json
 ```
 
-Kinds: `note` | `prompt` | `config` | `code`. Tools (required for `config`):
-`react-native` | `vscode` | `cursor` | `opencode` | `claude-code` | `other`.
-When `tool` is `other`, pass `--custom-tool`. Config metadata (`--tool`,
-`--custom-tool`, `--version`, `--context`) is stored only for `kind=config`.
-Resources sync to the InsForge `resources` table (same as the web `/resources`
-tool). `--json` applies to `create|list|get|update|delete`.
+Categories: `docs` | `git` | `tool` | `article` | `other`.
+
+Resources use categories `docs` | `git` | `tool` | `article` | `other`.
+Both commands access the same InsForge `resources` rows shown in web `/resources`.
+`--json` applies to `create|list|get|update|delete`.
 
 ## Ideas
 

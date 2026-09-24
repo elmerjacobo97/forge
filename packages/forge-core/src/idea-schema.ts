@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { formatZodError } from "./bookmark-schema.js";
+import { formatZodError } from "./schema-utils.js";
 import { IDEA_CATEGORIES, IDEA_STATUSES } from "./types.js";
 import type { IdeaCreateInput, IdeaUpdateInput } from "./types.js";
 

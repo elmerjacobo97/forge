@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { formatZodError } from "./bookmark-schema.js";
+import { formatZodError } from "./schema-utils.js";
 import { COLUMNS, COMMENT_AUTHORS, PRIORITIES } from "./types.js";
 import type {
   TicketCommentInput,

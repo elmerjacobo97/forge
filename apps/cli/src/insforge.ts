@@ -1,6 +1,5 @@
 import type { InsForgeClient } from "@insforge/sdk";
 import {
-  createBookmarksService,
   createDevBoardService,
   createForgeClient,
   createIdeasService,
@@ -77,11 +76,6 @@ export async function createAuthedClient(): Promise<{
   const session = parseAuthSession(data as unknown, "Session refresh", currentSession.refreshToken);
   await writeSession(session);
   return { config, session, client: createClient(config, session.accessToken) };
-}
-
-export async function createAuthedBookmarksService() {
-  const { client } = await createAuthedClient();
-  return createBookmarksService({ client });
 }
 
 export async function createAuthedResourcesService() {

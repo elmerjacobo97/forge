@@ -1,6 +1,6 @@
 # Forge
 
-Forge es un workspace personal para desarrollo: utilidades de navegador, bookmarks, recursos, ideas, un Dev Board kanban con time tracking, uptime monitor y webhook inspector, con un CLI que opera sobre los mismos datos.
+Forge es un workspace personal de desarrollo: Dev Board, Ideas, Resources para enlaces de programación, Uptime Monitor y Webhook Inspector. Web, CLI y MCP comparten datos de InsForge.
 
 ## Stack
 
@@ -13,7 +13,8 @@ Forge es un workspace personal para desarrollo: utilidades de navegador, bookmar
 
 ```
 apps/web        Next.js 16 — rutas en src/app, features en src/features
-apps/cli        forge-cli — bookmarks, proyectos, tickets, recursos, ideas
+apps/cli        forge-cli — recursos, ideas, proyectos y tickets
+apps/mcp        MCP remoto — herramientas de Dev Board
 migrations      Esquema InsForge (tablas, RLS, RPCs)
 docs            Producto, roadmap e ideas
 specs           Especificaciones por feature
@@ -26,10 +27,10 @@ Cada feature de `apps/web/src/features/<feature>` es dueña de sus `components/`
 ```bash
 pnpm install      # Instalar dependencias
 pnpm dev          # Web en desarrollo
-pnpm build        # Build web + CLI (incluye typecheck)
-pnpm test         # Tests web + CLI (Vitest)
-pnpm test:watch   # Tests en modo watch (ambos, en paralelo)
-pnpm test:coverage # Tests con cobertura V8 (ambos)
+pnpm build        # Build core, web y CLI (incluye typecheck)
+pnpm test         # Tests core, web, CLI y MCP (Vitest)
+pnpm test:watch   # Tests core, web y CLI en modo watch
+pnpm test:coverage # Tests core, web y CLI con cobertura V8
 pnpm lint         # ESLint
 pnpm format       # Prettier
 pnpm doctor       # React Doctor (web)
@@ -39,19 +40,17 @@ Para un solo test web: `pnpm --filter @forge/web exec vitest run --config tests.
 
 ## Herramientas web
 
-Productividad y datos: Dev Board, Ideas, Bookmarks, Resources, JSON Formatter, JSON to TypeScript.
-Red: HTTP Tester, Webhook Inspector, Uptime Monitor.
-Utilidades: JWT Decoder, Regex Tester, Base64, Mock Data Generator, Password Generator, Image Tools.
+Dev Board, Ideas, Resources, Webhook Inspector y Uptime Monitor.
 
 ## CLI
 
 ```bash
 forge-cli init --from-web-env   # Configurar contra el proyecto InsForge
 forge-cli login --email "<email>"
-forge-cli bookmark list --json
+forge-cli resource list --json
+forge-cli bookmark list --json  # alias compatible de resource
 forge-cli project list
 forge-cli ticket list --project <id>
-forge-cli resource list
 forge-cli idea list
 ```
 

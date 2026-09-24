@@ -1,10 +1,9 @@
-import { createAuthedResourcesService } from "../insforge.js";
 import {
-  RESOURCE_KINDS,
-  RESOURCE_TOOLS,
   parseResourceCreateInput,
   parseResourceUpdateInput,
+  RESOURCE_CATEGORIES,
 } from "@forge/core";
+import { createAuthedResourcesService } from "../insforge.js";
 import {
   getFlagValue,
   getPositionals,
@@ -21,6 +20,7 @@ import {
 
 const RESOURCE_HELP = `Usage:
   forge-cli resource <command> [options]
+  forge-cli bookmark <command> [options]  Alias for resource
 
 Commands:
   create    Create a resource
@@ -37,29 +37,21 @@ list options:
   --offset <n>             Optional rows to skip (>= 0, requires --limit)
 
 create options:
-  --title <text>               Required (min 2)
-  --kind <kind>                Required (${RESOURCE_KINDS.join(" | ")})
-  --content <text>             Required
-  --language <format>          Optional (json, yaml, javascript, typescript, markdown, env, plain-text, other)
-  --tags <a,b,c>               Optional comma-separated tags
-  --tool <tool>                Required when kind is config (${RESOURCE_TOOLS.join(" | ")})
-  --custom-tool <name>         Required when tool is other
-  --version <text>             Optional (config only)
-  --context <text>             Optional (config only)
+  --title <text>           Required (min 2)
+  --url <url>              Required (valid URL)
+  --category <category>    Required (${RESOURCE_CATEGORIES.join(" | ")})
+  --description <text>     Required (5-200)
+  --tags <a,b,c>           Optional comma-separated tags
 
 update options (at least one):
   --title <text>
-  --kind <kind>
-  --content <text>
-  --language <format>
+  --url <url>
+  --category <category>
+  --description <text>
   --tags <a,b,c>
-  --tool <tool>
-  --custom-tool <name>
-  --version <text>
-  --context <text>
 
 Examples:
-  forge-cli resource create --title "ESLint flat" --kind config --content "{}" --language json --tool vscode --tags eslint
+  forge-cli resource create --title "React docs" --url https://react.dev --category docs --description "Official React documentation" --tags react,docs
   forge-cli resource list
   forge-cli resource list --json
   forge-cli resource list --limit 10 --offset 10
@@ -76,24 +68,16 @@ function fail(message: string, json: boolean): void {
 function readResourceFlags(args: string[]): Record<string, unknown> {
   const raw: Record<string, unknown> = {};
   const title = getFlagValue(args, "--title");
-  const kind = getFlagValue(args, "--kind");
-  const content = getFlagValue(args, "--content");
-  const language = getFlagValue(args, "--language");
-  const tagsRaw = getFlagValue(args, "--tags");
-  const tool = getFlagValue(args, "--tool");
-  const customTool = getFlagValue(args, "--custom-tool");
-  const version = getFlagValue(args, "--version");
-  const context = getFlagValue(args, "--context");
+  const url = getFlagValue(args, "--url");
+  const category = getFlagValue(args, "--category");
+  const description = getFlagValue(args, "--description");
+  const tags = getFlagValue(args, "--tags");
 
   if (title !== undefined) raw.title = title;
-  if (kind !== undefined) raw.kind = kind;
-  if (content !== undefined) raw.content = content;
-  if (language !== undefined) raw.language = language;
-  if (tagsRaw !== undefined) raw.tags = parseTagsFlag(tagsRaw);
-  if (tool !== undefined) raw.tool = tool;
-  if (customTool !== undefined) raw.customTool = customTool;
-  if (version !== undefined) raw.version = version;
-  if (context !== undefined) raw.context = context;
+  if (url !== undefined) raw.url = url;
+  if (category !== undefined) raw.category = category;
+  if (description !== undefined) raw.description = description;
+  if (tags !== undefined) raw.tags = parseTagsFlag(tags);
 
   return raw;
 }
@@ -101,24 +85,15 @@ function readResourceFlags(args: string[]): Record<string, unknown> {
 async function runCreate(args: string[]): Promise<void> {
   const json = hasFlag(args, "--json");
   const input = parseResourceCreateInput({
-    title: getFlagValue(args, "--title"),
-    kind: getFlagValue(args, "--kind"),
-    content: getFlagValue(args, "--content"),
-    language: getFlagValue(args, "--language"),
+    ...readResourceFlags(args),
     tags: parseTagsFlag(getFlagValue(args, "--tags")),
-    tool: getFlagValue(args, "--tool"),
-    customTool: getFlagValue(args, "--custom-tool"),
-    version: getFlagValue(args, "--version"),
-    context: getFlagValue(args, "--context"),
   });
-
   if ("error" in input) {
     fail(input.error, json);
     return;
   }
 
-  const service = await createAuthedResourcesService();
-  const resource = await service.create(input);
+  const resource = await (await createAuthedResourcesService()).create(input);
   writeResourceOutput(resource, json);
 }
 
@@ -130,8 +105,7 @@ async function runList(args: string[]): Promise<void> {
     return;
   }
 
-  const service = await createAuthedResourcesService();
-  const resources = await service.list(parsed.options);
+  const resources = await (await createAuthedResourcesService()).list(parsed.options);
   writeResourceListOutput(resources, json);
 }
 
@@ -143,8 +117,7 @@ async function runGet(args: string[]): Promise<void> {
     return;
   }
 
-  const service = await createAuthedResourcesService();
-  const resource = await service.get(id);
+  const resource = await (await createAuthedResourcesService()).get(id);
   writeResourceOutput(resource, json);
 }
 
@@ -156,19 +129,13 @@ async function runUpdate(args: string[]): Promise<void> {
     return;
   }
 
-  const raw = readResourceFlags(args);
-  if (getFlagValue(args, "--tags") !== undefined) {
-    raw.tags = parseTagsFlag(getFlagValue(args, "--tags"));
-  }
-
-  const input = parseResourceUpdateInput(raw);
+  const input = parseResourceUpdateInput(readResourceFlags(args));
   if ("error" in input) {
     fail(input.error, json);
     return;
   }
 
-  const service = await createAuthedResourcesService();
-  const resource = await service.update(id, input);
+  const resource = await (await createAuthedResourcesService()).update(id, input);
   writeResourceOutput(resource, json);
 }
 
@@ -180,8 +147,7 @@ async function runDelete(args: string[]): Promise<void> {
     return;
   }
 
-  const service = await createAuthedResourcesService();
-  await service.delete(id);
+  await (await createAuthedResourcesService()).delete(id);
   writeDeletedOutput("resource", id, json);
 }
 
@@ -192,7 +158,6 @@ export async function runResource(args: string[]): Promise<void> {
   }
 
   const [subcommand, ...rest] = args;
-
   switch (subcommand) {
     case "create":
       await runCreate(rest);

@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ChevronsUpDown, Hammer, LogOut, Search, Settings, User } from "lucide-react";
+import { ChevronsUpDown, Hammer, LogOut, Search, User } from "lucide-react";
 import { signOutAction } from "@/features/auth/actions";
 import type { AuthUser } from "@/features/auth/types";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -136,13 +135,6 @@ export function AppSidebar({ activePath, user, version }: AppSidebarProps) {
             align="end"
             className="w-48"
           >
-            <DropdownMenuItem asChild>
-              <Link href="/settings">
-                <Settings className="size-3.5" />
-                Settings
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
               onClick={() => startSignOut(() => signOutAction())}

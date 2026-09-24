@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/bookmarks",
+  usePathname: () => "/resources",
   useRouter: () => ({ replace: mocks.replace }),
   useSearchParams: () => new URLSearchParams(mocks.searchParams),
 }));
@@ -72,7 +72,7 @@ describe("ListPagination", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Load more" }));
 
-    expect(mocks.replace).toHaveBeenCalledWith("/bookmarks?q=react&category=docs&visible=24", {
+    expect(mocks.replace).toHaveBeenCalledWith("/resources?q=react&category=docs&visible=24", {
       scroll: false,
     });
   });
@@ -88,7 +88,7 @@ describe("ListPagination", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Load more" }));
 
-    expect(mocks.replace).toHaveBeenCalledWith("/bookmarks?visible=27", {
+    expect(mocks.replace).toHaveBeenCalledWith("/resources?visible=27", {
       scroll: false,
     });
   });

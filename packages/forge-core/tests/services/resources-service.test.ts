@@ -2,122 +2,60 @@ import { describe, expect, it } from "vitest";
 import { createResourcesService, mapRowToResource } from "../../src/resources-service.js";
 import { createListClient } from "../helpers/insforge-client.js";
 
-describe("mapRowToResource", () => {
-  const row = {
-    id: "d7f1ce67-cf72-4f8e-8545-f0d2fb4ec501",
-    title: "ESLint flat",
-    kind: "config",
-    content: "{}",
-    language: "json",
-    tags: ["eslint"],
-    tool: "vscode",
-    custom_tool: null,
-    version: "9",
-    context: "workspace",
-    created_at: "2026-01-01T00:00:00.000Z",
-  };
+const row = {
+  id: "d7f1ce67-cf72-4f8e-8545-f0d2fb4ec501",
+  title: "React docs",
+  url: "https://react.dev",
+  category: "docs",
+  description: "Official React documentation",
+  tags: ["react"],
+  created_at: "2026-01-01T00:00:00.000Z",
+};
 
-  it("maps a valid InsForge row to the stable CLI format", () => {
+describe("mapRowToResource", () => {
+  it("maps a resource row to the shared web and CLI shape", () => {
     expect(mapRowToResource(row)).toEqual({
       id: row.id,
-      title: "ESLint flat",
-      kind: "config",
-      content: "{}",
-      language: "json",
-      tags: ["eslint"],
-      tool: "vscode",
-      customTool: null,
-      version: "9",
-      context: "workspace",
-      createdAt: "2026-01-01T00:00:00.000Z",
-    });
-  });
-
-  it("maps legacy rows with null metadata", () => {
-    expect(
-      mapRowToResource({
-        id: row.id,
-        title: "Quick note",
-        kind: "note",
-        content: "hello",
-        language: null,
-        tags: [],
-        tool: null,
-        custom_tool: null,
-        version: null,
-        context: null,
-        created_at: row.created_at,
-      }),
-    ).toEqual({
-      id: row.id,
-      title: "Quick note",
-      kind: "note",
-      content: "hello",
-      language: null,
-      tags: [],
-      tool: null,
-      customTool: null,
-      version: null,
-      context: null,
-      createdAt: "2026-01-01T00:00:00.000Z",
+      title: row.title,
+      url: row.url,
+      category: row.category,
+      description: row.description,
+      tags: row.tags,
+      createdAt: row.created_at,
     });
   });
 
   it("rejects malformed rows", () => {
-    expect(() => mapRowToResource({ ...row, tags: "eslint" })).toThrow(
+    expect(() => mapRowToResource({ ...row, tags: "react" })).toThrow(
       /tags must be a string array/,
     );
-    expect(() => mapRowToResource({ ...row, kind: "invalid" })).toThrow(/kind must be one of/);
-    expect(() => mapRowToResource({ ...row, tool: "invalid" })).toThrow(/tool must be one of/);
+    expect(() => mapRowToResource({ ...row, category: "invalid" })).toThrow(
+      /category must be one of/,
+    );
   });
 });
 
-describe("resourcesService.list options", () => {
-  const row = {
-    id: "d7f1ce67-cf72-4f8e-8545-f0d2fb4ec501",
-    title: "ESLint flat",
-    kind: "config",
-    content: "{}",
-    language: "json",
-    tags: ["eslint"],
-    tool: "vscode",
-    custom_tool: null,
-    version: "9",
-    context: "workspace",
-    created_at: "2026-01-01T00:00:00.000Z",
-  };
-
-  it("returns all rows without options", async () => {
-    const { client, range } = createListClient([row]);
+describe("resourcesService.list", () => {
+  it("reads resources table and maps rows", async () => {
+    const { client, from, range } = createListClient([row]);
     const service = createResourcesService({ client });
 
     await expect(service.list()).resolves.toEqual([
       {
         id: row.id,
         title: row.title,
-        kind: row.kind,
-        content: row.content,
-        language: row.language,
+        url: row.url,
+        category: row.category,
+        description: row.description,
         tags: row.tags,
-        tool: row.tool,
-        customTool: null,
-        version: row.version,
-        context: row.context,
         createdAt: row.created_at,
       },
     ]);
+    expect(from).toHaveBeenCalledWith("resources");
     expect(range).not.toHaveBeenCalled();
   });
 
-  it("applies a range from the limit", async () => {
-    const { client, range } = createListClient([row]);
-
-    await createResourcesService({ client }).list({ limit: 10 });
-
-    expect(range).toHaveBeenCalledWith(0, 9);
-  });
-
-  it("applies the offset when both flags are present", async () => {
+  it("applies limit and offset", async () => {
     const { client, range } = createListClient([row]);
 
     await createResourcesService({ client }).list({ limit: 10, offset: 10 });

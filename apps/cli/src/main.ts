@@ -1,4 +1,3 @@
-import { runBookmark } from "./commands/bookmark.js";
 import { runIdea } from "./commands/idea.js";
 import { runInit } from "./commands/init.js";
 import { runLogin } from "./commands/login.js";
@@ -22,8 +21,8 @@ Commands:
   login     Sign in with email/password
   logout    Sign out and clear local session
   whoami    Show the authenticated user
-  bookmark  Manage bookmarks (create|list|get|update|delete)
-  resource  Manage resources (create|list|get|update|delete)
+  resource  Manage developer resources (create|list|get|update|delete)
+  bookmark  Alias for resource
   idea      Manage ideas (create|list|get|update|delete)
   project   Manage Dev Board projects (create|list|get|update|delete)
   ticket    Manage Dev Board tickets (create|list|get|update|delete|move|next|comment|comments|report)
@@ -64,8 +63,6 @@ async function main(argv: string[]): Promise<void> {
       await runWhoami(rest);
       return;
     case "bookmark":
-      await runBookmark(rest);
-      return;
     case "resource":
       await runResource(rest);
       return;
