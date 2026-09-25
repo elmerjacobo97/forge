@@ -1,6 +1,6 @@
 # SPEC 24 — Inbox de revisión
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 04 — Proyectos en el Dev Board · SPEC 17 — Loop de agente sobre tickets · SPEC 22 — Estados, búsqueda y filtros de proyectos
 > **Fecha:** 2026-09-24
 > **Objetivo:** Añadir en la web una cola en `/dev-board/inbox` con los tickets en validation y review de los proyectos no archivados, mostrando proyecto, título, columna, enlace al PR y último comentario.
