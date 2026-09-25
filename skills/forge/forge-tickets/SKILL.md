@@ -154,8 +154,8 @@ When a ticket's title, description, or comments carry a `Spec:` or `Change:` ref
      The spec/change is the source of truth for what to build; the ticket is the scope fence.
 3. Implement only the ticket's section/steps. Do not run the whole plan, and do not run `/spec-impl`.
 4. Mark `[x]` only that section's checkboxes: the group's steps in the spec, or that section of `tasks.md` for OpenSpec. Do not edit the spec's `Estado` / `Status` line. Leave the checkbox edit in the working tree — do not commit. Commits happen only on the owner's explicit close order (Close work).
-5. Branch: use the normal ticket branch from the default branch (Git workflow, Open work, step 5). If a work branch for this ticket already exists, reuse it. Never create `spec-NN-slug` on top.
-6. One active ticket per spec or change at a time: parallel branches editing the same spec file or `tasks.md` conflict.
+5. Branch: if a work branch for this spec or change already exists, including one left by an earlier group now in `validation`, check it out and continue there. Do not open a second branch. Never create `spec-NN-slug` on top. Otherwise use the normal ticket branch from the default branch (Git workflow, Open work, step 5).
+6. An earlier group in `validation` does not block this one, even with uncommitted changes. Do not move this ticket back to `todo`, do not stop its timer, and do not wait for the owner to close or move the earlier ticket. Those uncommitted changes stay in the working tree.
 7. Handoff: comment with the spec/change and section plus verification, then move to `validation` with `--branch`, as usual. `validation` is when this group's implementation is finished, not when the spec file was approved.
 
 ## Create a ticket
@@ -280,11 +280,11 @@ If a ticket id appears together with an order to start or finish work — even e
    - Fallback: `git remote show origin` → "HEAD branch".
    - Fallback order for local-only repos: `development`, `develop`, `main`, `master`.
    - If still ambiguous, ask the owner before branching.
-4. Sync: `git fetch origin`, `git checkout <default>`, `git pull --ff-only origin <default>`. If the pull fails, stop and report — do not force or stash silently.
+4. Sync: `git fetch origin`, `git checkout <default>`, `git pull --ff-only origin <default>`. If the pull fails, stop and report — do not force or stash silently. Skip this checkout when the current branch is already the work branch for this spec or change and it still has uncommitted changes from an earlier group: stay there.
 5. Create the branch `<type>/<slug>`:
    - `<type>` inferred from the ticket title: `fix`, `refactor`, `docs`, `chore`; default `feat`.
    - `<slug>`: short kebab-case from the title (lowercase, hyphens, no accents).
-   - If the ticket references a spec/change and a work branch for it already exists, check it out instead of creating a new one (see "Spec / OpenSpec-driven tickets").
+   - If the ticket references a spec/change and a work branch for it already exists, including one whose ticket is in `validation`, check it out instead of creating a new one. Do not block on that earlier ticket (see "Spec / OpenSpec-driven tickets").
 
 ### Close work — "cierra el ticket" / "close the ticket"
 
@@ -367,6 +367,7 @@ With `--json`, any error prints `{"error":{"message":"..."}}` to stderr and exit
 - When the owner names a ticket to work on (any phrasing, any language), move it to `in_progress` immediately — before planning, investigating, or touching code. Planning time counts; the timer must be running. Re-running the move is safe (same-column move is a no-op). If the ticket is paused in `in_progress`, move it to `todo` and then to `in_progress` so the timer resumes.
 - A spec's board time starts only when the owner asks for it: one `in_progress` ticket while the spec is written and reviewed. Approving the spec does not pause the timer and does not move the ticket to `validation`. If the spec is still a draft, say it must be marked Approved and leave the timer running.
 - Annotate spec groups only when the owner asks. The design ticket becomes Group 1; other groups are created in `todo`. Work each id with this skill, not with `/spec-impl`. `/spec-impl` without that ask leaves the board unchanged.
+- A later spec group is not blocked by an earlier group in `validation`. Continue on that spec's existing branch. Do not return the new ticket to `todo` or stop its timer.
 - On a spec group, mark `[x]` only that group's steps and do not edit the spec state line.
 - Always pass `--project-id` on `ticket create` and `ticket list`.
 - Prefer `--json` when parsing results in automation.
