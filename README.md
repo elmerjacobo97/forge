@@ -79,4 +79,5 @@ El argumento es `claude`, `cursor`, `codex`, `antigravity` u `opencode`. Hay que
 - `docs/product.md` — alcance y principios.
 - `docs/ROADMAP.md` — estado actual y siguientes pasos.
 - `docs/IDEAS.md` — ideas sin priorizar.
+- [`docs/github-oauth-setup.md`](docs/github-oauth-setup.md) — configurar GitHub OAuth para Forge Web en local y producción.
 - `AGENTS.md` — guías para agentes y convenciones del repo.

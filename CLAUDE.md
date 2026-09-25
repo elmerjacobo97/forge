@@ -34,10 +34,10 @@ Linting uses ESLint + Prettier (not Biome). Config lives at the workspace root f
 
 **Data**: InsForge Postgres schema is versioned in root `migrations/`. User-owned rows are protected with RLS. Dev Board transitions use RPC functions so tickets, events, and time entries update atomically.
 
-**Auth**: `@insforge/sdk/ssr` owns cookies, Server Actions, browser refresh, server client, and `proxy.ts` session renewal.
+**Auth**: `@insforge/sdk/ssr` owns cookies, Server Actions, browser refresh, server client, and `proxy.ts` session renewal. `/login` also starts GitHub OAuth with InsForge PKCE; `/api/auth/callback` exchanges the code. Setup is `docs/github-oauth-setup.md`; GitHub secrets stay in InsForge.
 
 **Aliasing**: `@/*` → `apps/web/src/*`.
 
-**Styling**: Tailwind v4, theme tokens in `apps/web/src/index.css` (no separate `tailwind.config`). shadcn components in `apps/web/src/components/ui`, config in `apps/web/components.json`.
+**Styling**: Tailwind v4, theme tokens in `apps/web/src/index.css` (no separate `tailwind.config`). shadcn components in `apps/web/src/components/ui`, config in `apps/web/components.json`. Brand marks live in `apps/web/src/components/brand-icons/`.
 
 **Env**: `NEXT_PUBLIC_INSFORGE_URL` and `NEXT_PUBLIC_INSFORGE_ANON_KEY` are public. `INSFORGE_API_KEY` and `CRON_TOKEN` stay server-only for Uptime Monitor and Webhook Inspector.

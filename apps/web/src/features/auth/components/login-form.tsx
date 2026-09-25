@@ -5,7 +5,8 @@ import { useForm } from "@tanstack/react-form";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Mail01Icon, SquareLock01Icon, ViewIcon, ViewOffIcon } from "@hugeicons/core-free-icons";
 
-import { signInAction } from "@/features/auth/actions";
+import { signInAction, signInWithGitHubAction } from "@/features/auth/actions";
+import { GitHubIcon } from "@/components/brand-icons/github-icon";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,10 +26,27 @@ import {
 } from "@/components/ui/input-group";
 import { loginSchema } from "../schemas/auth-schema";
 
-export function LoginForm({ redirectTo }: { redirectTo?: string }) {
+const oauthErrorMessages: Record<string, string> = {
+  github_cancelled: "GitHub sign-in was cancelled.",
+  github_email_unverified:
+    "GitHub did not provide a verified email address. Choose an account with a verified email or sign in with email and password.",
+  oauth_failed: "GitHub sign-in failed. Please try again.",
+};
+
+export function LoginForm({
+  redirectTo,
+  oauthError,
+}: {
+  redirectTo?: string;
+  oauthError?: string;
+}) {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [isOAuthPending, startOAuthTransition] = useTransition();
+  const oauthErrorMessage = oauthError
+    ? (oauthErrorMessages[oauthError] ?? oauthErrorMessages.oauth_failed)
+    : null;
 
   const form = useForm({
     defaultValues: {
@@ -63,7 +81,14 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
           }}
         >
           <FieldGroup>
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            {error || oauthErrorMessage ? (
+              <p
+                className="text-sm text-destructive"
+                role="alert"
+              >
+                {error ?? oauthErrorMessage}
+              </p>
+            ) : null}
             <form.Field name="email">
               {(field) => {
                 const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
@@ -161,16 +186,40 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
         </form>
       </CardContent>
       <CardFooter>
-        <Field orientation="horizontal">
+        <div className="grid w-full gap-3">
+          <Field orientation="horizontal">
+            <Button
+              type="submit"
+              form="login-form"
+              className="w-full"
+              disabled={isPending || isOAuthPending}
+            >
+              {isPending ? "Signing in..." : "Sign in"}
+            </Button>
+          </Field>
           <Button
-            type="submit"
-            form="login-form"
+            type="button"
+            variant="outline"
             className="w-full"
-            disabled={isPending}
+            disabled={isPending || isOAuthPending}
+            onClick={() => {
+              setError(null);
+              startOAuthTransition(async () => {
+                const result = await signInWithGitHubAction(redirectTo);
+                if (!result.ok) setError(result.message);
+              });
+            }}
           >
-            {isPending ? "Signing in..." : "Sign in"}
+            {isOAuthPending ? (
+              "Connecting to GitHub..."
+            ) : (
+              <>
+                <GitHubIcon className="size-4" />
+                <span>Continue with GitHub</span>
+              </>
+            )}
           </Button>
-        </Field>
+        </div>
       </CardFooter>
     </Card>
   );

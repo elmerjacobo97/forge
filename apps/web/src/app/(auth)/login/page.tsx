@@ -9,8 +9,13 @@ export const metadata: Metadata = {
 };
 
 async function LoginContent({ searchParams }: PageProps<"/login">) {
-  const { redirect } = await searchParams;
-  return <LoginForm redirectTo={typeof redirect === "string" ? redirect : undefined} />;
+  const { redirect, error } = await searchParams;
+  return (
+    <LoginForm
+      redirectTo={typeof redirect === "string" ? redirect : undefined}
+      oauthError={typeof error === "string" ? error : undefined}
+    />
+  );
 }
 
 export default function LoginPage(props: PageProps<"/login">) {
