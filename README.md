@@ -56,6 +56,24 @@ forge-cli idea list
 
 La sesión y configuración viven en `~/.forge/` con permisos `0600`.
 
+## Skills para agentes
+
+Los skills de Forge viven en `skills/forge/` y se instalan en Claude Code, Cursor, Codex, OpenCode y Antigravity.
+
+```bash
+npx skills@latest add elmerjacobo97/forge -s forge-tickets -s forge-projects -s forge-ideas -s forge-resources -s forge-bookmarks -s forge-weekly
+```
+
+Para instalarlos dentro de un proyecto concreto:
+
+```bash
+git clone https://github.com/elmerjacobo97/forge.git ~/.forge
+cd ~/proyecto
+~/.forge/scripts/install-to-agent.sh cursor
+```
+
+El argumento es `claude`, `cursor`, `codex`, `antigravity` u `opencode`. Hay que correrlo desde el proyecto destino, no desde Forge.
+
 ## Documentación
 
 - `docs/product.md` — alcance y principios.
