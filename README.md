@@ -61,7 +61,7 @@ La sesión y configuración viven en `~/.forge/` con permisos `0600`.
 Los skills de Forge viven en `skills/forge/` y se instalan en Claude Code, Cursor, Codex, OpenCode y Antigravity.
 
 ```bash
-npx skills@latest add elmerjacobo97/forge -s forge-tickets -s forge-projects -s forge-ideas -s forge-resources -s forge-bookmarks -s forge-weekly
+npx skills@latest add elmerjacobo97/forge
 ```
 
 Para instalarlos dentro de un proyecto concreto:
