@@ -115,15 +115,9 @@ forge-cli ticket create \
   --column in_progress
 ```
 
-Use the real `NN-slug` when it is already known. Until the file exists, keep the description as `Spec: pendiente — diseño`. The timer runs while the spec is discussed and written. This skill does not write the spec.
+Use the real `NN-slug` when it is already known. Until the file exists, keep the description as `Spec: pendiente — diseño`. The timer runs while the spec is discussed, written, and reviewed. This skill does not write the spec.
 
-When the owner marks that spec approved, pause the ticket. Approving the spec changes the file only. Do not move the ticket to `validation`.
-
-```bash
-forge-cli ticket adjust-time <id> --stop-at now
-```
-
-`--stop-at now` stops the timer and leaves the ticket in `in_progress`, paused. If they stop mid-draft, pause the same way.
+Approving the spec changes the file only. Do not pause the timer and do not move the ticket. The time spent reviewing it until the owner marks it Approved is part of the implementation and stays on the running timer. Do not run `adjust-time --stop-at now` for that.
 
 ### Annotate the groups
 
@@ -155,7 +149,7 @@ When a ticket's title, description, or comments carry a `Spec:` or `Change:` ref
 
 1. Move it to `in_progress` first. If `ticket get` shows it paused in `in_progress`, a same-column move does not resume the timer: move it to `todo`, then to `in_progress`.
 2. Read the referenced files before touching code:
-   - Spec flow: `specs/NN-slug.md` — state line, scope, implementation plan, acceptance criteria. Continue only if the state means "Approved"; otherwise stop and tell the owner.
+   - Spec flow: `specs/NN-slug.md` — state line, scope, implementation plan, acceptance criteria. Write code only if the state means "Approved". Otherwise tell the owner the spec must be marked Approved, and wait. Do not pause the timer and do not move the ticket while waiting.
    - OpenSpec: `proposal.md`, `design.md`, the delta specs, and the referenced section of `tasks.md`.
      The spec/change is the source of truth for what to build; the ticket is the scope fence.
 3. Implement only the ticket's section/steps. Do not run the whole plan, and do not run `/spec-impl`.
@@ -371,7 +365,7 @@ With `--json`, any error prints `{"error":{"message":"..."}}` to stderr and exit
 - Ensure `init` + `login` before ticket mutations. Re-run `init --from-web-env` if Dev Board table IDs are missing from config.
 - Start agent work from `ticket next`; it is read-only.
 - When the owner names a ticket to work on (any phrasing, any language), move it to `in_progress` immediately — before planning, investigating, or touching code. Planning time counts; the timer must be running. Re-running the move is safe (same-column move is a no-op). If the ticket is paused in `in_progress`, move it to `todo` and then to `in_progress` so the timer resumes.
-- A spec's board time starts only when the owner asks for it: one `in_progress` ticket while the spec is written, paused with `adjust-time --stop-at now` when they mark the spec approved. Approving the spec does not move that ticket to `validation`.
+- A spec's board time starts only when the owner asks for it: one `in_progress` ticket while the spec is written and reviewed. Approving the spec does not pause the timer and does not move the ticket to `validation`. If the spec is still a draft, say it must be marked Approved and leave the timer running.
 - Annotate spec groups only when the owner asks. The design ticket becomes Group 1; other groups are created in `todo`. Work each id with this skill, not with `/spec-impl`. `/spec-impl` without that ask leaves the board unchanged.
 - On a spec group, mark `[x]` only that group's steps and do not edit the spec state line.
 - Always pass `--project-id` on `ticket create` and `ticket list`.
