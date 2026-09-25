@@ -74,15 +74,21 @@ function failure(error: { message?: string } | null, fallback: string): Error {
 
 type InsForgeClient = Awaited<ReturnType<typeof createInsForgeServerClient>>;
 
-async function getTicket(insforge: InsForgeClient, ticketId: string): Promise<Ticket> {
+async function readTicket(insforge: InsForgeClient, ticketId: string): Promise<Ticket | null> {
   const { data, error } = await insforge.database
     .from("dev_board_tickets")
     .select(TICKET_COLUMNS)
     .eq("id", ticketId)
     .maybeSingle();
   if (error) throw failure(error, "Ticket not found.");
-  if (!data) throw new Error("Ticket not found.");
+  if (!data) return null;
   return toTicket(data);
+}
+
+async function getTicket(insforge: InsForgeClient, ticketId: string): Promise<Ticket> {
+  const ticket = await readTicket(insforge, ticketId);
+  if (!ticket) throw new Error("Ticket not found.");
+  return ticket;
 }
 
 async function commentCounts(
@@ -113,6 +119,11 @@ function handoff(ticket: Ticket): { p_branch: string; p_pr_url: string } {
 }
 
 export const devBoardService = {
+  async getTicket(ticketId: string): Promise<Ticket | null> {
+    const insforge = await createInsForgeServerClient();
+    return readTicket(insforge, ticketId);
+  },
+
   async fetchTicketPage(
     projectId: string,
     column: ColumnId,

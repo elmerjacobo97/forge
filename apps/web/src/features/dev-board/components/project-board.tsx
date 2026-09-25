@@ -73,9 +73,15 @@ interface ProjectBoardProps {
   project: Project;
   userId: string;
   initialColumns: ColumnPage[];
+  initialTicket: Ticket | null;
 }
 
-export function ProjectBoard({ project, userId, initialColumns }: ProjectBoardProps) {
+export function ProjectBoard({
+  project,
+  userId,
+  initialColumns,
+  initialTicket,
+}: ProjectBoardProps) {
   const [columns, setColumns] = useState<ColumnRecord>(() => toColumnRecord(initialColumns));
   const [loadingColumns, setLoadingColumns] = useState<Partial<Record<ColumnId, boolean>>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -85,8 +91,8 @@ export function ProjectBoard({ project, userId, initialColumns }: ProjectBoardPr
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [dragTickets, setDragTickets] = useState<Ticket[] | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editTicket, setEditTicket] = useState<Ticket | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(initialTicket !== null);
+  const [editTicket, setEditTicket] = useState<Ticket | null>(initialTicket);
   const [commentsTicket, setCommentsTicket] = useState<Ticket | null>(null);
   const [timeTicket, setTimeTicket] = useState<Ticket | null>(null);
   const [movePrompt, setMovePrompt] = useState<{ ticket: Ticket; sessionMs: number } | null>(null);

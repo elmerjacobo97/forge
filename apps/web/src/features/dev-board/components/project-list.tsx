@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Delete02Icon,
+  InboxIcon,
   KanbanIcon,
   MoreHorizontalIcon,
   PencilEdit01Icon,
@@ -131,20 +132,37 @@ export function ProjectList({
             Each project has its own kanban board and analytics.
           </p>
         </div>
-        {hasAnyProjects ? (
+        <div className="flex shrink-0 items-center gap-2">
           <Button
+            variant="outline"
             size="sm"
-            onClick={openCreate}
+            asChild
             className="gap-1.5"
           >
-            <HugeiconsIcon
-              icon={PlusSignIcon}
-              strokeWidth={2}
-              className="size-3.5"
-            />
-            New project
+            <Link href="/dev-board/inbox">
+              <HugeiconsIcon
+                icon={InboxIcon}
+                strokeWidth={2}
+                className="size-3.5"
+              />
+              Inbox
+            </Link>
           </Button>
-        ) : null}
+          {hasAnyProjects ? (
+            <Button
+              size="sm"
+              onClick={openCreate}
+              className="gap-1.5"
+            >
+              <HugeiconsIcon
+                icon={PlusSignIcon}
+                strokeWidth={2}
+                className="size-3.5"
+              />
+              New project
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <ProjectListToolbar filters={filters} />

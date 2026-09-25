@@ -111,6 +111,25 @@ export async function createTicketAction(input: unknown): Promise<DevBoardAction
   }
 }
 
+export async function getTicketAction(ticketId: unknown): Promise<DevBoardActionResult<Ticket>> {
+  if (!(await isAuthenticated())) {
+    return { ok: false, message: "You must be signed in to view tickets." };
+  }
+
+  const parsedId = z.uuid().safeParse(ticketId);
+  if (!parsedId.success) {
+    return { ok: false, message: "Invalid ticket." };
+  }
+
+  try {
+    const ticket = await devBoardService.getTicket(parsedId.data);
+    if (!ticket) return { ok: false, message: "Ticket not found." };
+    return { ok: true, data: ticket };
+  } catch (error) {
+    return failure(error, "Failed to load ticket.");
+  }
+}
+
 export async function updateTicketAction(input: unknown): Promise<DevBoardActionResult<Ticket>> {
   if (!(await isAuthenticated())) {
     return { ok: false, message: "You must be signed in to update tickets." };

@@ -69,10 +69,16 @@ describe("ProjectList", () => {
     expect(desktopCreatedDate?.className).toContain("sm:table-cell");
     expect(screen.getByRole("combobox", { name: "Change status for Forge" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Actions for Forge" })).toBeTruthy();
+    const inbox = screen.getByRole("link", { name: "Inbox" });
+    const newProject = screen.getByRole("button", { name: "New project" });
+    expect(inbox.getAttribute("href")).toBe("/dev-board/inbox");
+    expect(
+      inbox.compareDocumentPosition(newProject) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("lets a table row update status directly", async () => {
-    const archivedProject = { ...project, status: "archived" };
+    const archivedProject: Project = { ...project, status: "archived" };
     mocks.updateProjectAction.mockResolvedValue({
       ok: true,
       data: { ...archivedProject, status: "paused" },
