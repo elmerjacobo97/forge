@@ -11,10 +11,10 @@ Claude web / móvil, Claude Code, opencode, Cursor  o  MCP Inspector
 Worker forge-mcp (Cloudflare)  ──  Durable Object (sesión Forge, rotación de token)
         │
         ▼
-@forge/core services  →  InsForge (RLS de tu cuenta, solo lectura)
+@forge/core services  →  InsForge (RLS de tu cuenta, lectura y escritura de tickets)
 ```
 
-El Worker expone seis tools read-only (`forge_list_projects`, `forge_get_project`, `forge_list_tickets`, `forge_next_ticket`, `forge_get_ticket`, `forge_activity_report`) y nunca escribe en el board.
+El Worker expone seis herramientas de consulta (`forge_list_projects`, `forge_get_project`, `forge_list_tickets`, `forge_next_ticket`, `forge_get_ticket`, `forge_activity_report`) y seis de escritura de tickets (`forge_create_ticket`, `forge_move_ticket`, `forge_update_ticket`, `forge_add_ticket_comment`, `forge_pause_ticket`, `forge_resume_ticket`). Las escrituras no incluyen borrado ni edición de título, descripción o prioridad; ver `apps/mcp/README.md` para los parámetros actuales.
 
 ## 1. Requisitos
 

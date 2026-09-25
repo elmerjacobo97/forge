@@ -15,6 +15,7 @@ Forge es browser-only (ver `AGENTS.md`): nada de Tauri/Rust/native-IPC. Stack ac
 - **Uptime Monitor** — chequeos programados, latencia, historial y alertas Telegram/Slack.
 - **Webhook Inspector** — URLs temporales con captura e inspección de requests.
 - **CLI** (`forge-cli`) — CRUD de recursos, ideas, proyectos y tickets; `bookmark` es alias de `resource`.
+- **MCP remoto** — consultas de Dev Board y escritura de tickets (crear, mover, actualizar datos de handoff, comentar, pausar y reanudar).
 
 ---
 
@@ -28,10 +29,6 @@ Forge es browser-only (ver `AGENTS.md`): nada de Tauri/Rust/native-IPC. Stack ac
 ---
 
 ## Con backend (UI-first, conectar después)
-
-### MCP: escritura en Dev Board
-
-El MCP remoto actual expone consultas de Dev Board. Evaluar mutaciones después si hacen falta.
 
 ### Saved HTTP requests collections
 
@@ -77,10 +74,9 @@ Tail de logs estructurado con filtros por nivel.
 
 **Con backend (extiende lo existente):**
 
-1. MCP server sobre `forge-cli`.
-2. Saved HTTP collections.
-3. Env / `.env` manager.
+1. Saved HTTP collections.
+2. Env / `.env` manager.
 
 ---
 
-_Última actualización: 2026-09-13._
+_Última actualización: 2026-09-24._
