@@ -66,6 +66,7 @@ export function AppSidebar({ activePath, user, version }: AppSidebarProps) {
           user={{
             name: user.name || "Developer",
             email: user.email,
+            avatarUrl: user.avatarUrl,
           }}
           pending={isSigningOut}
           onSignOut={() => startSignOut(() => signOutAction())}

@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
+import { profileAvatarUrl } from "@/features/auth/profile";
 import type { AuthUser } from "@/features/auth/types";
 import { createInsForgeServerClient } from "@/lib/insforge/server";
 
@@ -19,5 +20,6 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
     id: data.user.id,
     email: data.user.email,
     name: profileName(data.user.profile),
+    avatarUrl: profileAvatarUrl(data.user.profile),
   };
 });

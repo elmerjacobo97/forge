@@ -3,7 +3,7 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Logout01Icon, UnfoldMoreIcon } from "@hugeicons/core-free-icons";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,7 @@ interface NavUserProps {
   user: {
     name: string;
     email: string;
+    avatarUrl?: string | null;
   };
   pending?: boolean;
   onSignOut: () => void;
@@ -49,6 +50,13 @@ export function NavUser({ user, pending = false, onSignOut }: NavUserProps) {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="size-8 rounded-none after:rounded-none">
+                {user.avatarUrl ? (
+                  <AvatarImage
+                    src={user.avatarUrl}
+                    alt=""
+                    className="rounded-none"
+                  />
+                ) : null}
                 <AvatarFallback className="rounded-none">{label}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
