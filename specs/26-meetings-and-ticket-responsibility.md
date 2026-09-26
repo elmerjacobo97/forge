@@ -128,44 +128,45 @@ Convenciones:
 
 ### Grupo 4 — Editor, navegación e integración
 
-- [ ] **4.1** Crear `/meetings` para el historial y `/meetings/new` y `/meetings/[meetingId]` para crear y editar en página completa. Guardar título, fecha/hora, asistentes, contexto, decisiones y próximos pasos; al guardar, abrir la reunión creada.
-- [ ] **4.2** Añadir en Meetings la búsqueda y filtro por proyecto, y controles para responsables, fechas límite y completado. Al convertir un paso, conservarlo vinculado al ticket; si no hay proyecto, pedir uno.
-- [ ] **4.3** Registrar Meetings en `apps/web/src/lib/tools.ts` y proteger la ruta en `apps/web/src/proxy.ts`. Añadir al board del proyecto el atajo **New meeting**, con el proyecto preseleccionado.
-- [ ] **4.4** Actualizar `README.md`, `docs/product.md`, `docs/ROADMAP.md`, `apps/cli/README.md` y `apps/mcp/README.md` para reflejar la herramienta y el campo Responsable.
+- [x] **4.1** Crear `/meetings` para el historial y `/meetings/new` y `/meetings/[meetingId]` para crear y editar en página completa. Guardar título, fecha/hora, asistentes, contexto, decisiones y próximos pasos; al crear desde el historial, volver a `/meetings`, y al crear desde un proyecto, volver a ese board. La ruta por ID permite abrir y editar reuniones existentes.
+- [x] **4.2** Añadir en Meetings la búsqueda y filtro por proyecto, y controles para responsables, fechas límite y completado. Al convertir un paso, conservarlo vinculado al ticket; si no hay proyecto, pedir uno.
+- [x] **4.3** Registrar Meetings en `apps/web/src/lib/tools.ts` y proteger la ruta en `apps/web/src/proxy.ts`. Añadir al board del proyecto el atajo **New meeting**, con el proyecto preseleccionado.
+- [x] **4.4** Actualizar `README.md`, `docs/product.md`, `docs/ROADMAP.md`, `apps/cli/README.md` y `apps/mcp/README.md` para reflejar la herramienta y el campo Responsable.
 
 ## Criterios de aceptación
 
 **Meetings**
 
-- [ ] Meetings aparece en el sidebar; la ruta exige sesión y ofrece crear una reunión en una página completa.
-- [ ] Desde un proyecto se puede iniciar la misma creación con ese proyecto preseleccionado. También se pueden crear reuniones sin proyecto.
-- [ ] Una reunión guarda título, fecha y hora editable —por defecto, la hora actual—, asistentes opcionales, contexto y decisiones.
-- [ ] Cada próximo paso admite título, detalle opcional, responsable como texto libre, fecha límite opcional y marcado de completado.
-- [ ] Los próximos pasos no crean tickets automáticamente. La lista global busca por título/contexto, filtra por proyecto y ordena por fecha reciente.
-- [ ] Al elegir **Crear ticket**, se usa el proyecto de la reunión o se pide seleccionar uno. El ticket entra en Backlog con prioridad media y recibe el título, detalle y responsable del próximo paso; la fecha límite permanece en la reunión.
-- [ ] La reunión conserva el próximo paso y muestra su ticket vinculado; el progreso de ese paso se consulta en Dev Board.
-- [ ] Borrar una reunión con tickets vinculados no borra esos tickets. Borrar un ticket no borra el próximo paso de la reunión.
+- [x] Meetings aparece en el sidebar; la ruta exige sesión y ofrece crear una reunión en una página completa.
+- [x] Desde un proyecto se puede iniciar la misma creación con ese proyecto preseleccionado. También se pueden crear reuniones sin proyecto.
+- [x] Una reunión guarda título, fecha y hora editable —por defecto, la hora actual—, asistentes opcionales, contexto y decisiones.
+- [x] Cada próximo paso admite título, detalle opcional, responsable como texto libre, fecha límite opcional y marcado de completado.
+- [x] Los próximos pasos no crean tickets automáticamente. La lista global busca por título/contexto, filtra por proyecto y ordena por fecha reciente.
+- [x] Al elegir **Crear ticket**, se usa el proyecto de la reunión o se pide seleccionar uno. El ticket entra en Backlog con prioridad media y recibe el título, detalle y responsable del próximo paso; la fecha límite permanece en la reunión.
+- [x] La reunión conserva el próximo paso y muestra su ticket vinculado; el progreso de ese paso se consulta en Dev Board.
+- [x] Borrar una reunión con tickets vinculados no borra esos tickets. Borrar un ticket no borra el próximo paso de la reunión.
 
 **Responsable en tickets**
 
-- [ ] Todos los tickets pueden guardar un responsable opcional de texto libre; los existentes siguen cargando con `NULL`.
-- [ ] Se puede consultar, crear, editar y limpiar el responsable desde web, CLI y MCP.
-- [ ] Las actualizaciones que no incluyen el responsable conservan el valor actual; los valores inválidos se rechazan.
+- [x] Todos los tickets pueden guardar un responsable opcional de texto libre; los existentes siguen cargando con `NULL`.
+- [x] Se puede consultar, crear, editar y limpiar el responsable desde web, CLI y MCP.
+- [x] Las actualizaciones que no incluyen el responsable conservan el valor actual; los valores inválidos se rechazan.
 
 **Datos y seguridad**
 
-- [ ] Las tablas de reuniones aplican RLS por usuario. Una reunión solo puede vincularse a un proyecto propio.
-- [ ] La conversión comprueba usuario, acción y proyecto; una operación repetida no crea tickets duplicados. Si falla, la acción queda sin vínculo.
-- [ ] Borrar un proyecto deja la reunión sin proyecto, sin borrar sus notas.
+- [x] Las tablas de reuniones aplican RLS por usuario. Una reunión solo puede vincularse a un proyecto propio.
+- [x] La conversión comprueba usuario, acción y proyecto; una operación repetida no crea tickets duplicados. Si falla, la acción queda sin vínculo.
+- [x] Borrar un proyecto deja la reunión sin proyecto, sin borrar sus notas.
 
 **Verificación**
 
-- [ ] Tests cubren schemas, servicios, filtros, conversiones, errores, datos antiguos y aislamiento en web, Core/CLI y MCP, sin conectarse a InsForge real.
-- [ ] `pnpm test`, `pnpm build`, `pnpm lint` y `pnpm --filter @forge/mcp typecheck` pasan.
-- [ ] Una revisión manual confirma crear/editar/buscar reuniones, crear una desde un proyecto y promover un próximo paso sin perder la reunión ni su responsable.
+- [x] Tests cubren schemas, servicios, filtros, conversiones, errores, datos antiguos y aislamiento en web, Core/CLI y MCP, sin conectarse a InsForge real.
+- [x] `pnpm test`, `pnpm build`, `pnpm lint` y `pnpm --filter @forge/mcp typecheck` pasan.
+- [x] Una revisión manual confirma crear/editar/buscar reuniones, crear una desde un proyecto y promover un próximo paso sin perder la reunión ni su responsable.
 
 ## Decisiones
 
+- **Sí:** Después de crear, volver al origen: `/meetings` si se inició desde el historial o al board si se inició desde un proyecto. `/meetings/[meetingId]` queda para abrir y editar una reunión ya creada.
 - **Sí:** Meetings es una herramienta independiente en el sidebar, con un atajo dentro de cada proyecto. El atajo preselecciona el proyecto.
 - **Sí:** Una reunión puede ser general o pertenecer a un proyecto. Si no tiene proyecto, se elige uno al crear un ticket.
 - **Sí:** La captura es manual, en una página completa, con secciones distintas para contexto, decisiones y próximos pasos.

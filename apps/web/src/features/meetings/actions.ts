@@ -25,6 +25,7 @@ async function isAuthenticated(): Promise<boolean> {
 
 function revalidateMeetings(): void {
   revalidatePath("/meetings");
+  revalidatePath("/meetings/[meetingId]", "page");
 }
 
 export async function createMeetingAction(input: unknown): Promise<MeetingActionResult<Meeting>> {

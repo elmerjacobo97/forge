@@ -105,7 +105,10 @@ describe("meeting actions", () => {
       data: { id: actionItemId, isCompleted: true },
     });
     expect(service.setActionItemCompleted).toHaveBeenCalledWith(actionItemId, true);
-    expect(revalidatePath).toHaveBeenCalledTimes(2);
+    expect(revalidatePath).toHaveBeenNthCalledWith(1, "/meetings");
+    expect(revalidatePath).toHaveBeenNthCalledWith(2, "/meetings/[meetingId]", "page");
+    expect(revalidatePath).toHaveBeenNthCalledWith(3, "/meetings");
+    expect(revalidatePath).toHaveBeenNthCalledWith(4, "/meetings/[meetingId]", "page");
   });
 
   it("calls the conversion service and refreshes the ticket board", async () => {

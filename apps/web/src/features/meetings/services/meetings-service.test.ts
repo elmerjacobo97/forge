@@ -34,7 +34,7 @@ const actionItemRow = {
 
 function makeQuery() {
   const query: Record<string, ReturnType<typeof vi.fn>> = {};
-  for (const method of ["select", "eq", "or", "order", "insert", "update", "delete", "is"]) {
+  for (const method of ["select", "eq", "or", "order", "insert", "update", "delete", "is", "in"]) {
     query[method] = vi.fn(() => query);
   }
   query.single = vi.fn();
@@ -128,6 +128,49 @@ describe("meetingsService.getMeeting", () => {
     });
     expect(actionQuery.order).toHaveBeenCalledWith("created_at", { ascending: true });
     expect(actionQuery.order).toHaveBeenCalledWith("id", { ascending: true });
+  });
+
+  it("maps linked ticket details for a converted action item", async () => {
+    const meetingQuery = makeQuery();
+    meetingQuery.maybeSingle.mockResolvedValue({ data: meetingRow, error: null });
+    const linkedItem = { ...actionItemRow, ticket_id: "ticket-1" };
+    const actionQuery = makeQuery();
+    actionQuery.then = vi.fn((resolve) =>
+      Promise.resolve({ data: [linkedItem], error: null }).then(resolve),
+    );
+    const ticketQuery = makeQuery();
+    ticketQuery.then = vi.fn((resolve) =>
+      Promise.resolve({
+        data: [
+          {
+            id: "ticket-1",
+            project_id: "project-1",
+            title: "Send the recap",
+            column_id: "in_progress",
+          },
+        ],
+        error: null,
+      }).then(resolve),
+    );
+    database.from
+      .mockReturnValueOnce(meetingQuery)
+      .mockReturnValueOnce(actionQuery)
+      .mockReturnValueOnce(ticketQuery);
+
+    await expect(meetingsService.getMeeting("meeting-1")).resolves.toMatchObject({
+      actionItems: [
+        {
+          ticketId: "ticket-1",
+          linkedTicket: {
+            id: "ticket-1",
+            projectId: "project-1",
+            title: "Send the recap",
+            column: "in_progress",
+          },
+        },
+      ],
+    });
+    expect(ticketQuery.in).toHaveBeenCalledWith("id", ["ticket-1"]);
   });
 });
 

@@ -1,6 +1,6 @@
 # `@forge/mcp` — Forge remote MCP server
 
-Cloudflare Worker that exposes the Forge Dev Board to MCP clients (Claude web/mobile, Claude Code, opencode, Cursor, MCP Inspector) over a remote Model Context Protocol endpoint. Read tools query InsForge with the owner's session. Write tools create and move tickets, update handoff and responsible-name fields, comment, pause, and resume. They do not delete.
+Cloudflare Worker that exposes the Forge Dev Board to MCP clients (Claude web/mobile, Claude Code, opencode, Cursor, MCP Inspector) over a remote Model Context Protocol endpoint. Read tools query InsForge with the owner's session. Write tools create and move tickets, update handoff and responsible-name fields, comment, pause, and resume. They do not delete. Meetings notes and action items remain a private web-only feature.
 
 - Production endpoint: `https://forge-mcp.ejacobotiniano.workers.dev/mcp`
 - Auth: OAuth 2.1 via GitHub (`@cloudflare/workers-oauth-provider`) with a single allowed login (`ALLOWED_GITHUB_LOGIN`)

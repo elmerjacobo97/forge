@@ -22,17 +22,21 @@ describe("proxy", () => {
     expect(updateSession).not.toHaveBeenCalled();
   });
 
-  it.each(["/resources", "/bookmarks", "/uptime-monitor", "/webhook-inspector"])(
-    "protects retained routes: %s",
-    async (pathname) => {
-      const response = await proxy(new NextRequest(`http://localhost${pathname}`));
+  it.each([
+    "/resources",
+    "/bookmarks",
+    "/meetings",
+    "/meetings/new",
+    "/uptime-monitor",
+    "/webhook-inspector",
+  ])("protects retained routes: %s", async (pathname) => {
+    const response = await proxy(new NextRequest(`http://localhost${pathname}`));
 
-      expect(response.headers.get("location")).toBe(
-        `http://localhost/login?redirect=${encodeURIComponent(pathname)}`,
-      );
-      expect(updateSession).not.toHaveBeenCalled();
-    },
-  );
+    expect(response.headers.get("location")).toBe(
+      `http://localhost/login?redirect=${encodeURIComponent(pathname)}`,
+    );
+    expect(updateSession).not.toHaveBeenCalled();
+  });
 
   it.each(["/robots.txt", "/sitemap.xml", "/opengraph-image", "/missing-page"])(
     "allows public and unknown paths: %s",

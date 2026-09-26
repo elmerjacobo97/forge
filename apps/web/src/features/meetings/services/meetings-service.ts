@@ -6,7 +6,13 @@ import { createInsForgeServerClient } from "@/lib/insforge/server";
 import { ticketRowSchema, toTicket } from "@/features/dev-board/utils/ticket-row";
 import type { Ticket } from "@/features/dev-board/types/board";
 import type { MeetingActionItemInput, MeetingFilters, MeetingInput } from "../schemas/meeting";
-import type { Meeting, MeetingActionItem, MeetingDetail, MeetingsPage } from "../types";
+import type {
+  Meeting,
+  MeetingActionItem,
+  MeetingDetail,
+  MeetingLinkedTicket,
+  MeetingsPage,
+} from "../types";
 import { buildMeetingSearchFilter } from "../utils/query-filters";
 
 const meetingRowSchema = z.object({
@@ -19,6 +25,13 @@ const meetingRowSchema = z.object({
   decisions: z.array(z.string()),
   created_at: z.string(),
   updated_at: z.string(),
+});
+
+const meetingTicketRowSchema = z.object({
+  id: z.string(),
+  project_id: z.string(),
+  title: z.string(),
+  column_id: z.enum(["backlog", "todo", "in_progress", "validation", "review", "done"]),
 });
 
 const actionItemRowSchema = z.object({
@@ -143,9 +156,33 @@ export const meetingsService = {
       .order("id", { ascending: true });
     if (actionItemsError) throw failure(actionItemsError, "Failed to load meeting action items.");
 
+    const actionItems = actionItemRowSchema.array().parse(actionItemsData).map(toActionItem);
+    const ticketIds = actionItems.flatMap((item) => (item.ticketId ? [item.ticketId] : []));
+    const linkedTickets = new Map<string, MeetingLinkedTicket>();
+
+    if (ticketIds.length > 0) {
+      const { data: ticketsData, error: ticketsError } = await insforge.database
+        .from("dev_board_tickets")
+        .select("id,project_id,title,column_id")
+        .in("id", ticketIds);
+      if (ticketsError) throw failure(ticketsError, "Failed to load linked tickets.");
+
+      for (const ticket of meetingTicketRowSchema.array().parse(ticketsData)) {
+        linkedTickets.set(ticket.id, {
+          id: ticket.id,
+          projectId: ticket.project_id,
+          title: ticket.title,
+          column: ticket.column_id,
+        });
+      }
+    }
+
     return {
       ...toMeeting(data),
-      actionItems: actionItemRowSchema.array().parse(actionItemsData).map(toActionItem),
+      actionItems: actionItems.map((item) => ({
+        ...item,
+        linkedTicket: item.ticketId ? (linkedTickets.get(item.ticketId) ?? null) : null,
+      })),
     };
   },
 

@@ -31,6 +31,7 @@ const row = {
   last_moved_at: "2026-07-20T00:00:00.000Z",
   branch: null,
   pr_url: null,
+  responsible_name: null,
 };
 
 function handlerFor(event: string) {

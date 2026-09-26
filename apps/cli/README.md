@@ -180,11 +180,14 @@ forge-cli project delete <id>
 ```bash
 forge-cli ticket create --project-id <projectId> --title "Ship CLI tickets"
 forge-cli ticket create --project-id <projectId> --title "WIP" --column in_progress --priority high
+forge-cli ticket create --project-id <projectId> --title "Write meeting recap" --responsible "Alex"
 forge-cli ticket list --project-id <projectId>
 forge-cli ticket list --project-id <projectId> --column todo --json
 forge-cli ticket get <id>
 forge-cli ticket update <id> --title "New title" --priority med
 forge-cli ticket update <id> --branch dev/handoff --pr-url "https://github.com/acme/forge/pull/17"
+forge-cli ticket update <id> --responsible "Alex"
+forge-cli ticket update <id> --clear-responsible
 forge-cli ticket update <id> --clear-branch --clear-pr-url
 forge-cli ticket move <id> --column in_progress
 forge-cli ticket move <id> --column validation
@@ -206,7 +209,10 @@ forge-cli ticket delete <id> --json
 `--project-id` is required on `create` and `list` and optional on `next`
 (default: all projects). Columns: `backlog` | `todo` | `in_progress` |
 `validation` | `review` | `done`. Priorities: `low` | `med` | `high`. Ticket writes use
-backend RPCs so moves, timers, events, and time entries remain atomic.
+backend RPCs so moves, timers, events, and time entries remain atomic. `--responsible`
+sets an optional free-text name (1–120 characters); `--clear-responsible` explicitly
+clears it, while updates that omit the field preserve the current value. Meetings
+notes and next steps are managed in the web app, not the CLI.
 Timer-active columns are `in_progress` and `validation`; moving between them
 keeps the timer running, and `review`/`done` stop it.
 

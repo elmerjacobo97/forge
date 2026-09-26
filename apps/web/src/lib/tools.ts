@@ -2,6 +2,7 @@ import type { IconSvgElement } from "@hugeicons/react";
 import {
   Activity01Icon,
   Bookmark01Icon,
+  Calendar03Icon,
   Idea01Icon,
   LayoutThreeColumnIcon,
   WebhookIcon,
@@ -24,6 +25,14 @@ export const tools: ToolDef[] = [
     name: "Dev Board",
     description: "Kanban board with auto time tracking for dev tasks",
     icon: LayoutThreeColumnIcon,
+    category: "Productivity",
+  },
+  {
+    id: "meetings",
+    path: "/meetings",
+    name: "Meetings",
+    description: "Keep meeting notes, decisions, and next steps together",
+    icon: Calendar03Icon,
     category: "Productivity",
   },
   {

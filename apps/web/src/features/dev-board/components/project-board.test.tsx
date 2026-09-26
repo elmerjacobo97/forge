@@ -81,6 +81,15 @@ describe("ProjectBoard opened ticket", () => {
   });
 });
 
+describe("ProjectBoard meeting shortcut", () => {
+  it("starts a meeting with the current project preselected", () => {
+    expect(renderBoard("planned")).toContain(
+      'href="/meetings/new?projectId=project-1&amp;returnTo=project"',
+    );
+    expect(renderBoard("planned")).toContain("New meeting");
+  });
+});
+
 describe("ProjectBoard status badge", () => {
   it.each(PROJECT_STATUSES)("shows the current %s status", (status) => {
     const markup = renderBoard(status);

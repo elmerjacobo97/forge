@@ -4,7 +4,7 @@
 
 ## Qué es
 
-Forge es un workspace personal de desarrollo con Dev Board, Ideas y Resources para enlaces de programación. También conserva Uptime Monitor y Webhook Inspector. Web, CLI y MCP comparten datos de InsForge.
+Forge es un workspace personal de desarrollo con Dev Board, Meetings, Ideas y Resources para enlaces de programación. También conserva Uptime Monitor y Webhook Inspector. Web, CLI y MCP comparten datos de InsForge; Meetings es una superficie privada disponible solo en la web.
 
 Hoy el objetivo no es ser un producto SaaS, sino la herramienta diaria del autor: rápida, privada y útil sin fricción.
 
@@ -20,7 +20,8 @@ Hoy el objetivo no es ser un producto SaaS, sino la herramienta diaria del autor
 
 ### Superficies con datos
 
-- **Dev Board:** kanban por proyecto con columnas fijas, drag & drop, time tracking automático en "In Progress", analítica (cycle time, tiempo registrado, throughput) y actualización en vivo vía InsForge realtime (los cambios del CLI se reflejan sin recargar).
+- **Dev Board:** kanban por proyecto con columnas fijas, drag & drop, time tracking automático en "In Progress", analítica (cycle time, tiempo registrado, throughput), responsable de texto libre opcional y actualización en vivo vía InsForge realtime (los cambios del CLI se reflejan sin recargar).
+- **Meetings:** diario privado de reuniones manuales con proyecto opcional, fecha/hora, asistentes, contexto, decisiones y próximos pasos. Un próximo paso se convierte explícitamente en ticket sin perder su vínculo; la herramienta no está expuesta por CLI ni MCP.
 - **Resources:** enlaces con categoría, tags y descripción. Web y CLI usan misma tabla `resources`.
 - **Ideas:** captura de ideas con título, contenido, estado, categoría, tags y enlaces.
 - **Webhook Inspector:** URLs temporales que capturan requests entrantes para inspección.
@@ -28,11 +29,11 @@ Hoy el objetivo no es ser un producto SaaS, sino la herramienta diaria del autor
 
 ### CLI (`forge-cli`)
 
-CRUD de recursos, ideas, proyectos y tickets. `bookmark` queda como alias de `resource`.
+CRUD de recursos, ideas, proyectos y tickets; tickets aceptan un responsable opcional de texto libre. `bookmark` queda como alias de `resource`. Meetings no forma parte del CLI.
 
 ### MCP remoto
 
-Seis herramientas para consultar y operar Dev Board. MCP queda independiente de Resources.
+Herramientas para consultar y operar Dev Board; creación y actualización de tickets admiten un responsable de texto libre. MCP queda independiente de Resources y Meetings no forma parte de su interfaz.
 
 ## Arquitectura
 

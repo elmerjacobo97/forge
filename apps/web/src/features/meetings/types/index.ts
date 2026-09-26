@@ -23,8 +23,19 @@ export interface MeetingActionItem {
   updatedAt: string;
 }
 
+export interface MeetingLinkedTicket {
+  id: string;
+  projectId: string;
+  title: string;
+  column: "backlog" | "todo" | "in_progress" | "validation" | "review" | "done";
+}
+
+export interface MeetingActionItemWithTicket extends MeetingActionItem {
+  linkedTicket: MeetingLinkedTicket | null;
+}
+
 export interface MeetingDetail extends Meeting {
-  actionItems: MeetingActionItem[];
+  actionItems: MeetingActionItemWithTicket[];
 }
 
 export interface MeetingsPage {

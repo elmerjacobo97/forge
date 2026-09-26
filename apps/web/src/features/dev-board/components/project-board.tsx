@@ -18,6 +18,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Analytics01Icon,
   ArrowLeft01Icon,
+  Calendar03Icon,
   PlusSignIcon,
   RefreshIcon,
 } from "@hugeicons/core-free-icons";
@@ -418,6 +419,20 @@ export function ProjectBoard({
                 className="size-3.5"
               />
               Analytics
+            </Link>
+          </Button>
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+          >
+            <Link href={`/meetings/new?projectId=${project.id}&returnTo=project`}>
+              <HugeiconsIcon
+                icon={Calendar03Icon}
+                strokeWidth={2}
+                className="size-3.5"
+              />
+              New meeting
             </Link>
           </Button>
           <Button

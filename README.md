@@ -1,6 +1,6 @@
 # Forge
 
-Forge es un workspace personal de desarrollo: Dev Board, Ideas, Resources para enlaces de programación, Uptime Monitor y Webhook Inspector. Web, CLI y MCP comparten datos de InsForge.
+Forge es un workspace personal de desarrollo: Dev Board, Meetings, Ideas, Resources para enlaces de programación, Uptime Monitor y Webhook Inspector. Web, CLI y MCP comparten datos de InsForge; Meetings vive solo en la web.
 
 ## Stack
 
@@ -20,7 +20,7 @@ docs            Producto, roadmap e ideas
 specs           Especificaciones por feature
 ```
 
-Cada feature de `apps/web/src/features/<feature>` es dueña de sus `components/`, `hooks/`, `schemas/`, `services/`, `types/`, `utils/` y `actions.ts` (Server Actions). Las rutas en `src/app` son delgadas y solo componen features. Los tests web viven junto al módulo que cubren; los del CLI se agrupan en `apps/cli/tests/` por tipo (`schemas`, `services`, `lib`, `commands`).
+Cada feature de `apps/web/src/features/<feature>` es dueña de sus `components/`, `hooks/`, `schemas/`, `services/`, `types/`, `utils/` y `actions.ts` (Server Actions). Meetings es una herramienta web privada para notas y próximos pasos; los tickets de Dev Board pueden llevar un responsable de texto libre. Las rutas en `src/app` son delgadas y solo componen features. Los tests web viven junto al módulo que cubren; los del CLI se agrupan en `apps/cli/tests/` por tipo (`schemas`, `services`, `lib`, `commands`).
 
 ## Comandos
 
@@ -40,7 +40,7 @@ Para un solo test web: `pnpm --filter @forge/web exec vitest run --config tests.
 
 ## Herramientas web
 
-Dev Board, Ideas, Resources, Webhook Inspector y Uptime Monitor.
+Dev Board, Meetings, Ideas, Resources, Webhook Inspector y Uptime Monitor.
 
 ## CLI
 
