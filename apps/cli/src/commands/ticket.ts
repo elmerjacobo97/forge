@@ -54,6 +54,7 @@ create options:
   --title <text>               Required (1-120)
   --description <text>         Optional (default "")
   --priority <priority>        Optional (${PRIORITIES.join(" | ")}, default med)
+  --responsible <name>         Optional responsible name (max 120 characters)
   --column <column>            Optional (${COLUMNS.join(" | ")}, default backlog)
 
 list options:
@@ -78,6 +79,8 @@ update options (at least one):
   --pr-url <url>               Bind a PR URL (http/https, max 2048)
   --clear-branch               Clear the branch
   --clear-pr-url               Clear the PR URL
+  --responsible <name>         Set the responsible name (max 120 characters)
+  --clear-responsible          Clear the responsible name
 
 move options:
   --column <column>            Required destination column
@@ -132,6 +135,7 @@ async function runCreate(args: string[]): Promise<void> {
     description: getFlagValue(args, "--description") ?? "",
     priority: getFlagValue(args, "--priority") ?? "med",
     column: getFlagValue(args, "--column") ?? "backlog",
+    responsibleName: getFlagValue(args, "--responsible"),
   });
 
   if ("error" in input) {
@@ -204,14 +208,17 @@ async function runUpdate(args: string[]): Promise<void> {
   const priority = getFlagValue(args, "--priority");
   const branch = getFlagValue(args, "--branch");
   const prUrl = getFlagValue(args, "--pr-url");
+  const responsibleName = getFlagValue(args, "--responsible");
 
   if (title !== undefined) raw.title = title;
   if (description !== undefined) raw.description = description;
   if (priority !== undefined) raw.priority = priority;
   if (branch !== undefined) raw.branch = branch;
   if (prUrl !== undefined) raw.prUrl = prUrl;
+  if (responsibleName !== undefined) raw.responsibleName = responsibleName;
   if (hasFlag(args, "--clear-branch")) raw.clearBranch = true;
   if (hasFlag(args, "--clear-pr-url")) raw.clearPrUrl = true;
+  if (hasFlag(args, "--clear-responsible")) raw.clearResponsible = true;
 
   const input = parseTicketUpdateInput(raw);
   if ("error" in input) {

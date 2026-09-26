@@ -48,6 +48,29 @@ describe("parseTicketCreateInput", () => {
     });
   });
 
+  it("trims and validates the optional responsible name", () => {
+    expect(
+      parseTicketCreateInput({
+        projectId: "p1",
+        title: "Ship",
+        description: "",
+        priority: "med",
+        column: "backlog",
+        responsibleName: "  Ada Lovelace  ",
+      }),
+    ).toMatchObject({ responsibleName: "Ada Lovelace" });
+    expect(
+      parseTicketCreateInput({
+        projectId: "p1",
+        title: "Ship",
+        description: "",
+        priority: "med",
+        column: "backlog",
+        responsibleName: "x".repeat(121),
+      }),
+    ).toHaveProperty("error");
+  });
+
   it("rejects empty title, unknown priority, and invalid column", () => {
     const result = parseTicketCreateInput({
       projectId: "proj1",
@@ -114,6 +137,18 @@ describe("parseTicketUpdateInput", () => {
     expect(result).toHaveProperty("error");
     if (!("error" in result)) throw new Error("expected validation error");
     expect(result.error).toContain("Provide at least one field to update");
+  });
+
+  it("supports setting or clearing responsibility and rejects conflicting flags", () => {
+    expect(parseTicketUpdateInput({ responsibleName: " Ada " })).toEqual({
+      responsibleName: "Ada",
+    });
+    expect(parseTicketUpdateInput({ clearResponsible: true })).toEqual({
+      clearResponsible: true,
+    });
+    expect(
+      parseTicketUpdateInput({ responsibleName: "Ada", clearResponsible: true }),
+    ).toHaveProperty("error");
   });
 
   it("rejects invalid priority in a partial update", () => {

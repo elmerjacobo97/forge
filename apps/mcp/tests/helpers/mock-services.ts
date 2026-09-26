@@ -62,6 +62,7 @@ export function ticket(id: string, overrides: Partial<Ticket> = {}): Ticket {
     lastMovedAt: "2026-09-01T00:00:00.000Z",
     branch: null,
     prUrl: null,
+    responsibleName: null,
     ...overrides,
   };
 }

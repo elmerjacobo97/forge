@@ -50,6 +50,7 @@ const sampleTicket: Ticket = {
   lastMovedAt: "2026-07-18T13:00:00.000Z",
   branch: "spec-17-agent-ticket-loop",
   prUrl: "https://github.com/acme/forge/pull/17",
+  responsibleName: "Ada Lovelace",
 };
 
 const sampleComment: TicketComment = {
@@ -108,6 +109,7 @@ describe("formatTicketText", () => {
     expect(text).toContain("title:       Ship CLI tickets");
     expect(text).toContain("column:      todo");
     expect(text).toContain("priority:    high");
+    expect(text).toContain("responsible: Ada Lovelace");
     expect(text).toContain("timer:       stopped (logged 1:05)");
   });
 
@@ -204,6 +206,7 @@ describe("formatNextContextText", () => {
     expect(text).toContain("title:       Ship CLI tickets");
     expect(text).toContain("project:     Forge (p1)");
     expect(text).toContain("priority:    high");
+    expect(text).toContain("responsible: Ada Lovelace");
     expect(text).toContain("comments:    1");
     expect(text).toContain("inProgress:  1 ticket(s) in progress (not eligible)");
     expect(text).toContain("Implemented the loop and moved to review.");

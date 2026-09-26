@@ -21,6 +21,7 @@ function ticket(id: string, column: Ticket["column"], position: number): Ticket 
     lastMovedAt: "2026-07-11T15:00:00.000Z",
     branch: null,
     prUrl: null,
+    responsibleName: null,
   };
 }
 

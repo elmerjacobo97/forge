@@ -19,19 +19,23 @@ export interface TicketReportArgs {
   columns?: ColumnId[];
 }
 
-interface TicketHandoffArgs {
+interface TicketUpdateFields {
   branch?: string;
   prUrl?: string;
   clearBranch?: boolean;
   clearPrUrl?: boolean;
+  responsibleName?: string;
+  clearResponsible?: boolean;
 }
 
-function handoffFields(input: TicketHandoffArgs): TicketUpdateInput {
+function ticketUpdateFields(input: TicketUpdateFields): TicketUpdateInput {
   return {
     ...(input.branch !== undefined ? { branch: input.branch } : {}),
     ...(input.prUrl !== undefined ? { prUrl: input.prUrl } : {}),
     ...(input.clearBranch !== undefined ? { clearBranch: input.clearBranch } : {}),
     ...(input.clearPrUrl !== undefined ? { clearPrUrl: input.clearPrUrl } : {}),
+    ...(input.responsibleName !== undefined ? { responsibleName: input.responsibleName } : {}),
+    ...(input.clearResponsible !== undefined ? { clearResponsible: input.clearResponsible } : {}),
   };
 }
 
@@ -92,25 +96,26 @@ export function createToolHandlers(services: ForgeServices) {
       description: string;
       column: ColumnId;
       priority: Priority;
+      responsibleName?: string;
     }): Promise<Ticket> => {
       await services.projects.get(input.projectId);
       return services.board.create(input);
     },
 
     moveTicket: (
-      input: { ticketId: string; column: ColumnId } & TicketHandoffArgs,
+      input: { ticketId: string; column: ColumnId } & TicketUpdateFields,
     ): Promise<Ticket> =>
       services.board.move({
         id: input.ticketId,
         column: input.column,
-        ...handoffFields(input),
+        ...ticketUpdateFields(input),
       }),
 
     updateTicket: ({
       ticketId,
-      ...handoff
-    }: { ticketId: string } & TicketHandoffArgs): Promise<Ticket> =>
-      services.board.update(ticketId, handoffFields(handoff)),
+      ...fields
+    }: { ticketId: string } & TicketUpdateFields): Promise<Ticket> =>
+      services.board.update(ticketId, ticketUpdateFields(fields)),
 
     addTicketComment: ({
       ticketId,

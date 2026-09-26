@@ -52,6 +52,7 @@ function ticket(id: string, projectId: string): Ticket {
     lastMovedAt: "2026-09-01T00:00:00.000Z",
     branch: null,
     prUrl: null,
+    responsibleName: null,
   };
 }
 

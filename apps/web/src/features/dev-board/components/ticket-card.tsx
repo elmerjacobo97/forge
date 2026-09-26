@@ -112,6 +112,11 @@ export function TicketCard({
               {ticket.description}
             </p>
           )}
+          {ticket.responsibleName && (
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              <span className="font-medium">Responsible:</span> {ticket.responsibleName}
+            </p>
+          )}
 
           {(timerActive || ticket.totalElapsedMs > 0) && (
             <div className="mt-2 flex items-center gap-1.5">

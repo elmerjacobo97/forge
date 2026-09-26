@@ -49,6 +49,7 @@ export function TicketForm({
       title: "",
       description: "",
       priority: "med" as Priority,
+      responsibleName: "",
       branch: null as string | null,
       prUrl: null as string | null,
     },
@@ -69,6 +70,7 @@ export function TicketForm({
               title: editTicket.title,
               description: editTicket.description,
               priority: editTicket.priority,
+              responsibleName: editTicket.responsibleName ?? "",
               branch: editTicket.branch ?? "",
               prUrl: editTicket.prUrl ?? "",
             }
@@ -76,6 +78,7 @@ export function TicketForm({
               title: "",
               description: "",
               priority: "med",
+              responsibleName: "",
               branch: "",
               prUrl: "",
             },
@@ -96,7 +99,7 @@ export function TicketForm({
           <DialogTitle>{isEdit ? "Edit Ticket" : "New Ticket"}</DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Update ticket details, priority, or description."
+              ? "Update ticket details, priority, description, or responsible name."
               : "Create a ticket and track its time across your workflow."}
           </DialogDescription>
         </DialogHeader>
@@ -192,6 +195,30 @@ export function TicketForm({
                         ))}
                       </SelectContent>
                     </Select>
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                );
+              }}
+            </form.Field>
+
+            <form.Field name="responsibleName">
+              {(field) => {
+                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name}>Responsible</FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="Optional name"
+                      autoComplete="off"
+                      maxLength={120}
+                      aria-invalid={isInvalid}
+                    />
+                    <p className="text-xs text-muted-foreground">Text only; not a Forge account.</p>
                     {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );

@@ -48,6 +48,7 @@ export interface Ticket {
   lastMovedAt: string;
   branch: string | null;
   prUrl: string | null;
+  responsibleName: string | null;
   commentCount?: number;
 }
 

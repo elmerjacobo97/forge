@@ -65,6 +65,7 @@ const ticketRow = {
   last_moved_at: "2026-09-01T00:00:00.000Z",
   branch: "dev/handoff",
   pr_url: "https://github.com/acme/forge/pull/17",
+  responsible_name: "Ada Lovelace",
 };
 
 const commentRow = {
@@ -91,6 +92,7 @@ function ticket(overrides: Partial<Ticket> = {}): Ticket {
     lastMovedAt: "2026-09-01T00:00:00.000Z",
     branch: null,
     prUrl: null,
+    responsibleName: null,
     ...overrides,
   };
 }
@@ -113,6 +115,7 @@ describe("devBoardService.fetchTicketPage", () => {
         id: "ticket-1",
         branch: "dev/handoff",
         prUrl: "https://github.com/acme/forge/pull/17",
+        responsibleName: "Ada Lovelace",
         commentCount: 2,
       }),
     ]);
@@ -121,6 +124,20 @@ describe("devBoardService.fetchTicketPage", () => {
     expect(tickets.range).toHaveBeenCalledWith(0, 24);
     expect(page.nextCursor).toBeNull();
     expect(page.total).toBe(1);
+  });
+
+  it("maps migrated legacy tickets with no responsible name as null", async () => {
+    const tickets = createQueryMock({
+      data: [{ ...ticketRow, responsible_name: null }],
+      error: null,
+      count: 1,
+    });
+    const comments = createQueryMock({ data: [], error: null });
+    routeTables(tickets, comments);
+
+    const page = await devBoardService.fetchTicketPage("project-1", "todo", null);
+
+    expect(page.tickets[0]?.responsibleName).toBeNull();
   });
 
   it("skips the comment count query on an empty page", async () => {
@@ -194,6 +211,32 @@ describe("devBoardService comments", () => {
   });
 });
 
+describe("devBoardService responsible name", () => {
+  it("sends responsibility on create and update", async () => {
+    database.rpc.mockResolvedValue({ data: ticketRow, error: null });
+
+    await devBoardService.createTicket({
+      projectId: "project-1",
+      title: "Ship CLI tickets",
+      description: "",
+      priority: "med",
+      responsibleName: "Ada Lovelace",
+    });
+    expect(database.rpc).toHaveBeenCalledWith(
+      "create_dev_board_ticket",
+      expect.objectContaining({ p_responsible_name: "Ada Lovelace" }),
+    );
+
+    const tickets = createQueryMock({ data: ticketRow, error: null });
+    database.from.mockReturnValue(tickets);
+    await devBoardService.updateTicket(ticket({ responsibleName: "Grace Hopper" }));
+    expect(database.rpc).toHaveBeenLastCalledWith(
+      "update_dev_board_ticket",
+      expect.objectContaining({ p_responsible_name: "Grace Hopper" }),
+    );
+  });
+});
+
 describe("devBoardService.updateTicket handoff", () => {
   it("clears handoff fields with empty strings when null", async () => {
     const tickets = createQueryMock({ data: ticketRow, error: null });
@@ -208,6 +251,7 @@ describe("devBoardService.updateTicket handoff", () => {
         p_ticket_id: "ticket-1",
         p_branch: "",
         p_pr_url: "",
+        p_responsible_name: "",
       }),
     );
   });

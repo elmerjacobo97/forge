@@ -39,6 +39,7 @@ export function formatTicketText(ticket: Ticket): string {
     `priority:    ${ticket.priority}\n` +
     `branch:      ${formatNullable(ticket.branch)}\n` +
     `prUrl:       ${formatNullable(ticket.prUrl)}\n` +
+    `responsible: ${formatNullable(ticket.responsibleName)}\n` +
     `description: ${ticket.description || "(none)"}\n` +
     `timer:       ${formatTimerSummary(ticket)}\n` +
     `createdAt:   ${ticket.createdAt}\n` +
@@ -124,6 +125,7 @@ export function formatNextContextText(context: NextTicketContext): string {
     `project:     ${projectLabel}`,
     `column:      ${context.ticket.column}`,
     `priority:    ${context.ticket.priority}`,
+    `responsible: ${formatNullable(context.ticket.responsibleName)}`,
     `description: ${context.ticket.description || "(none)"}`,
     `comments:    ${context.comments.length}`,
   ];

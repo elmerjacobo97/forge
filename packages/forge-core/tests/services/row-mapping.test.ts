@@ -35,6 +35,7 @@ describe("InsForge row mapping", () => {
       last_moved_at: "2026-07-20T00:01:00.000Z",
       branch: "spec-17-agent-ticket-loop",
       pr_url: "https://github.com/acme/forge/pull/17",
+      responsible_name: "Ada Lovelace",
     };
 
     expect(mapRowToTicket(row)).toMatchObject({
@@ -45,6 +46,7 @@ describe("InsForge row mapping", () => {
       totalElapsedMs: 1000,
       branch: "spec-17-agent-ticket-loop",
       prUrl: "https://github.com/acme/forge/pull/17",
+      responsibleName: "Ada Lovelace",
     });
     expect(() => mapRowToTicket({ ...row, position: "0" })).toThrow(/position must be a number/);
   });

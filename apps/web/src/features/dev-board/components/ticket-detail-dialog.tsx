@@ -88,6 +88,17 @@ export function TicketDetailDialog({
                 size="sm"
               >
                 <ItemContent>
+                  <ItemTitle>Responsible</ItemTitle>
+                  <ItemDescription className="line-clamp-none">
+                    {ticket.responsibleName ?? "No responsible person."}
+                  </ItemDescription>
+                </ItemContent>
+              </Item>
+              <Item
+                variant="muted"
+                size="sm"
+              >
+                <ItemContent>
                   <ItemTitle>Branch</ItemTitle>
                   <ItemDescription className="line-clamp-none font-mono text-xs">
                     {ticket.branch?.trim() ? ticket.branch : "No branch."}

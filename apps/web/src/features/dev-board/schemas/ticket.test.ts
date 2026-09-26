@@ -14,6 +14,7 @@ const base = {
   priority: "med" as const,
   branch: null,
   prUrl: null,
+  responsibleName: "",
 };
 
 const inputRow = {
@@ -31,6 +32,7 @@ const inputRow = {
   lastMovedAt: "2026-09-01T00:00:00.000Z",
   branch: null,
   prUrl: null,
+  responsibleName: null,
 };
 
 describe("ticketSchema handoff fields", () => {
@@ -50,6 +52,16 @@ describe("ticketSchema handoff fields", () => {
 
     expect(parsed.branch).toBe("dev/handoff");
     expect(parsed.prUrl).toBe("https://github.com/acme/forge/pull/17");
+  });
+
+  it("trims responsible names and normalizes blank values to null", () => {
+    expect(ticketSchema.parse({ ...base, responsibleName: " Ada Lovelace " }).responsibleName).toBe(
+      "Ada Lovelace",
+    );
+    expect(ticketSchema.parse({ ...base, responsibleName: "   " }).responsibleName).toBeNull();
+    expect(ticketSchema.safeParse({ ...base, responsibleName: "x".repeat(121) }).success).toBe(
+      false,
+    );
   });
 
   it("rejects non-http PR URLs, oversized PR URLs, and oversized branches", () => {
@@ -76,7 +88,7 @@ describe("ticketCommentSchema", () => {
   });
 });
 
-describe("ticketInputSchema handoff fields", () => {
+describe("ticketInputSchema handoff and responsible fields", () => {
   it("accepts null and valid handoff values", () => {
     expect(ticketInputSchema.safeParse(inputRow).success).toBe(true);
     expect(
@@ -88,12 +100,15 @@ describe("ticketInputSchema handoff fields", () => {
     ).toBe(true);
   });
 
-  it("rejects invalid handoff values", () => {
+  it("rejects invalid handoff and responsible values", () => {
     expect(ticketInputSchema.safeParse({ ...inputRow, branch: "" }).success).toBe(false);
     expect(ticketInputSchema.safeParse({ ...inputRow, prUrl: "not-a-url" }).success).toBe(false);
     expect(ticketInputSchema.safeParse({ ...inputRow, prUrl: "https://example.com" }).success).toBe(
       true,
     );
+    expect(
+      ticketInputSchema.safeParse({ ...inputRow, responsibleName: "x".repeat(121) }).success,
+    ).toBe(false);
   });
 });
 

@@ -38,6 +38,12 @@ const descriptionSchema = z
   .trim()
   .max(2000, "Description must be at most 2000 characters.");
 
+const responsibleNameSchema = z
+  .string({ error: "Responsible name must be a string (--responsible)." })
+  .trim()
+  .min(1, "Responsible name must not be empty.")
+  .max(120, "Responsible name must be at most 120 characters.");
+
 const branchSchema = z
   .string({ error: "Branch must be a string (--branch)." })
   .trim()
@@ -62,6 +68,7 @@ export const ticketCreateSchema = z.object({
   description: descriptionSchema,
   priority: prioritySchema,
   column: columnSchema,
+  responsibleName: responsibleNameSchema.optional(),
 });
 
 export const ticketUpdateSchema = z
@@ -73,10 +80,15 @@ export const ticketUpdateSchema = z
     prUrl: prUrlSchema.optional(),
     clearBranch: z.boolean().optional(),
     clearPrUrl: z.boolean().optional(),
+    responsibleName: responsibleNameSchema.optional(),
+    clearResponsible: z.boolean().optional(),
   })
   .refine((value) => Object.values(value).some((field) => field !== undefined), {
     message:
-      "Provide at least one field to update (--title, --description, --priority, --branch, or --pr-url).",
+      "Provide at least one field to update (--title, --description, --priority, --branch, --pr-url, or --responsible).",
+  })
+  .refine((value) => !(value.responsibleName !== undefined && value.clearResponsible === true), {
+    message: "Use either --responsible or --clear-responsible, not both.",
   });
 
 export const ticketMoveSchema = z.object({

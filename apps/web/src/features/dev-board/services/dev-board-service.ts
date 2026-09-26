@@ -169,6 +169,7 @@ export const devBoardService = {
     title: string;
     description: string;
     priority: Ticket["priority"];
+    responsibleName?: string | null;
   }): Promise<Ticket> {
     const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database.rpc("create_dev_board_ticket", {
@@ -177,6 +178,7 @@ export const devBoardService = {
       p_description: input.description,
       p_column_id: "backlog",
       p_priority: input.priority,
+      p_responsible_name: input.responsibleName ?? "",
     });
     if (error) throw failure(error, "Failed to create ticket.");
     return rpcTicket(data);
@@ -211,6 +213,7 @@ export const devBoardService = {
       p_description: ticket.description,
       p_priority: ticket.priority,
       ...handoff(ticket),
+      p_responsible_name: ticket.responsibleName ?? "",
     });
     if (error) throw failure(error, "Failed to update ticket.");
     return rpcTicket(data);

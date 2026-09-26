@@ -31,6 +31,7 @@ export const BOOLEAN_FLAGS = new Set([
   "-h",
   "--clear-branch",
   "--clear-pr-url",
+  "--clear-responsible",
   "--remove-last",
 ]);
 

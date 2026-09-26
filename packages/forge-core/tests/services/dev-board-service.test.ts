@@ -20,6 +20,7 @@ function ticketRow(overrides: Overrides = {}) {
     last_moved_at: "2026-09-01T00:00:00.000Z",
     branch: null,
     pr_url: null,
+    responsible_name: null,
     ...overrides,
   };
 }
@@ -305,6 +306,40 @@ describe("devBoardService comments", () => {
     await expect(
       createDevBoardService({ client }).addComment("missing", "hello", "user"),
     ).rejects.toThrow("Ticket not found.");
+  });
+});
+
+describe("devBoardService responsible name", () => {
+  it("maps and sends responsibleName when creating tickets", async () => {
+    const { client, rpcCalls } = createDevBoardMockClient({
+      rpc: () => ({ data: ticketRow({ responsible_name: "Ada" }), error: null }),
+    });
+
+    const ticket = await createDevBoardService({ client }).create({
+      projectId: "project-1",
+      title: "Ticket",
+      description: "",
+      priority: "med",
+      column: "backlog",
+      responsibleName: "Ada",
+    });
+
+    expect(ticket.responsibleName).toBe("Ada");
+    expect(rpcCalls[0].params).toMatchObject({ p_responsible_name: "Ada" });
+  });
+
+  it("omits responsibility when not provided and clears it explicitly", async () => {
+    const { client, rpcCalls } = createDevBoardMockClient({
+      tickets: [ticketRow({ id: "ticket-1", responsible_name: "Ada" })],
+      rpc: () => ({ data: ticketRow({ id: "ticket-1" }), error: null }),
+    });
+    const service = createDevBoardService({ client });
+
+    await service.update("ticket-1", { title: "Renamed" });
+    expect("p_responsible_name" in rpcCalls[0].params).toBe(false);
+
+    await service.update("ticket-1", { clearResponsible: true });
+    expect(rpcCalls[1].params.p_responsible_name).toBe("");
   });
 });
 

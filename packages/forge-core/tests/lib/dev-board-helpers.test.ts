@@ -32,6 +32,7 @@ function ticket(
     lastMovedAt: "2026-07-11T15:00:00.000Z",
     branch: null,
     prUrl: null,
+    responsibleName: null,
     ...overrides,
   };
 }
@@ -43,6 +44,7 @@ describe("toTicketSummary", () => {
         description: "long text",
         branch: "feat/x",
         prUrl: "https://example.com/pr/1",
+        responsibleName: "Ada Lovelace",
       }),
     );
 
@@ -54,6 +56,7 @@ describe("toTicketSummary", () => {
       priority: "med",
       branch: "feat/x",
       prUrl: "https://example.com/pr/1",
+      responsibleName: "Ada Lovelace",
       createdAt: "2026-07-11T15:00:00.000Z",
     });
     expect("description" in summary).toBe(false);

@@ -154,6 +154,7 @@ const adjustedTicket: Ticket = {
   lastMovedAt: "2026-09-12T20:00:00.000Z",
   branch: null,
   prUrl: null,
+  responsibleName: null,
 };
 
 describe("adjustTicketTimeAction", () => {

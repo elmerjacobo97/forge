@@ -9,6 +9,7 @@ export function toTicketSummary(ticket: Ticket): TicketSummary {
     priority: ticket.priority,
     branch: ticket.branch,
     prUrl: ticket.prUrl,
+    responsibleName: ticket.responsibleName,
     createdAt: ticket.createdAt,
   };
 }

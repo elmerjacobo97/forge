@@ -106,7 +106,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_create_ticket",
       {
         description:
-          "Create a Dev Board ticket. Requires projectId and title. description defaults to empty, column to backlog, and priority to med.",
+          "Create a Dev Board ticket. Requires projectId and title. description defaults to empty, column to backlog, priority to med, and responsibleName is optional free text (max 120 characters).",
         inputSchema: createTicketInput,
       },
       (args) => run((handlers) => handlers.createTicket(args)),
@@ -126,7 +126,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_update_ticket",
       {
         description:
-          "Update ticket handoff only: branch, prUrl, clearBranch, or clearPrUrl. At least one is required. Does not change title, description, or priority.",
+          "Update ticket handoff or responsibleName: branch, prUrl, clearBranch, clearPrUrl, responsibleName, or clearResponsible. At least one is required. Does not change title, description, or priority.",
         inputSchema: updateTicketInput,
       },
       (args) => run((handlers) => handlers.updateTicket(args)),

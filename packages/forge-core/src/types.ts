@@ -57,6 +57,7 @@ export type Ticket = {
   lastMovedAt: string;
   branch: string | null;
   prUrl: string | null;
+  responsibleName: string | null;
 };
 
 export interface TicketSummary {
@@ -67,6 +68,7 @@ export interface TicketSummary {
   priority: Priority;
   branch: string | null;
   prUrl: string | null;
+  responsibleName: string | null;
   createdAt: string;
 }
 
@@ -76,6 +78,7 @@ export type TicketCreateInput = {
   description: string;
   priority: Priority;
   column: ColumnId;
+  responsibleName?: string;
 };
 
 export type TicketUpdateInput = Partial<
@@ -85,6 +88,8 @@ export type TicketUpdateInput = Partial<
   prUrl?: string;
   clearBranch?: boolean;
   clearPrUrl?: boolean;
+  responsibleName?: string;
+  clearResponsible?: boolean;
 };
 
 export type TicketMoveInput = {

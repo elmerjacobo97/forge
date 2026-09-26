@@ -33,6 +33,7 @@ export function createTicket(values: TicketFormValues, projectId: string): Ticke
     lastMovedAt: now,
     branch: null,
     prUrl: null,
+    responsibleName: values.responsibleName,
   };
 }
 

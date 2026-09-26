@@ -21,6 +21,7 @@ function makeTicket(overrides: Partial<Ticket> = {}): Ticket {
     lastMovedAt: "2026-09-12T10:00:00.000Z",
     branch: null,
     prUrl: null,
+    responsibleName: null,
     ...overrides,
   };
 }
@@ -60,6 +61,11 @@ describe("TicketCard", () => {
 
     now.mockReturnValue(Date.parse("2026-09-12T10:03:05.000Z"));
     expect(timerText(renderCard(makeTicket()))).toBe("2:00");
+  });
+
+  it("renders the responsible name on the ticket card", () => {
+    expect(renderCard(makeTicket({ responsibleName: "Ada Lovelace" }))).toContain("Responsible:");
+    expect(renderCard(makeTicket({ responsibleName: "Ada Lovelace" }))).toContain("Ada Lovelace");
   });
 
   it("server-renders the total elapsed time for a paused ticket", () => {

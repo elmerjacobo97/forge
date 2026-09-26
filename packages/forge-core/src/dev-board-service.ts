@@ -70,6 +70,7 @@ export function mapRowToTicket(value: unknown): Ticket {
     lastMovedAt: stringField(row, "last_moved_at", "ticket row"),
     branch: nullableStringField(row, "branch"),
     prUrl: nullableStringField(row, "pr_url"),
+    responsibleName: nullableStringField(row, "responsible_name"),
   };
 }
 
@@ -105,7 +106,7 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
     const response = await client.database
       .from("dev_board_tickets")
       .select(
-        "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url",
+        "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url,responsible_name",
       )
       .eq("id", id)
       .maybeSingle();
@@ -132,7 +133,7 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
       let query = client.database
         .from("dev_board_tickets")
         .select(
-          "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url",
+          "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url,responsible_name",
         )
         .eq("column_id", column)
         .order("created_at", { ascending: false })
@@ -191,6 +192,16 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
     return params;
   }
 
+  function responsibleParams(
+    input: Pick<TicketUpdateInput, "responsibleName" | "clearResponsible">,
+  ): Record<string, unknown> {
+    if (input.clearResponsible) return { p_responsible_name: "" };
+    if (input.responsibleName !== undefined) {
+      return { p_responsible_name: input.responsibleName };
+    }
+    return {};
+  }
+
   return {
     async list(projectId: string, column?: ColumnId): Promise<Ticket[]> {
       const tickets: Ticket[] = [];
@@ -198,7 +209,7 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
         let query = client.database
           .from("dev_board_tickets")
           .select(
-            "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url",
+            "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url,responsible_name",
           )
           .eq("project_id", projectId)
           .order("created_at", { ascending: false })
@@ -265,6 +276,9 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
           p_description: input.description,
           p_column_id: input.column,
           p_priority: input.priority,
+          ...(input.responsibleName !== undefined
+            ? { p_responsible_name: input.responsibleName }
+            : {}),
         },
         "Failed to create ticket.",
       );
@@ -280,6 +294,7 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
           p_description: input.description ?? previous.description,
           p_priority: input.priority ?? previous.priority,
           ...handoffParams(input),
+          ...responsibleParams(input),
         },
         "Failed to update ticket.",
       );

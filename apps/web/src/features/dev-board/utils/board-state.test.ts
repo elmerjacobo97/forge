@@ -27,6 +27,7 @@ function ticket(overrides: Partial<Ticket> & { id: string; column: ColumnId }): 
     branch: null,
     prUrl: null,
     ...overrides,
+    responsibleName: overrides.responsibleName ?? null,
   };
 }
 

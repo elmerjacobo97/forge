@@ -20,6 +20,11 @@ export const ticketSchema = z.object({
     )
     .transform((value) => value.trim() || null)
     .nullable(),
+  responsibleName: z
+    .string()
+    .trim()
+    .max(120, "Responsible name must be at most 120 characters")
+    .transform((value) => value || null),
 });
 
 export type TicketFormValues = z.infer<typeof ticketSchema>;
@@ -55,6 +60,7 @@ export const ticketInputSchema = z.object({
     .max(2048, "PR URL is too long")
     .regex(/^https?:\/\//i, "PR URL must start with http:// or https://")
     .nullable(),
+  responsibleName: z.string().max(120).nullable(),
 });
 
 export type TicketInput = z.infer<typeof ticketInputSchema>;

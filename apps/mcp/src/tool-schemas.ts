@@ -65,6 +65,7 @@ export const createTicketInput = {
   description: descriptionSchema.default(""),
   column: columnSchema.default("backlog"),
   priority: prioritySchema.default("med"),
+  responsibleName: z.string().trim().min(1).max(120).optional(),
 };
 
 export const moveTicketInput = {
@@ -83,15 +84,25 @@ export const updateTicketInput = z
     prUrl: prUrlSchema.optional(),
     clearBranch: z.boolean().optional(),
     clearPrUrl: z.boolean().optional(),
+    responsibleName: z.string().trim().min(1).max(120).optional(),
+    clearResponsible: z.boolean().optional(),
   })
   .refine(
     (value) =>
       value.branch !== undefined ||
       value.prUrl !== undefined ||
       value.clearBranch !== undefined ||
-      value.clearPrUrl !== undefined,
-    { message: "Provide at least one of branch, prUrl, clearBranch, or clearPrUrl." },
-  );
+      value.clearPrUrl !== undefined ||
+      value.responsibleName !== undefined ||
+      value.clearResponsible !== undefined,
+    {
+      message:
+        "Provide at least one of branch, prUrl, clearBranch, clearPrUrl, responsibleName, or clearResponsible.",
+    },
+  )
+  .refine((value) => !(value.responsibleName !== undefined && value.clearResponsible === true), {
+    message: "Use either responsibleName or clearResponsible, not both.",
+  });
 
 export const addTicketCommentInput = {
   ticketId: ticketIdSchema,

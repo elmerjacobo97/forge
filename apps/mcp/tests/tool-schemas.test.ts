@@ -78,6 +78,7 @@ describe("ticket write inputs", () => {
         description: "notes",
         column: "todo",
         priority: "high",
+        responsibleName: "Ada Lovelace",
       }).success,
     ).toBe(true);
     expect(
@@ -91,6 +92,12 @@ describe("ticket write inputs", () => {
       }).success,
     ).toBe(true);
     expect(updateTicketInput.safeParse({ ticketId: "t1", clearBranch: true }).success).toBe(true);
+    expect(updateTicketInput.safeParse({ ticketId: "t1", responsibleName: " Ada " }).success).toBe(
+      true,
+    );
+    expect(updateTicketInput.safeParse({ ticketId: "t1", clearResponsible: true }).success).toBe(
+      true,
+    );
     expect(
       z.object(addTicketCommentInput).safeParse({ ticketId: "t1", body: "done" }).success,
     ).toBe(true);
@@ -104,6 +111,23 @@ describe("ticket write inputs", () => {
       expect(parsed.data.column).toBe("backlog");
       expect(parsed.data.priority).toBe("med");
     }
+  });
+
+  it("rejects invalid responsible names and simultaneous set/clear", () => {
+    expect(
+      z.object(createTicketInput).safeParse({
+        projectId: "p1",
+        title: "Ship it",
+        responsibleName: "x".repeat(121),
+      }).success,
+    ).toBe(false);
+    expect(
+      updateTicketInput.safeParse({
+        ticketId: "t1",
+        responsibleName: "Ada",
+        clearResponsible: true,
+      }).success,
+    ).toBe(false);
   });
 
   it("rejects invalid column, priority, prUrl, and body", () => {

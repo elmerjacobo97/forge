@@ -36,7 +36,11 @@ describe("createToolHandlers", () => {
   it("lists tickets as lightweight summaries", async () => {
     const services = createMockServices();
     services.board.list.mockResolvedValue([
-      ticket("t1", { description: "long text", branch: "feat/x" }),
+      ticket("t1", {
+        description: "long text",
+        branch: "feat/x",
+        responsibleName: "Ada Lovelace",
+      }),
     ]);
     const handlers = createToolHandlers(asForgeServices(services));
 
@@ -52,6 +56,7 @@ describe("createToolHandlers", () => {
         priority: "med",
         branch: "feat/x",
         prUrl: null,
+        responsibleName: "Ada Lovelace",
         createdAt: "2026-09-01T00:00:00.000Z",
       },
     ]);
@@ -136,7 +141,11 @@ describe("createToolHandlers", () => {
   });
 
   it("creates a ticket after the project exists", async () => {
-    const created = ticket("t1", { title: "Ship it", column: "backlog" });
+    const created = ticket("t1", {
+      title: "Ship it",
+      column: "backlog",
+      responsibleName: "Ada Lovelace",
+    });
     const services = createMockServices();
     services.projects.get.mockResolvedValue(project("p1"));
     services.board.create.mockResolvedValue(created);
@@ -149,6 +158,7 @@ describe("createToolHandlers", () => {
         description: "",
         column: "backlog",
         priority: "med",
+        responsibleName: "Ada Lovelace",
       }),
     ).resolves.toEqual(created);
     expect(services.projects.get).toHaveBeenCalledWith("p1");
@@ -158,6 +168,7 @@ describe("createToolHandlers", () => {
       description: "",
       column: "backlog",
       priority: "med",
+      responsibleName: "Ada Lovelace",
     });
   });
 
@@ -208,12 +219,17 @@ describe("createToolHandlers", () => {
         ticketId: "t1",
         prUrl: "https://github.com/org/repo/pull/1",
         clearBranch: true,
+        responsibleName: "Ada Lovelace",
       }),
     ).resolves.toEqual(updated);
     expect(services.board.update).toHaveBeenCalledWith("t1", {
       prUrl: "https://github.com/org/repo/pull/1",
       clearBranch: true,
+      responsibleName: "Ada Lovelace",
     });
+
+    await handlers.updateTicket({ ticketId: "t1", clearResponsible: true });
+    expect(services.board.update).toHaveBeenLastCalledWith("t1", { clearResponsible: true });
   });
 
   it("adds a comment as the agent", async () => {

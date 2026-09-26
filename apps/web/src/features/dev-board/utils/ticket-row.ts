@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { Ticket } from "../types/board";
 
 export const TICKET_COLUMNS =
-  "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url";
+  "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url,responsible_name";
 
 export const ticketRowSchema = z.object({
   id: z.string(),
@@ -20,6 +20,7 @@ export const ticketRowSchema = z.object({
   last_moved_at: z.string(),
   branch: z.string().nullable(),
   pr_url: z.string().nullable(),
+  responsible_name: z.string().nullable(),
 });
 
 export function toTicket(value: unknown): Ticket {
@@ -39,5 +40,6 @@ export function toTicket(value: unknown): Ticket {
     lastMovedAt: row.last_moved_at,
     branch: row.branch,
     prUrl: row.pr_url,
+    responsibleName: row.responsible_name,
   };
 }

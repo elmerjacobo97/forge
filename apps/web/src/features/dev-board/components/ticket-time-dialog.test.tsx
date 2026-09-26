@@ -30,6 +30,7 @@ function makeTicket(overrides: Partial<Ticket> = {}): Ticket {
     branch: null,
     prUrl: null,
     ...overrides,
+    responsibleName: overrides.responsibleName ?? null,
   };
 }
 

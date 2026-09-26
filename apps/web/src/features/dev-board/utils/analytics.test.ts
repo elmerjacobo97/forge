@@ -9,17 +9,52 @@ const range: AnalyticsRange = {
 };
 
 const data: AnalyticsData = {
-  tickets: [{
-    id: "ticket-1", projectId: "project-1", title: "Ship analytics", description: "", column: "done", position: 0,
-    priority: "high", createdAt: "2026-07-01T00:00:00.000Z", timerStartedAt: null,
-    totalElapsedMs: 3_600_000, isPaused: false, lastMovedAt: "2026-07-03T12:00:00.000Z",
-    branch: null, prUrl: null,
-  }],
-  events: [
-    { id: "start", ticketId: "ticket-1", eventType: "started", fromColumn: "todo", toColumn: "in_progress", occurredAt: "2026-07-02T10:00:00.000Z" },
-    { id: "done", ticketId: "ticket-1", eventType: "completed", fromColumn: "in_progress", toColumn: "done", occurredAt: "2026-07-03T12:00:00.000Z" },
+  tickets: [
+    {
+      id: "ticket-1",
+      projectId: "project-1",
+      title: "Ship analytics",
+      description: "",
+      column: "done",
+      position: 0,
+      priority: "high",
+      createdAt: "2026-07-01T00:00:00.000Z",
+      timerStartedAt: null,
+      totalElapsedMs: 3_600_000,
+      isPaused: false,
+      lastMovedAt: "2026-07-03T12:00:00.000Z",
+      branch: null,
+      prUrl: null,
+      responsibleName: null,
+    },
   ],
-  timeEntries: [{ id: "entry-1", ticketId: "ticket-1", startedAt: "2026-07-02T10:00:00.000Z", endedAt: "2026-07-02T11:00:00.000Z", durationMs: 3_600_000 }],
+  events: [
+    {
+      id: "start",
+      ticketId: "ticket-1",
+      eventType: "started",
+      fromColumn: "todo",
+      toColumn: "in_progress",
+      occurredAt: "2026-07-02T10:00:00.000Z",
+    },
+    {
+      id: "done",
+      ticketId: "ticket-1",
+      eventType: "completed",
+      fromColumn: "in_progress",
+      toColumn: "done",
+      occurredAt: "2026-07-03T12:00:00.000Z",
+    },
+  ],
+  timeEntries: [
+    {
+      id: "entry-1",
+      ticketId: "ticket-1",
+      startedAt: "2026-07-02T10:00:00.000Z",
+      endedAt: "2026-07-02T11:00:00.000Z",
+      durationMs: 3_600_000,
+    },
+  ],
 };
 
 describe("buildAnalytics", () => {
