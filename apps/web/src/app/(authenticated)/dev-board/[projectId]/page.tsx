@@ -17,14 +17,13 @@ export default async function DevBoardProjectPage({
   params,
   searchParams,
 }: PageProps<"/dev-board/[projectId]">) {
-  const { projectId } = await params;
-  const user = await getCurrentUser();
+  const [{ projectId }, user, query] = await Promise.all([params, getCurrentUser(), searchParams]);
   if (!user) redirect("/login");
 
-  const project = await projectsService.getProject(projectId).catch(() => null);
+  const project = await projectsService.getProject(projectId);
   if (!project) notFound();
 
-  const ticketId = ticketIdFromQuery((await searchParams).ticket);
+  const ticketId = ticketIdFromQuery(query.ticket);
   const [initialColumns, loadedTicket] = await Promise.all([
     Promise.all(
       COLUMNS.map(async (column) => {

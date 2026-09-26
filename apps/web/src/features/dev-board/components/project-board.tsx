@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import {
   DndContext,
@@ -39,6 +39,7 @@ import {
   columnTickets,
   incrementCommentCount,
   removeTicket,
+  restoreTicket,
   toColumnRecord,
   upsertTicket,
   type ColumnRecord,
@@ -87,7 +88,7 @@ export function ProjectBoard({
   const [loadingColumns, setLoadingColumns] = useState<Partial<Record<ColumnId, boolean>>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [, startMutating] = useTransition();
-  const tickets = columnTickets(columns);
+  const tickets = useMemo(() => columnTickets(columns), [columns]);
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
@@ -148,7 +149,7 @@ export function ProjectBoard({
     startMutating(async () => {
       const result = await updateTicketAction(ticket);
       if (!result.ok) {
-        setColumns(previous);
+        setColumns((current) => restoreTicket(current, previous, ticket.id));
         toast.error(result.message);
         return;
       }
@@ -171,7 +172,7 @@ export function ProjectBoard({
     startMutating(async () => {
       const result = await deleteTicketAction(ticket.id);
       if (!result.ok) {
-        setColumns(previous);
+        setColumns((current) => restoreTicket(current, previous, ticket.id));
         toast.error(result.message);
         return;
       }

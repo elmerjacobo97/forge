@@ -2,8 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   getCurrentUser: vi.fn(),
-  notFound: vi.fn(),
-  redirect: vi.fn(),
+  notFound: vi.fn(() => {
+    throw new Error("NOT_FOUND");
+  }),
+  redirect: vi.fn((path: string) => {
+    throw new Error(`REDIRECT:${path}`);
+  }),
   getProject: vi.fn(),
   fetchTicketPage: vi.fn(),
   getTicket: vi.fn(),
@@ -66,6 +70,13 @@ function renderPage(ticketParam?: string) {
 beforeEach(() => vi.clearAllMocks());
 
 describe("DevBoardProjectPage status", () => {
+  it("redirects unauthenticated users before reading project data", async () => {
+    mocks.getCurrentUser.mockResolvedValue(null);
+
+    await expect(renderPage()).rejects.toThrow("REDIRECT:/login");
+    expect(mocks.getProject).not.toHaveBeenCalled();
+  });
+
   it("passes the persisted project status through to the board", async () => {
     mocks.getCurrentUser.mockResolvedValue({ id: "user-1" });
     mocks.getProject.mockResolvedValue(project);
@@ -76,6 +87,24 @@ describe("DevBoardProjectPage status", () => {
     expect(element.props.project).toEqual(project);
     expect(element.props.project.status).toBe("paused");
     expect(element.props.initialTicket).toBeNull();
+  });
+
+  it("renders not-found only when the project does not exist", async () => {
+    mocks.getCurrentUser.mockResolvedValue({ id: "user-1" });
+    mocks.getProject.mockResolvedValue(null);
+
+    await expect(renderPage()).rejects.toThrow("NOT_FOUND");
+    expect(mocks.notFound).toHaveBeenCalledOnce();
+    expect(mocks.fetchTicketPage).not.toHaveBeenCalled();
+  });
+
+  it("lets project backend errors reach the route error boundary", async () => {
+    const error = new Error("Database unavailable");
+    mocks.getCurrentUser.mockResolvedValue({ id: "user-1" });
+    mocks.getProject.mockRejectedValue(error);
+
+    await expect(renderPage()).rejects.toBe(error);
+    expect(mocks.notFound).not.toHaveBeenCalled();
   });
 });
 

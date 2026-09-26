@@ -59,19 +59,31 @@ const subscribeToNothing = () => () => {};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
-export function MeetingEditor({
-  initialMeeting,
-  projects,
-  initialProjectId = null,
-  returnToProjectId = null,
-  initialMeetingAt,
-}: {
-  initialMeeting: MeetingDetail | null;
+type MeetingEditorProps = {
   projects: Project[];
-  initialProjectId?: string | null;
-  returnToProjectId?: string | null;
-  initialMeetingAt: string;
-}) {
+} & (
+  | {
+      initialMeeting: null;
+      initialProjectId?: string | null;
+      returnToProjectId?: string | null;
+      initialMeetingAt: string;
+    }
+  | {
+      initialMeeting: MeetingDetail;
+      initialProjectId?: never;
+      returnToProjectId?: never;
+      initialMeetingAt?: never;
+    }
+);
+
+export function MeetingEditor(props: MeetingEditorProps) {
+  const { projects } = props;
+  const initialMeeting = props.initialMeeting;
+  const initialProjectId = props.initialMeeting === null ? (props.initialProjectId ?? null) : null;
+  const returnToProjectId =
+    props.initialMeeting === null ? (props.returnToProjectId ?? null) : null;
+  const initialMeetingAt =
+    props.initialMeeting === null ? props.initialMeetingAt : props.initialMeeting.meetingAt;
   const router = useRouter();
   const isHydrated = useSyncExternalStore(subscribeToNothing, getClientSnapshot, getServerSnapshot);
   const isEditing = initialMeeting !== null;

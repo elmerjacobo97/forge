@@ -1,4 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+// @vitest-environment jsdom
+
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { render } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 
 vi.mock("../actions", () => ({
@@ -96,5 +99,42 @@ describe("ProjectBoard status badge", () => {
 
     expect(markup).toContain(`aria-label="Project status: ${PROJECT_STATUS_LABELS[status]}"`);
     expect(markup).toContain(PROJECT_STATUS_LABELS[status]);
+  });
+});
+
+afterEach(() => vi.restoreAllMocks());
+
+describe("ProjectBoard stale-ticket interval", () => {
+  it("does not restart the interval when unrelated project props rerender the board", () => {
+    const setIntervalSpy = vi.spyOn(window, "setInterval");
+    const project: Project = {
+      id: "project-1",
+      name: "Forge",
+      description: "Dev tools",
+      status: "in_progress",
+      createdAt: "2026-09-23T00:00:00.000Z",
+    };
+    const props = {
+      userId: "user-1",
+      initialColumns,
+      initialTicket: null,
+    };
+    const view = render(
+      <ProjectBoard
+        {...props}
+        project={project}
+      />,
+    );
+
+    expect(setIntervalSpy).toHaveBeenCalledTimes(1);
+
+    view.rerender(
+      <ProjectBoard
+        {...props}
+        project={{ ...project, name: "Forge Platform" }}
+      />,
+    );
+
+    expect(setIntervalSpy).toHaveBeenCalledTimes(1);
   });
 });

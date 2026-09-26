@@ -8,6 +8,7 @@ import {
   columnTickets,
   incrementCommentCount,
   removeTicket,
+  restoreTicket,
   toColumnRecord,
   upsertTicket,
 } from "./board-state";
@@ -98,6 +99,49 @@ describe("board-state", () => {
 
     expect(next.todo.tickets).toEqual([]);
     expect(next.todo.total).toBe(0);
+  });
+
+  it("restores one optimistic ticket without discarding unrelated board updates", () => {
+    const original = ticket({ id: "t1", column: "backlog", title: "Original" });
+    const other = ticket({ id: "t2", column: "backlog", title: "Other" });
+    const previous = toColumnRecord([
+      { column: "backlog", tickets: [original, other], total: 2, nextCursor: null },
+    ]);
+    const optimistic = upsertTicket(
+      previous,
+      ticket({ ...original, column: "done", title: "Optimistic move" }),
+    );
+    const concurrent = upsertTicket(optimistic, ticket({ ...other, title: "Realtime update" }));
+
+    const restored = restoreTicket(concurrent, previous, original.id);
+
+    expect(restored.backlog.tickets.find((item) => item.id === original.id)?.title).toBe(
+      "Original",
+    );
+    expect(restored.backlog.tickets.find((item) => item.id === other.id)?.title).toBe(
+      "Realtime update",
+    );
+    expect(restored.backlog.total).toBe(2);
+    expect(restored.done.tickets).toEqual([]);
+    expect(restored.done.total).toBe(0);
+  });
+
+  it("restores an optimistically deleted ticket while retaining another change", () => {
+    const original = ticket({ id: "t1", column: "backlog" });
+    const previous = toColumnRecord([
+      { column: "backlog", tickets: [original], total: 1, nextCursor: null },
+    ]);
+    const optimistic = removeTicket(previous, original);
+    const concurrent = upsertTicket(
+      optimistic,
+      ticket({ id: "t2", column: "todo", title: "Realtime update" }),
+    );
+
+    const restored = restoreTicket(concurrent, previous, original.id);
+
+    expect(restored.backlog.tickets.map((item) => item.id)).toEqual([original.id]);
+    expect(restored.backlog.total).toBe(1);
+    expect(restored.todo.tickets[0]?.title).toBe("Realtime update");
   });
 
   it("appends only unknown tickets with a new cursor", () => {

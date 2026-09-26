@@ -29,7 +29,6 @@ export default async function MeetingDetailPage({
       key={meeting.id}
       initialMeeting={meeting}
       projects={projects}
-      initialMeetingAt={meeting.meetingAt}
     />
   );
 }

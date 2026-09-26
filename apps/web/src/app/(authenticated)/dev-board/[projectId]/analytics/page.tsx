@@ -9,7 +9,7 @@ export default async function DevBoardAnalyticsPage({
   params,
 }: PageProps<"/dev-board/[projectId]/analytics">) {
   const { projectId } = await params;
-  const project = await projectsService.getProject(projectId).catch(() => null);
+  const project = await projectsService.getProject(projectId);
   if (!project) notFound();
 
   const initialRange = presetRange("30d");

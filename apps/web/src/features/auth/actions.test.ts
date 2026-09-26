@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const cookies = vi.hoisted(() => vi.fn());
 const signInWithOAuth = vi.hoisted(() => vi.fn());
+const signInWithPassword = vi.hoisted(() => vi.fn());
+const signOut = vi.hoisted(() => vi.fn());
 const redirect = vi.hoisted(() =>
   vi.fn((url: string): never => {
     throw new Error(`REDIRECT:${url}`);
@@ -10,9 +12,11 @@ const redirect = vi.hoisted(() =>
 
 vi.mock("next/headers", () => ({ cookies }));
 vi.mock("next/navigation", () => ({ redirect }));
-vi.mock("@insforge/sdk/ssr", () => ({ createAuthActions: () => ({ signInWithOAuth }) }));
+vi.mock("@insforge/sdk/ssr", () => ({
+  createAuthActions: () => ({ signInWithOAuth, signInWithPassword, signOut }),
+}));
 
-import { signInWithGitHubAction } from "./actions";
+import { signInAction, signInWithGitHubAction, signOutAction } from "./actions";
 
 const cookieStore = { set: vi.fn() };
 
@@ -23,6 +27,47 @@ beforeEach(() => {
   signInWithOAuth.mockResolvedValue({
     data: { url: "https://auth.insforge.app/oauth", codeVerifier: "pkce-verifier" },
     error: null,
+  });
+  signInWithPassword.mockResolvedValue({ error: null });
+  signOut.mockResolvedValue(undefined);
+});
+
+describe("signInAction", () => {
+  it("validates credentials before contacting auth", async () => {
+    await expect(signInAction({ email: "not-an-email", password: "short" })).resolves.toEqual({
+      ok: false,
+      message: "Enter a valid email and password.",
+    });
+    expect(signInWithPassword).not.toHaveBeenCalled();
+    expect(cookies).not.toHaveBeenCalled();
+  });
+
+  it("signs in and redirects only to a safe internal path", async () => {
+    const credentials = { email: "dev@example.com", password: "long-password" };
+
+    await expect(signInAction(credentials, "/meetings?projectId=forge")).rejects.toThrow(
+      "REDIRECT:/meetings?projectId=forge",
+    );
+
+    expect(signInWithPassword).toHaveBeenCalledWith(credentials);
+  });
+
+  it("returns an auth error without redirecting", async () => {
+    signInWithPassword.mockResolvedValueOnce({ error: new Error("Invalid login credentials") });
+
+    await expect(
+      signInAction({ email: "dev@example.com", password: "long-password" }),
+    ).resolves.toEqual({ ok: false, message: "Invalid login credentials" });
+    expect(redirect).not.toHaveBeenCalled();
+  });
+});
+
+describe("signOutAction", () => {
+  it("signs out and redirects to the login page", async () => {
+    await expect(signOutAction()).rejects.toThrow("REDIRECT:/login");
+
+    expect(signOut).toHaveBeenCalledOnce();
+    expect(redirect).toHaveBeenCalledWith("/login");
   });
 });
 

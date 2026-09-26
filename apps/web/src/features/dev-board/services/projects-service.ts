@@ -40,15 +40,15 @@ export const projectsService = {
     return projectRowSchema.array().parse(data).map(toProject);
   },
 
-  async getProject(projectId: string): Promise<Project> {
+  async getProject(projectId: string): Promise<Project | null> {
     const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database
       .from("dev_board_projects")
       .select("id,name,description,status,created_at")
       .eq("id", projectId)
-      .single();
-    if (error) throw failure(error, "Project not found.");
-    return toProject(data);
+      .maybeSingle();
+    if (error) throw failure(error, "Failed to load project.");
+    return data ? toProject(data) : null;
   },
 
   async createProject(input: ProjectCreateInput): Promise<Project> {

@@ -69,6 +69,47 @@ describe("MeetingEditor", () => {
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/meetings"));
   });
 
+  it("updates an existing meeting from its own initial values", async () => {
+    const existingMeeting = {
+      id: "d7f1ce67-cf72-4f8e-8545-f0d2fb4ec501",
+      projectId: null,
+      title: "Planning",
+      meetingAt,
+      attendees: ["Alex"],
+      context: "Release planning",
+      decisions: ["Ship the first slice"],
+      createdAt: meetingAt,
+      updatedAt: meetingAt,
+      actionItems: [],
+    };
+    mocks.updateMeeting.mockResolvedValue({
+      ok: true,
+      data: { id: existingMeeting.id, title: "Updated planning" },
+    });
+    render(
+      <MeetingEditor
+        initialMeeting={existingMeeting}
+        projects={[]}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Meeting title"), {
+      target: { value: "Updated planning" },
+    });
+    fireEvent.submit(document.getElementById("meeting-form")!);
+
+    await waitFor(() => expect(mocks.updateMeeting).toHaveBeenCalledOnce());
+    expect(mocks.updateMeeting).toHaveBeenCalledWith(
+      existingMeeting.id,
+      expect.objectContaining({
+        title: "Updated planning",
+        meetingAt: new Date(meetingAt).toISOString(),
+      }),
+    );
+    expect(mocks.createMeeting).not.toHaveBeenCalled();
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
+  });
+
   it("returns to the originating project after creating from its board", async () => {
     mocks.createMeeting.mockResolvedValue({
       ok: true,
@@ -111,7 +152,6 @@ describe("MeetingEditor", () => {
         key={existingMeeting.id}
         initialMeeting={existingMeeting}
         projects={[]}
-        initialMeetingAt={meetingAt}
       />,
     );
 

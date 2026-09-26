@@ -103,6 +103,21 @@ export function removeTicket(columns: ColumnRecord, ticket: Ticket): ColumnRecor
   return next;
 }
 
+/** Restores one optimistic ticket without replacing changes to other tickets. */
+export function restoreTicket(
+  columns: ColumnRecord,
+  previous: ColumnRecord,
+  ticketId: string,
+): ColumnRecord {
+  const currentTicket = findLoadedTicket(columns, ticketId);
+  const previousTicket = findLoadedTicket(previous, ticketId);
+
+  if (!currentTicket && !previousTicket) return columns;
+
+  const withoutCurrent = currentTicket ? removeTicket(columns, currentTicket) : columns;
+  return previousTicket ? upsertTicket(withoutCurrent, previousTicket) : withoutCurrent;
+}
+
 export function appendTickets(
   columns: ColumnRecord,
   column: ColumnId,
@@ -125,12 +140,17 @@ export function appendTickets(
   };
 }
 
-function findTicketColumn(columns: ColumnRecord, ticketId: string): ColumnId | null {
+function findLoadedTicket(columns: ColumnRecord, ticketId: string): Ticket | undefined {
   for (const column of COLUMNS) {
-    if (columns[column].tickets.some((ticket) => ticket.id === ticketId)) return column;
+    const ticket = columns[column].tickets.find((item) => item.id === ticketId);
+    if (ticket) return ticket;
   }
 
-  return null;
+  return undefined;
+}
+
+function findTicketColumn(columns: ColumnRecord, ticketId: string): ColumnId | null {
+  return findLoadedTicket(columns, ticketId)?.column ?? null;
 }
 
 function withColumnTotal(columns: ColumnRecord, column: ColumnId, delta: number): ColumnRecord {

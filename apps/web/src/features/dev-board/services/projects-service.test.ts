@@ -25,11 +25,13 @@ function createQueryMock(result: { data: unknown; error: unknown }) {
     insert: vi.fn(),
     update: vi.fn(),
     single: vi.fn(),
+    maybeSingle: vi.fn(),
   };
   for (const method of ["select", "order", "eq", "insert", "update"]) {
     query[method].mockReturnValue(query);
   }
   query.single.mockResolvedValue(result);
+  query.maybeSingle.mockResolvedValue(result);
   query.then = (resolve) => Promise.resolve(result).then(resolve);
   return query;
 }
@@ -50,6 +52,21 @@ describe("projectsService", () => {
     });
     expect(database.from).toHaveBeenCalledWith("dev_board_projects");
     expect(query.select).toHaveBeenCalledWith("id,name,description,status,created_at");
+  });
+
+  it("returns null when a project does not exist", async () => {
+    const query = createQueryMock({ data: null, error: null });
+    database.from.mockReturnValue(query);
+
+    await expect(projectsService.getProject("missing")).resolves.toBeNull();
+    expect(query.maybeSingle).toHaveBeenCalledOnce();
+  });
+
+  it("throws backend errors rather than reporting a missing project", async () => {
+    const query = createQueryMock({ data: null, error: { message: "Database unavailable" } });
+    database.from.mockReturnValue(query);
+
+    await expect(projectsService.getProject("project-1")).rejects.toThrow("Database unavailable");
   });
 
   it("persists status when creating a project", async () => {
