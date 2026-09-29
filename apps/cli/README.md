@@ -212,7 +212,7 @@ forge-cli ticket delete <id> --json
 backend RPCs so moves, timers, events, and time entries remain atomic. `--responsible`
 sets an optional free-text name (1–120 characters); `--clear-responsible` explicitly
 clears it, while updates that omit the field preserve the current value. Meetings
-notes and next steps are managed in the web app, not the CLI.
+are managed in the web app, not the CLI.
 Timer-active columns are `in_progress` and `validation`; moving between them
 keeps the timer running, and `review`/`done` stop it.
 

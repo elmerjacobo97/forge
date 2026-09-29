@@ -20,8 +20,6 @@ vi.mock("../actions", () => ({
   updateMeetingAction: mocks.updateMeeting,
   deleteMeetingAction: mocks.deleteMeeting,
 }));
-vi.mock("./meeting-action-items", () => ({ MeetingActionItems: () => null }));
-
 import { MeetingEditor } from "./meeting-editor";
 
 const meetingAt = "2026-09-26T10:00:00.000Z";
@@ -80,7 +78,6 @@ describe("MeetingEditor", () => {
       decisions: ["Ship the first slice"],
       createdAt: meetingAt,
       updatedAt: meetingAt,
-      actionItems: [],
     };
     mocks.updateMeeting.mockResolvedValue({
       ok: true,
@@ -107,7 +104,36 @@ describe("MeetingEditor", () => {
       }),
     );
     expect(mocks.createMeeting).not.toHaveBeenCalled();
-    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
+    await waitFor(() =>
+      expect(mocks.replace).toHaveBeenCalledWith(`/meetings/${existingMeeting.id}`),
+    );
+  });
+
+  it("deletes the meeting from the editor and returns to the history", async () => {
+    const existingMeeting = {
+      id: "d7f1ce67-cf72-4f8e-8545-f0d2fb4ec501",
+      projectId: null,
+      title: "Planning",
+      meetingAt,
+      attendees: [],
+      context: "",
+      decisions: [],
+      createdAt: meetingAt,
+      updatedAt: meetingAt,
+    };
+    mocks.deleteMeeting.mockResolvedValue({ ok: true, data: undefined });
+    render(
+      <MeetingEditor
+        initialMeeting={existingMeeting}
+        projects={[]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete meeting" }));
+
+    await waitFor(() => expect(mocks.deleteMeeting).toHaveBeenCalledWith(existingMeeting.id));
+    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/meetings"));
   });
 
   it("returns to the originating project after creating from its board", async () => {
@@ -144,7 +170,6 @@ describe("MeetingEditor", () => {
       decisions: ["Old decision"],
       createdAt: meetingAt,
       updatedAt: meetingAt,
-      actionItems: [],
     };
     mocks.createMeeting.mockResolvedValue({ ok: true, data: { id: "meeting-3" } });
     const { rerender } = render(

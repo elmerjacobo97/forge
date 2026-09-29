@@ -21,7 +21,7 @@ Hoy el objetivo no es ser un producto SaaS, sino la herramienta diaria del autor
 ### Superficies con datos
 
 - **Dev Board:** kanban por proyecto con columnas fijas, drag & drop, time tracking automático en "In Progress", analítica (cycle time, tiempo registrado, throughput), responsable de texto libre opcional y actualización en vivo vía InsForge realtime (los cambios del CLI se reflejan sin recargar).
-- **Meetings:** diario privado de reuniones manuales con proyecto opcional, fecha/hora, asistentes, contexto, decisiones y próximos pasos. Un próximo paso se convierte explícitamente en ticket sin perder su vínculo; la herramienta no está expuesta por CLI ni MCP.
+- **Meetings:** diario privado de reuniones manuales con proyecto opcional, fecha/hora, asistentes, contexto y decisiones; la herramienta no está expuesta por CLI ni MCP.
 - **Resources:** enlaces con categoría, tags y descripción. Web y CLI usan misma tabla `resources`.
 - **Ideas:** captura de ideas con título, contenido, estado, categoría, tags y enlaces.
 - **Webhook Inspector:** URLs temporales que capturan requests entrantes para inspección.

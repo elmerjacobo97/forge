@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const database = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn() }));
+const database = vi.hoisted(() => ({ from: vi.fn() }));
 const createInsForgeServerClient = vi.hoisted(() => vi.fn(async () => ({ database })));
 
 vi.mock("@/lib/insforge/server", () => ({ createInsForgeServerClient }));
@@ -19,30 +19,15 @@ const meetingRow = {
   updated_at: "2026-09-26T10:00:00.000Z",
 };
 
-const actionItemRow = {
-  id: "action-1",
-  meeting_id: "meeting-1",
-  title: "Send the recap",
-  details: "Share key decisions.",
-  responsible_name: "Sam",
-  due_date: "2026-09-30",
-  is_completed: false,
-  ticket_id: null,
-  created_at: "2026-09-26T10:10:00.000Z",
-  updated_at: "2026-09-26T10:10:00.000Z",
-};
-
 function makeQuery() {
   const query: Record<string, ReturnType<typeof vi.fn>> = {};
-  for (const method of ["select", "eq", "or", "order", "insert", "update", "delete", "is", "in"]) {
+  for (const method of ["select", "eq", "or", "order", "insert", "update", "delete"]) {
     query[method] = vi.fn(() => query);
   }
   query.single = vi.fn();
   query.maybeSingle = vi.fn();
   query.range = vi.fn();
-  query.then = vi.fn((resolve) =>
-    Promise.resolve({ data: [actionItemRow], error: null }).then(resolve),
-  );
+  query.then = vi.fn((resolve) => Promise.resolve({ data: [], error: null }).then(resolve));
   return query;
 }
 
@@ -107,70 +92,17 @@ describe("meetingsService.fetchMeetingsPage", () => {
 });
 
 describe("meetingsService.getMeeting", () => {
-  it("loads the meeting and its action items", async () => {
+  it("loads and maps a meeting", async () => {
     const meetingQuery = makeQuery();
     meetingQuery.maybeSingle.mockResolvedValue({ data: meetingRow, error: null });
-    const actionQuery = makeQuery();
-    database.from.mockReturnValueOnce(meetingQuery).mockReturnValueOnce(actionQuery);
+    database.from.mockReturnValue(meetingQuery);
 
     await expect(meetingsService.getMeeting("meeting-1")).resolves.toMatchObject({
       id: "meeting-1",
       title: "Weekly planning",
-      actionItems: [
-        {
-          id: "action-1",
-          meetingId: "meeting-1",
-          responsibleName: "Sam",
-          dueDate: "2026-09-30",
-          ticketId: null,
-        },
-      ],
+      projectId: null,
+      context: meetingRow.context,
     });
-    expect(actionQuery.order).toHaveBeenCalledWith("created_at", { ascending: true });
-    expect(actionQuery.order).toHaveBeenCalledWith("id", { ascending: true });
-  });
-
-  it("maps linked ticket details for a converted action item", async () => {
-    const meetingQuery = makeQuery();
-    meetingQuery.maybeSingle.mockResolvedValue({ data: meetingRow, error: null });
-    const linkedItem = { ...actionItemRow, ticket_id: "ticket-1" };
-    const actionQuery = makeQuery();
-    actionQuery.then = vi.fn((resolve) =>
-      Promise.resolve({ data: [linkedItem], error: null }).then(resolve),
-    );
-    const ticketQuery = makeQuery();
-    ticketQuery.then = vi.fn((resolve) =>
-      Promise.resolve({
-        data: [
-          {
-            id: "ticket-1",
-            project_id: "project-1",
-            title: "Send the recap",
-            column_id: "in_progress",
-          },
-        ],
-        error: null,
-      }).then(resolve),
-    );
-    database.from
-      .mockReturnValueOnce(meetingQuery)
-      .mockReturnValueOnce(actionQuery)
-      .mockReturnValueOnce(ticketQuery);
-
-    await expect(meetingsService.getMeeting("meeting-1")).resolves.toMatchObject({
-      actionItems: [
-        {
-          ticketId: "ticket-1",
-          linkedTicket: {
-            id: "ticket-1",
-            projectId: "project-1",
-            title: "Send the recap",
-            column: "in_progress",
-          },
-        },
-      ],
-    });
-    expect(ticketQuery.in).toHaveBeenCalledWith("id", ["ticket-1"]);
   });
 });
 
@@ -202,80 +134,83 @@ describe("meeting writes", () => {
     ]);
   });
 
-  it("creates action items without a ticket and preserves responsible/due date", async () => {
+  it("updates a meeting in snake_case and maps the returned row", async () => {
     const query = makeQuery();
-    query.single.mockResolvedValue({ data: actionItemRow, error: null });
-    database.from.mockReturnValue(query);
-
-    await expect(
-      meetingsService.createActionItem("meeting-1", {
-        title: "Send the recap",
-        details: "Share key decisions.",
-        responsibleName: "Sam",
-        dueDate: "2026-09-30",
-      }),
-    ).resolves.toMatchObject({
-      id: "action-1",
-      responsibleName: "Sam",
-      dueDate: "2026-09-30",
-      ticketId: null,
-    });
-    expect(query.insert).toHaveBeenCalledWith([
-      {
-        meeting_id: "meeting-1",
-        title: "Send the recap",
-        details: "Share key decisions.",
-        responsible_name: "Sam",
-        due_date: "2026-09-30",
-      },
-    ]);
-  });
-
-  it("guards completion when an action item already has a ticket", async () => {
-    const query = makeQuery();
-    query.maybeSingle.mockResolvedValue({
-      data: { id: "action-1", ticket_id: "ticket-1" },
+    query.single.mockResolvedValue({
+      data: { ...meetingRow, title: "Updated planning" },
       error: null,
     });
     database.from.mockReturnValue(query);
 
-    await expect(meetingsService.setActionItemCompleted("action-1", true)).rejects.toThrow(
-      "progress is tracked in Dev Board",
+    await expect(
+      meetingsService.updateMeeting("meeting-1", {
+        projectId: null,
+        title: "Updated planning",
+        meetingAt: meetingRow.meeting_at,
+        attendees: ["Alex"],
+        context: meetingRow.context,
+        decisions: meetingRow.decisions,
+      }),
+    ).resolves.toMatchObject({ id: "meeting-1", title: "Updated planning" });
+    expect(query.update).toHaveBeenCalledWith({
+      project_id: null,
+      title: "Updated planning",
+      meeting_at: meetingRow.meeting_at,
+      attendees: ["Alex"],
+      context: meetingRow.context,
+      decisions: meetingRow.decisions,
+    });
+    expect(query.eq).toHaveBeenCalledWith("id", "meeting-1");
+    expect(query.select).toHaveBeenCalledWith(
+      "id,project_id,title,meeting_at,attendees,context,decisions,created_at,updated_at",
     );
-    expect(query.update).not.toHaveBeenCalled();
   });
 
-  it("converts an action item through the atomic RPC", async () => {
-    const ticketRow = {
-      id: "ticket-1",
-      project_id: "project-1",
-      title: "Send the recap",
-      description: "Share key decisions.",
-      column_id: "backlog",
-      position: 0,
-      priority: "med",
-      created_at: "2026-09-26T10:20:00.000Z",
-      timer_started_at: null,
-      total_elapsed_ms: 0,
-      is_paused: true,
-      last_moved_at: "2026-09-26T10:20:00.000Z",
-      branch: null,
-      pr_url: null,
-      responsible_name: "Sam",
-    };
-    database.rpc.mockResolvedValue({ data: ticketRow, error: null });
+  it("surfaces update failures", async () => {
+    const query = makeQuery();
+    query.single.mockResolvedValue({ data: null, error: { message: "update denied" } });
+    database.from.mockReturnValue(query);
 
     await expect(
-      meetingsService.createTicketFromActionItem("action-1", "project-1"),
-    ).resolves.toMatchObject({
-      id: "ticket-1",
-      title: "Send the recap",
-      projectId: "project-1",
-      responsibleName: "Sam",
-    });
-    expect(database.rpc).toHaveBeenCalledWith("create_dev_board_ticket_from_meeting_action", {
-      p_action_item_id: "action-1",
-      p_project_id: "project-1",
-    });
+      meetingsService.updateMeeting("meeting-1", {
+        projectId: null,
+        title: "Updated planning",
+        meetingAt: meetingRow.meeting_at,
+        attendees: [],
+        context: "",
+        decisions: [],
+      }),
+    ).rejects.toThrow("update denied");
+  });
+
+  it("deletes a meeting by id and confirms a row was removed", async () => {
+    const query = makeQuery();
+    query.then = vi.fn((resolve) =>
+      Promise.resolve({ data: [{ id: "meeting-1" }], error: null }).then(resolve),
+    );
+    database.from.mockReturnValue(query);
+
+    await expect(meetingsService.deleteMeeting("meeting-1")).resolves.toBeUndefined();
+    expect(query.delete).toHaveBeenCalledOnce();
+    expect(query.eq).toHaveBeenCalledWith("id", "meeting-1");
+    expect(query.select).toHaveBeenCalledWith("id");
+  });
+
+  it("fails the delete when no meeting was removed", async () => {
+    const query = makeQuery();
+    query.then = vi.fn((resolve) => Promise.resolve({ data: [], error: null }).then(resolve));
+    database.from.mockReturnValue(query);
+
+    await expect(meetingsService.deleteMeeting("meeting-1")).rejects.toThrow("Meeting not found.");
+  });
+
+  it("surfaces delete failures", async () => {
+    const query = makeQuery();
+    query.then = vi.fn((resolve) =>
+      Promise.resolve({ data: null, error: { message: "delete denied" } }).then(resolve),
+    );
+    database.from.mockReturnValue(query);
+
+    await expect(meetingsService.deleteMeeting("meeting-1")).rejects.toThrow("delete denied");
   });
 });

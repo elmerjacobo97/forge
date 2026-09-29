@@ -31,7 +31,7 @@ export const tools: ToolDef[] = [
     id: "meetings",
     path: "/meetings",
     name: "Meetings",
-    description: "Keep meeting notes, decisions, and next steps together",
+    description: "Keep meeting notes and decisions together",
     icon: Calendar03Icon,
     category: "Productivity",
   },

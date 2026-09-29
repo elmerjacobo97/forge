@@ -8,13 +8,13 @@
 - **Sin TanStack Query:** el server-state se maneja con lecturas en servidor, Server Actions para mutaciones y Route Handlers para polling/paginación de cliente.
 - **Tools activas (6):** Dev Board, Meetings, Ideas, Resources, Webhook Inspector y Uptime Monitor.
 - **Limpieza actual:** se quitaron utilidades de navegador, AI generation y Settings. Bookmarks pasa a Resources; su migración conserva links y elimina filas del Resources anterior. Webhook Inspector y Uptime Monitor permanecen intactos.
-- **Tests:** 669 tests con Vitest en core, web, CLI y MCP.
+- **Tests:** 689 tests con Vitest en core, web, CLI y MCP.
 
 ## Hecho en la última pasada
 
 - Poda de herramientas y dependencias huérfanas.
 - Resources ahora comparte una tabla y un contrato entre web y CLI; `bookmark` sigue como alias.
-- Meetings añade notas privadas y conversión explícita de próximos pasos en tickets; el responsable opcional de texto libre está disponible en Dev Board web, CLI y MCP.
+- Meetings añade notas privadas; el responsable opcional de texto libre está disponible en Dev Board web, CLI y MCP.
 - Filtros de listas en `searchParams` con islas de cliente mínimas.
 - Un módulo por diálogo (`add`, `edit`, `delete`) en cada recurso.
 - Route Handlers para: eventos de webhook, detalle de uptime, paginación de tickets y analítica del board.

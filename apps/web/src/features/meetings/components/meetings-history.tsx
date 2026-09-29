@@ -3,12 +3,10 @@
 import { useCallback, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { format } from "date-fns";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Calendar03Icon, PlusSignIcon, Search01Icon } from "@hugeicons/core-free-icons";
 
 import { ListPagination } from "@/components/list-pagination";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -27,18 +25,15 @@ import {
 } from "@/components/ui/select";
 import { useUrlSearch } from "@/lib/hooks/use-url-search";
 import type { MeetingFilters } from "../schemas/meeting";
-import type { Meeting, MeetingsPage } from "../types";
+import type { MeetingsPage } from "../types";
 import type { Project } from "@/features/dev-board/types/project";
+import { MeetingRow } from "./meeting-row";
 
 function buildQuery(filters: MeetingFilters): string {
   const params = new URLSearchParams();
   if (filters.q) params.set("q", filters.q);
   if (filters.projectId) params.set("projectId", filters.projectId);
   return params.toString();
-}
-
-function formatMeetingDate(meetingAt: string): string {
-  return format(new Date(meetingAt), "EEE, MMM d, yyyy · h:mm a");
 }
 
 export function MeetingsHistory({
@@ -69,9 +64,8 @@ export function MeetingsHistory({
     <div className="flex h-full min-h-0 flex-col gap-5">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs text-muted-foreground">Field notes</p>
-          <h1 className="mt-1 font-heading text-2xl font-semibold tracking-tight">Meetings</h1>
-          <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+          <h1 className="font-heading text-lg font-medium tracking-tight">Meetings</h1>
+          <p className="text-xs text-muted-foreground">
             Decisions, context, and the work that follows each conversation.
           </p>
         </div>
@@ -143,7 +137,7 @@ export function MeetingsHistory({
               </EmptyTitle>
               <EmptyDescription>
                 {page.total === 0
-                  ? "Keep decisions and next steps together. Start with a meeting note."
+                  ? "Keep meeting context and decisions together. Start with a meeting note."
                   : "Try another search or choose a different project."}
               </EmptyDescription>
             </EmptyHeader>
@@ -157,22 +151,14 @@ export function MeetingsHistory({
             ) : null}
           </Empty>
         ) : (
-          <div className="mx-auto max-w-4xl">
-            <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
-              <span>
-                {page.total} {page.total === 1 ? "entry" : "entries"}
-              </span>
-              {isNavigating ? <span role="status">Updating…</span> : null}
-            </div>
-            <ol className="divide-y divide-border/70 border-y border-border/70">
-              {page.meetings.map((meeting) => (
-                <MeetingHistoryEntry
-                  key={meeting.id}
-                  meeting={meeting}
-                  projectName={meeting.projectId ? projectNames.get(meeting.projectId) : undefined}
-                />
-              ))}
-            </ol>
+          <div className="divide-y divide-border border border-border bg-card">
+            {page.meetings.map((meeting) => (
+              <MeetingRow
+                key={meeting.id}
+                meeting={meeting}
+                projectName={meeting.projectId ? projectNames.get(meeting.projectId) : undefined}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -182,62 +168,5 @@ export function MeetingsHistory({
         total={page.total}
       />
     </div>
-  );
-}
-
-function MeetingHistoryEntry({ meeting, projectName }: { meeting: Meeting; projectName?: string }) {
-  return (
-    <li>
-      <Link
-        href={`/meetings/${meeting.id}`}
-        className="group grid gap-3 py-4 outline-none transition-colors hover:bg-accent/30 focus-visible:bg-accent/30 sm:grid-cols-[168px_minmax(0,1fr)] sm:gap-6 sm:px-3"
-      >
-        <div className="flex items-start gap-2 text-xs text-muted-foreground sm:block">
-          <HugeiconsIcon
-            icon={Calendar03Icon}
-            strokeWidth={1.8}
-            className="mt-0.5 size-3.5 shrink-0"
-          />
-          <time
-            dateTime={meeting.meetingAt}
-            className="tabular-nums"
-          >
-            {formatMeetingDate(meeting.meetingAt)}
-          </time>
-        </div>
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="min-w-0 flex-1 truncate font-heading text-base font-medium tracking-tight group-hover:underline">
-              {meeting.title}
-            </h2>
-            {projectName ? (
-              <Badge
-                variant="outline"
-                className="max-w-40 truncate"
-              >
-                {projectName}
-              </Badge>
-            ) : null}
-          </div>
-          <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-            {meeting.context || meeting.decisions[0] || "No context recorded."}
-          </p>
-          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-            {meeting.attendees.length > 0 ? (
-              <span>
-                {meeting.attendees.length}{" "}
-                {meeting.attendees.length === 1 ? "attendee" : "attendees"}
-              </span>
-            ) : null}
-            {meeting.decisions.length > 0 ? (
-              <span>
-                {meeting.decisions.length}{" "}
-                {meeting.decisions.length === 1 ? "decision" : "decisions"}
-              </span>
-            ) : null}
-          </div>
-        </div>
-      </Link>
-    </li>
   );
 }

@@ -15,17 +15,16 @@ vi.mock("@/features/meetings/services/meetings-service", () => ({
 vi.mock("@/features/dev-board/services/projects-service", () => ({
   projectsService: { listProjects: mocks.listProjects },
 }));
-vi.mock("@/features/meetings/components/meeting-detail", () => ({
-  MeetingDetail: () => null,
+vi.mock("@/features/meetings/components/meeting-editor", () => ({
+  MeetingEditor: () => null,
 }));
 
-import MeetingDetailPage from "./page";
+import EditMeetingPage from "./page";
 
 const meetingId = "d7f1ce67-cf72-4f8e-8545-f0d2fb4ec501";
-const projectId = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
 const meeting = {
   id: meetingId,
-  projectId,
+  projectId: null,
   title: "Planning",
   meetingAt: "2026-09-26T10:00:00.000Z",
   attendees: [],
@@ -37,36 +36,27 @@ const meeting = {
 
 beforeEach(() => vi.clearAllMocks());
 
-describe("MeetingDetailPage", () => {
-  it("loads a valid meeting for the read-only detail with its project name", async () => {
+describe("EditMeetingPage", () => {
+  it("loads a valid meeting for the full-page editor", async () => {
     mocks.getMeeting.mockResolvedValue(meeting);
-    mocks.listProjects.mockResolvedValue([{ id: projectId, name: "Forge" }]);
+    mocks.listProjects.mockResolvedValue([]);
 
-    const element = await MeetingDetailPage({ params: Promise.resolve({ meetingId }) });
+    const element = await EditMeetingPage({ params: Promise.resolve({ meetingId }) });
 
     expect(mocks.getMeeting).toHaveBeenCalledWith(meetingId);
-    expect(element.props.meeting).toBe(meeting);
-    expect(element.props.projectName).toBe("Forge");
-  });
-
-  it("leaves the project name undefined when the meeting has no project", async () => {
-    mocks.getMeeting.mockResolvedValue({ ...meeting, projectId: null });
-    mocks.listProjects.mockResolvedValue([{ id: projectId, name: "Forge" }]);
-
-    const element = await MeetingDetailPage({ params: Promise.resolve({ meetingId }) });
-
-    expect(element.props.projectName).toBeUndefined();
+    expect(element.key).toBe(meetingId);
+    expect(element.props.initialMeeting).toBe(meeting);
   });
 
   it("returns not-found for invalid or unavailable meeting ids", async () => {
     await expect(
-      MeetingDetailPage({ params: Promise.resolve({ meetingId: "invalid" }) }),
+      EditMeetingPage({ params: Promise.resolve({ meetingId: "invalid" }) }),
     ).rejects.toThrow("NOT_FOUND");
     expect(mocks.getMeeting).not.toHaveBeenCalled();
 
     mocks.getMeeting.mockResolvedValue(null);
     mocks.listProjects.mockResolvedValue([]);
-    await expect(MeetingDetailPage({ params: Promise.resolve({ meetingId }) })).rejects.toThrow(
+    await expect(EditMeetingPage({ params: Promise.resolve({ meetingId }) })).rejects.toThrow(
       "NOT_FOUND",
     );
   });

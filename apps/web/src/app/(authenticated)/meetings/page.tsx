@@ -1,6 +1,3 @@
-import { redirect } from "next/navigation";
-
-import { getCurrentUser } from "@/features/auth/server";
 import { MeetingsHistory } from "@/features/meetings/components/meetings-history";
 import { parseMeetingFilters } from "@/features/meetings/schemas/meeting";
 import { meetingsService } from "@/features/meetings/services/meetings-service";
@@ -12,9 +9,6 @@ export default async function MeetingsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-
   const params = await searchParams;
   const filters = parseMeetingFilters(params);
   const visible = parseVisibleParam(params.visible);

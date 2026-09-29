@@ -20,7 +20,7 @@ docs            Producto, roadmap e ideas
 specs           Especificaciones por feature
 ```
 
-Cada feature de `apps/web/src/features/<feature>` es dueña de sus `components/`, `hooks/`, `schemas/`, `services/`, `types/`, `utils/` y `actions.ts` (Server Actions). Meetings es una herramienta web privada para notas y próximos pasos; los tickets de Dev Board pueden llevar un responsable de texto libre. Las rutas en `src/app` son delgadas y solo componen features. Los tests web viven junto al módulo que cubren; los del CLI se agrupan en `apps/cli/tests/` por tipo (`schemas`, `services`, `lib`, `commands`).
+Cada feature de `apps/web/src/features/<feature>` es dueña de sus `components/`, `hooks/`, `schemas/`, `services/`, `types/`, `utils/` y `actions.ts` (Server Actions). Meetings es una herramienta web privada para notas y decisiones; los tickets de Dev Board pueden llevar un responsable de texto libre. Las rutas en `src/app` son delgadas y solo componen features. Los tests web viven junto al módulo que cubren; los del CLI se agrupan en `apps/cli/tests/` por tipo (`schemas`, `services`, `lib`, `commands`).
 
 ## Comandos
 

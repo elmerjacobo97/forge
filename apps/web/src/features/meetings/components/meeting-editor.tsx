@@ -10,14 +10,6 @@ import { ArrowLeft01Icon, Delete02Icon, SaveIcon } from "@hugeicons/core-free-ic
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,11 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { createMeetingAction, deleteMeetingAction, updateMeetingAction } from "../actions";
+import { createMeetingAction, updateMeetingAction } from "../actions";
 import { meetingFormSchema, type MeetingFormValues } from "../schemas/meeting";
-import type { MeetingDetail } from "../types";
+import type { Meeting } from "../types";
 import type { Project } from "@/features/dev-board/types/project";
-import { MeetingActionItems } from "./meeting-action-items";
+import { DeleteMeetingDialog } from "./delete-meeting-dialog";
 
 function toLocalDateTime(value: string): string {
   const date = new Date(value);
@@ -40,7 +32,7 @@ function toLocalDateTime(value: string): string {
 }
 
 function getMeetingFormDefaults(
-  initialMeeting: MeetingDetail | null,
+  initialMeeting: Meeting | null,
   initialProjectId: string | null,
   initialMeetingAt: string,
   isHydrated: boolean,
@@ -69,7 +61,7 @@ type MeetingEditorProps = {
       initialMeetingAt: string;
     }
   | {
-      initialMeeting: MeetingDetail;
+      initialMeeting: Meeting;
       initialProjectId?: never;
       returnToProjectId?: never;
       initialMeetingAt?: never;
@@ -87,10 +79,9 @@ export function MeetingEditor(props: MeetingEditorProps) {
   const router = useRouter();
   const isHydrated = useSyncExternalStore(subscribeToNothing, getClientSnapshot, getServerSnapshot);
   const isEditing = initialMeeting !== null;
-  const [meeting, setMeeting] = useState<MeetingDetail | null>(initialMeeting);
+  const meeting = initialMeeting;
   const [isSaving, startSaving] = useTransition();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [isDeleting, startDeleting] = useTransition();
   const form = useForm({
     defaultValues: getMeetingFormDefaults(
       initialMeeting,
@@ -111,12 +102,13 @@ export function MeetingEditor(props: MeetingEditorProps) {
         }
 
         toast.success(meeting ? "Meeting saved." : "Meeting created.");
-        if (!meeting) {
-          router.replace(returnToProjectId ? `/dev-board/${returnToProjectId}` : "/meetings");
-          return;
-        }
-        setMeeting((current) => (current ? { ...current, ...result.data } : null));
-        router.refresh();
+        router.replace(
+          meeting
+            ? `/meetings/${meeting.id}`
+            : returnToProjectId
+              ? `/dev-board/${returnToProjectId}`
+              : "/meetings",
+        );
       });
     },
   });
@@ -125,22 +117,6 @@ export function MeetingEditor(props: MeetingEditorProps) {
       getMeetingFormDefaults(initialMeeting, initialProjectId, initialMeetingAt, isHydrated),
     );
   }, [form, initialMeeting, initialMeetingAt, initialProjectId, isHydrated, returnToProjectId]);
-
-  function confirmDelete() {
-    if (!meeting) return;
-    startDeleting(async () => {
-      const result = await deleteMeetingAction(meeting.id);
-      if (!result.ok) {
-        toast.error(result.message);
-        return;
-      }
-      toast.success("Meeting deleted. Linked tickets remain on Dev Board.");
-      router.push("/meetings");
-    });
-  }
-
-  const linkedTicketCount =
-    meeting?.actionItems.filter((item) => item.ticketId !== null).length ?? 0;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 pb-8">
@@ -408,79 +384,14 @@ export function MeetingEditor(props: MeetingEditorProps) {
       </form>
 
       {meeting ? (
-        <section
-          aria-labelledby="action-items-heading"
-          className="border-t border-border/70 pt-6"
-        >
-          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-            <h2
-              id="action-items-heading"
-              className="font-heading text-lg font-semibold tracking-tight"
-            >
-              Next steps
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Nothing becomes a ticket until you choose to create one.
-            </p>
-          </div>
-          <MeetingActionItems
-            meetingId={meeting.id}
-            projectId={meeting.projectId}
-            projects={projects}
-            initialItems={meeting.actionItems}
-          />
-        </section>
-      ) : (
-        <section
-          className="border-t border-border/70 pt-6"
-          aria-labelledby="action-items-heading"
-        >
-          <h2
-            id="action-items-heading"
-            className="font-heading text-lg font-semibold tracking-tight"
-          >
-            Next steps
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Save this meeting first, then add its next steps here.
-          </p>
-        </section>
-      )}
-
-      <Dialog
-        open={isDeleteOpen}
-        onOpenChange={setIsDeleteOpen}
-      >
-        <DialogContent
-          onInteractOutside={(event) => event.preventDefault()}
-          className="max-w-md sm:max-w-md"
-        >
-          <DialogHeader>
-            <DialogTitle>Delete this meeting?</DialogTitle>
-            <DialogDescription>
-              Its notes and next steps will be removed.{" "}
-              {linkedTicketCount > 0
-                ? `${linkedTicketCount} linked ${linkedTicketCount === 1 ? "ticket stays" : "tickets stay"} on Dev Board.`
-                : "Tickets are never deleted with a meeting."}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setIsDeleteOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Deleting…" : "Delete meeting"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <DeleteMeetingDialog
+          meetingId={meeting.id}
+          meetingTitle={meeting.title}
+          isOpen={isDeleteOpen}
+          onOpenChange={setIsDeleteOpen}
+          onDeleted={() => router.push("/meetings")}
+        />
+      ) : null}
     </div>
   );
 }

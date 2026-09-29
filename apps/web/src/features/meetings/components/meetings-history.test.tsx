@@ -1,15 +1,21 @@
 // @vitest-environment jsdom
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-const mocks = vi.hoisted(() => ({ replace: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  replace: vi.fn(),
+  refresh: vi.fn(),
+  deleteMeeting: vi.fn(),
+}));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/meetings",
-  useRouter: () => ({ replace: mocks.replace }),
+  useRouter: () => ({ replace: mocks.replace, refresh: mocks.refresh }),
   useSearchParams: () => new URLSearchParams(),
 }));
+vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
+vi.mock("../actions", () => ({ deleteMeetingAction: mocks.deleteMeeting }));
 
 import { MeetingsHistory } from "./meetings-history";
 
@@ -34,22 +40,26 @@ const meeting = {
 };
 
 beforeEach(() => {
-  vi.useFakeTimers();
-  mocks.replace.mockClear();
+  vi.clearAllMocks();
   Element.prototype.scrollIntoView = vi.fn();
+  Element.prototype.hasPointerCapture = vi.fn();
+  Element.prototype.setPointerCapture = vi.fn();
+  Element.prototype.releasePointerCapture = vi.fn();
 });
 
-afterEach(() => vi.useRealTimers());
+function renderHistory(meetings = [meeting], total = 1) {
+  return render(
+    <MeetingsHistory
+      page={{ meetings, total }}
+      filters={{ q: "", projectId: null }}
+      projects={[project]}
+    />,
+  );
+}
 
 describe("MeetingsHistory", () => {
-  it("renders meeting notes and links to create and edit pages", () => {
-    render(
-      <MeetingsHistory
-        page={{ meetings: [meeting], total: 1 }}
-        filters={{ q: "", projectId: null }}
-        projects={[project]}
-      />,
-    );
+  it("renders meeting rows with metadata and links to detail and creation", () => {
+    renderHistory();
 
     expect(screen.getByRole("heading", { name: "Meetings" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "New meeting" }).getAttribute("href")).toBe(
@@ -59,16 +69,12 @@ describe("MeetingsHistory", () => {
       `/meetings/${meeting.id}`,
     );
     expect(screen.getByText("Forge")).toBeTruthy();
+    expect(screen.getByText("1 attendee")).toBeTruthy();
+    expect(screen.getByText("1 decision")).toBeTruthy();
   });
 
-  it("writes search and project filters to the URL", () => {
-    render(
-      <MeetingsHistory
-        page={{ meetings: [], total: 0 }}
-        filters={{ q: "", projectId: null }}
-        projects={[project]}
-      />,
-    );
+  it("writes search and project filters to the URL", async () => {
+    renderHistory([], 0);
 
     fireEvent.change(
       screen.getByRole("searchbox", { name: "Search meetings by title or context" }),
@@ -76,11 +82,45 @@ describe("MeetingsHistory", () => {
         target: { value: "release" },
       },
     );
-    act(() => vi.advanceTimersByTime(250));
-    expect(mocks.replace).toHaveBeenCalledWith("/meetings?q=release");
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/meetings?q=release"));
 
     fireEvent.click(screen.getByRole("combobox", { name: "Filter meetings by project" }));
     fireEvent.click(screen.getByRole("option", { name: "Forge" }));
     expect(mocks.replace).toHaveBeenLastCalledWith(`/meetings?projectId=${projectId}`);
+  });
+
+  it("links each row menu to the editor", async () => {
+    renderHistory();
+
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Actions for Release planning" }));
+
+    const editItem = await screen.findByRole("menuitem", { name: "Edit" });
+    expect(editItem.getAttribute("href")).toBe(`/meetings/${meeting.id}/edit`);
+  });
+
+  it("deletes a meeting from the row menu and refreshes the list", async () => {
+    mocks.deleteMeeting.mockResolvedValue({ ok: true, data: undefined });
+    renderHistory();
+
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Actions for Release planning" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
+
+    expect(screen.getByText("Delete this meeting?")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Delete meeting" }));
+
+    await waitFor(() => expect(mocks.deleteMeeting).toHaveBeenCalledWith(meeting.id));
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
+  });
+
+  it("keeps the row when deletion fails", async () => {
+    mocks.deleteMeeting.mockResolvedValue({ ok: false, message: "delete denied" });
+    renderHistory();
+
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Actions for Release planning" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete meeting" }));
+
+    await waitFor(() => expect(mocks.deleteMeeting).toHaveBeenCalledOnce());
+    expect(mocks.refresh).not.toHaveBeenCalled();
   });
 });

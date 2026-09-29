@@ -1,7 +1,5 @@
-import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { getCurrentUser } from "@/features/auth/server";
 import { MeetingEditor } from "@/features/meetings/components/meeting-editor";
 import { projectsService } from "@/features/dev-board/services/projects-service";
 
@@ -10,9 +8,6 @@ export default async function NewMeetingPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-
   const [params, projects] = await Promise.all([searchParams, projectsService.listProjects()]);
   const rawProjectId = typeof params.projectId === "string" ? params.projectId : undefined;
   const parsedProjectId = z.uuid().safeParse(rawProjectId);

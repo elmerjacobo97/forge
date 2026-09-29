@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { z } from "zod";
 
-import { MeetingDetail } from "@/features/meetings/components/meeting-detail";
+import { MeetingEditor } from "@/features/meetings/components/meeting-editor";
 import { meetingsService } from "@/features/meetings/services/meetings-service";
 import { projectsService } from "@/features/dev-board/services/projects-service";
 
-export default async function MeetingDetailPage({
+export default async function EditMeetingPage({
   params,
 }: {
   params: Promise<{ meetingId: string }>;
@@ -20,14 +20,11 @@ export default async function MeetingDetailPage({
   ]);
   if (!meeting) notFound();
 
-  const projectName = meeting.projectId
-    ? projects.find((project) => project.id === meeting.projectId)?.name
-    : undefined;
-
   return (
-    <MeetingDetail
-      meeting={meeting}
-      projectName={projectName}
+    <MeetingEditor
+      key={meeting.id}
+      initialMeeting={meeting}
+      projects={projects}
     />
   );
 }

@@ -37,23 +37,6 @@ export const meetingFormSchema = meetingSchema.extend({
 
 export type MeetingFormValues = z.input<typeof meetingFormSchema>;
 
-export const meetingActionItemSchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(1, "Action item title is required.")
-    .max(120, "Action item title must be at most 120 characters."),
-  details: z.string().trim().max(2000, "Action item details must be at most 2000 characters."),
-  responsibleName: z
-    .string()
-    .trim()
-    .max(120, "Responsible name must be at most 120 characters.")
-    .transform((value) => value || null),
-  dueDate: z.iso.date().nullable(),
-});
-
-export type MeetingActionItemInput = z.infer<typeof meetingActionItemSchema>;
-
 export const meetingFiltersSchema = z.object({
   q: z.string().trim(),
   projectId: z.uuid().nullable(),

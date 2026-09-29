@@ -3,16 +3,8 @@ import "server-only";
 import { z } from "zod";
 
 import { createInsForgeServerClient } from "@/lib/insforge/server";
-import { ticketRowSchema, toTicket } from "@/features/dev-board/utils/ticket-row";
-import type { Ticket } from "@/features/dev-board/types/board";
-import type { MeetingActionItemInput, MeetingFilters, MeetingInput } from "../schemas/meeting";
-import type {
-  Meeting,
-  MeetingActionItem,
-  MeetingDetail,
-  MeetingLinkedTicket,
-  MeetingsPage,
-} from "../types";
+import type { MeetingFilters, MeetingInput } from "../schemas/meeting";
+import type { Meeting, MeetingsPage } from "../types";
 import { buildMeetingSearchFilter } from "../utils/query-filters";
 
 const meetingRowSchema = z.object({
@@ -27,30 +19,8 @@ const meetingRowSchema = z.object({
   updated_at: z.string(),
 });
 
-const meetingTicketRowSchema = z.object({
-  id: z.string(),
-  project_id: z.string(),
-  title: z.string(),
-  column_id: z.enum(["backlog", "todo", "in_progress", "validation", "review", "done"]),
-});
-
-const actionItemRowSchema = z.object({
-  id: z.string(),
-  meeting_id: z.string(),
-  title: z.string(),
-  details: z.string(),
-  responsible_name: z.string().nullable(),
-  due_date: z.string().nullable(),
-  is_completed: z.boolean(),
-  ticket_id: z.string().nullable(),
-  created_at: z.string(),
-  updated_at: z.string(),
-});
-
 const MEETING_COLUMNS =
   "id,project_id,title,meeting_at,attendees,context,decisions,created_at,updated_at";
-const ACTION_ITEM_COLUMNS =
-  "id,meeting_id,title,details,responsible_name,due_date,is_completed,ticket_id,created_at,updated_at";
 
 function toMeeting(value: unknown): Meeting {
   const row = meetingRowSchema.parse(value);
@@ -62,22 +32,6 @@ function toMeeting(value: unknown): Meeting {
     attendees: row.attendees,
     context: row.context,
     decisions: row.decisions,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-}
-
-function toActionItem(value: unknown): MeetingActionItem {
-  const row = actionItemRowSchema.parse(value);
-  return {
-    id: row.id,
-    meetingId: row.meeting_id,
-    title: row.title,
-    details: row.details,
-    responsibleName: row.responsible_name,
-    dueDate: row.due_date,
-    isCompleted: row.is_completed,
-    ticketId: row.ticket_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -95,15 +49,6 @@ function meetingPayload(meeting: MeetingInput) {
     attendees: meeting.attendees,
     context: meeting.context,
     decisions: meeting.decisions,
-  };
-}
-
-function actionItemPayload(item: MeetingActionItemInput) {
-  return {
-    title: item.title,
-    details: item.details,
-    responsible_name: item.responsibleName,
-    due_date: item.dueDate,
   };
 }
 
@@ -138,7 +83,7 @@ export const meetingsService = {
     };
   },
 
-  async getMeeting(meetingId: string): Promise<MeetingDetail | null> {
+  async getMeeting(meetingId: string): Promise<Meeting | null> {
     const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database
       .from("meetings")
@@ -147,43 +92,7 @@ export const meetingsService = {
       .maybeSingle();
     if (error) throw failure(error, "Failed to load meeting.");
     if (!data) return null;
-
-    const { data: actionItemsData, error: actionItemsError } = await insforge.database
-      .from("meeting_action_items")
-      .select(ACTION_ITEM_COLUMNS)
-      .eq("meeting_id", meetingId)
-      .order("created_at", { ascending: true })
-      .order("id", { ascending: true });
-    if (actionItemsError) throw failure(actionItemsError, "Failed to load meeting action items.");
-
-    const actionItems = actionItemRowSchema.array().parse(actionItemsData).map(toActionItem);
-    const ticketIds = actionItems.flatMap((item) => (item.ticketId ? [item.ticketId] : []));
-    const linkedTickets = new Map<string, MeetingLinkedTicket>();
-
-    if (ticketIds.length > 0) {
-      const { data: ticketsData, error: ticketsError } = await insforge.database
-        .from("dev_board_tickets")
-        .select("id,project_id,title,column_id")
-        .in("id", ticketIds);
-      if (ticketsError) throw failure(ticketsError, "Failed to load linked tickets.");
-
-      for (const ticket of meetingTicketRowSchema.array().parse(ticketsData)) {
-        linkedTickets.set(ticket.id, {
-          id: ticket.id,
-          projectId: ticket.project_id,
-          title: ticket.title,
-          column: ticket.column_id,
-        });
-      }
-    }
-
-    return {
-      ...toMeeting(data),
-      actionItems: actionItems.map((item) => ({
-        ...item,
-        linkedTicket: item.ticketId ? (linkedTickets.get(item.ticketId) ?? null) : null,
-      })),
-    };
+    return toMeeting(data);
   },
 
   async createMeeting(input: MeetingInput): Promise<Meeting> {
@@ -211,89 +120,12 @@ export const meetingsService = {
 
   async deleteMeeting(meetingId: string): Promise<void> {
     const insforge = await createInsForgeServerClient();
-    const { error } = await insforge.database.from("meetings").delete().eq("id", meetingId);
-    if (error) throw failure(error, "Failed to delete meeting.");
-  },
-
-  async createActionItem(
-    meetingId: string,
-    input: MeetingActionItemInput,
-  ): Promise<MeetingActionItem> {
-    const insforge = await createInsForgeServerClient();
     const { data, error } = await insforge.database
-      .from("meeting_action_items")
-      .insert([{ meeting_id: meetingId, ...actionItemPayload(input) }])
-      .select(ACTION_ITEM_COLUMNS)
-      .single();
-    if (error) throw failure(error, "Failed to create meeting action item.");
-    return toActionItem(data);
-  },
-
-  async updateActionItem(
-    actionItemId: string,
-    input: MeetingActionItemInput,
-  ): Promise<MeetingActionItem> {
-    const insforge = await createInsForgeServerClient();
-    const { data, error } = await insforge.database
-      .from("meeting_action_items")
-      .update(actionItemPayload(input))
-      .eq("id", actionItemId)
-      .select(ACTION_ITEM_COLUMNS)
-      .single();
-    if (error) throw failure(error, "Failed to update meeting action item.");
-    return toActionItem(data);
-  },
-
-  async setActionItemCompleted(
-    actionItemId: string,
-    isCompleted: boolean,
-  ): Promise<MeetingActionItem> {
-    const insforge = await createInsForgeServerClient();
-    const { data: currentData, error: currentError } = await insforge.database
-      .from("meeting_action_items")
-      .select("id,ticket_id")
-      .eq("id", actionItemId)
-      .maybeSingle();
-    if (currentError) throw failure(currentError, "Failed to update meeting action item.");
-    if (!currentData) throw new Error("Meeting action item not found.");
-    const current = z
-      .object({ id: z.string(), ticket_id: z.string().nullable() })
-      .parse(currentData);
-    if (current.ticket_id) {
-      throw new Error("Linked action item progress is tracked in Dev Board.");
-    }
-
-    const { data, error } = await insforge.database
-      .from("meeting_action_items")
-      .update({ is_completed: isCompleted })
-      .eq("id", actionItemId)
-      .is("ticket_id", null)
-      .select(ACTION_ITEM_COLUMNS)
-      .maybeSingle();
-    if (error) throw failure(error, "Failed to update meeting action item.");
-    if (!data) throw new Error("Linked action item progress is tracked in Dev Board.");
-    return toActionItem(data);
-  },
-
-  async deleteActionItem(actionItemId: string): Promise<void> {
-    const insforge = await createInsForgeServerClient();
-    const { error } = await insforge.database
-      .from("meeting_action_items")
+      .from("meetings")
       .delete()
-      .eq("id", actionItemId);
-    if (error) throw failure(error, "Failed to delete meeting action item.");
-  },
-
-  async createTicketFromActionItem(
-    actionItemId: string,
-    projectId?: string | null,
-  ): Promise<Ticket> {
-    const insforge = await createInsForgeServerClient();
-    const { data, error } = await insforge.database.rpc(
-      "create_dev_board_ticket_from_meeting_action",
-      { p_action_item_id: actionItemId, p_project_id: projectId ?? null },
-    );
-    if (error) throw failure(error, "Failed to create ticket from meeting action item.");
-    return toTicket(ticketRowSchema.parse(Array.isArray(data) ? data[0] : data));
+      .eq("id", meetingId)
+      .select("id");
+    if (error) throw failure(error, "Failed to delete meeting.");
+    if (!data || data.length === 0) throw new Error("Meeting not found.");
   },
 };

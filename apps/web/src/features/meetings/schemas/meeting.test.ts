@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  meetingActionItemSchema,
   meetingFiltersSchema,
   meetingFormSchema,
   meetingSchema,
@@ -71,38 +70,6 @@ describe("meetingFormSchema", () => {
     };
     expect(meetingFormSchema.safeParse({ ...values, projectId: "bad" }).success).toBe(false);
     expect(meetingFormSchema.safeParse({ ...values, meetingAt: "" }).success).toBe(false);
-  });
-});
-
-describe("meetingActionItemSchema", () => {
-  it("trims and normalizes an empty responsible name to null", () => {
-    expect(
-      meetingActionItemSchema.parse({
-        title: "  Send the recap  ",
-        details: "  Share the key decisions.  ",
-        responsibleName: "  ",
-        dueDate: null,
-      }),
-    ).toEqual({
-      title: "Send the recap",
-      details: "Share the key decisions.",
-      responsibleName: null,
-      dueDate: null,
-    });
-  });
-
-  it("enforces ticket-compatible title, details and responsible-name limits", () => {
-    const input = { title: "Action", details: "", responsibleName: "Sam", dueDate: null };
-    expect(meetingActionItemSchema.safeParse({ ...input, title: "x".repeat(121) }).success).toBe(
-      false,
-    );
-    expect(meetingActionItemSchema.safeParse({ ...input, details: "x".repeat(2001) }).success).toBe(
-      false,
-    );
-    expect(
-      meetingActionItemSchema.safeParse({ ...input, responsibleName: "x".repeat(121) }).success,
-    ).toBe(false);
-    expect(meetingActionItemSchema.safeParse({ ...input, dueDate: "soon" }).success).toBe(false);
   });
 });
 
