@@ -4,6 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
+  Calendar03Icon,
   Clock01Icon,
   Copy01Icon,
   Delete02Icon,
@@ -17,6 +18,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -36,14 +38,16 @@ import {
   type ColumnId,
   type Priority,
   type Ticket,
+  type TicketComplexity,
   COLUMN_LABELS,
   COLUMNS,
   COMPLEXITY_LABELS,
+  COMPLEXITY_LEVELS,
   isTimerColumn,
   PRIORITY_COLORS,
   PRIORITY_LABELS,
 } from "../types/board";
-import { formatLocalDateTime } from "../utils/planning-dates";
+import { formatLocalDateTime, formatShortDateRange, isOverdue } from "../utils/planning-dates";
 import { computeElapsed, formatDuration, pauseTimer, resumeTimer } from "../utils/timer";
 
 function subscribeClientRender(): () => void {
@@ -99,23 +103,33 @@ export function TicketCard({
 
   const now = useClock(timerRunning);
   const elapsed = now === null ? ticket.totalElapsedMs : computeElapsed(ticket, now);
-  const startDateLabel = hasMounted ? formatLocalDateTime(ticket.startDate) : null;
-  const dueDateLabel = hasMounted ? formatLocalDateTime(ticket.dueDate) : null;
+
+  const dateRange = hasMounted ? formatShortDateRange(ticket.startDate, ticket.dueDate) : null;
+  const overdue = hasMounted && isOverdue(ticket.dueDate, ticket.column === "done");
+  const hasTimer = timerActive || ticket.totalElapsedMs > 0;
+  const commentCount = ticket.commentCount ?? 0;
+  const hasFooter = Boolean(ticket.responsibleName) || hasTimer || commentCount > 0;
 
   return (
     <div
       ref={sortable.setNodeRef}
       style={style}
       className={cn(
-        "group border border-input/50 bg-card p-2.5 shadow-sm transition-shadow",
+        "group relative border border-input/50 bg-card py-2.5 pr-2.5 pl-3.5 shadow-xs transition-[border-color,box-shadow] hover:border-foreground/20 hover:shadow-md",
         sortable.isDragging && "opacity-30",
         timerRunning && "border-primary/40 bg-primary/5",
       )}
     >
-      <div className="flex items-start gap-1.5">
+      <span
+        aria-hidden
+        className={cn("absolute inset-y-0 left-0 w-0.5", PRIORITY_COLORS[ticket.priority])}
+      />
+      <span className="sr-only">{PRIORITY_LABELS[ticket.priority]} priority</span>
+
+      <div>
         <button
           type="button"
-          className="mt-0.5 cursor-grab text-muted-foreground/40 opacity-0 group-hover:opacity-100 active:cursor-grabbing"
+          className="absolute top-2 left-0.5 cursor-grab text-muted-foreground/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
           aria-label="Drag"
           {...sortable.attributes}
           {...sortable.listeners}
@@ -127,62 +141,79 @@ export function TicketCard({
           />
         </button>
 
-        <div className="min-w-0 flex-1">
-          <p className="wrap-anywhere text-xs font-medium leading-snug">{ticket.title}</p>
+        <div className="min-w-0 pr-6">
+          <p className="wrap-anywhere text-[13px] leading-snug font-medium">{ticket.title}</p>
           {ticket.description && (
-            <p className="mt-1 line-clamp-2 text-[11px] wrap-anywhere text-muted-foreground">
+            <p className="mt-1 line-clamp-2 text-xs wrap-anywhere text-muted-foreground">
               {ticket.description}
             </p>
           )}
-          {ticket.responsibleName && (
-            <p className="mt-1 text-[10px] text-muted-foreground">
-              <span className="font-medium">Responsible:</span> {ticket.responsibleName}
-            </p>
-          )}
-          {(ticket.complexity || startDateLabel || dueDateLabel) && (
-            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+          {(ticket.complexity || dateRange) && (
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
               {ticket.complexity && (
-                <span>
-                  <span className="font-medium">Complexity:</span>{" "}
+                <Badge
+                  variant="secondary"
+                  aria-label={`${COMPLEXITY_LABELS[ticket.complexity]} complexity`}
+                >
+                  <span
+                    aria-hidden
+                    className="flex items-end gap-px"
+                  >
+                    {[0, 1, 2].map((level) => (
+                      <span
+                        key={level}
+                        className={cn(
+                          "w-0.5 bg-muted-foreground/30",
+                          level === 0 && "h-1.5",
+                          level === 1 && "h-2",
+                          level === 2 && "h-2.5",
+                          level <=
+                            COMPLEXITY_LEVELS.indexOf(ticket.complexity as TicketComplexity) &&
+                            "bg-foreground",
+                        )}
+                      />
+                    ))}
+                  </span>
                   {COMPLEXITY_LABELS[ticket.complexity]}
+                </Badge>
+              )}
+              {dateRange && (
+                <span
+                  className={cn(
+                    "flex items-center gap-1 text-[11px] tabular-nums text-muted-foreground",
+                    overdue && "text-destructive",
+                  )}
+                  title={[
+                    formatLocalDateTime(ticket.startDate),
+                    formatLocalDateTime(ticket.dueDate),
+                  ]
+                    .filter(Boolean)
+                    .join(" → ")}
+                >
+                  <HugeiconsIcon
+                    icon={Calendar03Icon}
+                    strokeWidth={2}
+                    className="size-3"
+                  />
+                  {ticket.startDate && (
+                    <time
+                      dateTime={ticket.startDate}
+                      className="sr-only"
+                    >
+                      {formatLocalDateTime(ticket.startDate)}
+                    </time>
+                  )}
+                  {ticket.dueDate && (
+                    <time
+                      dateTime={ticket.dueDate}
+                      className="sr-only"
+                    >
+                      {formatLocalDateTime(ticket.dueDate)}
+                    </time>
+                  )}
+                  <span aria-hidden>{dateRange}</span>
                 </span>
               )}
-              {startDateLabel && ticket.startDate && (
-                <span>
-                  <span className="font-medium">Start:</span>{" "}
-                  <time dateTime={ticket.startDate}>{startDateLabel}</time>
-                </span>
-              )}
-              {dueDateLabel && ticket.dueDate && (
-                <span>
-                  <span className="font-medium">Due:</span>{" "}
-                  <time dateTime={ticket.dueDate}>{dueDateLabel}</time>
-                </span>
-              )}
-            </div>
-          )}
-
-          {(timerActive || ticket.totalElapsedMs > 0) && (
-            <div className="mt-2 flex items-center gap-1.5">
-              <HugeiconsIcon
-                icon={Clock01Icon}
-                strokeWidth={2}
-                className={cn(
-                  "size-3",
-                  timerRunning && "text-primary animate-pulse",
-                  timerPaused && "text-muted-foreground",
-                  !timerActive && "text-muted-foreground",
-                )}
-              />
-              <span
-                className={cn(
-                  "font-mono text-[11px]",
-                  timerRunning && "text-primary",
-                  !timerRunning && "text-muted-foreground",
-                )}
-              >
-                {formatDuration(elapsed)}
-              </span>
             </div>
           )}
         </div>
@@ -192,7 +223,7 @@ export function TicketCard({
             <Button
               size="icon-sm"
               variant="ghost"
-              className="shrink-0 opacity-0 group-hover:opacity-100"
+              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
               aria-label="Ticket actions"
             >
               <HugeiconsIcon
@@ -337,25 +368,51 @@ export function TicketCard({
         </DropdownMenu>
       </div>
 
-      <div className="mt-2 flex items-center gap-1.5">
-        <span
-          className={cn("size-1.5", PRIORITY_COLORS[ticket.priority])}
-          aria-label={`${PRIORITY_LABELS[ticket.priority]} priority`}
-        />
-        {(ticket.commentCount ?? 0) > 0 && (
-          <span
-            className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground"
-            aria-label={`${ticket.commentCount} comment${ticket.commentCount === 1 ? "" : "s"}`}
-          >
-            <HugeiconsIcon
-              icon={Message01Icon}
-              strokeWidth={2}
-              className="size-3"
-            />
-            {ticket.commentCount}
-          </span>
-        )}
-      </div>
+      {hasFooter && (
+        <div className="mt-2.5 flex items-center gap-2.5 border-t border-border/50 pt-2">
+          {ticket.responsibleName && (
+            <span
+              className="min-w-0 truncate text-[11px] text-muted-foreground"
+              title={ticket.responsibleName}
+            >
+              <span className="font-medium">Resp.</span> {ticket.responsibleName}
+            </span>
+          )}
+          {hasTimer && (
+            <span className="flex items-center gap-1">
+              <HugeiconsIcon
+                icon={Clock01Icon}
+                strokeWidth={2}
+                className={cn(
+                  "size-3 text-muted-foreground",
+                  timerRunning && "animate-pulse text-primary",
+                )}
+              />
+              <span
+                className={cn(
+                  "font-mono text-[11px] tabular-nums text-muted-foreground",
+                  timerRunning && "text-primary",
+                )}
+              >
+                {formatDuration(elapsed)}
+              </span>
+            </span>
+          )}
+          {commentCount > 0 && (
+            <span
+              className="ml-auto flex items-center gap-1 text-[11px] tabular-nums text-muted-foreground"
+              aria-label={`${commentCount} comment${commentCount === 1 ? "" : "s"}`}
+            >
+              <HugeiconsIcon
+                icon={Message01Icon}
+                strokeWidth={2}
+                className="size-3"
+              />
+              {commentCount}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

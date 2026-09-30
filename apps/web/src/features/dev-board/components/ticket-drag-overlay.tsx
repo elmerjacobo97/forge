@@ -4,7 +4,7 @@ import { Clock01Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 
 import type { Ticket } from "../types/board";
-import { isTimerColumn } from "../types/board";
+import { isTimerColumn, PRIORITY_COLORS } from "../types/board";
 import { computeElapsed, formatDuration } from "../utils/timer";
 
 interface TicketDragOverlayProps {
@@ -18,13 +18,17 @@ export function TicketDragOverlay({ ticket }: TicketDragOverlayProps) {
   return (
     <div
       className={cn(
-        " border border-input/50 bg-card p-2.5 shadow-lg ring-1 ring-primary/20",
+        "relative border border-input/50 bg-card py-2.5 pr-2.5 pl-3.5 shadow-lg ring-1 ring-primary/20",
         timerRunning && "border-primary/40 bg-primary/5",
       )}
     >
-      <p className="text-xs font-medium leading-snug">{ticket.title}</p>
+      <span
+        aria-hidden
+        className={cn("absolute inset-y-0 left-0 w-0.5", PRIORITY_COLORS[ticket.priority])}
+      />
+      <p className="text-[13px] leading-snug font-medium">{ticket.title}</p>
       {ticket.description && (
-        <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">{ticket.description}</p>
+        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{ticket.description}</p>
       )}
       {(isTimerColumn(ticket.column) || ticket.totalElapsedMs > 0) && (
         <div className="mt-2 flex items-center gap-1.5 text-muted-foreground">

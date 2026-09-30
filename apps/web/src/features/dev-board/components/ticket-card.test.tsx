@@ -70,9 +70,11 @@ describe("TicketCard", () => {
     expect(timerText(renderCard(makeTicket()))).toBe("2:00");
   });
 
-  it("renders the responsible name on the ticket card", () => {
-    expect(renderCard(makeTicket({ responsibleName: "Ada Lovelace" }))).toContain("Responsible:");
-    expect(renderCard(makeTicket({ responsibleName: "Ada Lovelace" }))).toContain("Ada Lovelace");
+  it("renders the responsible as Resp. plus the name", () => {
+    const markup = renderCard(makeTicket({ responsibleName: "Ada Lovelace" }));
+
+    expect(markup).toContain("Resp.");
+    expect(markup).toContain("Ada Lovelace");
   });
 
   it("renders planning metadata in the local timezone after hydration", async () => {
@@ -93,7 +95,6 @@ describe("TicketCard", () => {
     );
 
     await waitFor(() => {
-      expect(container.textContent).toContain("Complexity:");
       expect(container.textContent).toContain("Medium");
       expect(container.textContent).toContain(formatLocalDateTime(startDate));
       expect(container.textContent).toContain(formatLocalDateTime(dueDate));
@@ -103,9 +104,10 @@ describe("TicketCard", () => {
   });
 
   it("omits empty planning metadata from the card", () => {
-    expect(renderCard(makeTicket())).not.toContain("Complexity:");
-    expect(renderCard(makeTicket())).not.toContain("Start:");
-    expect(renderCard(makeTicket())).not.toContain("Due:");
+    const markup = renderCard(makeTicket());
+
+    expect(markup).not.toContain("complexity");
+    expect(markup).not.toContain("<time");
   });
 
   it("server-renders the total elapsed time for a paused ticket", () => {
