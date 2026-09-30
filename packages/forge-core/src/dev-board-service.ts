@@ -57,7 +57,9 @@ function priorityField(value: unknown): Priority {
 function complexityField(value: unknown): TicketComplexity | null {
   if (value === null) return null;
   if (typeof value !== "string" || !(COMPLEXITY_LEVELS as readonly string[]).includes(value)) {
-    throw new Error(`Invalid ticket row: complexity must be null or one of ${COMPLEXITY_LEVELS.join(", ")}.`);
+    throw new Error(
+      `Invalid ticket row: complexity must be null or one of ${COMPLEXITY_LEVELS.join(", ")}.`,
+    );
   }
   return value as TicketComplexity;
 }
@@ -384,7 +386,13 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
             ? { p_action: "set_total", p_ended_at: null, p_duration_ms: input.setTotal }
             : "removeLast" in input
               ? { p_action: "delete_last", p_ended_at: null, p_duration_ms: null }
-              : { p_action: "stop_at", p_ended_at: input.stopAt, p_duration_ms: null };
+              : "stopWith" in input
+                ? {
+                    p_action: "stop_with_duration",
+                    p_ended_at: null,
+                    p_duration_ms: input.stopWith,
+                  }
+                : { p_action: "stop_at", p_ended_at: input.stopAt, p_duration_ms: null };
 
       return ticketRpc(
         "adjust_dev_board_ticket_time",

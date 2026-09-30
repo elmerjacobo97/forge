@@ -105,13 +105,13 @@ export type TicketCreateInput = TicketPlanningCreateInput & {
 
 export type TicketUpdateInput = TicketPlanningUpdateInput &
   Partial<Pick<TicketCreateInput, "title" | "description" | "priority">> & {
-  branch?: string;
-  prUrl?: string;
-  clearBranch?: boolean;
-  clearPrUrl?: boolean;
-  responsibleName?: string;
-  clearResponsible?: boolean;
-};
+    branch?: string;
+    prUrl?: string;
+    clearBranch?: boolean;
+    clearPrUrl?: boolean;
+    responsibleName?: string;
+    clearResponsible?: boolean;
+  };
 
 export type TicketMoveInput = {
   id: string;
@@ -126,7 +126,8 @@ export type TicketTimeAdjustInput =
   | { id: string; set: number }
   | { id: string; setTotal: number }
   | { id: string; removeLast: true }
-  | { id: string; stopAt: string };
+  | { id: string; stopAt: string }
+  | { id: string; stopWith: number };
 
 export const COMMENT_AUTHORS = ["user", "agent"] as const;
 

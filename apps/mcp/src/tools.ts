@@ -1,4 +1,9 @@
-import { groupActivity, resolveReportWindow, toTicketSummary } from "@forge/core";
+import {
+  groupActivity,
+  parseTicketTimeAdjustInput,
+  resolveReportWindow,
+  toTicketSummary,
+} from "@forge/core";
 import type {
   ActivityReport,
   ColumnId,
@@ -130,6 +135,26 @@ export function createToolHandlers(services: ForgeServices) {
 
     resumeTicket: ({ ticketId }: { ticketId: string }): Promise<Ticket> =>
       services.board.resumeTimer(ticketId),
+
+    adjustTicketTime: async ({
+      ticketId,
+      ...fields
+    }: {
+      ticketId: string;
+      set?: string;
+      setTotal?: string;
+      removeLast?: boolean;
+      stopAt?: string;
+      stopWith?: string;
+    }): Promise<Ticket> => {
+      const input = parseTicketTimeAdjustInput({
+        id: ticketId,
+        ...fields,
+        removeLast: fields.removeLast || undefined,
+      });
+      if ("error" in input) throw new Error(input.error);
+      return services.board.adjustTime(input);
+    },
   };
 }
 

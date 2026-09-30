@@ -7,6 +7,7 @@ import githubHandler from "./github-handler.js";
 import { createForgeServices } from "./services.js";
 import {
   activityReportInput,
+  adjustTicketTimeInput,
   addTicketCommentInput,
   createTicketInput,
   getProjectInput,
@@ -159,6 +160,16 @@ export class ForgeMcp extends McpAgent<Env> {
         inputSchema: ticketIdInput,
       },
       (args) => run((handlers) => handlers.resumeTicket(args)),
+    );
+
+    this.server.registerTool(
+      "forge_adjust_ticket_time",
+      {
+        description:
+          "Fix logged time on a ticket. Provide exactly one of: set (rewrite the last closed session), setTotal (set the logged total; only when the ticket has no time entries), removeLast (delete the last closed session, true), stopAt (stop the running session at 'now' or an ISO 8601 time), stopWith (stop the running session now, logging that duration even when longer than the elapsed time; the session start moves back). Durations need a unit, like 30m, 90m, 1h30m, or 2h. Every change adds an audit comment.",
+        inputSchema: adjustTicketTimeInput,
+      },
+      (args) => run((handlers) => handlers.adjustTicketTime(args)),
     );
   }
 }

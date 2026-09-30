@@ -319,4 +319,20 @@ describe("createToolHandlers", () => {
     expect(services.board.pauseTimer).toHaveBeenCalledWith("t1");
     expect(services.board.resumeTimer).toHaveBeenCalledWith("t1");
   });
+
+  it("adjusts ticket time through the shared parser", async () => {
+    const adjusted = ticket("t1", { isPaused: true });
+    const services = createMockServices();
+    services.board.adjustTime.mockResolvedValue(adjusted);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.adjustTicketTime({ ticketId: "t1", stopWith: "3h" })).resolves.toEqual(
+      adjusted,
+    );
+    expect(services.board.adjustTime).toHaveBeenCalledWith({ id: "t1", stopWith: 10_800_000 });
+
+    await expect(handlers.adjustTicketTime({ ticketId: "t1" })).rejects.toThrow(
+      "Provide exactly one of",
+    );
+  });
 });

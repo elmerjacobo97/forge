@@ -199,6 +199,7 @@ forge-cli ticket adjust-time <id> --set 1h30m
 forge-cli ticket adjust-time <id> --set-total 20m
 forge-cli ticket adjust-time <id> --remove-last
 forge-cli ticket adjust-time <id> --stop-at now
+forge-cli ticket adjust-time <id> --stop-with 3h
 forge-cli ticket next
 forge-cli ticket next --project-id <projectId> --json
 forge-cli ticket comment <id> --body "Handoff notes" --author agent
@@ -234,12 +235,15 @@ rewrites the last closed session, `--set-total <duration>` sets the logged
 total directly (only when the ticket has no time entries; use it to backfill
 time spent before the timer started, e.g. planning), `--remove-last` deletes
 the last session, and `--stop-at <now|iso>` stops the running session at that
-time (`now` equals a pause). Durations require a unit (`30m`, `90m`, `1h30m`,
+time (`now` equals a pause). `--stop-with <duration>` stops the running session
+now and logs that duration even when it exceeds the elapsed time: the session
+start moves back so it ends now (use it when the timer was started late).
+Durations require a unit (`30m`, `90m`, `1h30m`,
 `2h`; `0m` removes the session). With the timer running, `--set` edits the
 previous closed session; use `--stop-at` for the current one. Every duration
 change leaves an audit comment on the ticket (written by the backend).
 Because `--set-total` stores the value in the ticket total rather than in a
-time entry, a later `--set`, `--remove-last` or `--stop-at` recomputes the
+time entry, a later `--set`, `--remove-last`, `--stop-at` or `--stop-with` recomputes the
 total from entries and drops the backfilled time.
 
 `next` returns the best pending `todo` ticket ranked by priority

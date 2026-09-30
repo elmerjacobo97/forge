@@ -15,6 +15,7 @@ export interface MockServices {
     addComment: Mock;
     pauseTimer: Mock;
     resumeTimer: Mock;
+    adjustTime: Mock;
   };
   activity: { listEvents: Mock; listCommentsInRange: Mock };
 }
@@ -33,6 +34,7 @@ export function createMockServices(): MockServices {
       addComment: vi.fn(),
       pauseTimer: vi.fn(),
       resumeTimer: vi.fn(),
+      adjustTime: vi.fn(),
     },
     activity: { listEvents: vi.fn(), listCommentsInRange: vi.fn() },
   };

@@ -163,3 +163,14 @@ export const addTicketCommentInput = {
 export const ticketIdInput = {
   ticketId: ticketIdSchema,
 };
+
+const durationSchema = z.string().trim().min(1, "Duration must not be empty.");
+
+export const adjustTicketTimeInput = {
+  ticketId: ticketIdSchema,
+  set: durationSchema.optional(),
+  setTotal: durationSchema.optional(),
+  removeLast: z.boolean().optional(),
+  stopAt: z.string().trim().min(1).optional(),
+  stopWith: durationSchema.optional(),
+};

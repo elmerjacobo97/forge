@@ -13,13 +13,14 @@
 - Nueva acción RPC `stop_with_duration`: detiene el timer ahora y registra una sesión de la duración pedida que termina en `now`; `started_at` se mueve hacia atrás.
 - Duración menor o igual al tiempo transcurrido (+1 min de tolerancia): se mantiene `stop_at` sin cambios.
 - Comentario de auditoría `Timer adjusted: <antes> → <después>` en la nueva acción.
-- Tests de schema y diálogo.
+- CLI: flag `adjust-time --stop-with <duration>` (forge-core: `stopWith`), con README y skill `forge-tickets`.
+- MCP: nueva tool `forge_adjust_ticket_time` (`set`, `setTotal`, `removeLast`, `stopAt`, `stopWith`, exactamente uno) sobre el mismo parser de forge-core.
+- Tests de schema, diálogo, forge-core y MCP.
 
 **Fuera de alcance (para specs futuras):**
 
 - Editar manualmente hora de inicio y fin de una sesión.
 - Añadir sesiones manuales o editar sesiones que no sean la última.
-- CLI y MCP.
 - Detectar o impedir solapamiento con sesiones anteriores.
 
 ## Data model

@@ -25,8 +25,18 @@ function isValidPlanningDate(value: string): boolean {
   const match = value.match(PLANNING_DATE_PATTERN);
   if (!match) return false;
 
-  const [, yearText, monthText, dayText, hourText, minuteText, secondText, zone, zoneHour, zoneMinute] =
-    match;
+  const [
+    ,
+    yearText,
+    monthText,
+    dayText,
+    hourText,
+    minuteText,
+    secondText,
+    zone,
+    zoneHour,
+    zoneMinute,
+  ] = match;
   const year = Number(yearText);
   const month = Number(monthText);
   const day = Number(dayText);
@@ -108,21 +118,25 @@ const commentBodySchema = z
   .min(1, "Comment body is required (--body).")
   .max(5000, "Comment body must be at most 5000 characters.");
 
-export const ticketCreateSchema = z.object({
-  projectId: projectIdSchema,
-  title: titleSchema,
-  description: descriptionSchema,
-  priority: prioritySchema,
-  column: columnSchema,
-  responsibleName: responsibleNameSchema.optional(),
-  startDate: planningDateSchema.optional(),
-  dueDate: planningDateSchema.optional(),
-  complexity: complexitySchema.optional(),
-}).refine(
-  (value) =>
-    !value.startDate || !value.dueDate || Date.parse(value.startDate) <= Date.parse(value.dueDate),
-  { message: "Start date must be on or before due date.", path: ["dueDate"] },
-);
+export const ticketCreateSchema = z
+  .object({
+    projectId: projectIdSchema,
+    title: titleSchema,
+    description: descriptionSchema,
+    priority: prioritySchema,
+    column: columnSchema,
+    responsibleName: responsibleNameSchema.optional(),
+    startDate: planningDateSchema.optional(),
+    dueDate: planningDateSchema.optional(),
+    complexity: complexitySchema.optional(),
+  })
+  .refine(
+    (value) =>
+      !value.startDate ||
+      !value.dueDate ||
+      Date.parse(value.startDate) <= Date.parse(value.dueDate),
+    { message: "Start date must be on or before due date.", path: ["dueDate"] },
+  );
 
 export const ticketUpdateSchema = z
   .object({
@@ -232,6 +246,11 @@ export const ticketTimeAdjustSchema = z
       .optional(),
     removeLast: z.boolean().optional(),
     stopAt: stopAtSchema.optional(),
+    stopWith: z
+      .string({ error: "Duration must be a string (--stop-with)." })
+      .trim()
+      .min(1, "Duration must not be empty (--stop-with).")
+      .optional(),
   })
   .superRefine((value, context) => {
     const provided = [
@@ -239,21 +258,25 @@ export const ticketTimeAdjustSchema = z
       value.setTotal !== undefined,
       value.removeLast === true,
       value.stopAt !== undefined,
+      value.stopWith !== undefined,
     ].filter(Boolean).length;
 
     if (provided !== 1) {
       context.addIssue({
         code: "custom",
-        message: "Provide exactly one of --set, --set-total, --remove-last or --stop-at.",
+        message:
+          "Provide exactly one of --set, --set-total, --remove-last, --stop-at or --stop-with.",
       });
       return;
     }
 
-    const durationInput = value.set ?? value.setTotal;
+    const durationInput = value.set ?? value.setTotal ?? value.stopWith;
     if (durationInput !== undefined) {
       const duration = parseDurationMs(durationInput);
       if (typeof duration !== "number") {
         context.addIssue({ code: "custom", message: duration.error });
+      } else if (value.stopWith !== undefined && duration <= 0) {
+        context.addIssue({ code: "custom", message: "Duration must be greater than zero." });
       }
     }
   });
@@ -324,7 +347,7 @@ export function parseTicketTimeAdjustInput(
     return { error: formatZodError(parsed.error) };
   }
 
-  const { id, set, setTotal, removeLast, stopAt } = parsed.data;
+  const { id, set, setTotal, removeLast, stopAt, stopWith } = parsed.data;
 
   if (set !== undefined) {
     const durationMs = parseDurationMs(set);
@@ -340,6 +363,14 @@ export function parseTicketTimeAdjustInput(
       return { error: durationMs.error };
     }
     return { id, setTotal: durationMs };
+  }
+
+  if (stopWith !== undefined) {
+    const durationMs = parseDurationMs(stopWith);
+    if (typeof durationMs !== "number") {
+      return { error: durationMs.error };
+    }
+    return { id, stopWith: durationMs };
   }
 
   if (removeLast === true) {

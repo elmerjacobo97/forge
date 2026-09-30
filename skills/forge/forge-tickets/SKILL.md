@@ -90,7 +90,7 @@ forge-cli ticket adjust-time <id> --set-total 20m   # the planning time that alr
 ```
 
 - `--set-total` sets the logged total directly (RPC `set_total`, the same fallback the web uses) and requires the ticket to have **no time entries**. If it fails with `Ticket has time entries; edit the last session instead`, skip the backfill and mention it in the handoff comment.
-- The backfill lives in the ticket total, not in a time entry: a later `--set`, `--remove-last` or `--stop-at` recomputes the total from entries and drops it. After backfilling, move columns normally.
+- The backfill lives in the ticket total, not in a time entry: a later `--set`, `--remove-last`, `--stop-at` or `--stop-with` recomputes the total from entries and drops it. After backfilling, move columns normally.
 - Needs `forge-cli >= 0.8.0`; older binaries do not know `--set-total` and fail with `Provide exactly one of --set, --remove-last or --stop-at.`
 
 ## Spec / OpenSpec-driven tickets
@@ -235,12 +235,14 @@ forge-cli ticket adjust-time <id> --set 1h30m     # rewrite the last closed sess
 forge-cli ticket adjust-time <id> --set-total 20m # set the logged total (no time entries yet)
 forge-cli ticket adjust-time <id> --remove-last  # delete the last closed session
 forge-cli ticket adjust-time <id> --stop-at now  # stop the running session (now = pause)
+forge-cli ticket adjust-time <id> --stop-with 3h # stop now, logging 3h even if longer than elapsed
 ```
 
 - Durations require a unit: `30m`, `90m`, `1h30m`, `2h`; `0m` removes the session.
 - `--set` edits the last **closed** session; with the timer running it edits the previous one. Use `--stop-at` for the current run.
 - `--set-total` sets `total_elapsed_ms` directly and only works when the ticket has no time entries (backfill planning time); later `--set`, `--remove-last` or `--stop-at` recompute the total from entries and drop it.
 - `--stop-at` accepts `now` or an ISO 8601 timestamp and leaves the ticket paused.
+- `--stop-with <duration>` stops the running session now and logs that duration even when it exceeds the elapsed time (the session start moves back). Needs `forge-cli >= 0.12.0`.
 - Every duration change writes an audit comment on the ticket (backend RPC).
 
 ## Agent ticket loop
@@ -413,6 +415,6 @@ With `--json`, any error prints `{"error":{"message":"..."}}` to stderr and exit
 - Responsible, complexity, Start Date and Due Date are optional and owner-provided. Dates are ISO 8601 with offset, Start Date <= Due Date. Omit a flag to keep a value; use `--clear-*` to clear it. Requires `forge-cli >= 0.11.0` for the planning fields.
 - Columns only: `backlog`, `todo`, `in_progress`, `validation`, `review`, `done`.
 - Priorities only: `low`, `med`, `high`.
-- Do not pause/resume timers via raw `set_dev_board_ticket_timer`, read analytics, reorder with `--position`, move tickets between projects, or cascade-delete events — out of scope for this CLI surface. Time corrections go through `ticket adjust-time` (`--set`, `--set-total`, `--remove-last`, `--stop-at`).
+- Do not pause/resume timers via raw `set_dev_board_ticket_timer`, read analytics, reorder with `--position`, move tickets between projects, or cascade-delete events — out of scope for this CLI surface. Time corrections go through `ticket adjust-time` (`--set`, `--set-total`, `--remove-last`, `--stop-at`, `--stop-with`).
 - Projects stay under `forge-cli project` / skill `forge-projects`. Bookmarks stay under `forge-cli bookmark` / skill `forge-bookmarks`.
 - Weekly activity summaries for the Friday meeting: use skill `forge-weekly` (`forge-cli ticket report`). It is read-only; never mix a report with ticket mutations.

@@ -509,6 +509,17 @@ describe("parseTicketTimeAdjustInput", () => {
     ).toEqual({ id: "ticket1", stopAt: "2026-09-12T20:00:00.000Z" });
   });
 
+  it("accepts --stop-with and rejects zero or conflicting use", () => {
+    expect(parseTicketTimeAdjustInput({ id: "ticket1", stopWith: "3h" })).toEqual({
+      id: "ticket1",
+      stopWith: 10_800_000,
+    });
+    expect(parseTicketTimeAdjustInput({ id: "ticket1", stopWith: "0m" })).toHaveProperty("error");
+    expect(
+      parseTicketTimeAdjustInput({ id: "ticket1", stopWith: "1h", stopAt: "now" }),
+    ).toHaveProperty("error");
+  });
+
   it("normalizes --stop-at now to the current ISO timestamp", () => {
     const before = Date.now();
     const result = parseTicketTimeAdjustInput({ id: "ticket1", stopAt: "NOW" });
@@ -534,7 +545,7 @@ describe("parseTicketTimeAdjustInput", () => {
       expect(result).toHaveProperty("error");
       if (!("error" in result)) throw new Error("expected validation error");
       expect(result.error).toContain(
-        "Provide exactly one of --set, --set-total, --remove-last or --stop-at.",
+        "Provide exactly one of --set, --set-total, --remove-last, --stop-at or --stop-with.",
       );
     }
   });

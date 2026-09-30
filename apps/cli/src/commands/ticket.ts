@@ -104,6 +104,8 @@ adjust-time options (exactly one):
   --set-total <duration>       Set the logged total; only when the ticket has no time entries
   --remove-last                Delete the last closed session
   --stop-at <now|iso>          Stop the running session at that time (now = pause)
+  --stop-with <duration>       Stop the running session now, logging that duration (may exceed
+                               the elapsed time; the session start moves back)
 
 comment options:
   --body <text>                Required (1-5000)
@@ -126,6 +128,7 @@ Examples:
   forge-cli ticket adjust-time <id> --set-total 20m
   forge-cli ticket adjust-time <id> --remove-last
   forge-cli ticket adjust-time <id> --stop-at now
+  forge-cli ticket adjust-time <id> --stop-with 3h
   forge-cli ticket next --json
   forge-cli ticket comment <id> --body "Moved to review" --author agent
   forge-cli ticket comments <id> --json
@@ -301,6 +304,7 @@ async function runAdjustTime(args: string[]): Promise<void> {
     setTotal: getFlagValue(args, "--set-total"),
     removeLast: hasFlag(args, "--remove-last") || undefined,
     stopAt: getFlagValue(args, "--stop-at"),
+    stopWith: getFlagValue(args, "--stop-with"),
   });
   if ("error" in input) {
     fail(input.error, json);
