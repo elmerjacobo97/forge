@@ -8,6 +8,10 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   createProjectAction: vi.fn(),
   updateProjectAction: vi.fn(),
+  copy: vi.fn(),
+}));
+vi.mock("@/lib/hooks/use-copy", () => ({
+  useCopy: () => ({ copied: false, copy: mocks.copy }),
 }));
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dev-board",
@@ -102,6 +106,25 @@ describe("ProjectList", () => {
       }),
     );
     expect(toast.success).toHaveBeenCalledWith("Project status updated.");
+  });
+
+  it("copies the project id from the row actions menu", async () => {
+    render(
+      <ProjectList
+        projects={[project]}
+        filters={filters}
+        hasAnyProjects
+      />,
+    );
+
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Actions for Forge" }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Copy ID" }));
+
+    expect(mocks.copy).toHaveBeenCalledWith("project-1");
+    expect(toast.success).toHaveBeenCalledWith("Project ID copied.");
   });
 
   it("shows a recoverable empty state when filters have no matches", () => {

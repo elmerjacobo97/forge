@@ -5,12 +5,14 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
+  Copy01Icon,
   Delete02Icon,
   InboxIcon,
   KanbanIcon,
   MoreHorizontalIcon,
   PencilEdit01Icon,
   PlusSignIcon,
+  Tick02Icon,
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 
@@ -44,6 +46,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useCopy } from "@/lib/hooks/use-copy";
 import { cn } from "@/lib/utils";
 import { createProjectAction, updateProjectAction } from "../actions";
 import type { ProjectFormValues } from "../schemas/project";
@@ -61,6 +64,71 @@ const STATUS_TRIGGER_STYLES: Record<ProjectStatus, string> = {
   completed: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
   archived: "border-border bg-transparent text-muted-foreground",
 };
+
+function ProjectRowMenu({
+  project,
+  onEdit,
+  onDelete,
+}: {
+  project: Project;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const { copied, copy } = useCopy();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          className="text-muted-foreground"
+          aria-label={`Actions for ${project.name}`}
+        >
+          <HugeiconsIcon
+            icon={MoreHorizontalIcon}
+            strokeWidth={2}
+            className="size-3.5"
+          />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={onEdit}>
+          <HugeiconsIcon
+            icon={PencilEdit01Icon}
+            strokeWidth={2}
+            className="size-3.5"
+          />
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            copy(project.id);
+            toast.success("Project ID copied.");
+          }}
+        >
+          <HugeiconsIcon
+            icon={copied ? Tick02Icon : Copy01Icon}
+            strokeWidth={2}
+            className="size-3.5"
+          />
+          Copy ID
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          variant="destructive"
+          onClick={onDelete}
+        >
+          <HugeiconsIcon
+            icon={Delete02Icon}
+            strokeWidth={2}
+            className="size-3.5"
+          />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export function ProjectList({
   projects,
@@ -269,43 +337,11 @@ export function ProjectList({
                   {format(new Date(project.createdAt), "MMM d, yyyy")}
                 </TableCell>
                 <TableCell className="px-1 text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        size="icon-sm"
-                        variant="ghost"
-                        className="text-muted-foreground"
-                        aria-label={`Actions for ${project.name}`}
-                      >
-                        <HugeiconsIcon
-                          icon={MoreHorizontalIcon}
-                          strokeWidth={2}
-                          className="size-3.5"
-                        />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEdit(project)}>
-                        <HugeiconsIcon
-                          icon={PencilEdit01Icon}
-                          strokeWidth={2}
-                          className="size-3.5"
-                        />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => setDeleteTarget(project)}
-                      >
-                        <HugeiconsIcon
-                          icon={Delete02Icon}
-                          strokeWidth={2}
-                          className="size-3.5"
-                        />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <ProjectRowMenu
+                    project={project}
+                    onEdit={() => openEdit(project)}
+                    onDelete={() => setDeleteTarget(project)}
+                  />
                 </TableCell>
               </TableRow>
             ))}
