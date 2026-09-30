@@ -47,7 +47,7 @@ export function TicketCard({
       ref={sortable.setNodeRef}
       style={style}
       className={cn(
-        "group relative border border-input/50 bg-card py-2.5 pr-2.5 pl-3.5 shadow-xs transition-[border-color,box-shadow] hover:border-foreground/20 hover:shadow-md",
+        "group relative border border-input/50 bg-card py-2.5 pr-2.5 pl-6 shadow-xs transition-[border-color,box-shadow] hover:border-foreground/20 hover:shadow-md",
         sortable.isDragging && "opacity-30",
         timerRunning && "border-primary/40 bg-primary/5",
       )}
@@ -61,7 +61,7 @@ export function TicketCard({
       <div>
         <button
           type="button"
-          className="absolute top-2 left-0.5 cursor-grab text-muted-foreground/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
+          className="absolute top-2.5 left-1.5 cursor-grab p-0.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
           aria-label="Drag"
           {...sortable.attributes}
           {...sortable.listeners}
