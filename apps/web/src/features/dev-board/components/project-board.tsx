@@ -113,7 +113,6 @@ export function ProjectBoard({
   }
 
   function handleCommentCreated(ticketId: string) {
-    setColumns((current) => incrementCommentCount(current, ticketId));
     setCommentsTicket((current) =>
       current && current.id === ticketId
         ? { ...current, commentCount: (current.commentCount ?? 0) + 1 }

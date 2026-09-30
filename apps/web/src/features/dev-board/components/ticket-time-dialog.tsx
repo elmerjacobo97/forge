@@ -32,7 +32,7 @@ interface TicketTimeDialogProps {
   ticket: Ticket | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdjusted: (ticket: Ticket, addsComment: boolean) => void;
+  onAdjusted: (ticket: Ticket) => void;
 }
 
 export function TicketTimeDialog({
@@ -70,7 +70,7 @@ export function TicketTimeDialog({
 
 interface TicketTimeEditorProps {
   ticket: Ticket;
-  onAdjusted: (ticket: Ticket, addsComment: boolean) => void;
+  onAdjusted: (ticket: Ticket) => void;
   onClose: () => void;
 }
 
@@ -147,7 +147,7 @@ function TicketTimeEditor({ ticket, onAdjusted, onClose }: TicketTimeEditorProps
 type TicketTimeFormProps = {
   ticket: Ticket;
   initialMs: number;
-  onAdjusted: (ticket: Ticket, addsComment: boolean) => void;
+  onAdjusted: (ticket: Ticket) => void;
   onClose: () => void;
 } & (
   { mode: "running"; startedAt: string } | { mode: "last"; entry: TimeEntry } | { mode: "total" }

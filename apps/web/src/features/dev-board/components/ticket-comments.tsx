@@ -13,6 +13,7 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { Markdown } from "@/components/markdown";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import { createTicketCommentAction } from "../actions";
@@ -27,6 +28,24 @@ interface TicketCommentsProps {
 
 function formatCommentDate(value: string): string {
   return formatLocalDateTime(value) ?? value;
+}
+
+function CommentsSkeleton() {
+  return (
+    <div
+      className="flex flex-col gap-2"
+      role="status"
+      aria-label="Loading comments"
+    >
+      <div className="flex flex-col gap-2 border border-input/50 bg-muted/30 p-2">
+        <div className="flex items-center justify-between gap-2">
+          <Skeleton className="h-4 w-10" />
+          <Skeleton className="h-3 w-28" />
+        </div>
+        <Skeleton className="h-3 w-3/4" />
+      </div>
+    </div>
+  );
 }
 
 export function TicketComments({ ticketId, onCommentCreated }: TicketCommentsProps) {
@@ -56,9 +75,15 @@ export function TicketComments({ ticketId, onCommentCreated }: TicketCommentsPro
 
   return (
     <div className="flex flex-col gap-2">
-      {isLoading && <p className="text-[11px] text-muted-foreground">Loading comments…</p>}
+      {isLoading && <CommentsSkeleton />}
 
       {!isLoading && error && <p className="text-[11px] text-destructive">{error}</p>}
+
+      {!isLoading && !error && comments.length === 0 && (
+        <p className="border border-dashed border-input/50 p-3 text-center text-xs text-muted-foreground">
+          No comments yet.
+        </p>
+      )}
 
       {comments.length > 0 && (
         <ul className="flex flex-col gap-2">

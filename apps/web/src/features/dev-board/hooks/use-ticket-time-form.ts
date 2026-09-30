@@ -6,14 +6,13 @@ import { adjustTicketTimeAction } from "../actions";
 import { ticketTimeFormSchema, type TicketTimeAdjustInput } from "../schemas/ticket";
 import type { Ticket } from "../types/board";
 import { durationMsFromParts, durationParts } from "../utils/timer";
-import { adjustmentAddsComment } from "../utils/tickets";
 import { buildTimePayload, type TicketTimeMode } from "../utils/ticket-time-form";
 
 interface UseTicketTimeFormOptions {
   ticket: Ticket;
   initialMs: number;
   target: TicketTimeMode;
-  onAdjusted: (ticket: Ticket, addsComment: boolean) => void;
+  onAdjusted: (ticket: Ticket) => void;
   onClose: () => void;
 }
 
@@ -61,7 +60,7 @@ export function useTicketTimeForm({
       }
 
       toast.success("Time adjusted.");
-      onAdjusted(result.data, adjustmentAddsComment(payload));
+      onAdjusted(result.data);
       onClose();
     });
   }

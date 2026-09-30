@@ -5,7 +5,6 @@ import { createTicketAction, deleteTicketAction, updateTicketAction } from "../a
 import type { TicketFormValues } from "../schemas/ticket";
 import type { ColumnId, Ticket } from "../types/board";
 import {
-  incrementCommentCount,
   removeTicket,
   restoreTicket,
   upsertTicket,
@@ -84,11 +83,8 @@ export function useBoardMutations({
     });
   }
 
-  function handleAdjusted(ticket: Ticket, addsComment: boolean) {
-    setColumns((current) => {
-      const next = upsertTicket(current, ticket);
-      return addsComment ? incrementCommentCount(next, ticket.id) : next;
-    });
+  function handleAdjusted(ticket: Ticket) {
+    setColumns((current) => upsertTicket(current, ticket));
   }
 
   function commitMove(movedTicket: Ticket, staleSessionMs: number | null) {

@@ -85,7 +85,7 @@ describe("TicketTimeDialog", () => {
         endedAt: "2026-09-12T11:00:00.000Z",
       });
     });
-    expect(onAdjusted).toHaveBeenCalledWith(expect.objectContaining({ id: "ticket-1" }), true);
+    expect(onAdjusted).toHaveBeenCalledWith(expect.objectContaining({ id: "ticket-1" }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
