@@ -72,7 +72,7 @@ cd ~/proyecto
 ~/.forge/scripts/install-to-agent.sh cursor
 ```
 
-El argumento es `claude`, `cursor`, `codex`, `antigravity` u `opencode`. Hay que correrlo desde el proyecto destino, no desde Forge.
+El argumento es `claude`, `cursor`, `codex`, `antigravity` u `opencode`. Hay que correrlo desde el proyecto destino, no desde Forge. Con `claude` crea symlinks en `.claude/skills/` del proyecto; con `codex` y `antigravity` copia los skills y reemplaza la copia anterior.
 
 ## Documentación
 

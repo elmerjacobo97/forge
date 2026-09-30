@@ -18,7 +18,7 @@ if [ -z "$AGENT" ]; then
 usage: install-to-agent.sh <agent>
 
 agents:
-  claude       symlink skills into .claude/skills/ (project) or ~/.claude/skills (user)
+  claude       symlink skills into .claude/skills/ of the current project
   cursor       generate .cursor/rules/<name>.mdc files from each SKILL.md
   codex        append a "## Skills" block to AGENTS.md with skill summaries
   antigravity  generate .antigravity/skills/<name>.md files
@@ -51,11 +51,19 @@ fm() {
     /^---$/{f++; if(f==2)exit; next}
     f==1 {
       if (match($0, "^"key":[[:space:]]*")) {
-        print substr($0, RSTART+RLENGTH)
+        v = substr($0, RSTART+RLENGTH)
+        if (v ~ /^".*"$/) v = substr(v, 2, length(v)-2)
+        print v
         exit
       }
     }
   ' "$1"
+}
+
+# Quote a value for a YAML double-quoted scalar.
+yaml_quote() {
+  local v="${1//\\/\\\\}"
+  printf '"%s"' "${v//\"/\\\"}"
 }
 
 case "$AGENT" in
@@ -80,7 +88,7 @@ case "$AGENT" in
       out="$DEST/${name}.mdc"
       {
         echo "---"
-        echo "description: ${desc}"
+        echo "description: $(yaml_quote "$desc")"
         echo "alwaysApply: false"
         echo "---"
         echo
@@ -119,6 +127,8 @@ case "$AGENT" in
     mkdir -p "$TARGET/.codex/skills"
     skill_dirs | while IFS= read -r src; do
       name="$(basename "$src")"
+      rm -rf "$TARGET/.codex/skills/$name"
+      mkdir -p "$TARGET/.codex/skills/$name"
       cp -R "$src/." "$TARGET/.codex/skills/$name/"
     done
 
@@ -142,6 +152,8 @@ case "$AGENT" in
     mkdir -p "$DEST"
     skill_dirs | while IFS= read -r src; do
       name="$(basename "$src")"
+      rm -rf "$DEST/$name"
+      mkdir -p "$DEST/$name"
       cp -R "$src/." "$DEST/$name/"
       echo "copied $name -> $DEST/$name"
     done
@@ -156,7 +168,7 @@ case "$AGENT" in
       out="$DEST/${name}.md"
       {
         echo "---"
-        echo "description: ${desc}"
+        echo "description: $(yaml_quote "$desc")"
         echo "---"
         echo
         skill_body "$src/SKILL.md"

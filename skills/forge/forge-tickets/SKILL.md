@@ -4,7 +4,7 @@ description: "Use when managing Forge Dev Board tickets with forge-cli: create, 
 license: MIT
 metadata:
   author: elmerjacobo97
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Forge Dev Board tickets (`forge-cli`)
@@ -15,6 +15,8 @@ Use the global binary **`forge-cli`** (not Laravel Forge’s `forge`):
 npm install -g @codigoconelmer/forge-cli@latest
 forge-cli --version   # requires >= 0.5.0 (comments, next, validation column, --branch, --pr-url, report)
 # `adjust-time --set-total` requires >= 0.8.0
+# `--responsible` requires >= 0.10.0
+# `--complexity`, `--start-date`, `--due-date` (and their --clear-* flags) require >= 0.11.0
 ```
 
 If the installed version is older than 0.5.0, update it before any ticket mutation — older binaries lack commands the agent loop depends on and fail with `Unknown ticket command`.
@@ -198,6 +200,12 @@ forge-cli ticket create --project-id <projectId> \
 | `--description` | optional, default `""`, max 2000                                                               |
 | `--priority`    | `low` \| `med` \| `high` (default `med`)                                                       |
 | `--column`      | `backlog` \| `todo` \| `in_progress` \| `validation` \| `review` \| `done` (default `backlog`) |
+| `--responsible` | optional responsible name, max 120 characters                                                  |
+| `--complexity`  | optional: `low` \| `medium` \| `high`                                                          |
+| `--start-date`  | optional ISO 8601 timestamp with offset, e.g. `2026-09-28T21:29:00-06:00`                      |
+| `--due-date`    | optional ISO 8601 timestamp with offset; must not be earlier than `--start-date`               |
+
+Set `--responsible`, `--complexity`, `--start-date` and `--due-date` only when the owner gives them. Do not invent values.
 
 Creating with a timer-active column (`in_progress` or `validation`) starts the timer (same semantics as the web board).
 Create without `--project-id`, or with an id that is missing / not yours, exits non-zero and does not create a ticket.
@@ -326,6 +334,33 @@ forge-cli ticket comments <id> --json
 
 `move` writes the handoff atomically with the column change. `update` without these flags keeps the current values; `--branch ""` is neither needed nor accepted.
 
+## Responsible and planning fields
+
+`ticket update` sets or clears these optional fields. `ticket create` accepts the set flags.
+
+| Flag                               | Effect                                        |
+| ---------------------------------- | --------------------------------------------- |
+| `--responsible <name>`             | set the responsible name (max 120 characters) |
+| `--clear-responsible`              | clear the responsible name                    |
+| `--complexity <low\|medium\|high>` | set complexity                                |
+| `--clear-complexity`               | clear complexity                              |
+| `--start-date <iso>`               | set Start Date (ISO 8601 with offset)         |
+| `--clear-start-date`               | clear Start Date                              |
+| `--due-date <iso>`                 | set Due Date (ISO 8601 with offset)           |
+| `--clear-due-date`                 | clear Due Date                                |
+
+```bash
+forge-cli ticket create --project-id <projectId> --title "Plan release" \
+  --complexity high --start-date 2026-09-28T21:29:00-06:00 --due-date 2026-10-02T17:00:00-06:00
+forge-cli ticket update <id> --complexity medium --responsible "Ana"
+forge-cli ticket update <id> --clear-complexity --clear-start-date --clear-due-date
+```
+
+- Omitting a flag keeps the current value. Clearing needs the explicit `--clear-*` flag.
+- Do not set and clear the same field in one call. Start Date must be on or before Due Date; a violation is rejected and the ticket does not change.
+- Dates without an offset (`2026-09-28`) are rejected. Always include the offset.
+- `--json` output and `ticket get` return `responsibleName`, `complexity`, `startDate`, `dueDate` (`null` when unset).
+
 ## Other commands
 
 ```bash
@@ -375,6 +410,7 @@ With `--json`, any error prints `{"error":{"message":"..."}}` to stderr and exit
 - Comment handoff as `--author agent`; comments are append-only (no edit/delete). Keep them short (1–3 lines): outcome, verification, blockers. The web Comments dialog renders GFM markdown; the CLI prints the raw body.
 - Never commit during open work: no commit for the implementation, the tests, the spec group's checkbox update, or the OpenSpec `tasks.md` checkbox update. Leave the changes in the working tree; commit only when the owner explicitly orders close ("cierra el ticket", Close work).
 - Column moves by the agent end at `validation` (owner/agent verification, timer keeps running; adjustments happen there). `review` and `done` are owner-only: never move there on your own, not even when the owner says "cierra el ticket". Only an explicit order in the same message ("move it to review/done") authorizes it — otherwise remind the owner to move it manually.
+- Responsible, complexity, Start Date and Due Date are optional and owner-provided. Dates are ISO 8601 with offset, Start Date <= Due Date. Omit a flag to keep a value; use `--clear-*` to clear it. Requires `forge-cli >= 0.11.0` for the planning fields.
 - Columns only: `backlog`, `todo`, `in_progress`, `validation`, `review`, `done`.
 - Priorities only: `low`, `med`, `high`.
 - Do not pause/resume timers via raw `set_dev_board_ticket_timer`, read analytics, reorder with `--position`, move tickets between projects, or cascade-delete events — out of scope for this CLI surface. Time corrections go through `ticket adjust-time` (`--set`, `--set-total`, `--remove-last`, `--stop-at`).
