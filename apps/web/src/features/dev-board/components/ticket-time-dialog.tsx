@@ -183,13 +183,15 @@ function TicketTimeForm(props: TicketTimeFormProps) {
 
   const values = useStore(form.store, (state) => state.values);
   const durationMs = durationMsFromParts(values.hours, values.minutes);
-  const maxMs = props.mode === "running" ? initialMs : null;
-  const exceedsMax = maxMs !== null && durationMs > maxMs + 60_000;
+  const extendsSession = props.mode === "running" && durationMs > initialMs + 60_000;
 
   function buildPayload(hours: number, minutes: number, remove: boolean): TicketTimeAdjustInput {
     const requestedMs = durationMsFromParts(hours, minutes);
 
     if (props.mode === "running") {
+      if (requestedMs > initialMs + 60_000) {
+        return { ticketId: ticket.id, action: "stop_with_duration", durationMs: requestedMs };
+      }
       return {
         ticketId: ticket.id,
         action: "stop_at",
@@ -226,8 +228,8 @@ function TicketTimeForm(props: TicketTimeFormProps) {
         ? `Last session: ${formatClock(props.entry.startedAt)} – ${formatClock(props.entry.endedAt)} · ${formatDuration(props.entry.durationMs)}`
         : `No sessions recorded · logged total ${formatDuration(ticket.totalElapsedMs)}`;
 
-  const preview = exceedsMax
-    ? `Exceeds current session (max ${formatDuration(maxMs)})`
+  const preview = extendsSession
+    ? `Ends now · start moves back to fit ${formatDuration(durationMs)}`
     : props.mode === "running"
       ? `Ends at ${formatClock(endTimeFromDuration(props.startedAt, durationMs))}`
       : `New duration: ${formatDuration(durationMs)}`;
@@ -308,7 +310,7 @@ function TicketTimeForm(props: TicketTimeFormProps) {
                   size="sm"
                   variant="outline"
                   className="h-7 px-2 text-xs"
-                  disabled={isSaving || (maxMs !== null && preset.ms > maxMs)}
+                  disabled={isSaving}
                   onClick={() => {
                     const parts = durationParts(preset.ms);
                     form.setFieldValue("hours", parts.hours);
@@ -323,13 +325,11 @@ function TicketTimeForm(props: TicketTimeFormProps) {
 
           {props.mode === "running" && (
             <p className="text-xs text-muted-foreground">
-              You can only shorten the running session.
+              A longer duration moves the session start back so it ends now.
             </p>
           )}
 
-          <FieldDescription className={exceedsMax ? "text-destructive" : undefined}>
-            {preview}
-          </FieldDescription>
+          <FieldDescription>{preview}</FieldDescription>
 
           {props.mode === "last" ? (
             <div className="flex items-center gap-2">
@@ -383,7 +383,7 @@ function TicketTimeForm(props: TicketTimeFormProps) {
         <Button
           type="submit"
           form="ticket-time-form"
-          disabled={isSaving || exceedsMax}
+          disabled={isSaving}
         >
           {isSaving ? "Saving…" : primaryLabel}
         </Button>

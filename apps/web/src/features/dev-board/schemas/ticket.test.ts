@@ -207,6 +207,20 @@ describe("ticketTimeAdjustSchema", () => {
       ticketTimeAdjustSchema.safeParse({ ...adjustBase, action: "set_total", durationMs: 0 })
         .success,
     ).toBe(true);
+    expect(
+      ticketTimeAdjustSchema.safeParse({
+        ...adjustBase,
+        action: "stop_with_duration",
+        durationMs: 10_800_000,
+      }).success,
+    ).toBe(true);
+    expect(
+      ticketTimeAdjustSchema.safeParse({
+        ...adjustBase,
+        action: "stop_with_duration",
+        durationMs: 0,
+      }).success,
+    ).toBe(false);
   });
 
   it("rejects invalid ids, datetimes, durations and actions", () => {

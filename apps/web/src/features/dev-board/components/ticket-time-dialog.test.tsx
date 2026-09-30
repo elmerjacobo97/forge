@@ -89,26 +89,33 @@ describe("TicketTimeDialog", () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it("blocks durations that exceed the running session", () => {
+  it("extends beyond the running session by moving the start back", async () => {
     vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-09-12T10:10:00.000Z"));
+    adjustTicketTimeAction.mockResolvedValue({
+      ok: true,
+      data: makeTicket({ isPaused: true, timerStartedAt: null }),
+    });
 
     renderDialog(makeTicket());
 
-    expect((screen.getByRole("button", { name: "30m" }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole("button", { name: "1h" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole("button", { name: "1h" }) as HTMLButtonElement).disabled).toBe(false);
 
-    fireEvent.change(screen.getByLabelText("Minutes"), { target: { value: "20" } });
+    fireEvent.click(screen.getByRole("button", { name: "1h" }));
 
-    expect(screen.getByText(/Exceeds current session/)).toBeTruthy();
-    expect((screen.getByRole("button", { name: "Stop timer" }) as HTMLButtonElement).disabled).toBe(
-      true,
-    );
-
-    fireEvent.change(screen.getByLabelText("Minutes"), { target: { value: "5" } });
-
+    expect(screen.getByText(/start moves back/)).toBeTruthy();
     expect((screen.getByRole("button", { name: "Stop timer" }) as HTMLButtonElement).disabled).toBe(
       false,
     );
+
+    fireEvent.click(screen.getByRole("button", { name: "Stop timer" }));
+
+    await waitFor(() => {
+      expect(adjustTicketTimeAction).toHaveBeenCalledWith({
+        ticketId: "ticket-1",
+        action: "stop_with_duration",
+        durationMs: 3_600_000,
+      });
+    });
   });
 
   it("prefills only the running segment, ignoring earlier logged time", () => {

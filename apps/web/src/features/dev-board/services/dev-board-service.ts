@@ -282,7 +282,9 @@ export const devBoardService = {
       p_action: input.action,
       p_ended_at: input.action === "stop_at" ? input.endedAt : null,
       p_duration_ms:
-        input.action === "set_last_duration" || input.action === "set_total"
+        input.action === "set_last_duration" ||
+        input.action === "set_total" ||
+        input.action === "stop_with_duration"
           ? input.durationMs
           : null,
     });

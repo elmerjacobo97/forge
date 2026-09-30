@@ -143,6 +143,11 @@ export const ticketTimeAdjustSchema = z.discriminatedUnion("action", [
   }),
   z.object({
     ticketId: z.uuid(),
+    action: z.literal("stop_with_duration"),
+    durationMs: z.number().int().min(1),
+  }),
+  z.object({
+    ticketId: z.uuid(),
     action: z.literal("set_last_duration"),
     durationMs: z.number().int().min(0),
   }),
