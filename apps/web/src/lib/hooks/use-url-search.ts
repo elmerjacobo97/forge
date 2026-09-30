@@ -1,30 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useDebounce } from "./use-debounce";
-
 export function useUrlSearch(query: string, onCommit: (value: string) => void, delay = 200) {
   const [draft, setDraft] = useState<string | null>(null);
   const [pending, setPending] = useState<string[]>([]);
   const [lastQuery, setLastQuery] = useState(query);
-  const debouncedDraft = useDebounce(draft, delay);
-  const lastSentRef = useRef<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const latestRef = useRef({ query, draft, onCommit });
 
   useEffect(() => {
-    if (draft === null || debouncedDraft !== draft) return;
-    if (draft.trim() === query) return;
-    if (lastSentRef.current === draft) return;
-    lastSentRef.current = draft;
-    onCommit(draft);
-  }, [draft, debouncedDraft, query, onCommit]);
+    latestRef.current = { query, draft, onCommit };
+  });
 
-  if (
-    draft !== null &&
-    debouncedDraft === draft &&
-    draft.trim() !== query &&
-    !pending.includes(draft)
-  ) {
-    setPending([...pending, draft]);
-  }
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   if (query !== lastQuery) {
     setLastQuery(query);
@@ -38,10 +25,19 @@ export function useUrlSearch(query: string, onCommit: (value: string) => void, d
     }
   }
 
-  const setValue = useCallback((next: string) => {
-    lastSentRef.current = null;
-    setDraft(next);
-  }, []);
+  const setValue = useCallback(
+    (next: string) => {
+      setDraft(next);
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        const latest = latestRef.current;
+        if (latest.draft !== next || next.trim() === latest.query) return;
+        setPending((current) => (current.includes(next) ? current : [...current, next]));
+        latest.onCommit(next);
+      }, delay);
+    },
+    [delay],
+  );
 
   return { value: draft ?? query, setValue };
 }

@@ -50,22 +50,38 @@ export function DeleteIdeaDialog({ idea, isOpen, onOpenChange }: DeleteIdeaDialo
           <DialogTitle>Delete idea?</DialogTitle>
           <DialogDescription>{`"${idea.title}" will be permanently removed.`}</DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={confirmDelete}
-            disabled={isDeleting}
-          >
-            Delete
-          </Button>
-        </DialogFooter>
+        <DeleteIdeaFooter
+          isDeleting={isDeleting}
+          onCancel={() => onOpenChange(false)}
+          onConfirm={confirmDelete}
+        />
       </DialogContent>
     </Dialog>
+  );
+}
+
+interface DeleteIdeaFooterProps {
+  isDeleting: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+function DeleteIdeaFooter({ isDeleting, onCancel, onConfirm }: DeleteIdeaFooterProps) {
+  return (
+    <DialogFooter>
+      <Button
+        variant="ghost"
+        onClick={onCancel}
+      >
+        Cancel
+      </Button>
+      <Button
+        variant="destructive"
+        onClick={onConfirm}
+        disabled={isDeleting}
+      >
+        Delete
+      </Button>
+    </DialogFooter>
   );
 }

@@ -31,7 +31,8 @@ const COLUMN_BADGE: Record<ReviewInboxColumn, string> = {
 };
 
 export function ReviewInbox({ items }: { items: ReviewInboxItem[] }) {
-  const [rows, setRows] = useState(items);
+  const [edits, setEdits] = useState<Record<string, Pick<ReviewInboxItem, "title" | "prUrl">>>({});
+  const rows = items.map((item) => ({ ...item, ...edits[item.ticketId] }));
   const [selected, setSelected] = useState<ReviewInboxItem | null>(null);
   const [editTicket, setEditTicket] = useState<Ticket | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -68,13 +69,10 @@ export function ReviewInbox({ items }: { items: ReviewInboxItem[] }) {
         return;
       }
 
-      setRows((currentRows) =>
-        currentRows.map((row) =>
-          row.ticketId === result.data.id
-            ? { ...row, title: result.data.title, prUrl: result.data.prUrl }
-            : row,
-        ),
-      );
+      setEdits((current) => ({
+        ...current,
+        [result.data.id]: { title: result.data.title, prUrl: result.data.prUrl },
+      }));
       toast.success("Ticket updated.");
     });
   }

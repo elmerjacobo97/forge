@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete02Icon, PlusSignIcon } from "@hugeicons/core-free-icons";
 
@@ -41,6 +42,10 @@ export function MonitorHeadersEditor({
   onChange,
   disabled = false,
 }: MonitorHeadersEditorProps) {
+  const [rowIds, setRowIds] = useState<string[]>(() => value.map(() => crypto.randomUUID()));
+  if (rowIds.length !== value.length) {
+    setRowIds(value.map((_, index) => rowIds[index] ?? crypto.randomUUID()));
+  }
   const persistedNames = new Set(persistedHeaders.map((header) => header.name.toLowerCase()));
   const nameCounts = new Map<string, number>();
   for (const header of value) {
@@ -53,6 +58,7 @@ export function MonitorHeadersEditor({
   }
 
   function removeHeader(index: number) {
+    setRowIds(rowIds.filter((_, currentIndex) => currentIndex !== index));
     onChange(value.filter((_, currentIndex) => currentIndex !== index));
   }
 
@@ -102,7 +108,7 @@ export function MonitorHeadersEditor({
 
             return (
               <div
-                key={index}
+                key={rowIds[index]}
                 className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 border p-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_auto]"
               >
                 <Field data-invalid={nameInvalid}>

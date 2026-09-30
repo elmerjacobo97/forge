@@ -35,6 +35,21 @@ export function IdeaRow({ idea }: { idea: Idea }) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
+  const menuActions = [
+    {
+      label: "Edit",
+      icon: PencilEdit01Icon,
+      variant: undefined,
+      onSelect: () => setIsEditOpen(true),
+    },
+    {
+      label: "Delete",
+      icon: Delete02Icon,
+      variant: "destructive" as const,
+      onSelect: () => setIsDeleteOpen(true),
+    },
+  ];
+
   return (
     <div className="group flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-accent/40">
       <div className="min-w-0 flex-1 space-y-1">
@@ -82,25 +97,20 @@ export function IdeaRow({ idea }: { idea: Idea }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
-            <HugeiconsIcon
-              icon={PencilEdit01Icon}
-              strokeWidth={2}
-              className="size-3.5"
-            />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => setIsDeleteOpen(true)}
-          >
-            <HugeiconsIcon
-              icon={Delete02Icon}
-              strokeWidth={2}
-              className="size-3.5"
-            />
-            Delete
-          </DropdownMenuItem>
+          {menuActions.map((action) => (
+            <DropdownMenuItem
+              key={action.label}
+              variant={action.variant}
+              onClick={action.onSelect}
+            >
+              <HugeiconsIcon
+                icon={action.icon}
+                strokeWidth={2}
+                className="size-3.5"
+              />
+              {action.label}
+            </DropdownMenuItem>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
 

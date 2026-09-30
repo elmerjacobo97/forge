@@ -12,8 +12,7 @@ import { uptimeMonitorService } from "@/features/uptime-monitor/services/uptime-
 export default async function UptimeMonitorDetailPage({
   params,
 }: PageProps<"/uptime-monitor/[monitorId]">) {
-  const { monitorId } = await params;
-  const user = await getCurrentUser();
+  const [{ monitorId }, user] = await Promise.all([params, getCurrentUser()]);
   if (!user) redirect("/login");
 
   const [monitors, initialDetail] = await Promise.all([

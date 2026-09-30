@@ -1,7 +1,7 @@
 "use client";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Message01Icon, PencilEdit01Icon } from "@hugeicons/core-free-icons";
+import { PencilEdit01Icon } from "@hugeicons/core-free-icons";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,18 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { COLUMN_LABELS, COMPLEXITY_LABELS, PRIORITY_LABELS, type Ticket } from "../types/board";
-import { formatLocalDateTime } from "../utils/planning-dates";
+import { COLUMN_LABELS, PRIORITY_LABELS, type Ticket } from "../types/board";
+import { TicketDetailBody } from "./ticket-detail-sections";
 import type { ReviewInboxColumn, ReviewInboxComment } from "../types/review-inbox";
 
 const COLUMN_BADGE: Record<ReviewInboxColumn, string> = {
@@ -50,8 +40,6 @@ export function TicketDetailDialog({
 }) {
   const column =
     ticket?.column === "validation" || ticket?.column === "review" ? ticket.column : null;
-  const startDateLabel = ticket ? formatLocalDateTime(ticket.startDate) : null;
-  const dueDateLabel = ticket ? formatLocalDateTime(ticket.dueDate) : null;
 
   return (
     <Dialog
@@ -78,114 +66,10 @@ export function TicketDetailDialog({
         </DialogHeader>
 
         {ticket ? (
-          <>
-            <Separator />
-            <ScrollArea className="max-h-48">
-              <p className="whitespace-pre-wrap pr-3 text-sm leading-relaxed">
-                {ticket.description.trim() ? ticket.description : "No description."}
-              </p>
-            </ScrollArea>
-            <ItemGroup className="gap-2">
-              <Item
-                variant="muted"
-                size="sm"
-              >
-                <ItemContent>
-                  <ItemTitle>Planning</ItemTitle>
-                  <ItemDescription className="line-clamp-none">
-                    <span className="block">
-                      <span className="font-medium">Complexity:</span>{" "}
-                      {ticket.complexity ? COMPLEXITY_LABELS[ticket.complexity] : "Not set"}
-                    </span>
-                    <span className="block">
-                      <span className="font-medium">Start Date:</span>{" "}
-                      {startDateLabel && ticket.startDate ? (
-                        <time dateTime={ticket.startDate}>{startDateLabel}</time>
-                      ) : (
-                        "Not scheduled"
-                      )}
-                    </span>
-                    <span className="block">
-                      <span className="font-medium">Due Date:</span>{" "}
-                      {dueDateLabel && ticket.dueDate ? (
-                        <time dateTime={ticket.dueDate}>{dueDateLabel}</time>
-                      ) : (
-                        "Not scheduled"
-                      )}
-                    </span>
-                  </ItemDescription>
-                </ItemContent>
-              </Item>
-              <Item
-                variant="muted"
-                size="sm"
-              >
-                <ItemContent>
-                  <ItemTitle>Responsible</ItemTitle>
-                  <ItemDescription className="line-clamp-none">
-                    {ticket.responsibleName ?? "No responsible person."}
-                  </ItemDescription>
-                </ItemContent>
-              </Item>
-              <Item
-                variant="muted"
-                size="sm"
-              >
-                <ItemContent>
-                  <ItemTitle>Branch</ItemTitle>
-                  <ItemDescription className="line-clamp-none font-mono text-xs">
-                    {ticket.branch?.trim() ? ticket.branch : "No branch."}
-                  </ItemDescription>
-                </ItemContent>
-              </Item>
-              <Item
-                variant="outline"
-                size="sm"
-                asChild={Boolean(ticket.prUrl)}
-              >
-                {ticket.prUrl ? (
-                  <a
-                    href={ticket.prUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <ItemContent>
-                      <ItemTitle>Pull request</ItemTitle>
-                      <ItemDescription className="line-clamp-none break-all text-xs">
-                        {ticket.prUrl}
-                      </ItemDescription>
-                    </ItemContent>
-                  </a>
-                ) : (
-                  <ItemContent>
-                    <ItemTitle>Pull request</ItemTitle>
-                    <ItemDescription className="line-clamp-none text-xs">
-                      No pull request.
-                    </ItemDescription>
-                  </ItemContent>
-                )}
-              </Item>
-              <Item
-                variant="muted"
-                size="sm"
-              >
-                <ItemMedia variant="icon">
-                  <HugeiconsIcon
-                    icon={Message01Icon}
-                    strokeWidth={2}
-                  />
-                </ItemMedia>
-                <ItemContent>
-                  <ItemTitle>Latest comment</ItemTitle>
-                  <ItemDescription className="line-clamp-none">
-                    {comment
-                      ? `${comment.author === "agent" ? "agent" : "you"} ${comment.excerpt}`
-                      : "No comments."}
-                  </ItemDescription>
-                </ItemContent>
-              </Item>
-            </ItemGroup>
-          </>
+          <TicketDetailBody
+            ticket={ticket}
+            comment={comment}
+          />
         ) : null}
 
         <DialogFooter>

@@ -2,59 +2,27 @@
 
 import dynamic from "next/dynamic";
 import { Suspense, useMemo, useState } from "react";
-import Link from "next/link";
-import { endOfDay, format, startOfDay, subDays } from "date-fns";
+import { endOfDay, startOfDay, subDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Activity01Icon,
-  ArrowLeft01Icon,
-  Calendar03Icon,
-  Download01Icon,
-  GaugeIcon,
-  ListChecksIcon,
-  PauseCircleIcon,
-  Timer01Icon,
-  TrophyIcon,
-} from "@hugeicons/core-free-icons";
 
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item";
-import { Progress } from "@/components/ui/progress";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ToggleGroupItem, ToggleGroup } from "@/components/ui/toggle-group";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAnalytics } from "../hooks/use-analytics";
 import { AnalyticsPreset, type AnalyticsData, type AnalyticsRange } from "../types/analytics";
-import { PRIORITY_COLORS } from "../types/board";
 import type { Project } from "../types/project";
-import { downloadCsv, formatRangeLabel } from "../utils/analytics-range";
-import { analyticsCsv, buildAnalytics, presetRange } from "../utils/analytics";
-import { formatDuration } from "../utils/timer";
+import { buildAnalytics, presetRange } from "../utils/analytics";
+import {
+  AnalyticsHeader,
+  AnalyticsLeaderboard,
+  AnalyticsRangeControls,
+  AnalyticsStatsCard,
+} from "./analytics-sections";
 import { AnalyticsSkeleton } from "./analytics-skeleton";
 import { ChartsSkeleton } from "./charts-skeleton";
-
-import { StatItem } from "./stat-item";
 
 const AnalyticsCharts = dynamic(
   () => import("./analytics-charts").then((mod) => mod.AnalyticsCharts),
   { ssr: false, loading: () => <ChartsSkeleton /> },
 );
-
-function formatCustomRange(range: DateRange | undefined): string {
-  if (!range?.from) return "Select date range";
-  if (!range.to) return format(range.from, "MMM d, yyyy");
-  return `${format(range.from, "MMM d, yyyy")} - ${format(range.to, "MMM d, yyyy")}`;
-}
 
 function lastFifteenDays(): DateRange {
   const today = new Date();
@@ -74,7 +42,6 @@ export function ProjectAnalytics({
 }: ProjectAnalyticsProps) {
   const [preset, setPreset] = useState<AnalyticsPreset>("30d");
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const range = useMemo(() => {
     if (preset !== "custom") return presetRange(preset);
     const from = customRange?.from;
@@ -92,7 +59,6 @@ export function ProjectAnalytics({
     isLoading,
   } = useAnalytics(project.id, range, initialRange, initialAnalytics);
   const summary = analytics && range ? buildAnalytics(analytics, range) : null;
-  const maxTicketDuration = summary?.topTickets[0]?.durationMs ?? 0;
 
   function selectPreset(value: string) {
     if (!value) return;
@@ -103,100 +69,18 @@ export function ProjectAnalytics({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-col">
-          <h2 className="truncate font-heading text-lg font-semibold">{project.name} analytics</h2>
-          <p className="text-sm text-muted-foreground">
-            Work trends, cycle time, and time invested for this project.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            asChild
-            size="sm"
-            variant="outline"
-          >
-            <Link href={`/dev-board/${project.id}`}>
-              <HugeiconsIcon
-                icon={ArrowLeft01Icon}
-                strokeWidth={2}
-                className="size-3.5"
-              />
-              Board
-            </Link>
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => summary && downloadCsv(analyticsCsv(summary))}
-            disabled={!summary}
-          >
-            <HugeiconsIcon
-              icon={Download01Icon}
-              strokeWidth={2}
-              className="size-3.5"
-            />
-            Export CSV
-          </Button>
-        </div>
-      </div>
+      <AnalyticsHeader
+        project={project}
+        summary={summary}
+      />
 
-      <Card size="sm">
-        <CardContent className="flex flex-wrap items-center gap-3">
-          <ToggleGroup
-            type="single"
-            value={preset}
-            onValueChange={selectPreset}
-            variant="outline"
-            size="sm"
-          >
-            <ToggleGroupItem value="7d">7 days</ToggleGroupItem>
-            <ToggleGroupItem value="30d">30 days</ToggleGroupItem>
-            <ToggleGroupItem value="90d">90 days</ToggleGroupItem>
-            <ToggleGroupItem value="custom">Custom</ToggleGroupItem>
-          </ToggleGroup>
-          {preset === "custom" && (
-            <Popover
-              open={isCalendarOpen}
-              onOpenChange={setIsCalendarOpen}
-            >
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="min-w-56 justify-start text-left font-normal"
-                >
-                  <HugeiconsIcon
-                    icon={Calendar03Icon}
-                    strokeWidth={2}
-                    className="size-3.5"
-                  />
-                  {formatCustomRange(customRange)}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                align="start"
-                className="w-auto p-0"
-              >
-                <Card className="w-fit p-0">
-                  <CardContent className="p-0">
-                    <Calendar
-                      mode="range"
-                      selected={customRange}
-                      onSelect={setCustomRange}
-                      defaultMonth={customRange?.from}
-                      numberOfMonths={2}
-                      disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                    />
-                  </CardContent>
-                </Card>
-              </PopoverContent>
-            </Popover>
-          )}
-          <span className="ml-auto text-xs text-muted-foreground">
-            {range ? formatRangeLabel(range) : "Select an end date"}
-          </span>
-        </CardContent>
-      </Card>
+      <AnalyticsRangeControls
+        preset={preset}
+        onPresetChange={selectPreset}
+        customRange={customRange}
+        onCustomRangeChange={setCustomRange}
+        range={range}
+      />
 
       <div className="min-h-0 flex-1">
         <div className="flex flex-col gap-4 pb-6 *:shrink-0">
@@ -208,65 +92,7 @@ export function ProjectAnalytics({
             </Card>
           ) : summary ? (
             <>
-              <Card>
-                <CardContent className="grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0 xl:grid-cols-5">
-                  <StatItem
-                    icon={
-                      <HugeiconsIcon
-                        icon={ListChecksIcon}
-                        strokeWidth={2}
-                        className="size-4"
-                      />
-                    }
-                    label="Completed"
-                    value={summary.completed}
-                  />
-                  <StatItem
-                    icon={
-                      <HugeiconsIcon
-                        icon={Timer01Icon}
-                        strokeWidth={2}
-                        className="size-4"
-                      />
-                    }
-                    label="Time logged"
-                    value={formatDuration(summary.loggedMs)}
-                  />
-                  <StatItem
-                    icon={
-                      <HugeiconsIcon
-                        icon={GaugeIcon}
-                        strokeWidth={2}
-                        className="size-4"
-                      />
-                    }
-                    label="Average cycle"
-                    value={summary.averageCycleMs ? formatDuration(summary.averageCycleMs) : "–"}
-                  />
-                  <StatItem
-                    icon={
-                      <HugeiconsIcon
-                        icon={Activity01Icon}
-                        strokeWidth={2}
-                        className="size-4"
-                      />
-                    }
-                    label="Active"
-                    value={summary.active}
-                  />
-                  <StatItem
-                    icon={
-                      <HugeiconsIcon
-                        icon={PauseCircleIcon}
-                        strokeWidth={2}
-                        className="size-4"
-                      />
-                    }
-                    label="Paused"
-                    value={summary.paused}
-                  />
-                </CardContent>
-              </Card>
+              <AnalyticsStatsCard summary={summary} />
 
               <p className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
                 Trends
@@ -278,73 +104,7 @@ export function ProjectAnalytics({
               <p className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
                 Leaderboard
               </p>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <HugeiconsIcon
-                      icon={TrophyIcon}
-                      strokeWidth={2}
-                      className="size-4 text-muted-foreground"
-                    />
-                    Longest tickets
-                  </CardTitle>
-                  <CardDescription>
-                    {summary.longestTicket
-                      ? `${summary.longestTicket.title} has the most logged time.`
-                      : "No time entries in this range."}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {summary.topTickets.length ? (
-                    <ItemGroup>
-                      {summary.topTickets.map(({ ticket, durationMs }, index) => (
-                        <Item
-                          key={ticket.id}
-                          variant="outline"
-                        >
-                          <ItemMedia>
-                            <span className="flex size-6 items-center justify-center bg-muted font-mono text-xs tabular-nums">
-                              {index + 1}
-                            </span>
-                          </ItemMedia>
-                          <ItemContent>
-                            <ItemTitle>
-                              <span
-                                aria-hidden
-                                className={`size-1.5 shrink-0 ${PRIORITY_COLORS[ticket.priority]}`}
-                              />
-                              {ticket.title}
-                            </ItemTitle>
-                            <Progress
-                              value={(durationMs / (maxTicketDuration || 1)) * 100}
-                              className="h-1.5"
-                            />
-                          </ItemContent>
-                          <ItemActions>
-                            <span className="font-mono text-sm tabular-nums text-muted-foreground">
-                              {formatDuration(durationMs)}
-                            </span>
-                          </ItemActions>
-                        </Item>
-                      ))}
-                    </ItemGroup>
-                  ) : (
-                    <Empty>
-                      <EmptyMedia variant="icon">
-                        <HugeiconsIcon
-                          icon={TrophyIcon}
-                          strokeWidth={2}
-                          className="size-4"
-                        />
-                      </EmptyMedia>
-                      <EmptyTitle>No time entries yet</EmptyTitle>
-                      <EmptyDescription>
-                        Start a timer on a ticket to see it ranked here.
-                      </EmptyDescription>
-                    </Empty>
-                  )}
-                </CardContent>
-              </Card>
+              <AnalyticsLeaderboard summary={summary} />
             </>
           ) : null}
         </div>

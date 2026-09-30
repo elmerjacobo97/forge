@@ -1,136 +1,25 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { PlusSignIcon, WebhookIcon } from "@hugeicons/core-free-icons";
-import { toast } from "sonner";
-
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { WEBHOOK_MAX_ENDPOINTS_PER_USER } from "./constants";
 import { CreateEndpointDialog } from "./components/create-endpoint-dialog";
-import { EndpointRow } from "./components/endpoint-row";
-import { EventDetail } from "./components/event-detail";
-import { EventFeed } from "./components/event-feed";
-import { deleteWebhookEndpointAction } from "./actions";
-import { useWebhookEvents } from "./hooks/use-webhook-events";
-import type { WebhookEndpoint, WebhookEvent } from "./types";
-import { isEndpointExpired } from "./utils/limits";
+import { DeleteEndpointDialog } from "./components/delete-endpoint-dialog";
+import { EndpointsPanel } from "./components/endpoints-panel";
+import { EventsPanel } from "./components/events-panel";
+import { InspectorHeader } from "./components/inspector-header";
+import { useWebhookInspector } from "./hooks/use-webhook-inspector";
+import type { WebhookEndpoint } from "./types";
 
 export function WebhookInspector({ initialEndpoints }: { initialEndpoints: WebhookEndpoint[] }) {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<WebhookEndpoint | null>(null);
-  const [selectedEndpointId, setSelectedEndpointId] = useState<string | null>(null);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [isDeleting, startDeleting] = useTransition();
-
   const endpoints = initialEndpoints;
-
-  // Resolve against live data during render (avoid effect setState cascades).
-  const activeEndpointId =
-    selectedEndpointId && endpoints.some((endpoint) => endpoint.id === selectedEndpointId)
-      ? selectedEndpointId
-      : null;
-
-  const {
-    events,
-    isLoading: eventsLoading,
-    error: eventsError,
-  } = useWebhookEvents(activeEndpointId);
-
-  const activeEventId =
-    selectedEventId && events.some((event) => event.id === selectedEventId)
-      ? selectedEventId
-      : (events[0]?.id ?? null);
-
-  const selectedEndpoint = endpoints.find((endpoint) => endpoint.id === activeEndpointId) ?? null;
-  const selectedEvent = events.find((event) => event.id === activeEventId) ?? null;
-
-  const activeCount = useMemo(
-    () => endpoints.filter((endpoint) => !isEndpointExpired(endpoint.expiresAt)).length,
-    [endpoints],
-  );
-  const atLimit = activeCount >= WEBHOOK_MAX_ENDPOINTS_PER_USER;
-
-  function selectEndpoint(endpoint: WebhookEndpoint) {
-    setSelectedEndpointId(endpoint.id);
-    setSelectedEventId(null);
-  }
-
-  function selectEvent(event: WebhookEvent) {
-    setSelectedEventId(event.id);
-  }
-
-  function confirmDelete() {
-    if (!deleteTarget) return;
-    const deletingSelected = deleteTarget.id === selectedEndpointId;
-
-    startDeleting(async () => {
-      const result = await deleteWebhookEndpointAction(deleteTarget.id);
-      if (!result.ok) {
-        toast.error(result.message);
-        setDeleteTarget(null);
-        return;
-      }
-
-      toast.success("Webhook endpoint deleted.");
-      setDeleteTarget(null);
-      if (deletingSelected) {
-        setSelectedEndpointId(null);
-        setSelectedEventId(null);
-      }
-    });
-  }
+  const inspector = useWebhookInspector(endpoints);
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="font-heading text-lg font-medium tracking-tight">Webhook endpoints</h1>
-          <p className="text-xs text-muted-foreground">
-            Create temporary URLs that capture and inspect incoming HTTP requests. {activeCount}/
-            {WEBHOOK_MAX_ENDPOINTS_PER_USER} active.
-          </p>
-        </div>
-        <Button
-          size="sm"
-          className="shrink-0 gap-1.5"
-          onClick={() => setIsCreateOpen(true)}
-          disabled={atLimit}
-          title={
-            atLimit
-              ? `You can have at most ${WEBHOOK_MAX_ENDPOINTS_PER_USER} active endpoints.`
-              : undefined
-          }
-        >
-          <HugeiconsIcon
-            icon={PlusSignIcon}
-            strokeWidth={2}
-            className="size-3.5"
-          />
-          Create
-        </Button>
-      </div>
-
-      {atLimit ? (
-        <Alert>
-          <AlertTitle>Active endpoint limit reached</AlertTitle>
-          <AlertDescription>
-            Delete or wait for an endpoint to expire before creating another (max{" "}
-            {WEBHOOK_MAX_ENDPOINTS_PER_USER} active).
-          </AlertDescription>
-        </Alert>
-      ) : null}
+      <InspectorHeader
+        activeCount={inspector.activeCount}
+        atLimit={inspector.atLimit}
+        onCreate={() => inspector.setIsCreateOpen(true)}
+      />
 
       <ResizablePanelGroup
         orientation="vertical"
@@ -141,47 +30,13 @@ export function WebhookInspector({ initialEndpoints }: { initialEndpoints: Webho
           minSize={20}
           className="p-2"
         >
-          <div className="flex h-full min-h-0 flex-col gap-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Endpoints</Label>
-            <div className="min-h-0 flex-1 overflow-y-auto border border-input/60 bg-muted/20 p-2">
-              {endpoints.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-                  <HugeiconsIcon
-                    icon={WebhookIcon}
-                    strokeWidth={2}
-                    className="size-8 text-muted-foreground/40"
-                  />
-                  <p className="text-sm font-medium">No webhook endpoints yet</p>
-                  <p className="max-w-sm text-xs text-muted-foreground">
-                    Create an endpoint to get a public URL that captures incoming HTTP requests.
-                  </p>
-                  <Button
-                    size="sm"
-                    onClick={() => setIsCreateOpen(true)}
-                  >
-                    <HugeiconsIcon
-                      icon={PlusSignIcon}
-                      strokeWidth={2}
-                      data-icon="inline-start"
-                    />
-                    Create endpoint
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {endpoints.map((endpoint) => (
-                    <EndpointRow
-                      key={endpoint.id}
-                      endpoint={endpoint}
-                      selected={endpoint.id === activeEndpointId}
-                      onSelect={selectEndpoint}
-                      onDelete={setDeleteTarget}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <EndpointsPanel
+            endpoints={endpoints}
+            activeEndpointId={inspector.activeEndpointId}
+            onCreate={() => inspector.setIsCreateOpen(true)}
+            onSelect={inspector.selectEndpoint}
+            onDelete={inspector.setDeleteTarget}
+          />
         </ResizablePanel>
 
         <ResizableHandle
@@ -193,113 +48,30 @@ export function WebhookInspector({ initialEndpoints }: { initialEndpoints: Webho
           defaultSize={62}
           minSize={24}
         >
-          {selectedEndpoint ? (
-            <div className="flex h-full min-h-0 flex-col gap-1.5 p-2 pt-0">
-              <Label className="text-xs font-medium text-muted-foreground">
-                Events · {selectedEndpoint.name.trim() || "Untitled endpoint"}
-              </Label>
-              {eventsError ? (
-                <Alert variant="destructive">
-                  <AlertTitle>Could not load events</AlertTitle>
-                  <AlertDescription>{eventsError}</AlertDescription>
-                </Alert>
-              ) : (
-                <ResizablePanelGroup
-                  orientation="horizontal"
-                  className="min-h-0 flex-1"
-                >
-                  <ResizablePanel
-                    defaultSize={36}
-                    minSize={20}
-                    className="pr-2"
-                  >
-                    <div className="h-full min-h-0 overflow-hidden border border-input/60 bg-muted/20">
-                      <EventFeed
-                        events={events}
-                        selectedId={activeEventId}
-                        onSelect={selectEvent}
-                        isLoading={eventsLoading}
-                      />
-                    </div>
-                  </ResizablePanel>
-
-                  <ResizableHandle
-                    withHandle
-                    className="bg-transparent"
-                  />
-
-                  <ResizablePanel
-                    defaultSize={64}
-                    minSize={30}
-                    className="pl-2"
-                  >
-                    <div className="h-full min-h-0 overflow-hidden border border-input/60 bg-muted/20">
-                      <EventDetail event={selectedEvent} />
-                    </div>
-                  </ResizablePanel>
-                </ResizablePanelGroup>
-              )}
-            </div>
-          ) : (
-            <div className="flex h-full min-h-0 flex-col gap-1.5 p-2 pt-0">
-              <Label className="text-xs font-medium text-muted-foreground">Events</Label>
-              <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 border border-dashed border-input/40 bg-muted/10 p-6 text-center">
-                <HugeiconsIcon
-                  icon={WebhookIcon}
-                  strokeWidth={2}
-                  className="size-8 text-muted-foreground/40"
-                />
-                <p className="text-sm font-medium">Select an endpoint</p>
-                <p className="max-w-sm text-xs text-muted-foreground">
-                  Choose a webhook endpoint above to inspect captured HTTP requests.
-                </p>
-              </div>
-            </div>
-          )}
+          <EventsPanel
+            selectedEndpoint={inspector.selectedEndpoint}
+            events={inspector.events}
+            activeEventId={inspector.activeEventId}
+            selectedEvent={inspector.selectedEvent}
+            isLoading={inspector.eventsLoading}
+            error={inspector.eventsError}
+            onSelectEvent={inspector.selectEvent}
+          />
         </ResizablePanel>
       </ResizablePanelGroup>
 
       <CreateEndpointDialog
-        isOpen={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        disabled={atLimit}
+        isOpen={inspector.isCreateOpen}
+        onOpenChange={inspector.setIsCreateOpen}
+        disabled={inspector.atLimit}
       />
 
-      <Dialog
-        open={deleteTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
-      >
-        <DialogContent
-          onInteractOutside={(event) => event.preventDefault()}
-          className="max-w-md"
-        >
-          <DialogHeader>
-            <DialogTitle>Delete webhook endpoint?</DialogTitle>
-            <DialogDescription>
-              {deleteTarget
-                ? `"${deleteTarget.name.trim() || "Untitled endpoint"}" and all captured events will be permanently removed.`
-                : null}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setDeleteTarget(null)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={isDeleting}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteEndpointDialog
+        target={inspector.deleteTarget}
+        isDeleting={inspector.isDeleting}
+        onClose={() => inspector.setDeleteTarget(null)}
+        onConfirm={inspector.confirmDelete}
+      />
     </div>
   );
 }

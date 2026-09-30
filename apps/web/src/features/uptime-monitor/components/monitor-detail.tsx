@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -140,29 +140,13 @@ export function MonitorDetail({ monitor, initialDetail }: MonitorDetailProps) {
           <span className="text-xs font-medium text-muted-foreground">Check history</span>
           <div className="min-h-0 flex-1 overflow-y-auto border border-input/60">
             {isLoading ? (
-              <div className="flex flex-col gap-2 p-2">
-                {[1, 2, 3].map((index) => (
-                  <Skeleton
-                    key={index}
-                    className="h-8 w-full"
-                  />
-                ))}
-              </div>
+              <SkeletonRows count={3} />
             ) : checks.length === 0 ? (
-              <Empty className="h-full border-0">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <HugeiconsIcon
-                      icon={HistoryIcon}
-                      strokeWidth={2}
-                    />
-                  </EmptyMedia>
-                  <EmptyTitle>No checks yet</EmptyTitle>
-                  <EmptyDescription className="text-xs">
-                    The first check runs on the monitor&apos;s schedule.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+              <EmptyState
+                icon={HistoryIcon}
+                title="No checks yet"
+                description={<>The first check runs on the monitor&apos;s schedule.</>}
+              />
             ) : (
               <Table>
                 <TableHeader>
@@ -208,29 +192,13 @@ export function MonitorDetail({ monitor, initialDetail }: MonitorDetailProps) {
           <span className="text-xs font-medium text-muted-foreground">Recent incidents</span>
           <div className="min-h-0 flex-1 overflow-y-auto border border-input/60">
             {isLoading ? (
-              <div className="flex flex-col gap-2 p-2">
-                {[1, 2].map((index) => (
-                  <Skeleton
-                    key={index}
-                    className="h-8 w-full"
-                  />
-                ))}
-              </div>
+              <SkeletonRows count={2} />
             ) : incidents.length === 0 ? (
-              <Empty className="h-full border-0">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <HugeiconsIcon
-                      icon={ShieldAlertIcon}
-                      strokeWidth={2}
-                    />
-                  </EmptyMedia>
-                  <EmptyTitle>No incidents</EmptyTitle>
-                  <EmptyDescription className="text-xs">
-                    This monitor hasn&apos;t gone down yet.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+              <EmptyState
+                icon={ShieldAlertIcon}
+                title="No incidents"
+                description={<>This monitor hasn&apos;t gone down yet.</>}
+              />
             ) : (
               <Table>
                 <TableHeader>
@@ -282,5 +250,43 @@ function StatChip({
         <span className="font-medium tabular-nums">{formatUptimePercentage(value)}</span>
       )}
     </div>
+  );
+}
+
+function SkeletonRows({ count }: { count: number }) {
+  return (
+    <div className="flex flex-col gap-2 p-2">
+      {Array.from({ length: count }, (_, index) => (
+        <Skeleton
+          key={index}
+          className="h-8 w-full"
+        />
+      ))}
+    </div>
+  );
+}
+
+function EmptyState({
+  icon,
+  title,
+  description,
+}: {
+  icon: typeof HistoryIcon;
+  title: string;
+  description: ReactNode;
+}) {
+  return (
+    <Empty className="h-full border-0">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <HugeiconsIcon
+            icon={icon}
+            strokeWidth={2}
+          />
+        </EmptyMedia>
+        <EmptyTitle>{title}</EmptyTitle>
+        <EmptyDescription className="text-xs">{description}</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
   );
 }

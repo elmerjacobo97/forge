@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { createTicketCommentAction } from "../actions";
 import { useTicketComments } from "../hooks/use-ticket-comments";
 import type { TicketComment } from "../types/board";
+import { formatLocalDateTime } from "../utils/planning-dates";
 
 interface TicketCommentsProps {
   ticketId: string;
@@ -25,9 +26,7 @@ interface TicketCommentsProps {
 }
 
 function formatCommentDate(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
+  return formatLocalDateTime(value) ?? value;
 }
 
 export function TicketComments({ ticketId, onCommentCreated }: TicketCommentsProps) {
