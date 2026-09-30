@@ -10,6 +10,9 @@ export function toTicketSummary(ticket: Ticket): TicketSummary {
     branch: ticket.branch,
     prUrl: ticket.prUrl,
     responsibleName: ticket.responsibleName,
+    startDate: ticket.startDate,
+    dueDate: ticket.dueDate,
+    complexity: ticket.complexity,
     createdAt: ticket.createdAt,
   };
 }

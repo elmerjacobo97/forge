@@ -67,7 +67,8 @@ export class ForgeMcp extends McpAgent<Env> {
     this.server.registerTool(
       "forge_list_tickets",
       {
-        description: "List the tickets of a project, optionally filtered by column.",
+        description:
+          "List a project's tickets, optionally filtered by column. Ticket summaries include complexity, startDate, and dueDate.",
         inputSchema: listTicketsInput,
       },
       (args) => run((handlers) => handlers.listTickets(args)),
@@ -77,7 +78,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_next_ticket",
       {
         description:
-          "Get the best pending todo ticket with its project, comments, and the tickets already in progress.",
+          "Get the best pending todo ticket with its planning fields, project, comments, and the tickets already in progress.",
         inputSchema: nextTicketInput,
       },
       (args) => run((handlers) => handlers.nextTicket(args)),
@@ -86,7 +87,7 @@ export class ForgeMcp extends McpAgent<Env> {
     this.server.registerTool(
       "forge_get_ticket",
       {
-        description: "Get a ticket with its comment thread.",
+        description: "Get a ticket with its planning fields and comment thread.",
         inputSchema: getTicketInput,
       },
       (args) => run((handlers) => handlers.getTicket(args)),
@@ -106,7 +107,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_create_ticket",
       {
         description:
-          "Create a Dev Board ticket. Requires projectId and title. description defaults to empty, column to backlog, priority to med, and responsibleName is optional free text (max 120 characters).",
+          "Create a Dev Board ticket. Requires projectId and title. description defaults to empty, column to backlog, and priority to med. responsibleName is optional free text (max 120 characters). Optional planning fields are complexity (low, medium, high), startDate, and dueDate; dates require ISO 8601 timestamps with an explicit offset, and startDate must not follow dueDate.",
         inputSchema: createTicketInput,
       },
       (args) => run((handlers) => handlers.createTicket(args)),
@@ -126,7 +127,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_update_ticket",
       {
         description:
-          "Update ticket handoff or responsibleName: branch, prUrl, clearBranch, clearPrUrl, responsibleName, or clearResponsible. At least one is required. Does not change title, description, or priority.",
+          "Update branch, prUrl, responsibleName, or planning fields. Supported fields are branch, prUrl, clearBranch, clearPrUrl, responsibleName, clearResponsible, complexity, startDate, dueDate, clearStartDate, clearDueDate, and clearComplexity. Complexity is low, medium, or high; dates require ISO 8601 timestamps with an explicit offset. Omitted planning fields are preserved. At least one supported field is required. Does not change title, description, or priority.",
         inputSchema: updateTicketInput,
       },
       (args) => run((handlers) => handlers.updateTicket(args)),

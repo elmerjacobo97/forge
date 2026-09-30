@@ -34,6 +34,9 @@ export function createTicket(values: TicketFormValues, projectId: string): Ticke
     branch: null,
     prUrl: null,
     responsibleName: values.responsibleName,
+    startDate: values.startDate,
+    dueDate: values.dueDate,
+    complexity: values.complexity,
   };
 }
 

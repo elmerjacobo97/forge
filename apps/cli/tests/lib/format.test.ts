@@ -51,6 +51,9 @@ const sampleTicket: Ticket = {
   branch: "spec-17-agent-ticket-loop",
   prUrl: "https://github.com/acme/forge/pull/17",
   responsibleName: "Ada Lovelace",
+  complexity: "high",
+  startDate: "2026-09-28T21:29:00.000Z",
+  dueDate: "2026-10-02T23:00:00.000Z",
 };
 
 const sampleComment: TicketComment = {
@@ -110,6 +113,9 @@ describe("formatTicketText", () => {
     expect(text).toContain("column:      todo");
     expect(text).toContain("priority:    high");
     expect(text).toContain("responsible: Ada Lovelace");
+    expect(text).toContain("complexity:  high");
+    expect(text).toContain("startDate:   2026-09-28T21:29:00.000Z");
+    expect(text).toContain("dueDate:     2026-10-02T23:00:00.000Z");
     expect(text).toContain("timer:       stopped (logged 1:05)");
   });
 
@@ -131,8 +137,18 @@ describe("formatTicketText", () => {
     ).toContain("timer:       paused (logged 0:00)");
   });
 
-  it("shows (none) for empty description", () => {
-    expect(formatTicketText({ ...sampleTicket, description: "" })).toContain("description: (none)");
+  it("shows (none) for empty description and unset planning fields", () => {
+    const text = formatTicketText({
+      ...sampleTicket,
+      description: "",
+      complexity: null,
+      startDate: null,
+      dueDate: null,
+    });
+    expect(text).toContain("description: (none)");
+    expect(text).toContain("complexity:  (none)");
+    expect(text).toContain("startDate:   (none)");
+    expect(text).toContain("dueDate:     (none)");
   });
 
   it("renders branch and prUrl, with (none) when empty", () => {
@@ -207,6 +223,9 @@ describe("formatNextContextText", () => {
     expect(text).toContain("project:     Forge (p1)");
     expect(text).toContain("priority:    high");
     expect(text).toContain("responsible: Ada Lovelace");
+    expect(text).toContain("complexity:  high");
+    expect(text).toContain("startDate:   2026-09-28T21:29:00.000Z");
+    expect(text).toContain("dueDate:     2026-10-02T23:00:00.000Z");
     expect(text).toContain("comments:    1");
     expect(text).toContain("inProgress:  1 ticket(s) in progress (not eligible)");
     expect(text).toContain("Implemented the loop and moved to review.");

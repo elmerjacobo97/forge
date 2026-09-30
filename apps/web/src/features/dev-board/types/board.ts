@@ -21,6 +21,15 @@ export function isTimerColumn(column: ColumnId): boolean {
 export const PRIORITIES = ["low", "med", "high"] as const;
 export type Priority = (typeof PRIORITIES)[number];
 
+export const COMPLEXITY_LEVELS = ["low", "medium", "high"] as const;
+export type TicketComplexity = (typeof COMPLEXITY_LEVELS)[number];
+
+export const COMPLEXITY_LABELS = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+} satisfies Record<TicketComplexity, string>;
+
 export const PRIORITY_LABELS: Record<Priority, string> = {
   low: "Low",
   med: "Medium",
@@ -49,6 +58,9 @@ export interface Ticket {
   branch: string | null;
   prUrl: string | null;
   responsibleName: string | null;
+  startDate: string | null;
+  dueDate: string | null;
+  complexity: TicketComplexity | null;
   commentCount?: number;
 }
 

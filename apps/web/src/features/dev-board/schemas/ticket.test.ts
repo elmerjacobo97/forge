@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   ticketCommentSchema,
+  ticketCreateSchema,
   ticketInputSchema,
   ticketSchema,
   ticketTimeAdjustSchema,
@@ -15,6 +16,9 @@ const base = {
   branch: null,
   prUrl: null,
   responsibleName: "",
+  startDate: null,
+  dueDate: null,
+  complexity: null,
 };
 
 const inputRow = {
@@ -73,6 +77,56 @@ describe("ticketSchema handoff fields", () => {
     ).toBe(false);
     expect(ticketSchema.safeParse({ ...base, branch: "x".repeat(201) }).success).toBe(false);
   });
+
+  it("normalizes empty planning fields and accepts valid values", () => {
+    expect(ticketSchema.parse({ ...base, startDate: "", dueDate: null }).startDate).toBeNull();
+    expect(
+      ticketSchema.parse({
+        ...base,
+        startDate: "2026-09-28T19:00:00.000Z",
+        dueDate: "2026-09-28T21:00:00.000+02:00",
+        complexity: "high",
+      }),
+    ).toMatchObject({ complexity: "high" });
+  });
+
+  it("rejects malformed planning values and start dates after due dates", () => {
+    expect(ticketSchema.safeParse({ ...base, startDate: "2026-09-28T19:00" }).success).toBe(false);
+    expect(
+      ticketSchema.safeParse({
+        ...base,
+        startDate: "2026-09-29T00:00:00Z",
+        dueDate: "2026-09-28T00:00:00Z",
+      }).success,
+    ).toBe(false);
+    expect(ticketSchema.safeParse({ ...base, complexity: "urgent" }).success).toBe(false);
+  });
+
+  it("applies planning validation to ticket creation and defaults omitted fields", () => {
+    const input = { ...base, projectId: inputRow.projectId };
+    expect(ticketCreateSchema.safeParse(input).success).toBe(true);
+    const legacyInput = {
+      title: base.title,
+      description: base.description,
+      priority: base.priority,
+      branch: base.branch,
+      prUrl: base.prUrl,
+      responsibleName: base.responsibleName,
+      projectId: inputRow.projectId,
+    };
+    expect(ticketCreateSchema.parse(legacyInput)).toMatchObject({
+      startDate: null,
+      dueDate: null,
+      complexity: null,
+    });
+    expect(
+      ticketCreateSchema.safeParse({
+        ...input,
+        startDate: "2026-09-29T00:00:00Z",
+        dueDate: "2026-09-28T00:00:00Z",
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe("ticketCommentSchema", () => {
@@ -98,6 +152,22 @@ describe("ticketInputSchema handoff and responsible fields", () => {
         prUrl: "https://github.com/acme/forge/pull/17",
       }).success,
     ).toBe(true);
+  });
+
+  it("accepts planning fields but leaves omitted values undefined for partial updates", () => {
+    const parsedInput = ticketInputSchema.parse(inputRow);
+    expect(parsedInput.startDate).toBeUndefined();
+    expect(parsedInput.dueDate).toBeUndefined();
+    expect(parsedInput.complexity).toBeUndefined();
+    expect(
+      ticketInputSchema.safeParse({
+        ...inputRow,
+        startDate: "2026-09-28T19:00:00.000Z",
+        dueDate: "2026-09-28T20:00:00.000Z",
+        complexity: "medium",
+      }).success,
+    ).toBe(true);
+    expect(ticketInputSchema.safeParse({ ...inputRow, complexity: "urgent" }).success).toBe(false);
   });
 
   it("rejects invalid handoff and responsible values", () => {

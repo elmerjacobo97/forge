@@ -57,6 +57,9 @@ function ticket(id: string, projectId: string): Ticket {
     branch: null,
     prUrl: null,
     responsibleName: null,
+    startDate: null,
+    dueDate: null,
+    complexity: null,
   };
 }
 

@@ -72,13 +72,16 @@ describe("project and ticket inputs", () => {
 describe("ticket write inputs", () => {
   it("accepts a valid create, move, update, and comment", () => {
     expect(
-      z.object(createTicketInput).safeParse({
+      createTicketInput.safeParse({
         projectId: "p1",
         title: "Ship MCP writes",
         description: "notes",
         column: "todo",
         priority: "high",
         responsibleName: "Ada Lovelace",
+        complexity: "high",
+        startDate: "2026-09-28T21:29:00-06:00",
+        dueDate: "2026-10-02T17:00:00-06:00",
       }).success,
     ).toBe(true);
     expect(
@@ -92,6 +95,21 @@ describe("ticket write inputs", () => {
       }).success,
     ).toBe(true);
     expect(updateTicketInput.safeParse({ ticketId: "t1", clearBranch: true }).success).toBe(true);
+    expect(
+      updateTicketInput.safeParse({
+        ticketId: "t1",
+        complexity: "medium",
+        startDate: "2026-09-28T21:29:00-06:00",
+      }).success,
+    ).toBe(true);
+    expect(
+      updateTicketInput.safeParse({
+        ticketId: "t1",
+        clearStartDate: true,
+        clearDueDate: true,
+        clearComplexity: true,
+      }).success,
+    ).toBe(true);
     expect(updateTicketInput.safeParse({ ticketId: "t1", responsibleName: " Ada " }).success).toBe(
       true,
     );
@@ -104,18 +122,21 @@ describe("ticket write inputs", () => {
   });
 
   it("defaults create description, column, and priority", () => {
-    const parsed = z.object(createTicketInput).safeParse({ projectId: "p1", title: "Ship it" });
+    const parsed = createTicketInput.safeParse({ projectId: "p1", title: "Ship it" });
     expect(parsed.success).toBe(true);
     if (parsed.success) {
       expect(parsed.data.description).toBe("");
       expect(parsed.data.column).toBe("backlog");
       expect(parsed.data.priority).toBe("med");
+      expect(parsed.data.startDate).toBeUndefined();
+      expect(parsed.data.dueDate).toBeUndefined();
+      expect(parsed.data.complexity).toBeUndefined();
     }
   });
 
   it("rejects invalid responsible names and simultaneous set/clear", () => {
     expect(
-      z.object(createTicketInput).safeParse({
+      createTicketInput.safeParse({
         projectId: "p1",
         title: "Ship it",
         responsibleName: "x".repeat(121),
@@ -130,15 +151,56 @@ describe("ticket write inputs", () => {
     ).toBe(false);
   });
 
-  it("rejects invalid column, priority, prUrl, and body", () => {
+  it("requires valid complexity and offset-aware ordered planning dates", () => {
+    const base = { projectId: "p1", title: "Plan release" };
     expect(
-      z.object(createTicketInput).safeParse({ projectId: "p1", title: "Ship it", column: "nope" })
-        .success,
+      createTicketInput.safeParse({
+        ...base,
+        complexity: "high",
+        startDate: "2026-09-28T21:29:00-06:00",
+        dueDate: "2026-10-02T17:00:00-06:00",
+      }).success,
+    ).toBe(true);
+    expect(createTicketInput.safeParse({ ...base, complexity: "urgent" }).success).toBe(false);
+    expect(createTicketInput.safeParse({ ...base, startDate: "2026-09-28T21:29:00" }).success).toBe(
+      false,
+    );
+    expect(
+      createTicketInput.safeParse({
+        ...base,
+        startDate: "2026-10-02T17:00:00-06:00",
+        dueDate: "2026-09-28T21:29:00-06:00",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects conflicting, unordered, and offset-free planning updates", () => {
+    expect(
+      updateTicketInput.safeParse({
+        ticketId: "t1",
+        startDate: "2026-09-28T21:29:00-06:00",
+        clearStartDate: true,
+      }).success,
     ).toBe(false);
     expect(
-      z
-        .object(createTicketInput)
-        .safeParse({ projectId: "p1", title: "Ship it", priority: "urgent" }).success,
+      updateTicketInput.safeParse({
+        ticketId: "t1",
+        startDate: "2026-10-02T17:00:00-06:00",
+        dueDate: "2026-09-28T21:29:00-06:00",
+      }).success,
+    ).toBe(false);
+    expect(
+      updateTicketInput.safeParse({ ticketId: "t1", dueDate: "2026-10-02T17:00:00" }).success,
+    ).toBe(false);
+  });
+
+  it("rejects invalid column, priority, prUrl, and body", () => {
+    expect(
+      createTicketInput.safeParse({ projectId: "p1", title: "Ship it", column: "nope" }).success,
+    ).toBe(false);
+    expect(
+      createTicketInput.safeParse({ projectId: "p1", title: "Ship it", priority: "urgent" })
+        .success,
     ).toBe(false);
     expect(
       z.object(moveTicketInput).safeParse({ ticketId: "t1", column: "todo", prUrl: "ftp://nope" })
@@ -152,7 +214,7 @@ describe("ticket write inputs", () => {
     ).toBe(false);
   });
 
-  it("rejects an update with no handoff field and rejects title, description, and priority", () => {
+  it("rejects an update with no supported field and rejects title, description, and priority", () => {
     expect(updateTicketInput.safeParse({ ticketId: "t1" }).success).toBe(false);
     expect(updateTicketInput.safeParse({ ticketId: "t1", title: "Renamed" }).success).toBe(false);
     expect(updateTicketInput.safeParse({ ticketId: "t1", description: "notes" }).success).toBe(

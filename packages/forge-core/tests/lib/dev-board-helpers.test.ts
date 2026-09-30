@@ -33,6 +33,9 @@ function ticket(
     branch: null,
     prUrl: null,
     responsibleName: null,
+    startDate: null,
+    dueDate: null,
+    complexity: null,
     ...overrides,
   };
 }
@@ -57,6 +60,9 @@ describe("toTicketSummary", () => {
       branch: "feat/x",
       prUrl: "https://example.com/pr/1",
       responsibleName: "Ada Lovelace",
+      startDate: null,
+      dueDate: null,
+      complexity: null,
       createdAt: "2026-07-11T15:00:00.000Z",
     });
     expect("description" in summary).toBe(false);

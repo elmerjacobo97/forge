@@ -59,6 +59,9 @@ const openedTicket: Ticket = {
   branch: null,
   prUrl: "https://github.com/acme/forge/pull/24",
   responsibleName: "Ada Lovelace",
+  startDate: null,
+  dueDate: null,
+  complexity: null,
 };
 
 beforeEach(() => vi.clearAllMocks());

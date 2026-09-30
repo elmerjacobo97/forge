@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-import type { Ticket } from "../types/board";
+import { COMPLEXITY_LEVELS, type Ticket } from "../types/board";
 
 export const TICKET_COLUMNS =
-  "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url,responsible_name";
+  "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url,responsible_name,start_date,due_date,complexity";
 
 export const ticketRowSchema = z.object({
   id: z.string(),
@@ -21,6 +21,9 @@ export const ticketRowSchema = z.object({
   branch: z.string().nullable(),
   pr_url: z.string().nullable(),
   responsible_name: z.string().nullable(),
+  start_date: z.string().nullable(),
+  due_date: z.string().nullable(),
+  complexity: z.enum(COMPLEXITY_LEVELS).nullable(),
 });
 
 export function toTicket(value: unknown): Ticket {
@@ -41,5 +44,8 @@ export function toTicket(value: unknown): Ticket {
     branch: row.branch,
     prUrl: row.pr_url,
     responsibleName: row.responsible_name,
+    startDate: row.start_date,
+    dueDate: row.due_date,
+    complexity: row.complexity,
   };
 }

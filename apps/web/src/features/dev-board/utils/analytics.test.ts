@@ -26,6 +26,9 @@ const data: AnalyticsData = {
       branch: null,
       prUrl: null,
       responsibleName: null,
+      startDate: null,
+      dueDate: null,
+      complexity: null,
     },
   ],
   events: [

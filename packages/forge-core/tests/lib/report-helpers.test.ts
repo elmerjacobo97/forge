@@ -18,6 +18,9 @@ function ticket(overrides: Partial<Ticket> = {}): Ticket {
     lastMovedAt: "2026-09-01T00:00:00.000Z",
     branch: null,
     prUrl: null,
+    startDate: null,
+    dueDate: null,
+    complexity: null,
     ...overrides,
   };
 }

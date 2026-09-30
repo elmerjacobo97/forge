@@ -3,13 +3,14 @@ import "server-only";
 import { z } from "zod";
 
 import { createInsForgeServerClient } from "@/lib/insforge/server";
-import type { TicketTimeAdjustInput } from "../schemas/ticket";
+import type { TicketInput, TicketTimeAdjustInput } from "../schemas/ticket";
 import type { TimeEntry } from "../types/analytics";
 import {
   type ColumnId,
   type ColumnPage,
   type Ticket,
   type TicketComment,
+  type TicketComplexity,
   COLUMNS,
   TICKETS_PAGE_SIZE,
 } from "../types/board";
@@ -40,6 +41,24 @@ export interface TicketPage {
 const COMMENT_COLUMNS = "id,ticket_id,body,author,created_at";
 
 const TIME_ENTRY_COLUMNS = "id,ticket_id,started_at,ended_at,duration_ms";
+
+type TicketPlanningRpcParams = {
+  p_start_date?: string;
+  p_due_date?: string;
+  p_complexity?: TicketComplexity;
+  p_clear_start_date?: boolean;
+  p_clear_due_date?: boolean;
+  p_clear_complexity?: boolean;
+};
+
+type CreateTicketRpcParams = TicketPlanningRpcParams & {
+  p_project_id: string;
+  p_title: string;
+  p_description: string;
+  p_column_id: "backlog";
+  p_priority: Ticket["priority"];
+  p_responsible_name: string;
+};
 
 function toTicketComment(value: unknown): TicketComment {
   const row = ticketCommentRowSchema.parse(value);
@@ -111,11 +130,34 @@ async function commentCounts(
   return counts;
 }
 
-function handoff(ticket: Ticket): { p_branch: string; p_pr_url: string } {
+function handoff(ticket: Pick<Ticket, "branch" | "prUrl">): { p_branch: string; p_pr_url: string } {
   return {
     p_branch: ticket.branch ?? "",
     p_pr_url: ticket.prUrl ?? "",
   };
+}
+
+function assertPlanningDateOrder(startDate: string | null, dueDate: string | null): void {
+  if (startDate && dueDate && Date.parse(startDate) > Date.parse(dueDate)) {
+    throw new Error("Start Date must be on or before Due Date.");
+  }
+}
+
+function planningUpdateParams(ticket: TicketInput, previous: Ticket): TicketPlanningRpcParams {
+  const params: TicketPlanningRpcParams = {};
+  if (ticket.startDate !== undefined && ticket.startDate !== previous.startDate) {
+    if (ticket.startDate === null) params.p_clear_start_date = true;
+    else params.p_start_date = ticket.startDate;
+  }
+  if (ticket.dueDate !== undefined && ticket.dueDate !== previous.dueDate) {
+    if (ticket.dueDate === null) params.p_clear_due_date = true;
+    else params.p_due_date = ticket.dueDate;
+  }
+  if (ticket.complexity !== undefined && ticket.complexity !== previous.complexity) {
+    if (ticket.complexity === null) params.p_clear_complexity = true;
+    else params.p_complexity = ticket.complexity;
+  }
+  return params;
 }
 
 export const devBoardService = {
@@ -170,23 +212,36 @@ export const devBoardService = {
     description: string;
     priority: Ticket["priority"];
     responsibleName?: string | null;
+    startDate?: string | null;
+    dueDate?: string | null;
+    complexity?: TicketComplexity | null;
   }): Promise<Ticket> {
+    assertPlanningDateOrder(input.startDate ?? null, input.dueDate ?? null);
     const insforge = await createInsForgeServerClient();
-    const { data, error } = await insforge.database.rpc("create_dev_board_ticket", {
+    const params: CreateTicketRpcParams = {
       p_project_id: input.projectId,
       p_title: input.title,
       p_description: input.description,
       p_column_id: "backlog",
       p_priority: input.priority,
       p_responsible_name: input.responsibleName ?? "",
-    });
+    };
+    if (input.startDate) params.p_start_date = input.startDate;
+    if (input.dueDate) params.p_due_date = input.dueDate;
+    if (input.complexity) params.p_complexity = input.complexity;
+
+    const { data, error } = await insforge.database.rpc("create_dev_board_ticket", params);
     if (error) throw failure(error, "Failed to create ticket.");
     return rpcTicket(data);
   },
 
-  async updateTicket(ticket: Ticket): Promise<Ticket> {
+  async updateTicket(ticket: TicketInput): Promise<Ticket> {
     const insforge = await createInsForgeServerClient();
     const previous = await getTicket(insforge, ticket.id);
+    assertPlanningDateOrder(
+      ticket.startDate === undefined ? previous.startDate : ticket.startDate,
+      ticket.dueDate === undefined ? previous.dueDate : ticket.dueDate,
+    );
     if (previous.column !== ticket.column) {
       const { data, error } = await insforge.database.rpc("move_dev_board_ticket", {
         p_ticket_id: ticket.id,
@@ -214,6 +269,7 @@ export const devBoardService = {
       p_priority: ticket.priority,
       ...handoff(ticket),
       p_responsible_name: ticket.responsibleName ?? "",
+      ...planningUpdateParams(ticket, previous),
     });
     if (error) throw failure(error, "Failed to update ticket.");
     return rpcTicket(data);

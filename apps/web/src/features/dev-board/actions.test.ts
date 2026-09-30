@@ -7,12 +7,14 @@ const revalidatePath = vi.hoisted(() => vi.fn());
 vi.mock("next/cache", () => ({ revalidatePath }));
 
 const createComment = vi.hoisted(() => vi.fn());
+const createTicket = vi.hoisted(() => vi.fn());
+const updateTicket = vi.hoisted(() => vi.fn());
 const adjustTicketTime = vi.hoisted(() => vi.fn());
 const lastTimeEntry = vi.hoisted(() => vi.fn());
 const createProject = vi.hoisted(() => vi.fn());
 const updateProject = vi.hoisted(() => vi.fn());
 vi.mock("./services/dev-board-service", () => ({
-  devBoardService: { createComment, adjustTicketTime, lastTimeEntry },
+  devBoardService: { createComment, createTicket, updateTicket, adjustTicketTime, lastTimeEntry },
 }));
 vi.mock("./services/projects-service", () => ({
   projectsService: { createProject, updateProject },
@@ -21,9 +23,11 @@ vi.mock("./services/projects-service", () => ({
 import {
   adjustTicketTimeAction,
   createProjectAction,
+  createTicketAction,
   createTicketCommentAction,
   getLastTimeEntryAction,
   updateProjectAction,
+  updateTicketAction,
 } from "./actions";
 import type { Ticket } from "./types/board";
 
@@ -155,7 +159,73 @@ const adjustedTicket: Ticket = {
   branch: null,
   prUrl: null,
   responsibleName: null,
+  startDate: null,
+  dueDate: null,
+  complexity: null,
 };
+
+describe("ticket planning actions", () => {
+  const input = {
+    projectId,
+    title: "Ship CLI tickets",
+    description: "",
+    priority: "med",
+    branch: "",
+    prUrl: "",
+    responsibleName: "",
+    startDate: "2026-09-10T00:00:00.000Z",
+    dueDate: "2026-09-20T00:00:00.000Z",
+    complexity: "high",
+  };
+
+  it("forwards planning fields through create and update actions", async () => {
+    getCurrentUser.mockResolvedValue({ id: "user-1" });
+    createTicket.mockResolvedValue(adjustedTicket);
+    updateTicket.mockResolvedValue(adjustedTicket);
+
+    await expect(createTicketAction(input)).resolves.toEqual({ ok: true, data: adjustedTicket });
+    expect(createTicket).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectId,
+        startDate: input.startDate,
+        dueDate: input.dueDate,
+        complexity: "high",
+      }),
+    );
+
+    const updateInput = {
+      ...adjustedTicket,
+      column: "todo",
+      startDate: input.startDate,
+      dueDate: input.dueDate,
+      complexity: "high",
+    };
+    await expect(updateTicketAction(updateInput)).resolves.toEqual({
+      ok: true,
+      data: adjustedTicket,
+    });
+    expect(updateTicket).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startDate: input.startDate,
+        dueDate: input.dueDate,
+        complexity: "high",
+      }),
+    );
+  });
+
+  it("rejects invalid planning date order before persistence", async () => {
+    getCurrentUser.mockResolvedValue({ id: "user-1" });
+
+    await expect(
+      createTicketAction({
+        ...input,
+        startDate: "2026-09-20T00:00:00.000Z",
+        dueDate: "2026-09-10T00:00:00.000Z",
+      }),
+    ).resolves.toMatchObject({ ok: false });
+    expect(createTicket).not.toHaveBeenCalled();
+  });
+});
 
 describe("adjustTicketTimeAction", () => {
   it("requires a session", async () => {

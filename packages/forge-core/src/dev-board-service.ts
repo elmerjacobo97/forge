@@ -1,6 +1,6 @@
 import type { InsForgeClient } from "@insforge/sdk";
 import { asRecord, asRows, asSingleRow, stringField, throwIfError } from "./insforge-data.js";
-import { COLUMNS, PRIORITIES } from "./types.js";
+import { COLUMNS, COMPLEXITY_LEVELS, PRIORITIES } from "./types.js";
 import type {
   ColumnId,
   CommentAuthor,
@@ -8,6 +8,7 @@ import type {
   Priority,
   Ticket,
   TicketComment,
+  TicketComplexity,
   TicketCreateInput,
   TicketMoveInput,
   TicketTimeAdjustInput,
@@ -53,6 +54,41 @@ function priorityField(value: unknown): Priority {
   return value as Priority;
 }
 
+function complexityField(value: unknown): TicketComplexity | null {
+  if (value === null) return null;
+  if (typeof value !== "string" || !(COMPLEXITY_LEVELS as readonly string[]).includes(value)) {
+    throw new Error(`Invalid ticket row: complexity must be null or one of ${COMPLEXITY_LEVELS.join(", ")}.`);
+  }
+  return value as TicketComplexity;
+}
+
+function assertPlanningDateOrder(startDate: string | null, dueDate: string | null): void {
+  if (startDate !== null && dueDate !== null && Date.parse(startDate) > Date.parse(dueDate)) {
+    throw new Error("Start date must be on or before due date.");
+  }
+}
+
+function planningUpdateParams(input: TicketUpdateInput): Record<string, unknown> {
+  const params: Record<string, unknown> = {};
+  if (input.clearStartDate && input.startDate !== undefined) {
+    throw new Error("Cannot set and clear Start Date in the same update.");
+  }
+  if (input.clearDueDate && input.dueDate !== undefined) {
+    throw new Error("Cannot set and clear Due Date in the same update.");
+  }
+  if (input.clearComplexity && input.complexity !== undefined) {
+    throw new Error("Cannot set and clear Complexity in the same update.");
+  }
+
+  if (input.clearStartDate) params.p_clear_start_date = true;
+  else if (input.startDate !== undefined) params.p_start_date = input.startDate;
+  if (input.clearDueDate) params.p_clear_due_date = true;
+  else if (input.dueDate !== undefined) params.p_due_date = input.dueDate;
+  if (input.clearComplexity) params.p_clear_complexity = true;
+  else if (input.complexity !== undefined) params.p_complexity = input.complexity;
+  return params;
+}
+
 export function mapRowToTicket(value: unknown): Ticket {
   const row = asRecord(value, "ticket row");
   return {
@@ -71,6 +107,9 @@ export function mapRowToTicket(value: unknown): Ticket {
     branch: nullableStringField(row, "branch"),
     prUrl: nullableStringField(row, "pr_url"),
     responsibleName: nullableStringField(row, "responsible_name"),
+    startDate: nullableStringField(row, "start_date"),
+    dueDate: nullableStringField(row, "due_date"),
+    complexity: complexityField(row.complexity),
   };
 }
 
@@ -106,7 +145,7 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
     const response = await client.database
       .from("dev_board_tickets")
       .select(
-        "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url,responsible_name",
+        "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url,responsible_name,start_date,due_date,complexity",
       )
       .eq("id", id)
       .maybeSingle();
@@ -133,7 +172,7 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
       let query = client.database
         .from("dev_board_tickets")
         .select(
-          "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url,responsible_name",
+          "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url,responsible_name,start_date,due_date,complexity",
         )
         .eq("column_id", column)
         .order("created_at", { ascending: false })
@@ -209,7 +248,7 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
         let query = client.database
           .from("dev_board_tickets")
           .select(
-            "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url,responsible_name",
+            "id,project_id,title,description,column_id,position,priority,created_at,timer_started_at,total_elapsed_ms,is_paused,last_moved_at,branch,pr_url,responsible_name,start_date,due_date,complexity",
           )
           .eq("project_id", projectId)
           .order("created_at", { ascending: false })
@@ -268,6 +307,7 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
     },
 
     async create(input: TicketCreateInput): Promise<Ticket> {
+      assertPlanningDateOrder(input.startDate ?? null, input.dueDate ?? null);
       return ticketRpc(
         "create_dev_board_ticket",
         {
@@ -279,6 +319,9 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
           ...(input.responsibleName !== undefined
             ? { p_responsible_name: input.responsibleName }
             : {}),
+          ...(input.startDate !== undefined ? { p_start_date: input.startDate } : {}),
+          ...(input.dueDate !== undefined ? { p_due_date: input.dueDate } : {}),
+          ...(input.complexity !== undefined ? { p_complexity: input.complexity } : {}),
         },
         "Failed to create ticket.",
       );
@@ -286,6 +329,10 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
 
     async update(id: string, input: TicketUpdateInput): Promise<Ticket> {
       const previous = await get(id);
+      assertPlanningDateOrder(
+        input.clearStartDate ? null : (input.startDate ?? previous.startDate),
+        input.clearDueDate ? null : (input.dueDate ?? previous.dueDate),
+      );
       return ticketRpc(
         "update_dev_board_ticket",
         {
@@ -295,6 +342,7 @@ export function createDevBoardService({ client }: DevBoardServiceDeps) {
           p_priority: input.priority ?? previous.priority,
           ...handoffParams(input),
           ...responsibleParams(input),
+          ...planningUpdateParams(input),
         },
         "Failed to update ticket.",
       );

@@ -126,6 +126,50 @@ describe("parseTicketCreateInput", () => {
   });
 });
 
+describe("ticket planning fields", () => {
+  it("accepts complexity and ordered offset timestamps, including equal instants", () => {
+    expect(
+      parseTicketCreateInput({
+        projectId: "p1",
+        title: "Plan release",
+        description: "",
+        priority: "med",
+        column: "todo",
+        startDate: "2026-09-28T21:29:00-06:00",
+        dueDate: "2026-09-29T03:29:00Z",
+        complexity: "high",
+      }),
+    ).toMatchObject({
+      startDate: "2026-09-28T21:29:00-06:00",
+      dueDate: "2026-09-29T03:29:00Z",
+      complexity: "high",
+    });
+  });
+
+  it("rejects invalid complexity, offsetless or impossible dates, and reversed ranges", () => {
+    const base = {
+      projectId: "p1",
+      title: "Plan release",
+      description: "",
+      priority: "med",
+      column: "todo",
+    };
+
+    for (const payload of [
+      { ...base, complexity: "urgent" },
+      { ...base, startDate: "2026-09-28T21:29:00" },
+      { ...base, startDate: "2026-02-30T21:29:00Z" },
+      {
+        ...base,
+        startDate: "2026-09-29T05:30:00Z",
+        dueDate: "2026-09-29T03:29:00Z",
+      },
+    ]) {
+      expect(parseTicketCreateInput(payload)).toHaveProperty("error");
+    }
+  });
+});
+
 describe("parseTicketUpdateInput", () => {
   it("accepts a partial update", () => {
     const result = parseTicketUpdateInput({ title: "Updated title" });
@@ -156,6 +200,32 @@ describe("parseTicketUpdateInput", () => {
     expect(result).toHaveProperty("error");
     if (!("error" in result)) throw new Error("expected validation error");
     expect(result.error).toContain("Priority must be one of:");
+  });
+
+  it("accepts partial planning updates and explicit clear actions", () => {
+    expect(
+      parseTicketUpdateInput({
+        startDate: "2026-09-28T21:29:00-06:00",
+        clearDueDate: true,
+        clearComplexity: true,
+      }),
+    ).toEqual({
+      startDate: "2026-09-28T21:29:00-06:00",
+      clearDueDate: true,
+      clearComplexity: true,
+    });
+  });
+
+  it("rejects reversed planning updates and set/clear conflicts", () => {
+    expect(
+      parseTicketUpdateInput({
+        startDate: "2026-09-29T05:30:00Z",
+        dueDate: "2026-09-29T03:29:00Z",
+      }),
+    ).toHaveProperty("error");
+    expect(
+      parseTicketUpdateInput({ startDate: "2026-09-28T21:29:00-06:00", clearStartDate: true }),
+    ).toHaveProperty("error");
   });
 });
 

@@ -12,6 +12,7 @@ import {
 import { writeReportOutput } from "../report-format.js";
 import {
   COLUMNS,
+  COMPLEXITY_LEVELS,
   PRIORITIES,
   createActivityService,
   createDevBoardService,
@@ -56,6 +57,9 @@ create options:
   --priority <priority>        Optional (${PRIORITIES.join(" | ")}, default med)
   --responsible <name>         Optional responsible name (max 120 characters)
   --column <column>            Optional (${COLUMNS.join(" | ")}, default backlog)
+  --complexity <level>         Optional (${COMPLEXITY_LEVELS.join(" | ")})
+  --start-date <iso>           Optional ISO 8601 timestamp with offset
+  --due-date <iso>             Optional ISO 8601 timestamp with offset
 
 list options:
   --project-id <id>            Required Dev Board project id
@@ -81,6 +85,12 @@ update options (at least one):
   --clear-pr-url               Clear the PR URL
   --responsible <name>         Set the responsible name (max 120 characters)
   --clear-responsible          Clear the responsible name
+  --complexity <level>         Set complexity (${COMPLEXITY_LEVELS.join(" | ")})
+  --clear-complexity           Clear complexity
+  --start-date <iso>           Set Start Date (ISO 8601 timestamp with offset)
+  --clear-start-date           Clear Start Date
+  --due-date <iso>             Set Due Date (ISO 8601 timestamp with offset)
+  --clear-due-date             Clear Due Date
 
 move options:
   --column <column>            Required destination column
@@ -102,10 +112,13 @@ comment options:
 Examples:
   forge-cli ticket create --project-id <id> --title "Ship CLI"
   forge-cli ticket create --project-id <id> --title "WIP" --column in_progress --priority high
+  forge-cli ticket create --project-id <id> --title "Plan release" --complexity high --start-date 2026-09-28T21:29:00-06:00 --due-date 2026-10-02T17:00:00-06:00
   forge-cli ticket list --project-id <id>
   forge-cli ticket list --project-id <id> --column todo --json
   forge-cli ticket get <id>
   forge-cli ticket update <id> --title "New title"
+  forge-cli ticket update <id> --complexity medium --start-date 2026-09-28T21:29:00-06:00
+  forge-cli ticket update <id> --clear-complexity --clear-start-date --clear-due-date
   forge-cli ticket update <id> --clear-branch --clear-pr-url
   forge-cli ticket move <id> --column validation
   forge-cli ticket move <id> --column review --branch dev/handoff --pr-url https://github.com/acme/forge/pull/17
@@ -136,6 +149,9 @@ async function runCreate(args: string[]): Promise<void> {
     priority: getFlagValue(args, "--priority") ?? "med",
     column: getFlagValue(args, "--column") ?? "backlog",
     responsibleName: getFlagValue(args, "--responsible"),
+    complexity: getFlagValue(args, "--complexity"),
+    startDate: getFlagValue(args, "--start-date"),
+    dueDate: getFlagValue(args, "--due-date"),
   });
 
   if ("error" in input) {
@@ -209,6 +225,9 @@ async function runUpdate(args: string[]): Promise<void> {
   const branch = getFlagValue(args, "--branch");
   const prUrl = getFlagValue(args, "--pr-url");
   const responsibleName = getFlagValue(args, "--responsible");
+  const complexity = getFlagValue(args, "--complexity");
+  const startDate = getFlagValue(args, "--start-date");
+  const dueDate = getFlagValue(args, "--due-date");
 
   if (title !== undefined) raw.title = title;
   if (description !== undefined) raw.description = description;
@@ -216,9 +235,15 @@ async function runUpdate(args: string[]): Promise<void> {
   if (branch !== undefined) raw.branch = branch;
   if (prUrl !== undefined) raw.prUrl = prUrl;
   if (responsibleName !== undefined) raw.responsibleName = responsibleName;
+  if (complexity !== undefined) raw.complexity = complexity;
+  if (startDate !== undefined) raw.startDate = startDate;
+  if (dueDate !== undefined) raw.dueDate = dueDate;
   if (hasFlag(args, "--clear-branch")) raw.clearBranch = true;
   if (hasFlag(args, "--clear-pr-url")) raw.clearPrUrl = true;
   if (hasFlag(args, "--clear-responsible")) raw.clearResponsible = true;
+  if (hasFlag(args, "--clear-start-date")) raw.clearStartDate = true;
+  if (hasFlag(args, "--clear-due-date")) raw.clearDueDate = true;
+  if (hasFlag(args, "--clear-complexity")) raw.clearComplexity = true;
 
   const input = parseTicketUpdateInput(raw);
   if ("error" in input) {

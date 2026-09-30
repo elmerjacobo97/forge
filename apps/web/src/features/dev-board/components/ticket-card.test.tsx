@@ -1,8 +1,12 @@
+// @vitest-environment jsdom
+
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderToString } from "react-dom/server";
+import { render, waitFor } from "@testing-library/react";
 import { DndContext } from "@dnd-kit/core";
 
 import type { Ticket } from "../types/board";
+import { formatLocalDateTime } from "../utils/planning-dates";
 import { TicketCard } from "./ticket-card";
 
 function makeTicket(overrides: Partial<Ticket> = {}): Ticket {
@@ -22,6 +26,9 @@ function makeTicket(overrides: Partial<Ticket> = {}): Ticket {
     branch: null,
     prUrl: null,
     responsibleName: null,
+    startDate: null,
+    dueDate: null,
+    complexity: null,
     ...overrides,
   };
 }
@@ -66,6 +73,39 @@ describe("TicketCard", () => {
   it("renders the responsible name on the ticket card", () => {
     expect(renderCard(makeTicket({ responsibleName: "Ada Lovelace" }))).toContain("Responsible:");
     expect(renderCard(makeTicket({ responsibleName: "Ada Lovelace" }))).toContain("Ada Lovelace");
+  });
+
+  it("renders planning metadata in the local timezone after hydration", async () => {
+    const startDate = "2026-09-28T21:29:00.000Z";
+    const dueDate = "2026-09-29T21:29:00.000Z";
+    const { container } = render(
+      <DndContext>
+        <TicketCard
+          ticket={makeTicket({ startDate, dueDate, complexity: "medium" })}
+          onEdit={noop}
+          onComments={noop}
+          onAdjust={noop}
+          onMoveToColumn={noop}
+          onUpdate={noop}
+          onDelete={noop}
+        />
+      </DndContext>,
+    );
+
+    await waitFor(() => {
+      expect(container.textContent).toContain("Complexity:");
+      expect(container.textContent).toContain("Medium");
+      expect(container.textContent).toContain(formatLocalDateTime(startDate));
+      expect(container.textContent).toContain(formatLocalDateTime(dueDate));
+    });
+    expect(container.innerHTML).toContain(`datetime="${startDate}"`);
+    expect(container.innerHTML).toContain(`datetime="${dueDate}"`);
+  });
+
+  it("omits empty planning metadata from the card", () => {
+    expect(renderCard(makeTicket())).not.toContain("Complexity:");
+    expect(renderCard(makeTicket())).not.toContain("Start:");
+    expect(renderCard(makeTicket())).not.toContain("Due:");
   });
 
   it("server-renders the total elapsed time for a paused ticket", () => {

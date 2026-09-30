@@ -18,6 +18,9 @@ const row = {
   branch: null,
   pr_url: null,
   responsible_name: "Ada Lovelace",
+  start_date: null,
+  due_date: null,
+  complexity: null,
 };
 
 describe("board-realtime", () => {
@@ -47,6 +50,9 @@ describe("board-realtime", () => {
         branch: null,
         prUrl: null,
         responsibleName: "Ada Lovelace",
+        startDate: null,
+        dueDate: null,
+        complexity: null,
       },
     });
   });

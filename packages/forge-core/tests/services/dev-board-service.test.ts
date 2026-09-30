@@ -21,6 +21,9 @@ function ticketRow(overrides: Overrides = {}) {
     branch: null,
     pr_url: null,
     responsible_name: null,
+    start_date: null,
+    due_date: null,
+    complexity: null,
     ...overrides,
   };
 }
@@ -340,6 +343,123 @@ describe("devBoardService responsible name", () => {
 
     await service.update("ticket-1", { clearResponsible: true });
     expect(rpcCalls[1].params.p_responsible_name).toBe("");
+  });
+});
+
+describe("devBoardService planning fields", () => {
+  it("reads planning fields from ticket rows", async () => {
+    const startDate = "2026-09-28T21:29:00+00:00";
+    const dueDate = "2026-09-29T03:29:00+00:00";
+    const { client, calls } = createDevBoardMockClient({
+      tickets: [ticketRow({ start_date: startDate, due_date: dueDate, complexity: "high" })],
+    });
+
+    const ticket = await createDevBoardService({ client }).get("ticket-1");
+
+    expect(ticket).toMatchObject({ startDate, dueDate, complexity: "high" });
+    expect(
+      calls.some(
+        (call) =>
+          call.method === "select" &&
+          typeof call.args[0] === "string" &&
+          call.args[0].includes("start_date,due_date,complexity"),
+      ),
+    ).toBe(true);
+  });
+
+  it("sends optional planning fields on create and omits them for older callers", async () => {
+    const startDate = "2026-09-28T21:29:00-06:00";
+    const dueDate = "2026-09-29T03:29:00Z";
+    const { client, rpcCalls } = createDevBoardMockClient({
+      rpc: () => ({
+        data: ticketRow({ start_date: startDate, due_date: dueDate, complexity: "high" }),
+        error: null,
+      }),
+    });
+    const service = createDevBoardService({ client });
+
+    const ticket = await service.create({
+      projectId: "project-1",
+      title: "Ticket",
+      description: "",
+      priority: "med",
+      column: "todo",
+      startDate,
+      dueDate,
+      complexity: "high",
+    });
+
+    expect(ticket).toMatchObject({ startDate, dueDate, complexity: "high" });
+    expect(rpcCalls[0].params).toMatchObject({
+      p_start_date: startDate,
+      p_due_date: dueDate,
+      p_complexity: "high",
+    });
+
+    await service.create({
+      projectId: "project-1",
+      title: "Legacy caller",
+      description: "",
+      priority: "med",
+      column: "todo",
+    });
+    expect("p_start_date" in rpcCalls[1].params).toBe(false);
+    expect("p_due_date" in rpcCalls[1].params).toBe(false);
+    expect("p_complexity" in rpcCalls[1].params).toBe(false);
+  });
+
+  it("preserves omitted planning fields and sends explicit clear flags on update", async () => {
+    const startDate = "2026-09-28T21:29:00+00:00";
+    const dueDate = "2026-09-29T03:29:00+00:00";
+    const { client, rpcCalls } = createDevBoardMockClient({
+      tickets: [ticketRow({ start_date: startDate, due_date: dueDate, complexity: "medium" })],
+      rpc: () => ({ data: ticketRow({ id: "ticket-1" }), error: null }),
+    });
+    const service = createDevBoardService({ client });
+
+    await service.update("ticket-1", { title: "Rename without touching planning" });
+    for (const field of [
+      "p_start_date",
+      "p_due_date",
+      "p_complexity",
+      "p_clear_start_date",
+      "p_clear_due_date",
+      "p_clear_complexity",
+    ]) {
+      expect(field in rpcCalls[0].params).toBe(false);
+    }
+
+    await service.update("ticket-1", {
+      clearStartDate: true,
+      clearDueDate: true,
+      clearComplexity: true,
+    });
+    expect(rpcCalls[1].params).toMatchObject({
+      p_clear_start_date: true,
+      p_clear_due_date: true,
+      p_clear_complexity: true,
+    });
+    expect("p_start_date" in rpcCalls[1].params).toBe(false);
+    expect("p_due_date" in rpcCalls[1].params).toBe(false);
+    expect("p_complexity" in rpcCalls[1].params).toBe(false);
+  });
+
+  it("rejects an update that would put start after the existing due date", async () => {
+    const { client, rpcCalls } = createDevBoardMockClient({
+      tickets: [
+        ticketRow({
+          start_date: "2026-09-28T21:29:00+00:00",
+          due_date: "2026-09-29T03:29:00+00:00",
+        }),
+      ],
+    });
+
+    await expect(
+      createDevBoardService({ client }).update("ticket-1", {
+        startDate: "2026-09-29T04:00:00Z",
+      }),
+    ).rejects.toThrow("Start date must be on or before due date.");
+    expect(rpcCalls).toHaveLength(0);
   });
 });
 

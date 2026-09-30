@@ -28,6 +28,28 @@ export const PRIORITIES = ["low", "med", "high"] as const;
 
 export type Priority = (typeof PRIORITIES)[number];
 
+export const COMPLEXITY_LEVELS = ["low", "medium", "high"] as const;
+
+export type TicketComplexity = (typeof COMPLEXITY_LEVELS)[number];
+
+export type TicketPlanningFields = {
+  startDate: string | null;
+  dueDate: string | null;
+  complexity: TicketComplexity | null;
+};
+
+export type TicketPlanningCreateInput = {
+  startDate?: string;
+  dueDate?: string;
+  complexity?: TicketComplexity;
+};
+
+export type TicketPlanningUpdateInput = TicketPlanningCreateInput & {
+  clearStartDate?: boolean;
+  clearDueDate?: boolean;
+  clearComplexity?: boolean;
+};
+
 export type Project = {
   id: string;
   name: string;
@@ -42,7 +64,7 @@ export type ProjectCreateInput = {
 
 export type ProjectUpdateInput = Partial<ProjectCreateInput>;
 
-export type Ticket = {
+export type Ticket = TicketPlanningFields & {
   id: string;
   projectId: string;
   title: string;
@@ -60,7 +82,7 @@ export type Ticket = {
   responsibleName: string | null;
 };
 
-export interface TicketSummary {
+export interface TicketSummary extends TicketPlanningFields {
   id: string;
   projectId: string;
   title: string;
@@ -72,7 +94,7 @@ export interface TicketSummary {
   createdAt: string;
 }
 
-export type TicketCreateInput = {
+export type TicketCreateInput = TicketPlanningCreateInput & {
   projectId: string;
   title: string;
   description: string;
@@ -81,9 +103,8 @@ export type TicketCreateInput = {
   responsibleName?: string;
 };
 
-export type TicketUpdateInput = Partial<
-  Pick<TicketCreateInput, "title" | "description" | "priority">
-> & {
+export type TicketUpdateInput = TicketPlanningUpdateInput &
+  Partial<Pick<TicketCreateInput, "title" | "description" | "priority">> & {
   branch?: string;
   prUrl?: string;
   clearBranch?: boolean;

@@ -40,6 +40,9 @@ export function formatTicketText(ticket: Ticket): string {
     `branch:      ${formatNullable(ticket.branch)}\n` +
     `prUrl:       ${formatNullable(ticket.prUrl)}\n` +
     `responsible: ${formatNullable(ticket.responsibleName)}\n` +
+    `complexity:  ${formatNullable(ticket.complexity)}\n` +
+    `startDate:   ${formatNullable(ticket.startDate)}\n` +
+    `dueDate:     ${formatNullable(ticket.dueDate)}\n` +
     `description: ${ticket.description || "(none)"}\n` +
     `timer:       ${formatTimerSummary(ticket)}\n` +
     `createdAt:   ${ticket.createdAt}\n` +
@@ -126,6 +129,9 @@ export function formatNextContextText(context: NextTicketContext): string {
     `column:      ${context.ticket.column}`,
     `priority:    ${context.ticket.priority}`,
     `responsible: ${formatNullable(context.ticket.responsibleName)}`,
+    `complexity:  ${formatNullable(context.ticket.complexity)}`,
+    `startDate:   ${formatNullable(context.ticket.startDate)}`,
+    `dueDate:     ${formatNullable(context.ticket.dueDate)}`,
     `description: ${context.ticket.description || "(none)"}`,
     `comments:    ${context.comments.length}`,
   ];

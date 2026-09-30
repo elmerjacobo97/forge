@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { formatZodError } from "./schema-utils.js";
-import { COLUMNS, COMMENT_AUTHORS, PRIORITIES } from "./types.js";
+import { COLUMNS, COMMENT_AUTHORS, COMPLEXITY_LEVELS, PRIORITIES } from "./types.js";
 import type {
   TicketCommentInput,
   TicketCreateInput,
@@ -13,6 +13,52 @@ import type {
 const prioritySchema = z.enum(PRIORITIES, {
   error: `Priority must be one of: ${PRIORITIES.join(", ")}.`,
 });
+
+const complexitySchema = z.enum(COMPLEXITY_LEVELS, {
+  error: `Complexity must be one of: ${COMPLEXITY_LEVELS.join(", ")}.`,
+});
+
+const PLANNING_DATE_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-](\d{2}):(\d{2}))$/i;
+
+function isValidPlanningDate(value: string): boolean {
+  const match = value.match(PLANNING_DATE_PATTERN);
+  if (!match) return false;
+
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText, zone, zoneHour, zoneMinute] =
+    match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  const second = Number(secondText ?? "0");
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  if (
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > daysInMonth[month - 1] ||
+    hour > 23 ||
+    minute > 59 ||
+    second > 59
+  ) {
+    return false;
+  }
+  if (zone.toUpperCase() !== "Z" && (Number(zoneHour) > 23 || Number(zoneMinute) > 59)) {
+    return false;
+  }
+  return Number.isFinite(Date.parse(value));
+}
+
+const planningDateSchema = z
+  .string({ error: "Date must be an ISO 8601 timestamp with an offset." })
+  .trim()
+  .refine(isValidPlanningDate, {
+    message: "Date must be a valid ISO 8601 timestamp with an explicit offset.",
+  });
 
 const columnSchema = z.enum(COLUMNS, {
   error: `Column must be one of: ${COLUMNS.join(", ")}.`,
@@ -69,7 +115,14 @@ export const ticketCreateSchema = z.object({
   priority: prioritySchema,
   column: columnSchema,
   responsibleName: responsibleNameSchema.optional(),
-});
+  startDate: planningDateSchema.optional(),
+  dueDate: planningDateSchema.optional(),
+  complexity: complexitySchema.optional(),
+}).refine(
+  (value) =>
+    !value.startDate || !value.dueDate || Date.parse(value.startDate) <= Date.parse(value.dueDate),
+  { message: "Start date must be on or before due date.", path: ["dueDate"] },
+);
 
 export const ticketUpdateSchema = z
   .object({
@@ -82,6 +135,12 @@ export const ticketUpdateSchema = z
     clearPrUrl: z.boolean().optional(),
     responsibleName: responsibleNameSchema.optional(),
     clearResponsible: z.boolean().optional(),
+    startDate: planningDateSchema.optional(),
+    dueDate: planningDateSchema.optional(),
+    complexity: complexitySchema.optional(),
+    clearStartDate: z.boolean().optional(),
+    clearDueDate: z.boolean().optional(),
+    clearComplexity: z.boolean().optional(),
   })
   .refine((value) => Object.values(value).some((field) => field !== undefined), {
     message:
@@ -89,6 +148,35 @@ export const ticketUpdateSchema = z
   })
   .refine((value) => !(value.responsibleName !== undefined && value.clearResponsible === true), {
     message: "Use either --responsible or --clear-responsible, not both.",
+  })
+  .superRefine((value, context) => {
+    const planningFields = [
+      ["startDate", "clearStartDate", "Start Date"],
+      ["dueDate", "clearDueDate", "Due Date"],
+      ["complexity", "clearComplexity", "Complexity"],
+    ] as const;
+
+    for (const [field, clearField, label] of planningFields) {
+      if (value[field] !== undefined && value[clearField] === true) {
+        context.addIssue({
+          code: "custom",
+          path: [field],
+          message: `Cannot set and clear ${label} in the same update.`,
+        });
+      }
+    }
+
+    if (
+      value.startDate !== undefined &&
+      value.dueDate !== undefined &&
+      Date.parse(value.startDate) > Date.parse(value.dueDate)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["dueDate"],
+        message: "Start date must be on or before due date.",
+      });
+    }
   });
 
 export const ticketMoveSchema = z.object({

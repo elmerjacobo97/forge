@@ -31,6 +31,9 @@ function createTicket(overrides: Partial<Ticket> = {}): Ticket {
     prUrl: null,
     ...overrides,
     responsibleName: overrides.responsibleName ?? null,
+    startDate: overrides.startDate ?? null,
+    dueDate: overrides.dueDate ?? null,
+    complexity: overrides.complexity ?? null,
   };
 }
 

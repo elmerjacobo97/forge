@@ -180,11 +180,14 @@ forge-cli project delete <id>
 ```bash
 forge-cli ticket create --project-id <projectId> --title "Ship CLI tickets"
 forge-cli ticket create --project-id <projectId> --title "WIP" --column in_progress --priority high
+forge-cli ticket create --project-id <projectId> --title "Plan release" --complexity high --start-date "2026-09-28T21:29:00-06:00" --due-date "2026-10-02T17:00:00-06:00"
 forge-cli ticket create --project-id <projectId> --title "Write meeting recap" --responsible "Alex"
 forge-cli ticket list --project-id <projectId>
 forge-cli ticket list --project-id <projectId> --column todo --json
 forge-cli ticket get <id>
 forge-cli ticket update <id> --title "New title" --priority med
+forge-cli ticket update <id> --complexity medium --start-date "2026-09-28T21:29:00-06:00"
+forge-cli ticket update <id> --clear-complexity --clear-start-date --clear-due-date
 forge-cli ticket update <id> --branch dev/handoff --pr-url "https://github.com/acme/forge/pull/17"
 forge-cli ticket update <id> --responsible "Alex"
 forge-cli ticket update <id> --clear-responsible
@@ -213,6 +216,16 @@ backend RPCs so moves, timers, events, and time entries remain atomic. `--respon
 sets an optional free-text name (1–120 characters); `--clear-responsible` explicitly
 clears it, while updates that omit the field preserve the current value. Meetings
 are managed in the web app, not the CLI.
+
+Planning fields are optional: `--complexity low|medium|high`,
+`--start-date <timestamp>`, and `--due-date <timestamp>` are available on
+`create` and `update`. Dates must be ISO 8601 timestamps with an explicit offset, such as
+`2026-09-28T21:29:00-06:00` or a UTC timestamp ending in `Z`. When both dates
+are set, Start Date must be on or before Due Date. Updates preserve planning
+fields that are omitted; use `--clear-complexity`, `--clear-start-date`, or
+`--clear-due-date` to clear them explicitly. A field cannot be set and cleared
+in the same update.
+
 Timer-active columns are `in_progress` and `validation`; moving between them
 keeps the timer running, and `review`/`done` stop it.
 

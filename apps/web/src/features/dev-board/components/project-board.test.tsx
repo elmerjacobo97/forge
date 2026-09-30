@@ -68,6 +68,9 @@ const openedTicket: Ticket = {
   branch: null,
   prUrl: null,
   responsibleName: null,
+  startDate: null,
+  dueDate: null,
+  complexity: null,
 };
 
 describe("ProjectBoard opened ticket", () => {

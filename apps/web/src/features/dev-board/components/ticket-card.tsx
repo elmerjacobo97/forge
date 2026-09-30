@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/refs -- @dnd-kit/sortable exposes refs/listeners that must be applied during render */
+import { useSyncExternalStore } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -37,11 +38,25 @@ import {
   type Ticket,
   COLUMN_LABELS,
   COLUMNS,
+  COMPLEXITY_LABELS,
   isTimerColumn,
   PRIORITY_COLORS,
   PRIORITY_LABELS,
 } from "../types/board";
+import { formatLocalDateTime } from "../utils/planning-dates";
 import { computeElapsed, formatDuration, pauseTimer, resumeTimer } from "../utils/timer";
+
+function subscribeClientRender(): () => void {
+  return () => {};
+}
+
+function getClientRenderSnapshot(): boolean {
+  return true;
+}
+
+function getServerRenderSnapshot(): boolean {
+  return false;
+}
 
 interface TicketCardProps {
   ticket: Ticket;
@@ -67,6 +82,11 @@ export function TicketCard({
   });
 
   const { copied, copy } = useCopy();
+  const hasMounted = useSyncExternalStore(
+    subscribeClientRender,
+    getClientRenderSnapshot,
+    getServerRenderSnapshot,
+  );
 
   const style = {
     transform: CSS.Translate.toString(sortable.transform),
@@ -79,6 +99,8 @@ export function TicketCard({
 
   const now = useClock(timerRunning);
   const elapsed = now === null ? ticket.totalElapsedMs : computeElapsed(ticket, now);
+  const startDateLabel = hasMounted ? formatLocalDateTime(ticket.startDate) : null;
+  const dueDateLabel = hasMounted ? formatLocalDateTime(ticket.dueDate) : null;
 
   return (
     <div
@@ -116,6 +138,28 @@ export function TicketCard({
             <p className="mt-1 text-[10px] text-muted-foreground">
               <span className="font-medium">Responsible:</span> {ticket.responsibleName}
             </p>
+          )}
+          {(ticket.complexity || startDateLabel || dueDateLabel) && (
+            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+              {ticket.complexity && (
+                <span>
+                  <span className="font-medium">Complexity:</span>{" "}
+                  {COMPLEXITY_LABELS[ticket.complexity]}
+                </span>
+              )}
+              {startDateLabel && ticket.startDate && (
+                <span>
+                  <span className="font-medium">Start:</span>{" "}
+                  <time dateTime={ticket.startDate}>{startDateLabel}</time>
+                </span>
+              )}
+              {dueDateLabel && ticket.dueDate && (
+                <span>
+                  <span className="font-medium">Due:</span>{" "}
+                  <time dateTime={ticket.dueDate}>{dueDateLabel}</time>
+                </span>
+              )}
+            </div>
           )}
 
           {(timerActive || ticket.totalElapsedMs > 0) && (

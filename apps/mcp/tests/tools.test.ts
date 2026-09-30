@@ -40,6 +40,9 @@ describe("createToolHandlers", () => {
         description: "long text",
         branch: "feat/x",
         responsibleName: "Ada Lovelace",
+        startDate: "2026-09-28T21:29:00.000Z",
+        dueDate: "2026-10-02T23:00:00.000Z",
+        complexity: "high",
       }),
     ]);
     const handlers = createToolHandlers(asForgeServices(services));
@@ -57,6 +60,9 @@ describe("createToolHandlers", () => {
         branch: "feat/x",
         prUrl: null,
         responsibleName: "Ada Lovelace",
+        startDate: "2026-09-28T21:29:00.000Z",
+        dueDate: "2026-10-02T23:00:00.000Z",
+        complexity: "high",
         createdAt: "2026-09-01T00:00:00.000Z",
       },
     ]);
@@ -77,9 +83,33 @@ describe("createToolHandlers", () => {
     expect(services.board.next).toHaveBeenLastCalledWith({ projectId: "p2" });
   });
 
+  it("returns planning fields in the next-ticket context", async () => {
+    const context = {
+      ticket: ticket("t1", {
+        startDate: "2026-09-28T21:29:00.000Z",
+        dueDate: "2026-10-02T23:00:00.000Z",
+        complexity: "high",
+      }),
+      project: { id: "p1", name: "Forge" },
+      comments: [],
+      inProgress: [],
+    };
+    const services = createMockServices();
+    services.board.next.mockResolvedValue(context);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.nextTicket()).resolves.toEqual(context);
+  });
+
   it("returns a ticket with its comment thread", async () => {
     const services = createMockServices();
-    services.board.get.mockResolvedValue(ticket("t1"));
+    services.board.get.mockResolvedValue(
+      ticket("t1", {
+        startDate: "2026-09-28T21:29:00.000Z",
+        dueDate: "2026-10-02T23:00:00.000Z",
+        complexity: "medium",
+      }),
+    );
     services.board.listComments.mockResolvedValue([
       comment("c1", "t1", "2026-09-02T00:00:00.000Z"),
     ]);
@@ -87,7 +117,12 @@ describe("createToolHandlers", () => {
 
     const result = await handlers.getTicket({ ticketId: "t1" });
 
-    expect(result.ticket.id).toBe("t1");
+    expect(result.ticket).toMatchObject({
+      id: "t1",
+      startDate: "2026-09-28T21:29:00.000Z",
+      dueDate: "2026-10-02T23:00:00.000Z",
+      complexity: "medium",
+    });
     expect(result.comments).toHaveLength(1);
     expect(services.board.listComments).toHaveBeenCalledWith("t1");
   });
@@ -145,6 +180,9 @@ describe("createToolHandlers", () => {
       title: "Ship it",
       column: "backlog",
       responsibleName: "Ada Lovelace",
+      complexity: "high",
+      startDate: "2026-09-28T21:29:00-06:00",
+      dueDate: "2026-10-02T17:00:00-06:00",
     });
     const services = createMockServices();
     services.projects.get.mockResolvedValue(project("p1"));
@@ -159,6 +197,9 @@ describe("createToolHandlers", () => {
         column: "backlog",
         priority: "med",
         responsibleName: "Ada Lovelace",
+        complexity: "high",
+        startDate: "2026-09-28T21:29:00-06:00",
+        dueDate: "2026-10-02T17:00:00-06:00",
       }),
     ).resolves.toEqual(created);
     expect(services.projects.get).toHaveBeenCalledWith("p1");
@@ -169,6 +210,9 @@ describe("createToolHandlers", () => {
       column: "backlog",
       priority: "med",
       responsibleName: "Ada Lovelace",
+      complexity: "high",
+      startDate: "2026-09-28T21:29:00-06:00",
+      dueDate: "2026-10-02T17:00:00-06:00",
     });
   });
 
@@ -208,7 +252,7 @@ describe("createToolHandlers", () => {
     expect(services.board.move).toHaveBeenLastCalledWith({ id: "t1", column: "done" });
   });
 
-  it("updates only handoff fields", async () => {
+  it("updates handoff and planning fields without forwarding omitted values", async () => {
     const updated = ticket("t1", { prUrl: "https://github.com/org/repo/pull/1" });
     const services = createMockServices();
     services.board.update.mockResolvedValue(updated);
@@ -220,16 +264,34 @@ describe("createToolHandlers", () => {
         prUrl: "https://github.com/org/repo/pull/1",
         clearBranch: true,
         responsibleName: "Ada Lovelace",
+        startDate: "2026-09-28T21:29:00-06:00",
+        dueDate: "2026-10-02T17:00:00-06:00",
+        complexity: "high",
       }),
     ).resolves.toEqual(updated);
     expect(services.board.update).toHaveBeenCalledWith("t1", {
       prUrl: "https://github.com/org/repo/pull/1",
       clearBranch: true,
       responsibleName: "Ada Lovelace",
+      startDate: "2026-09-28T21:29:00-06:00",
+      dueDate: "2026-10-02T17:00:00-06:00",
+      complexity: "high",
     });
 
     await handlers.updateTicket({ ticketId: "t1", clearResponsible: true });
     expect(services.board.update).toHaveBeenLastCalledWith("t1", { clearResponsible: true });
+
+    await handlers.updateTicket({
+      ticketId: "t1",
+      clearStartDate: true,
+      clearDueDate: true,
+      clearComplexity: true,
+    });
+    expect(services.board.update).toHaveBeenLastCalledWith("t1", {
+      clearStartDate: true,
+      clearDueDate: true,
+      clearComplexity: true,
+    });
   });
 
   it("adds a comment as the agent", async () => {

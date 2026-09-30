@@ -29,6 +29,9 @@ function ticket(overrides: Partial<Ticket> & { id: string; column: ColumnId }): 
     prUrl: null,
     ...overrides,
     responsibleName: overrides.responsibleName ?? null,
+    startDate: overrides.startDate ?? null,
+    dueDate: overrides.dueDate ?? null,
+    complexity: overrides.complexity ?? null,
   };
 }
 

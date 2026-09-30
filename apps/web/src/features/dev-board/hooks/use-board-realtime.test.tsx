@@ -32,6 +32,9 @@ const row = {
   branch: null,
   pr_url: null,
   responsible_name: null,
+  start_date: null,
+  due_date: null,
+  complexity: null,
 };
 
 function handlerFor(event: string) {

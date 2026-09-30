@@ -22,6 +22,10 @@ const sampleTicket: Ticket = {
   lastMovedAt: "2026-09-08T10:00:00.000Z",
   branch: "feat/ticket-report",
   prUrl: null,
+  responsibleName: null,
+  startDate: null,
+  dueDate: null,
+  complexity: null,
 };
 
 const sampleEvent: TicketEvent = {

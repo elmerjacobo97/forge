@@ -1,4 +1,4 @@
-import { COLUMNS, PRIORITIES } from "@forge/core";
+import { COLUMNS, PRIORITIES, ticketCreateSchema, ticketUpdateSchema } from "@forge/core";
 import { z } from "zod";
 
 const projectIdSchema = z.string().trim().min(1, "Project id is required.");
@@ -59,14 +59,25 @@ export const activityReportInput = {
   columns: z.array(columnSchema).optional(),
 };
 
-export const createTicketInput = {
-  projectId: projectIdSchema,
-  title: titleSchema,
-  description: descriptionSchema.default(""),
-  column: columnSchema.default("backlog"),
-  priority: prioritySchema.default("med"),
-  responsibleName: z.string().trim().min(1).max(120).optional(),
-};
+export const createTicketInput = z
+  .object({
+    projectId: projectIdSchema,
+    title: titleSchema,
+    description: descriptionSchema.default(""),
+    column: columnSchema.default("backlog"),
+    priority: prioritySchema.default("med"),
+    responsibleName: z.string().trim().min(1).max(120).optional(),
+    startDate: ticketCreateSchema.shape.startDate,
+    dueDate: ticketCreateSchema.shape.dueDate,
+    complexity: ticketCreateSchema.shape.complexity,
+  })
+  .refine(
+    (value) =>
+      !value.startDate ||
+      !value.dueDate ||
+      Date.parse(value.startDate) <= Date.parse(value.dueDate),
+    { message: "Start date must be on or before due date.", path: ["dueDate"] },
+  );
 
 export const moveTicketInput = {
   ticketId: ticketIdSchema,
@@ -86,6 +97,12 @@ export const updateTicketInput = z
     clearPrUrl: z.boolean().optional(),
     responsibleName: z.string().trim().min(1).max(120).optional(),
     clearResponsible: z.boolean().optional(),
+    startDate: ticketUpdateSchema.shape.startDate,
+    dueDate: ticketUpdateSchema.shape.dueDate,
+    complexity: ticketUpdateSchema.shape.complexity,
+    clearStartDate: ticketUpdateSchema.shape.clearStartDate,
+    clearDueDate: ticketUpdateSchema.shape.clearDueDate,
+    clearComplexity: ticketUpdateSchema.shape.clearComplexity,
   })
   .refine(
     (value) =>
@@ -94,14 +111,48 @@ export const updateTicketInput = z
       value.clearBranch !== undefined ||
       value.clearPrUrl !== undefined ||
       value.responsibleName !== undefined ||
-      value.clearResponsible !== undefined,
+      value.clearResponsible !== undefined ||
+      value.startDate !== undefined ||
+      value.dueDate !== undefined ||
+      value.complexity !== undefined ||
+      value.clearStartDate !== undefined ||
+      value.clearDueDate !== undefined ||
+      value.clearComplexity !== undefined,
     {
-      message:
-        "Provide at least one of branch, prUrl, clearBranch, clearPrUrl, responsibleName, or clearResponsible.",
+      message: "Provide at least one handoff, responsible-name, or planning field to update.",
     },
   )
   .refine((value) => !(value.responsibleName !== undefined && value.clearResponsible === true), {
     message: "Use either responsibleName or clearResponsible, not both.",
+  })
+  .superRefine((value, context) => {
+    const planningFields = [
+      ["startDate", "clearStartDate", "Start Date"],
+      ["dueDate", "clearDueDate", "Due Date"],
+      ["complexity", "clearComplexity", "Complexity"],
+    ] as const;
+
+    for (const [field, clearField, label] of planningFields) {
+      if (value[field] !== undefined && value[clearField] === true) {
+        context.addIssue({
+          code: "custom",
+          path: [field],
+          message: `Cannot set and clear ${label} in the same update.`,
+        });
+      }
+    }
+
+    if (
+      value.startDate !== undefined &&
+      value.dueDate !== undefined &&
+      Date.parse(value.startDate) > Date.parse(value.dueDate)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["dueDate"],
+        message: "Start date must be on or before due date.",
+      });
+    }
   });
 
 export const addTicketCommentInput = {

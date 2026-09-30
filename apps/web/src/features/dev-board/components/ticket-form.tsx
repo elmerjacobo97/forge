@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   InputGroup,
@@ -26,8 +26,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { type Priority, type Ticket, PRIORITIES, PRIORITY_LABELS } from "../types/board";
+import {
+  type Priority,
+  type Ticket,
+  type TicketComplexity,
+  COMPLEXITY_LABELS,
+  COMPLEXITY_LEVELS,
+  PRIORITIES,
+  PRIORITY_LABELS,
+} from "../types/board";
 import { type TicketFormValues, ticketSchema } from "../schemas/ticket";
+import { localDateTimeInputToIso, toLocalDateTimeInput } from "../utils/planning-dates";
 
 interface TicketFormProps {
   open: boolean;
@@ -43,6 +52,33 @@ export function TicketForm({
   onSubmit: onSubmitTicket,
 }: TicketFormProps) {
   const isEdit = editTicket !== null;
+  const [planningDateErrors, setPlanningDateErrors] = useState<
+    Partial<Record<"startDate" | "dueDate", string>>
+  >({});
+  const planningDateErrorsRef = useRef<Partial<Record<"startDate" | "dueDate", string>>>({});
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      planningDateErrorsRef.current = {};
+      setPlanningDateErrors((errors) => (Object.keys(errors).length === 0 ? errors : {}));
+    }
+    onOpenChange(nextOpen);
+  }
+
+  function setPlanningDateError(field: "startDate" | "dueDate", message: string | undefined) {
+    const nextErrors = { ...planningDateErrorsRef.current };
+    if (message) nextErrors[field] = message;
+    else delete nextErrors[field];
+    planningDateErrorsRef.current = nextErrors;
+
+    setPlanningDateErrors((errors) => {
+      if (errors[field] === message) return errors;
+      const nextState = { ...errors };
+      if (message) nextState[field] = message;
+      else delete nextState[field];
+      return nextState;
+    });
+  }
 
   const form = useForm({
     defaultValues: {
@@ -52,18 +88,23 @@ export function TicketForm({
       responsibleName: "",
       branch: null as string | null,
       prUrl: null as string | null,
+      startDate: null as string | null,
+      dueDate: null as string | null,
+      complexity: null as TicketComplexity | null,
     },
     validators: {
       onSubmit: ticketSchema,
     },
     onSubmit: async ({ value }) => {
+      if (Object.keys(planningDateErrorsRef.current).length > 0) return;
       onSubmitTicket(value);
-      onOpenChange(false);
+      handleOpenChange(false);
     },
   });
 
   useEffect(() => {
     if (open) {
+      planningDateErrorsRef.current = {};
       form.reset(
         editTicket
           ? {
@@ -73,6 +114,9 @@ export function TicketForm({
               responsibleName: editTicket.responsibleName ?? "",
               branch: editTicket.branch ?? "",
               prUrl: editTicket.prUrl ?? "",
+              startDate: editTicket.startDate,
+              dueDate: editTicket.dueDate,
+              complexity: editTicket.complexity,
             }
           : {
               title: "",
@@ -81,6 +125,9 @@ export function TicketForm({
               responsibleName: "",
               branch: "",
               prUrl: "",
+              startDate: null,
+              dueDate: null,
+              complexity: null,
             },
       );
     }
@@ -89,7 +136,7 @@ export function TicketForm({
   return (
     <Dialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
     >
       <DialogContent
         onInteractOutside={(event) => event.preventDefault()}
@@ -99,8 +146,8 @@ export function TicketForm({
           <DialogTitle>{isEdit ? "Edit Ticket" : "New Ticket"}</DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Update ticket details, priority, description, or responsible name."
-              : "Create a ticket and track its time across your workflow."}
+              ? "Update ticket details, planning dates, complexity, or responsibility."
+              : "Create a ticket and track its planning and time across your workflow."}
           </DialogDescription>
         </DialogHeader>
 
@@ -201,6 +248,128 @@ export function TicketForm({
               }}
             </form.Field>
 
+            <form.Field name="startDate">
+              {(field) => {
+                const dateError = planningDateErrors.startDate;
+                const isInvalid = Boolean(dateError) || !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name}>Start Date</FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="datetime-local"
+                      step={60}
+                      value={toLocalDateTimeInput(field.state.value)}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => {
+                        try {
+                          field.handleChange(localDateTimeInputToIso(event.target.value));
+                          setPlanningDateError("startDate", undefined);
+                        } catch (error) {
+                          setPlanningDateError(
+                            "startDate",
+                            error instanceof Error
+                              ? error.message
+                              : "Choose a valid local date and time.",
+                          );
+                        }
+                      }}
+                      aria-invalid={isInvalid}
+                    />
+                    <FieldDescription>Optional; entered in your local time zone.</FieldDescription>
+                    {dateError ? (
+                      <FieldError>{dateError}</FieldError>
+                    ) : (
+                      field.state.meta.errors.length > 0 && (
+                        <FieldError errors={field.state.meta.errors} />
+                      )
+                    )}
+                  </Field>
+                );
+              }}
+            </form.Field>
+
+            <form.Field name="dueDate">
+              {(field) => {
+                const dateError = planningDateErrors.dueDate;
+                const isInvalid = Boolean(dateError) || !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name}>Due Date</FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="datetime-local"
+                      step={60}
+                      value={toLocalDateTimeInput(field.state.value)}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => {
+                        try {
+                          field.handleChange(localDateTimeInputToIso(event.target.value));
+                          setPlanningDateError("dueDate", undefined);
+                        } catch (error) {
+                          setPlanningDateError(
+                            "dueDate",
+                            error instanceof Error
+                              ? error.message
+                              : "Choose a valid local date and time.",
+                          );
+                        }
+                      }}
+                      aria-invalid={isInvalid}
+                    />
+                    <FieldDescription>Optional; entered in your local time zone.</FieldDescription>
+                    {dateError ? (
+                      <FieldError>{dateError}</FieldError>
+                    ) : (
+                      field.state.meta.errors.length > 0 && (
+                        <FieldError errors={field.state.meta.errors} />
+                      )
+                    )}
+                  </Field>
+                );
+              }}
+            </form.Field>
+
+            <form.Field name="complexity">
+              {(field) => {
+                const isInvalid = !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name}>Complexity</FieldLabel>
+                    <Select
+                      value={field.state.value ?? "none"}
+                      onValueChange={(value) =>
+                        field.handleChange(value === "none" ? null : (value as TicketComplexity))
+                      }
+                    >
+                      <SelectTrigger
+                        id={field.name}
+                        className="w-full"
+                        aria-invalid={isInvalid}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Not set</SelectItem>
+                        {COMPLEXITY_LEVELS.map((complexity) => (
+                          <SelectItem
+                            key={complexity}
+                            value={complexity}
+                          >
+                            {COMPLEXITY_LABELS[complexity]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FieldDescription>Optional estimate of the work effort.</FieldDescription>
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                );
+              }}
+            </form.Field>
+
             <form.Field name="responsibleName">
               {(field) => {
                 const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
@@ -278,7 +447,7 @@ export function TicketForm({
         <DialogFooter>
           <Button
             variant="ghost"
-            onClick={() => onOpenChange(false)}
+            onClick={() => handleOpenChange(false)}
           >
             Cancel
           </Button>

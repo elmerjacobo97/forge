@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/item";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { COLUMN_LABELS, PRIORITY_LABELS, type Ticket } from "../types/board";
+import { COLUMN_LABELS, COMPLEXITY_LABELS, PRIORITY_LABELS, type Ticket } from "../types/board";
+import { formatLocalDateTime } from "../utils/planning-dates";
 import type { ReviewInboxColumn, ReviewInboxComment } from "../types/review-inbox";
 
 const COLUMN_BADGE: Record<ReviewInboxColumn, string> = {
@@ -49,6 +50,8 @@ export function TicketDetailDialog({
 }) {
   const column =
     ticket?.column === "validation" || ticket?.column === "review" ? ticket.column : null;
+  const startDateLabel = ticket ? formatLocalDateTime(ticket.startDate) : null;
+  const dueDateLabel = ticket ? formatLocalDateTime(ticket.dueDate) : null;
 
   return (
     <Dialog
@@ -83,6 +86,36 @@ export function TicketDetailDialog({
               </p>
             </ScrollArea>
             <ItemGroup className="gap-2">
+              <Item
+                variant="muted"
+                size="sm"
+              >
+                <ItemContent>
+                  <ItemTitle>Planning</ItemTitle>
+                  <ItemDescription className="line-clamp-none">
+                    <span className="block">
+                      <span className="font-medium">Complexity:</span>{" "}
+                      {ticket.complexity ? COMPLEXITY_LABELS[ticket.complexity] : "Not set"}
+                    </span>
+                    <span className="block">
+                      <span className="font-medium">Start Date:</span>{" "}
+                      {startDateLabel && ticket.startDate ? (
+                        <time dateTime={ticket.startDate}>{startDateLabel}</time>
+                      ) : (
+                        "Not scheduled"
+                      )}
+                    </span>
+                    <span className="block">
+                      <span className="font-medium">Due Date:</span>{" "}
+                      {dueDateLabel && ticket.dueDate ? (
+                        <time dateTime={ticket.dueDate}>{dueDateLabel}</time>
+                      ) : (
+                        "Not scheduled"
+                      )}
+                    </span>
+                  </ItemDescription>
+                </ItemContent>
+              </Item>
               <Item
                 variant="muted"
                 size="sm"

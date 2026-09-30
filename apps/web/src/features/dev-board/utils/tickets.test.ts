@@ -22,6 +22,9 @@ function ticket(id: string, column: Ticket["column"], position: number): Ticket 
     branch: null,
     prUrl: null,
     responsibleName: null,
+    startDate: null,
+    dueDate: null,
+    complexity: null,
   };
 }
 

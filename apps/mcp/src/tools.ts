@@ -3,10 +3,10 @@ import type {
   ActivityReport,
   ColumnId,
   NextTicketContext,
-  Priority,
   Project,
   Ticket,
   TicketComment,
+  TicketCreateInput,
   TicketUpdateInput,
 } from "@forge/core";
 import type { ForgeServices } from "./services.js";
@@ -19,14 +19,15 @@ export interface TicketReportArgs {
   columns?: ColumnId[];
 }
 
-interface TicketUpdateFields {
-  branch?: string;
-  prUrl?: string;
-  clearBranch?: boolean;
-  clearPrUrl?: boolean;
-  responsibleName?: string;
-  clearResponsible?: boolean;
-}
+type TicketHandoffFields = Pick<
+  TicketUpdateInput,
+  "branch" | "prUrl" | "clearBranch" | "clearPrUrl" | "responsibleName" | "clearResponsible"
+>;
+type TicketUpdateFields = TicketHandoffFields &
+  Pick<
+    TicketUpdateInput,
+    "startDate" | "dueDate" | "complexity" | "clearStartDate" | "clearDueDate" | "clearComplexity"
+  >;
 
 function ticketUpdateFields(input: TicketUpdateFields): TicketUpdateInput {
   return {
@@ -36,6 +37,12 @@ function ticketUpdateFields(input: TicketUpdateFields): TicketUpdateInput {
     ...(input.clearPrUrl !== undefined ? { clearPrUrl: input.clearPrUrl } : {}),
     ...(input.responsibleName !== undefined ? { responsibleName: input.responsibleName } : {}),
     ...(input.clearResponsible !== undefined ? { clearResponsible: input.clearResponsible } : {}),
+    ...(input.startDate !== undefined ? { startDate: input.startDate } : {}),
+    ...(input.dueDate !== undefined ? { dueDate: input.dueDate } : {}),
+    ...(input.complexity !== undefined ? { complexity: input.complexity } : {}),
+    ...(input.clearStartDate !== undefined ? { clearStartDate: input.clearStartDate } : {}),
+    ...(input.clearDueDate !== undefined ? { clearDueDate: input.clearDueDate } : {}),
+    ...(input.clearComplexity !== undefined ? { clearComplexity: input.clearComplexity } : {}),
   };
 }
 
@@ -90,20 +97,13 @@ export function createToolHandlers(services: ForgeServices) {
 
     activityReport,
 
-    createTicket: async (input: {
-      projectId: string;
-      title: string;
-      description: string;
-      column: ColumnId;
-      priority: Priority;
-      responsibleName?: string;
-    }): Promise<Ticket> => {
+    createTicket: async (input: TicketCreateInput): Promise<Ticket> => {
       await services.projects.get(input.projectId);
       return services.board.create(input);
     },
 
     moveTicket: (
-      input: { ticketId: string; column: ColumnId } & TicketUpdateFields,
+      input: { ticketId: string; column: ColumnId } & TicketHandoffFields,
     ): Promise<Ticket> =>
       services.board.move({
         id: input.ticketId,

@@ -5,7 +5,9 @@ const createInsForgeServerClient = vi.hoisted(() => vi.fn(async () => ({ databas
 
 vi.mock("@/lib/insforge/server", () => ({ createInsForgeServerClient }));
 
+import type { TicketInput } from "../schemas/ticket";
 import { COLUMNS, type Ticket } from "../types/board";
+import { TICKET_COLUMNS } from "../utils/ticket-row";
 import { devBoardService } from "./dev-board-service";
 
 interface QueryResult {
@@ -66,6 +68,9 @@ const ticketRow = {
   branch: "dev/handoff",
   pr_url: "https://github.com/acme/forge/pull/17",
   responsible_name: "Ada Lovelace",
+  start_date: null,
+  due_date: null,
+  complexity: null,
 };
 
 const commentRow = {
@@ -93,6 +98,9 @@ function ticket(overrides: Partial<Ticket> = {}): Ticket {
     branch: null,
     prUrl: null,
     responsibleName: null,
+    startDate: null,
+    dueDate: null,
+    complexity: null,
     ...overrides,
   };
 }
@@ -100,8 +108,14 @@ function ticket(overrides: Partial<Ticket> = {}): Ticket {
 beforeEach(() => vi.clearAllMocks());
 
 describe("devBoardService.fetchTicketPage", () => {
-  it("maps branch/PR and attaches comment counts", async () => {
-    const tickets = createQueryMock({ data: [ticketRow], error: null, count: 1 });
+  it("maps branch, PR, and planning fields and attaches comment counts", async () => {
+    const row = {
+      ...ticketRow,
+      start_date: "2026-09-10T00:00:00.000Z",
+      due_date: "2026-09-20T00:00:00.000Z",
+      complexity: "high",
+    };
+    const tickets = createQueryMock({ data: [row], error: null, count: 1 });
     const comments = createQueryMock({
       data: [{ ticket_id: "ticket-1" }, { ticket_id: "ticket-1" }],
       error: null,
@@ -116,10 +130,14 @@ describe("devBoardService.fetchTicketPage", () => {
         branch: "dev/handoff",
         prUrl: "https://github.com/acme/forge/pull/17",
         responsibleName: "Ada Lovelace",
+        startDate: "2026-09-10T00:00:00.000Z",
+        dueDate: "2026-09-20T00:00:00.000Z",
+        complexity: "high",
         commentCount: 2,
       }),
     ]);
     expect(comments.in).toHaveBeenCalledWith("ticket_id", ["ticket-1"]);
+    expect(tickets.select).toHaveBeenCalledWith(TICKET_COLUMNS, { count: "exact" });
     expect(tickets.order).toHaveBeenCalledWith("created_at", { ascending: false });
     expect(tickets.range).toHaveBeenCalledWith(0, 24);
     expect(page.nextCursor).toBeNull();
@@ -211,8 +229,8 @@ describe("devBoardService comments", () => {
   });
 });
 
-describe("devBoardService responsible name", () => {
-  it("sends responsibility on create and update", async () => {
+describe("devBoardService responsible name and planning fields", () => {
+  it("sends responsibility and planning fields on create, and responsibility on update", async () => {
     database.rpc.mockResolvedValue({ data: ticketRow, error: null });
 
     await devBoardService.createTicket({
@@ -221,10 +239,18 @@ describe("devBoardService responsible name", () => {
       description: "",
       priority: "med",
       responsibleName: "Ada Lovelace",
+      startDate: "2026-09-10T00:00:00.000Z",
+      dueDate: "2026-09-20T00:00:00.000Z",
+      complexity: "high",
     });
     expect(database.rpc).toHaveBeenCalledWith(
       "create_dev_board_ticket",
-      expect.objectContaining({ p_responsible_name: "Ada Lovelace" }),
+      expect.objectContaining({
+        p_responsible_name: "Ada Lovelace",
+        p_start_date: "2026-09-10T00:00:00.000Z",
+        p_due_date: "2026-09-20T00:00:00.000Z",
+        p_complexity: "high",
+      }),
     );
 
     const tickets = createQueryMock({ data: ticketRow, error: null });
@@ -234,6 +260,74 @@ describe("devBoardService responsible name", () => {
       "update_dev_board_ticket",
       expect.objectContaining({ p_responsible_name: "Grace Hopper" }),
     );
+  });
+});
+
+describe("devBoardService.updateTicket planning fields", () => {
+  it("preserves existing planning fields when an update omits them", async () => {
+    const previous = {
+      ...ticketRow,
+      start_date: "2026-09-10T00:00:00.000Z",
+      due_date: "2026-09-20T00:00:00.000Z",
+      complexity: "medium",
+    };
+    const tickets = createQueryMock({ data: previous, error: null });
+    database.from.mockReturnValue(tickets);
+    database.rpc.mockResolvedValue({ data: previous, error: null });
+
+    const input: TicketInput = { ...ticket() };
+    delete input.startDate;
+    delete input.dueDate;
+    delete input.complexity;
+    await devBoardService.updateTicket(input);
+
+    const [, params] = database.rpc.mock.calls[0] as [string, Record<string, unknown>];
+    expect(params).not.toHaveProperty("p_start_date");
+    expect(params).not.toHaveProperty("p_due_date");
+    expect(params).not.toHaveProperty("p_complexity");
+    expect(params).not.toHaveProperty("p_clear_start_date");
+    expect(params).not.toHaveProperty("p_clear_due_date");
+    expect(params).not.toHaveProperty("p_clear_complexity");
+  });
+
+  it("sends explicit clear flags when planning fields are cleared", async () => {
+    const previous = {
+      ...ticketRow,
+      start_date: "2026-09-10T00:00:00.000Z",
+      due_date: "2026-09-20T00:00:00.000Z",
+      complexity: "medium",
+    };
+    const tickets = createQueryMock({ data: previous, error: null });
+    database.from.mockReturnValue(tickets);
+    database.rpc.mockResolvedValue({
+      data: { ...previous, start_date: null, due_date: null, complexity: null },
+      error: null,
+    });
+
+    await devBoardService.updateTicket(
+      ticket({ startDate: null, dueDate: null, complexity: null }),
+    );
+
+    expect(database.rpc).toHaveBeenCalledWith(
+      "update_dev_board_ticket",
+      expect.objectContaining({
+        p_clear_start_date: true,
+        p_clear_due_date: true,
+        p_clear_complexity: true,
+      }),
+    );
+  });
+
+  it("rejects an invalid merged date range before updating", async () => {
+    const tickets = createQueryMock({ data: ticketRow, error: null });
+    database.from.mockReturnValue(tickets);
+
+    await expect(
+      devBoardService.updateTicket(
+        ticket({ startDate: "2026-09-20T00:00:00.000Z", dueDate: "2026-09-10T00:00:00.000Z" }),
+      ),
+    ).rejects.toThrow("Start Date must be on or before Due Date.");
+    expect(database.rpc).not.toHaveBeenCalled();
   });
 });
 
