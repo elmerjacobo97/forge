@@ -1,10 +1,10 @@
 ---
 name: forge-resources
-description: "Use when managing Forge resources with forge-cli: save a note, prompt, config, or code resource, list resources, or update or delete a resource."
+description: "Use when managing Forge resources with forge-cli: save a link resource (URL, category, description, tags), list resources, get, update, or delete a resource."
 license: MIT
 metadata:
   author: elmerjacobo97
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Forge resources (`forge-cli`)
@@ -43,48 +43,43 @@ Session and config live in `~/.forge/` (`config.json`, `session.json`).
 
 ```bash
 forge-cli resource create \
-  --title "ESLint flat" \
-  --kind config \
-  --content "{}" \
-  --language json \
-  --tool vscode \
-  --version "9" \
-  --tags eslint,lint
+  --title "AI Design Skills" \
+  --url https://github.com/elayadesign/ai-design-skills \
+  --category git \
+  --description "Colección de skills de diseño para Claude Code, Cursor y Codex." \
+  --tags design,skills,ai
 ```
 
-### Required fields (same rules as the web form)
+### Fields
 
-| Flag                     | Rules                                                                                                  |
-| ------------------------ | ------------------------------------------------------------------------------------------------------ |
-| `--title`                | min 2 characters                                                                                       |
-| `--kind`                 | `note` \| `prompt` \| `config` \| `code`                                                               |
-| `--content`              | required                                                                                               |
-| `--language`             | optional format (`json`, `yaml`, `javascript`, `typescript`, `markdown`, `env`, `plain-text`, `other`) |
-| `--tags`                 | optional, comma-separated                                                                              |
-| `--tool`                 | required when `kind=config`                                                                            |
-| `--custom-tool`          | required when `tool=other`                                                                             |
-| `--version`, `--context` | optional (config only)                                                                                 |
-
-For kinds other than `config`, config metadata is stored as `null` (same as the web app).
+| Flag            | Rules                                                     |
+| --------------- | --------------------------------------------------------- |
+| `--title`       | required, min 2 characters                                |
+| `--url`         | required, valid URL                                       |
+| `--category`    | required: `docs` \| `git` \| `tool` \| `article` \| `other` |
+| `--description` | required, 5–200 characters                                |
+| `--tags`        | optional, comma-separated                                 |
 
 ## Other commands
 
 ```bash
 forge-cli resource list
+forge-cli resource list --limit 10 --offset 10
 forge-cli resource list --json
 forge-cli resource get <id> --json
-forge-cli resource create ... --json
 forge-cli resource update <id> --title "New title" --json
 forge-cli resource delete <id>
 ```
 
-`--json` applies to `create`, `list`, `get`, and `update`.
+- `--limit` 1–1000; `--offset` requires `--limit`.
+- `update` takes at least one of `--title`, `--url`, `--category`, `--description`, `--tags`.
+- `--json` applies to `create`, `list`, `get`, and `update`.
 
 ## Agent checklist
 
 - Use **`forge-cli`**, never bare `forge`.
-- Ensure `init` + `login` before resource mutations.
+- Ensure `init` + `login` before resource mutations; check with `forge-cli whoami`.
 - Prefer `--json` when parsing results in automation.
-- Kinds: `note`, `prompt`, `config`, `code`.
-- Tools: `react-native`, `vscode`, `cursor`, `opencode`, `claude-code`, `other`.
-- Resources CRUD only — no bookmarks, tickets, MCP, or AI generation here.
+- Categories: `docs`, `git`, `tool`, `article`, `other`.
+- `bookmark` is an alias for `resource`.
+- Resources CRUD only — no tickets, ideas, projects, or AI generation here.
