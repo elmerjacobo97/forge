@@ -6,9 +6,10 @@ export function createListClient(data: unknown) {
   const range = vi.fn().mockResolvedValue(response);
   const ordered = Object.assign(Promise.resolve(response), { range });
   const order = vi.fn(() => ordered);
-  const select = vi.fn(() => ({ order }));
+  const eq = vi.fn(() => ({ order }));
+  const select = vi.fn(() => ({ eq, order }));
   const from = vi.fn(() => ({ select }));
-  return { client: { database: { from } } as unknown as InsForgeClient, from, range };
+  return { client: { database: { from } } as unknown as InsForgeClient, from, range, eq };
 }
 
 type Row = Record<string, unknown>;

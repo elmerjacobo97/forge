@@ -62,4 +62,20 @@ describe("resourcesService.list", () => {
 
     expect(range).toHaveBeenCalledWith(10, 19);
   });
+
+  it("filters by category when provided", async () => {
+    const { client, eq } = createListClient([row]);
+
+    await createResourcesService({ client }).list({ category: "docs" });
+
+    expect(eq).toHaveBeenCalledWith("category", "docs");
+  });
+
+  it("does not filter by category when omitted", async () => {
+    const { client, eq } = createListClient([row]);
+
+    await createResourcesService({ client }).list({ limit: 10 });
+
+    expect(eq).not.toHaveBeenCalled();
+  });
 });

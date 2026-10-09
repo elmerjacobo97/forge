@@ -6,6 +6,7 @@ import {
   createMockServices,
   event,
   project,
+  resource,
   ticket,
 } from "./helpers/mock-services.js";
 
@@ -334,5 +335,111 @@ describe("createToolHandlers", () => {
     await expect(handlers.adjustTicketTime({ ticketId: "t1" })).rejects.toThrow(
       "Provide exactly one of",
     );
+  });
+});
+
+describe("resource handlers", () => {
+  it("lists resources through the service with the given filters", async () => {
+    const services = createMockServices();
+    services.resources.list.mockResolvedValue([resource("r1")]);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(
+      handlers.listResources({ limit: 10, offset: 5, category: "tool" }),
+    ).resolves.toEqual([resource("r1")]);
+    expect(services.resources.list).toHaveBeenCalledWith({
+      limit: 10,
+      offset: 5,
+      category: "tool",
+    });
+  });
+
+  it("gets a resource and propagates not found", async () => {
+    const services = createMockServices();
+    services.resources.get.mockResolvedValue(resource("r1"));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.getResource({ resourceId: "r1" })).resolves.toEqual(resource("r1"));
+    expect(services.resources.get).toHaveBeenCalledWith("r1");
+
+    services.resources.get.mockRejectedValue(new Error("Resource not found."));
+    await expect(handlers.getResource({ resourceId: "missing" })).rejects.toThrow(
+      "Resource not found.",
+    );
+  });
+
+  it("creates a resource with the given input", async () => {
+    const input = {
+      title: "React docs",
+      url: "https://react.dev",
+      category: "docs" as const,
+      description: "Official docs",
+      tags: [],
+    };
+    const services = createMockServices();
+    services.resources.create.mockResolvedValue(resource("r1", input));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.createResource(input)).resolves.toEqual(resource("r1", input));
+    expect(services.resources.create).toHaveBeenCalledWith(input);
+  });
+
+  it("updates fields directly when no incremental tags are given", async () => {
+    const services = createMockServices();
+    services.resources.update.mockResolvedValue(resource("r1", { title: "New" }));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await handlers.updateResource({ resourceId: "r1", title: "New", tags: ["a"] });
+
+    expect(services.resources.get).not.toHaveBeenCalled();
+    expect(services.resources.update).toHaveBeenCalledWith("r1", { title: "New", tags: ["a"] });
+  });
+
+  it("merges addTags into current tags without duplicates", async () => {
+    const services = createMockServices();
+    services.resources.get.mockResolvedValue(resource("r1", { tags: ["react", "docs"] }));
+    services.resources.update.mockResolvedValue(resource("r1"));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await handlers.updateResource({ resourceId: "r1", addTags: ["docs", "hooks"] });
+
+    expect(services.resources.update).toHaveBeenCalledWith("r1", {
+      tags: ["react", "docs", "hooks"],
+    });
+  });
+
+  it("removes removeTags after adding addTags", async () => {
+    const services = createMockServices();
+    services.resources.get.mockResolvedValue(resource("r1", { tags: ["react"] }));
+    services.resources.update.mockResolvedValue(resource("r1"));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await handlers.updateResource({
+      resourceId: "r1",
+      addTags: ["hooks", "react"],
+      removeTags: ["react"],
+    });
+
+    expect(services.resources.update).toHaveBeenCalledWith("r1", { tags: ["hooks"] });
+  });
+
+  it("propagates service errors from update", async () => {
+    const services = createMockServices();
+    services.resources.get.mockRejectedValue(new Error("Resource not found."));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(
+      handlers.updateResource({ resourceId: "missing", addTags: ["a"] }),
+    ).rejects.toThrow("Resource not found.");
+    expect(services.resources.update).not.toHaveBeenCalled();
+  });
+
+  it("deletes a resource and returns its id", async () => {
+    const services = createMockServices();
+    services.resources.delete.mockResolvedValue(undefined);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.deleteResource({ resourceId: "r1" })).resolves.toEqual({ id: "r1" });
+    expect(services.resources.delete).toHaveBeenCalledWith("r1");
   });
 });

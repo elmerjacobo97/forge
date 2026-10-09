@@ -9,6 +9,10 @@ import type {
   ColumnId,
   NextTicketContext,
   Project,
+  Resource,
+  ResourceCategory,
+  ResourceCreateInput,
+  ResourceUpdateInput,
   Ticket,
   TicketComment,
   TicketCreateInput,
@@ -51,7 +55,36 @@ function ticketUpdateFields(input: TicketUpdateFields): TicketUpdateInput {
   };
 }
 
+export interface ResourceListArgs {
+  limit?: number;
+  offset?: number;
+  category?: ResourceCategory;
+}
+
+export type ResourceUpdateArgs = Partial<ResourceCreateInput> & {
+  resourceId: string;
+  addTags?: string[];
+  removeTags?: string[];
+};
+
 export function createToolHandlers(services: ForgeServices) {
+  async function updateResource({
+    resourceId,
+    addTags,
+    removeTags,
+    ...fields
+  }: ResourceUpdateArgs): Promise<Resource> {
+    const update: ResourceUpdateInput = fields;
+    if (addTags === undefined && removeTags === undefined) {
+      return services.resources.update(resourceId, update);
+    }
+
+    const current = await services.resources.get(resourceId);
+    const tags = new Set([...current.tags, ...(addTags ?? [])]);
+    for (const tag of removeTags ?? []) tags.delete(tag);
+    return services.resources.update(resourceId, { ...update, tags: [...tags] });
+  }
+
   async function activityReport(input: TicketReportArgs): Promise<ActivityReport> {
     const window = resolveReportWindow({
       days: input.days,
@@ -101,6 +134,21 @@ export function createToolHandlers(services: ForgeServices) {
     }),
 
     activityReport,
+
+    listResources: (args: ResourceListArgs): Promise<Resource[]> => services.resources.list(args),
+
+    getResource: ({ resourceId }: { resourceId: string }): Promise<Resource> =>
+      services.resources.get(resourceId),
+
+    createResource: (input: ResourceCreateInput): Promise<Resource> =>
+      services.resources.create(input),
+
+    updateResource,
+
+    deleteResource: async ({ resourceId }: { resourceId: string }): Promise<{ id: string }> => {
+      await services.resources.delete(resourceId);
+      return { id: resourceId };
+    },
 
     createTicket: async (input: TicketCreateInput): Promise<Ticket> => {
       await services.projects.get(input.projectId);

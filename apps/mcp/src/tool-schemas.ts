@@ -1,4 +1,10 @@
-import { COLUMNS, PRIORITIES, ticketCreateSchema, ticketUpdateSchema } from "@forge/core";
+import {
+  COLUMNS,
+  PRIORITIES,
+  resourceCreateSchema,
+  ticketCreateSchema,
+  ticketUpdateSchema,
+} from "@forge/core";
 import { z } from "zod";
 
 const projectIdSchema = z.string().trim().min(1, "Project id is required.");
@@ -174,3 +180,52 @@ export const adjustTicketTimeInput = {
   stopAt: z.string().trim().min(1).optional(),
   stopWith: durationSchema.optional(),
 };
+
+const resourceShape = resourceCreateSchema.shape;
+const resourceIdSchema = z.string().trim().min(1, "Resource id is required.");
+const resourceTagsSchema = z.array(z.string().trim().min(1, "Tag must not be empty."));
+
+export const listResourcesInput = z
+  .object({
+    limit: z.number().int().min(1).optional(),
+    offset: z.number().int().min(0).optional(),
+    category: resourceShape.category.optional(),
+  })
+  .refine((value) => value.offset === undefined || value.limit !== undefined, {
+    message: "Offset requires limit.",
+    path: ["offset"],
+  });
+
+export const resourceIdInput = {
+  resourceId: resourceIdSchema,
+};
+
+export const createResourceInput = {
+  title: resourceShape.title,
+  url: resourceShape.url,
+  category: resourceShape.category,
+  description: resourceShape.description,
+  tags: resourceTagsSchema.default([]),
+};
+
+export const updateResourceInput = z
+  .strictObject({
+    resourceId: resourceIdSchema,
+    title: resourceShape.title.optional(),
+    url: resourceShape.url.optional(),
+    category: resourceShape.category.optional(),
+    description: resourceShape.description.optional(),
+    tags: resourceTagsSchema.optional(),
+    addTags: resourceTagsSchema.optional(),
+    removeTags: resourceTagsSchema.optional(),
+  })
+  .refine(
+    (value) =>
+      Object.entries(value).some(([key, field]) => key !== "resourceId" && field !== undefined),
+    { message: "Provide at least one field to update." },
+  )
+  .refine(
+    (value) =>
+      value.tags === undefined || (value.addTags === undefined && value.removeTags === undefined),
+    { message: "Use tags alone, or addTags and removeTags, not both.", path: ["tags"] },
+  );

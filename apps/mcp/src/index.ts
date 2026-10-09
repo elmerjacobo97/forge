@@ -9,13 +9,17 @@ import {
   activityReportInput,
   adjustTicketTimeInput,
   addTicketCommentInput,
+  createResourceInput,
   createTicketInput,
   getProjectInput,
   getTicketInput,
+  listResourcesInput,
   listTicketsInput,
   moveTicketInput,
   nextTicketInput,
+  resourceIdInput,
   ticketIdInput,
+  updateResourceInput,
   updateTicketInput,
 } from "./tool-schemas.js";
 import { toToolError, toToolResult } from "./tool-result.js";
@@ -170,6 +174,54 @@ export class ForgeMcp extends McpAgent<Env> {
         inputSchema: adjustTicketTimeInput,
       },
       (args) => run((handlers) => handlers.adjustTicketTime(args)),
+    );
+
+    this.server.registerTool(
+      "forge_list_resources",
+      {
+        description:
+          "List saved Forge resources (links), newest first. Optional category (docs, git, tool, article, other). Pass limit to page; offset requires limit. Without limit, returns every resource.",
+        inputSchema: listResourcesInput,
+      },
+      (args) => run((handlers) => handlers.listResources(args)),
+    );
+
+    this.server.registerTool(
+      "forge_get_resource",
+      {
+        description: "Get a Forge resource by id.",
+        inputSchema: resourceIdInput,
+      },
+      (args) => run((handlers) => handlers.getResource(args)),
+    );
+
+    this.server.registerTool(
+      "forge_create_resource",
+      {
+        description:
+          "Save a Forge resource. Requires title (min 2 characters), url, category (docs, git, tool, article, other), and description (5 to 200 characters). tags defaults to empty.",
+        inputSchema: createResourceInput,
+      },
+      (args) => run((handlers) => handlers.createResource(args)),
+    );
+
+    this.server.registerTool(
+      "forge_update_resource",
+      {
+        description:
+          "Update a Forge resource. Supported fields are title, url, category, description, tags (replaces all tags), addTags (added to current tags, no duplicates), and removeTags (removed after addTags). Do not combine tags with addTags or removeTags. At least one field is required.",
+        inputSchema: updateResourceInput,
+      },
+      (args) => run((handlers) => handlers.updateResource(args)),
+    );
+
+    this.server.registerTool(
+      "forge_delete_resource",
+      {
+        description: "Delete a Forge resource by id. Returns the deleted id. Cannot be undone.",
+        inputSchema: resourceIdInput,
+      },
+      (args) => run((handlers) => handlers.deleteResource(args)),
     );
   }
 }

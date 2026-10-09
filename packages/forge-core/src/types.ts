@@ -218,6 +218,10 @@ export type ResourceCreateInput = {
 
 export type ResourceUpdateInput = Partial<ResourceCreateInput>;
 
+export type ResourceListOptions = ListOptions & {
+  category?: ResourceCategory;
+};
+
 export const IDEA_STATUSES = ["seed", "exploring", "building", "parked", "shipped"] as const;
 
 export type IdeaStatus = (typeof IDEA_STATUSES)[number];

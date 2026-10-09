@@ -1,5 +1,5 @@
 import { vi, type Mock } from "vitest";
-import type { Project, Ticket, TicketComment, TicketEvent } from "@forge/core";
+import type { Project, Resource, Ticket, TicketComment, TicketEvent } from "@forge/core";
 import type { ForgeServices } from "../../src/services.js";
 
 export interface MockServices {
@@ -18,6 +18,7 @@ export interface MockServices {
     adjustTime: Mock;
   };
   activity: { listEvents: Mock; listCommentsInRange: Mock };
+  resources: { list: Mock; get: Mock; create: Mock; update: Mock; delete: Mock };
 }
 
 export function createMockServices(): MockServices {
@@ -37,6 +38,13 @@ export function createMockServices(): MockServices {
       adjustTime: vi.fn(),
     },
     activity: { listEvents: vi.fn(), listCommentsInRange: vi.fn() },
+    resources: {
+      list: vi.fn(),
+      get: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
   };
 }
 
@@ -74,6 +82,19 @@ export function ticket(id: string, overrides: Partial<Ticket> = {}): Ticket {
 
 export function comment(id: string, ticketId: string, createdAt: string): TicketComment {
   return { id, ticketId, author: "agent", body: `comment ${id}`, createdAt };
+}
+
+export function resource(id: string, overrides: Partial<Resource> = {}): Resource {
+  return {
+    id,
+    title: id,
+    url: "https://example.com",
+    category: "docs",
+    description: "description",
+    tags: [],
+    createdAt: "2026-09-01T00:00:00.000Z",
+    ...overrides,
+  };
 }
 
 export function event(id: string, ticketId: string, occurredAt: string): TicketEvent {

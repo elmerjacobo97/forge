@@ -2,10 +2,10 @@ import type { InsForgeClient } from "@insforge/sdk";
 import { asRecord, asRows, stringField, throwIfError } from "./insforge-data.js";
 import { RESOURCE_CATEGORIES } from "./types.js";
 import type {
-  ListOptions,
   Resource,
   ResourceCreateInput,
   ResourceCategory,
+  ResourceListOptions,
   ResourceUpdateInput,
 } from "./types.js";
 
@@ -65,11 +65,12 @@ export function createResourcesService({ client }: ResourcesServiceDeps) {
   }
 
   return {
-    async list(options: ListOptions = {}): Promise<Resource[]> {
-      let query = client.database
-        .from(TABLE)
-        .select(COLUMNS)
-        .order("created_at", { ascending: false });
+    async list(options: ResourceListOptions = {}): Promise<Resource[]> {
+      let query = client.database.from(TABLE).select(COLUMNS);
+      if (options.category !== undefined) {
+        query = query.eq("category", options.category);
+      }
+      query = query.order("created_at", { ascending: false });
       if (options.limit !== undefined) {
         const offset = options.offset ?? 0;
         query = query.range(offset, offset + options.limit - 1);

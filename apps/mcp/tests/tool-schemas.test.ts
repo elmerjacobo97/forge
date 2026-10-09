@@ -3,13 +3,17 @@ import { z } from "zod";
 import {
   activityReportInput,
   addTicketCommentInput,
+  createResourceInput,
   createTicketInput,
   getProjectInput,
   getTicketInput,
+  listResourcesInput,
   listTicketsInput,
   moveTicketInput,
   nextTicketInput,
+  resourceIdInput,
   ticketIdInput,
+  updateResourceInput,
   updateTicketInput,
 } from "../src/tool-schemas.js";
 
@@ -221,5 +225,64 @@ describe("ticket write inputs", () => {
       false,
     );
     expect(updateTicketInput.safeParse({ ticketId: "t1", priority: "high" }).success).toBe(false);
+  });
+});
+
+describe("resource inputs", () => {
+  const validCreate = {
+    title: "React docs",
+    url: "https://react.dev",
+    category: "docs",
+    description: "Official docs",
+  };
+
+  it("accepts a valid create and defaults tags to []", () => {
+    const parsed = z.object(createResourceInput).safeParse(validCreate);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.tags).toEqual([]);
+  });
+
+  it("rejects invalid create fields without calling the service", () => {
+    const schema = z.object(createResourceInput);
+    expect(schema.safeParse({ ...validCreate, title: "A" }).success).toBe(false);
+    expect(schema.safeParse({ ...validCreate, category: "video" }).success).toBe(false);
+    expect(schema.safeParse({ ...validCreate, url: "not-a-url" }).success).toBe(false);
+    expect(schema.safeParse({ ...validCreate, description: "abc" }).success).toBe(false);
+    expect(schema.safeParse({ ...validCreate, description: "x".repeat(201) }).success).toBe(false);
+    expect(schema.safeParse({ ...validCreate, tags: ["  "] }).success).toBe(false);
+  });
+
+  it("requires resourceId for get and delete", () => {
+    expect(z.object(resourceIdInput).safeParse({}).success).toBe(false);
+    expect(z.object(resourceIdInput).safeParse({ resourceId: "r1" }).success).toBe(true);
+  });
+
+  it("validates list filters and rejects offset without limit", () => {
+    expect(listResourcesInput.safeParse({}).success).toBe(true);
+    expect(
+      listResourcesInput.safeParse({ limit: 10, offset: 10, category: "tool" }).success,
+    ).toBe(true);
+    expect(listResourcesInput.safeParse({ offset: 10 }).success).toBe(false);
+    expect(listResourcesInput.safeParse({ category: "video" }).success).toBe(false);
+  });
+
+  it("requires at least one update field", () => {
+    expect(updateResourceInput.safeParse({ resourceId: "r1" }).success).toBe(false);
+    expect(updateResourceInput.safeParse({ resourceId: "r1", title: "New title" }).success).toBe(
+      true,
+    );
+  });
+
+  it("rejects tags combined with addTags or removeTags", () => {
+    expect(
+      updateResourceInput.safeParse({ resourceId: "r1", tags: ["a"], addTags: ["b"] }).success,
+    ).toBe(false);
+    expect(
+      updateResourceInput.safeParse({ resourceId: "r1", tags: ["a"], removeTags: ["b"] }).success,
+    ).toBe(false);
+    expect(
+      updateResourceInput.safeParse({ resourceId: "r1", addTags: ["b"], removeTags: ["a"] })
+        .success,
+    ).toBe(true);
   });
 });
