@@ -3,7 +3,7 @@ import type { Project, Resource, Ticket, TicketComment, TicketEvent } from "@for
 import type { ForgeServices } from "../../src/services.js";
 
 export interface MockServices {
-  projects: { list: Mock; get: Mock };
+  projects: { list: Mock; get: Mock; create: Mock; delete: Mock };
   board: {
     list: Mock;
     get: Mock;
@@ -16,6 +16,7 @@ export interface MockServices {
     pauseTimer: Mock;
     resumeTimer: Mock;
     adjustTime: Mock;
+    delete: Mock;
   };
   activity: { listEvents: Mock; listCommentsInRange: Mock };
   resources: { list: Mock; get: Mock; create: Mock; update: Mock; delete: Mock };
@@ -23,8 +24,9 @@ export interface MockServices {
 
 export function createMockServices(): MockServices {
   return {
-    projects: { list: vi.fn(), get: vi.fn() },
+    projects: { list: vi.fn(), get: vi.fn(), create: vi.fn(), delete: vi.fn() },
     board: {
+      delete: vi.fn(),
       list: vi.fn(),
       get: vi.fn(),
       next: vi.fn(),

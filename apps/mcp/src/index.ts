@@ -9,6 +9,7 @@ import {
   activityReportInput,
   adjustTicketTimeInput,
   addTicketCommentInput,
+  createProjectInput,
   createResourceInput,
   createTicketInput,
   getProjectInput,
@@ -67,6 +68,26 @@ export class ForgeMcp extends McpAgent<Env> {
         inputSchema: getProjectInput,
       },
       (args) => run((handlers) => handlers.getProject(args)),
+    );
+
+    this.server.registerTool(
+      "forge_create_project",
+      {
+        description:
+          "Create a Forge Dev Board project. Requires name (1 to 80 characters). description is optional (max 2000 characters) and defaults to empty.",
+        inputSchema: createProjectInput,
+      },
+      (args) => run((handlers) => handlers.createProject(args)),
+    );
+
+    this.server.registerTool(
+      "forge_delete_project",
+      {
+        description:
+          "Delete a Forge project by id. Only empty projects can be deleted; delete its tickets first. Returns the deleted id. Cannot be undone.",
+        inputSchema: getProjectInput,
+      },
+      (args) => run((handlers) => handlers.deleteProject(args)),
     );
 
     this.server.registerTool(
@@ -136,6 +157,15 @@ export class ForgeMcp extends McpAgent<Env> {
         inputSchema: updateTicketInput,
       },
       (args) => run((handlers) => handlers.updateTicket(args)),
+    );
+
+    this.server.registerTool(
+      "forge_delete_ticket",
+      {
+        description: "Delete a Forge ticket by id. Returns the deleted id. Cannot be undone.",
+        inputSchema: ticketIdInput,
+      },
+      (args) => run((handlers) => handlers.deleteTicket(args)),
     );
 
     this.server.registerTool(

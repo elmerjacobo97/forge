@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   activityReportInput,
   addTicketCommentInput,
+  createProjectInput,
   createResourceInput,
   createTicketInput,
   getProjectInput,
@@ -284,5 +285,20 @@ describe("resource inputs", () => {
       updateResourceInput.safeParse({ resourceId: "r1", addTags: ["b"], removeTags: ["a"] })
         .success,
     ).toBe(true);
+  });
+});
+
+describe("createProjectInput", () => {
+  const schema = z.object(createProjectInput);
+
+  it("defaults description to empty", () => {
+    const parsed = schema.safeParse({ name: "Forge" });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.description).toBe("");
+  });
+
+  it("rejects an empty or overlong name", () => {
+    expect(schema.safeParse({ name: "   " }).success).toBe(false);
+    expect(schema.safeParse({ name: "x".repeat(81) }).success).toBe(false);
   });
 });

@@ -1,3 +1,4 @@
+import { PROJECT_HAS_TICKETS_MESSAGE } from "@forge/core";
 import { describe, expect, it } from "vitest";
 import { createToolHandlers } from "../src/tools.js";
 import {
@@ -441,5 +442,44 @@ describe("resource handlers", () => {
 
     await expect(handlers.deleteResource({ resourceId: "r1" })).resolves.toEqual({ id: "r1" });
     expect(services.resources.delete).toHaveBeenCalledWith("r1");
+  });
+
+  it("creates a project through the projects service", async () => {
+    const services = createMockServices();
+    services.projects.create.mockResolvedValue(project("p1", "Forge"));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.createProject({ name: "Forge", description: "" })).resolves.toEqual(
+      project("p1", "Forge"),
+    );
+    expect(services.projects.create).toHaveBeenCalledWith({ name: "Forge", description: "" });
+  });
+
+  it("deletes a project and returns its id", async () => {
+    const services = createMockServices();
+    services.projects.delete.mockResolvedValue(undefined);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.deleteProject({ projectId: "p1" })).resolves.toEqual({ id: "p1" });
+    expect(services.projects.delete).toHaveBeenCalledWith("p1");
+  });
+
+  it("propagates the error when deleting a project that still has tickets", async () => {
+    const services = createMockServices();
+    services.projects.delete.mockRejectedValue(new Error(PROJECT_HAS_TICKETS_MESSAGE));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.deleteProject({ projectId: "p1" })).rejects.toThrow(
+      PROJECT_HAS_TICKETS_MESSAGE,
+    );
+  });
+
+  it("deletes a ticket and returns its id", async () => {
+    const services = createMockServices();
+    services.board.delete.mockResolvedValue(undefined);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.deleteTicket({ ticketId: "t1" })).resolves.toEqual({ id: "t1" });
+    expect(services.board.delete).toHaveBeenCalledWith("t1");
   });
 });

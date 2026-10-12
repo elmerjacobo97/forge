@@ -9,6 +9,7 @@ import type {
   ColumnId,
   NextTicketContext,
   Project,
+  ProjectCreateInput,
   Resource,
   ResourceCategory,
   ResourceCreateInput,
@@ -118,6 +119,13 @@ export function createToolHandlers(services: ForgeServices) {
     getProject: ({ projectId }: { projectId: string }): Promise<Project> =>
       services.projects.get(projectId),
 
+    createProject: (input: ProjectCreateInput): Promise<Project> => services.projects.create(input),
+
+    deleteProject: async ({ projectId }: { projectId: string }): Promise<{ id: string }> => {
+      await services.projects.delete(projectId);
+      return { id: projectId };
+    },
+
     listTickets: async ({ projectId, column }: { projectId: string; column?: ColumnId }) =>
       (await services.board.list(projectId, column)).map(toTicketSummary),
 
@@ -169,6 +177,11 @@ export function createToolHandlers(services: ForgeServices) {
       ...fields
     }: { ticketId: string } & TicketUpdateFields): Promise<Ticket> =>
       services.board.update(ticketId, ticketUpdateFields(fields)),
+
+    deleteTicket: async ({ ticketId }: { ticketId: string }): Promise<{ id: string }> => {
+      await services.board.delete(ticketId);
+      return { id: ticketId };
+    },
 
     addTicketComment: ({
       ticketId,
