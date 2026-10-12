@@ -84,7 +84,7 @@ export function ReviewInbox({ items }: { items: ReviewInboxItem[] }) {
           asChild
           size="sm"
           variant="ghost"
-          className="-ml-2 mb-1 h-7 gap-1.5 px-2"
+          className="-ml-2 mb-1 h-7 gap-1.5 px-2 leading-none"
         >
           <Link href="/dev-board">
             <HugeiconsIcon
@@ -112,7 +112,7 @@ export function ReviewInbox({ items }: { items: ReviewInboxItem[] }) {
               <TableHead className="w-[14%]">Project</TableHead>
               <TableHead className="w-[22%]">Title</TableHead>
               <TableHead className="w-28">Column</TableHead>
-              <TableHead className="w-16">PR</TableHead>
+              <TableHead className="hidden w-16 sm:table-cell">PR</TableHead>
               <TableHead>Comment</TableHead>
             </TableRow>
           </TableHeader>
@@ -139,7 +139,7 @@ export function ReviewInbox({ items }: { items: ReviewInboxItem[] }) {
                 <TableCell className="align-top">
                   <Badge className={COLUMN_BADGE[item.column]}>{COLUMN_LABELS[item.column]}</Badge>
                 </TableCell>
-                <TableCell className="align-top">
+                <TableCell className="hidden align-top sm:table-cell">
                   {item.prUrl ? (
                     <Badge
                       variant="outline"

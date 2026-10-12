@@ -50,21 +50,21 @@ export function MonitorTableRow({ row }: { row: MonitorRowData }) {
         >
           {monitor.name}
         </Link>
-        <div className="max-w-64 truncate text-xs text-muted-foreground">{monitor.url}</div>
+        <div className="max-w-28 truncate text-xs text-muted-foreground md:max-w-64">{monitor.url}</div>
       </TableCell>
       <TableCell>
         <MonitorStatusBadge status={monitor.status} />
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground">
+      <TableCell className="hidden text-xs text-muted-foreground lg:table-cell">
         {lastLatencyMs === null ? "—" : formatLatency(lastLatencyMs)}
       </TableCell>
-      <TableCell>
+      <TableCell className="hidden lg:table-cell">
         <MonitorSparkline
           buckets={sparklineBuckets}
           isLoading={false}
         />
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground">
+      <TableCell className="hidden text-xs text-muted-foreground lg:table-cell">
         {formatUptimePercentage(uptimePercentage)}
       </TableCell>
       <TableCell>

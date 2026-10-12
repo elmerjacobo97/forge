@@ -55,8 +55,8 @@ export function ProjectListToolbar({ filters }: { filters: ProjectFilters }) {
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="relative min-w-48 flex-1 sm:max-w-sm">
+    <div className="grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
+      <div className="relative col-span-2 sm:col-span-1 sm:max-w-sm sm:min-w-48 sm:flex-1">
         <HugeiconsIcon
           icon={Search01Icon}
           strokeWidth={2}
@@ -78,7 +78,7 @@ export function ProjectListToolbar({ filters }: { filters: ProjectFilters }) {
         onValueChange={(value) => applyFilters({ status: value as ProjectFilters["status"] })}
       >
         <SelectTrigger
-          className="min-w-36"
+          className="w-full sm:w-auto sm:min-w-36"
           aria-label="Filter by project status"
         >
           <SelectValue />
@@ -101,7 +101,7 @@ export function ProjectListToolbar({ filters }: { filters: ProjectFilters }) {
         onValueChange={(value) => applyFilters({ sort: value as ProjectFilters["sort"] })}
       >
         <SelectTrigger
-          className="min-w-36"
+          className="w-full sm:w-auto sm:min-w-36"
           aria-label="Sort projects"
         >
           <SelectValue />

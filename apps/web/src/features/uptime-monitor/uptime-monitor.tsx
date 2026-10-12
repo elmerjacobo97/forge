@@ -61,9 +61,9 @@ export function UptimeMonitor({
               <TableRow>
                 <TableHead>Monitor</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Last latency</TableHead>
-                <TableHead>24h trend</TableHead>
-                <TableHead>Uptime (24h)</TableHead>
+                <TableHead className="hidden lg:table-cell">Last latency</TableHead>
+                <TableHead className="hidden lg:table-cell">24h trend</TableHead>
+                <TableHead className="hidden lg:table-cell">Uptime (24h)</TableHead>
                 <TableHead>Enabled</TableHead>
                 <TableHead className="w-24" />
               </TableRow>

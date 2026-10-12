@@ -38,13 +38,13 @@ export function ProjectBoardHeader({
   onNewTicket,
 }: ProjectBoardHeaderProps) {
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="min-w-0">
         <Button
           asChild
           size="sm"
           variant="ghost"
-          className="-ml-2 mb-1 h-7 gap-1.5 px-2"
+          className="-ml-2 mb-1 h-7 gap-1.5 px-2 leading-none"
         >
           <Link href="/dev-board">
             <HugeiconsIcon
@@ -73,7 +73,7 @@ export function ProjectBoardHeader({
           &quot;In Progress&quot;
         </p>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           type="button"
           size="icon-sm"
@@ -93,28 +93,36 @@ export function ProjectBoardHeader({
           asChild
           size="sm"
           variant="outline"
+          className="px-2 md:px-3"
         >
-          <Link href={`/dev-board/${project.id}/analytics`}>
+          <Link
+            href={`/dev-board/${project.id}/analytics`}
+            aria-label="Analytics"
+          >
             <HugeiconsIcon
               icon={Analytics01Icon}
               strokeWidth={2}
               className="size-3.5"
             />
-            Analytics
+            <span className="hidden md:inline">Analytics</span>
           </Link>
         </Button>
         <Button
           asChild
           size="sm"
           variant="outline"
+          className="px-2 md:px-3"
         >
-          <Link href={`/meetings/new?projectId=${project.id}&returnTo=project`}>
+          <Link
+            href={`/meetings/new?projectId=${project.id}&returnTo=project`}
+            aria-label="New meeting"
+          >
             <HugeiconsIcon
               icon={Calendar03Icon}
               strokeWidth={2}
               className="size-3.5"
             />
-            New meeting
+            <span className="hidden md:inline">New meeting</span>
           </Link>
         </Button>
         <Button

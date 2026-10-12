@@ -119,6 +119,7 @@ export function AnalyticsRangeControls({
           onValueChange={onPresetChange}
           variant="outline"
           size="sm"
+          className="flex-wrap"
         >
           <ToggleGroupItem value="7d">7 days</ToggleGroupItem>
           <ToggleGroupItem value="30d">30 days</ToggleGroupItem>

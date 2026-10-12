@@ -182,7 +182,7 @@ export function AnalyticsCharts({ summary }: { summary: AnalyticsSummary }) {
               tickFormatter={minutesTick}
               tickLine={false}
               axisLine={false}
-              width={40}
+              width={48}
               tickMargin={4}
             />
             <ChartTooltip

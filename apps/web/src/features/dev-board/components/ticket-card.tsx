@@ -73,7 +73,7 @@ export function TicketCard({
       <div>
         <button
           type="button"
-          className="absolute top-2.5 left-1.5 cursor-grab p-0.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
+          className="absolute top-2.5 left-1.5 touch-none cursor-grab p-0.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 active:cursor-grabbing"
           aria-label="Drag"
           {...sortable.attributes}
           {...sortable.listeners}
