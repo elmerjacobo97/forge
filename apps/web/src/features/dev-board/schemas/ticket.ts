@@ -108,11 +108,19 @@ export const ticketInputSchema = z
     totalElapsedMs: z.number(),
     isPaused: z.boolean(),
     lastMovedAt: z.string(),
-    branch: z.string().min(1, "Branch is required").max(200, "Branch is too long").nullable(),
+    branch: z
+      .string()
+      .max(200, "Branch is too long")
+      .transform((value) => value.trim() || null)
+      .nullable(),
     prUrl: z
       .string()
       .max(2048, "PR URL is too long")
-      .regex(/^https?:\/\//i, "PR URL must start with http:// or https://")
+      .refine(
+        (value) => value.trim() === "" || /^https?:\/\//i.test(value.trim()),
+        "PR URL must start with http:// or https://",
+      )
+      .transform((value) => value.trim() || null)
       .nullable(),
     responsibleName: z.string().max(120).nullable(),
     startDate: z.iso.datetime({ offset: true }).nullable().optional(),

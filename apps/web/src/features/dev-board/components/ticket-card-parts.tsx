@@ -1,16 +1,18 @@
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Calendar03Icon, Clock01Icon, Message01Icon } from "@hugeicons/core-free-icons";
+import { Clock01Icon, Message01Icon } from "@hugeicons/core-free-icons";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 import {
+  type Priority,
   type Ticket,
   type TicketComplexity,
   COMPLEXITY_LABELS,
   COMPLEXITY_LEVELS,
+  PRIORITY_COLORS,
+  PRIORITY_LABELS,
 } from "../types/board";
-import { formatLocalDateTime } from "../utils/planning-dates";
 import { formatDuration } from "../utils/timer";
 
 export function TicketComplexityBadge({ complexity }: { complexity: TicketComplexity }) {
@@ -18,10 +20,11 @@ export function TicketComplexityBadge({ complexity }: { complexity: TicketComple
     <Badge
       variant="secondary"
       aria-label={`${COMPLEXITY_LABELS[complexity]} complexity`}
+      title={`${COMPLEXITY_LABELS[complexity]} complexity`}
     >
       <span
         aria-hidden
-        className="flex items-end gap-px"
+        className="flex items-center gap-px"
       >
         {[0, 1, 2].map((level) => (
           <span
@@ -41,48 +44,44 @@ export function TicketComplexityBadge({ complexity }: { complexity: TicketComple
   );
 }
 
-export function TicketDateRange({
+export function TicketPriorityBadge({ priority }: { priority: Priority }) {
+  return (
+    <Badge variant="outline">
+      <span
+        aria-hidden
+        className={cn("size-2 rounded-full", PRIORITY_COLORS[priority])}
+      />
+      {PRIORITY_LABELS[priority]}
+    </Badge>
+  );
+}
+
+export function TicketDates({
   ticket,
-  dateRange,
+  startLabel,
+  dueLabel,
   overdue,
 }: {
   ticket: Ticket;
-  dateRange: string;
+  startLabel: string | null;
+  dueLabel: string | null;
   overdue: boolean;
 }) {
+  if (!ticket.startDate && !ticket.dueDate) return null;
+
   return (
-    <span
-      className={cn(
-        "flex items-center gap-1 text-[11px] tabular-nums text-muted-foreground",
-        overdue && "text-destructive",
-      )}
-      title={[formatLocalDateTime(ticket.startDate), formatLocalDateTime(ticket.dueDate)]
-        .filter(Boolean)
-        .join(" → ")}
-    >
-      <HugeiconsIcon
-        icon={Calendar03Icon}
-        strokeWidth={2}
-        className="size-3"
-      />
+    <div className="mt-2 flex flex-col items-start gap-1 text-[11px] tabular-nums text-muted-foreground">
       {ticket.startDate && (
-        <time
-          dateTime={ticket.startDate}
-          className="sr-only"
-        >
-          {formatLocalDateTime(ticket.startDate)}
-        </time>
+        <span>
+          Start <time dateTime={ticket.startDate}>{startLabel}</time>
+        </span>
       )}
       {ticket.dueDate && (
-        <time
-          dateTime={ticket.dueDate}
-          className="sr-only"
-        >
-          {formatLocalDateTime(ticket.dueDate)}
-        </time>
+        <span className={cn(overdue && "text-destructive")}>
+          End <time dateTime={ticket.dueDate}>{dueLabel}</time>
+        </span>
       )}
-      <span aria-hidden>{dateRange}</span>
-    </span>
+    </div>
   );
 }
 
@@ -106,7 +105,7 @@ export function TicketCardFooter({
           className="min-w-0 truncate text-[11px] text-muted-foreground"
           title={ticket.responsibleName}
         >
-          <span className="font-medium">Resp.</span> {ticket.responsibleName}
+          <span className="font-medium">Resp:</span> {ticket.responsibleName}
         </span>
       )}
       {hasTimer && (

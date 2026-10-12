@@ -73,7 +73,7 @@ describe("TicketCard", () => {
   it("renders the responsible as Resp. plus the name", () => {
     const markup = renderCard(makeTicket({ responsibleName: "Ada Lovelace" }));
 
-    expect(markup).toContain("Resp.");
+    expect(markup).toContain("Resp:");
     expect(markup).toContain("Ada Lovelace");
   });
 
@@ -95,7 +95,8 @@ describe("TicketCard", () => {
     );
 
     await waitFor(() => {
-      expect(container.textContent).toContain("Medium");
+      expect(container.textContent).toContain("Start");
+      expect(container.textContent).toContain("End");
       expect(container.textContent).toContain(formatLocalDateTime(startDate));
       expect(container.textContent).toContain(formatLocalDateTime(dueDate));
     });
@@ -103,11 +104,30 @@ describe("TicketCard", () => {
     expect(container.innerHTML).toContain(`datetime="${dueDate}"`);
   });
 
+  it.each([
+    ["low", "Low"],
+    ["med", "Medium"],
+    ["high", "High"],
+  ] as const)("shows the %s priority label on the card", (priority, label) => {
+    expect(renderCard(makeTicket({ priority }))).toContain(label);
+  });
+
+  it("shows the complexity label next to the planning dates", () => {
+    const markup = renderCard(
+      makeTicket({ complexity: "medium", startDate: "2026-09-28T19:00:00.000Z" }),
+    );
+
+    expect(markup).toContain('aria-label="Medium complexity"');
+    expect(markup).toContain(">Medium</");
+  });
+
   it("omits empty planning metadata from the card", () => {
     const markup = renderCard(makeTicket());
 
     expect(markup).not.toContain("complexity");
     expect(markup).not.toContain("<time");
+    expect(markup).not.toContain("Start");
+    expect(markup).not.toContain("End");
   });
 
   it("server-renders the total elapsed time for a paused ticket", () => {
