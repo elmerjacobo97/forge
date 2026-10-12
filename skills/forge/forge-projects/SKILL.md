@@ -22,6 +22,8 @@ Projects sync to the same InsForge table and RLS policies as the web app. Auth i
 
 With the Forge MCP connector, use the `forge_*` tools (no `init`/`login`). Without it, use `forge-cli`.
 
+MCP `create`/`get` results include `forgeUrl` (project board link). Always show it to the user.
+
 | Action | CLI | MCP |
 | --- | --- | --- |
 | List | `project list` | `forge_list_projects` |
@@ -114,6 +116,7 @@ forge-cli ticket create --project-id <projectId> --title "Ship feature" --json
 
 ## Agent checklist
 
+- Show `forgeUrl` (MCP results) to the user after create.
 - Use **`forge-cli`**, never bare `forge` (conflicts with Laravel Forge CLI).
 - Ensure `init` + `login` before project mutations. Re-run `init --from-web-env` if `devBoardProjectsTableId` is missing.
 - Prefer `--json` when parsing results in automation.

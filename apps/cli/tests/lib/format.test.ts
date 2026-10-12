@@ -344,6 +344,7 @@ describe("formatResourceText", () => {
     expect(text).toContain("id:          r1");
     expect(text).toContain("title:       React docs");
     expect(text).toContain("url:         https://react.dev");
+    expect(text).toContain("forge:       https://forge.elmerjacobo.dev/resources?q=React%20docs");
     expect(text).toContain("category:    docs");
     expect(text).toContain("tags:        react, docs");
   });
@@ -358,12 +359,12 @@ describe("formatResourceListText", () => {
 describe("resource JSON formatters", () => {
   it("emits parseable resource JSON", () => {
     const parsed = JSON.parse(formatResourceJson(sampleResource)) as Resource;
-    expect(parsed).toEqual(sampleResource);
+    expect(parsed).toEqual({ ...sampleResource, forgeUrl: expect.any(String) });
   });
 
   it("emits a parseable resource array", () => {
     const parsed = JSON.parse(formatResourceListJson([sampleResource])) as Resource[];
-    expect(parsed).toEqual([sampleResource]);
+    expect(parsed).toEqual([{ ...sampleResource, forgeUrl: expect.any(String) }]);
   });
 });
 

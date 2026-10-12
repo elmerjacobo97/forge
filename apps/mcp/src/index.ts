@@ -74,7 +74,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_create_project",
       {
         description:
-          "Create a Forge Dev Board project. Requires name (1 to 80 characters). description is optional (max 2000 characters) and defaults to empty.",
+          "Create a Forge Dev Board project. Requires name (1 to 80 characters). description is optional (max 2000 characters) and defaults to empty. Result includes forgeUrl: give it to the user as the Forge link.",
         inputSchema: createProjectInput,
       },
       (args) => run((handlers) => handlers.createProject(args)),
@@ -133,7 +133,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_create_ticket",
       {
         description:
-          "Create a Dev Board ticket. Requires projectId and title. description defaults to empty, column to backlog, and priority to med. responsibleName is optional free text (max 120 characters). Optional planning fields are complexity (low, medium, high), startDate, and dueDate; dates require ISO 8601 timestamps with an explicit offset, and startDate must not follow dueDate.",
+          "Create a Dev Board ticket. Requires projectId and title. description defaults to empty, column to backlog, and priority to med. responsibleName is optional free text (max 120 characters). Optional planning fields are complexity (low, medium, high), startDate, and dueDate; dates require ISO 8601 timestamps with an explicit offset, and startDate must not follow dueDate. Result includes forgeUrl: give it to the user as the Forge link.",
         inputSchema: createTicketInput,
       },
       (args) => run((handlers) => handlers.createTicket(args)),
@@ -229,7 +229,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_create_resource",
       {
         description:
-          "Save a Forge resource. Requires title (min 2 characters), url, category (docs, git, tool, article, other), and description (5 to 200 characters). tags defaults to empty.",
+          "Save a Forge resource. Requires title (min 2 characters), url, category (docs, git, tool, article, other), and description (5 to 200 characters). tags defaults to empty. Result includes forgeUrl: give it to the user as the Forge link.",
         inputSchema: createResourceInput,
       },
       (args) => run((handlers) => handlers.createResource(args)),
@@ -239,7 +239,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_update_resource",
       {
         description:
-          "Update a Forge resource. Supported fields are title, url, category, description, tags (replaces all tags), addTags (added to current tags, no duplicates), and removeTags (removed after addTags). Do not combine tags with addTags or removeTags. At least one field is required.",
+          "Update a Forge resource. Supported fields are title, url, category, description, tags (replaces all tags), addTags (added to current tags, no duplicates), and removeTags (removed after addTags). Do not combine tags with addTags or removeTags. At least one field is required. Result includes forgeUrl: give it to the user as the Forge link.",
         inputSchema: updateResourceInput,
       },
       (args) => run((handlers) => handlers.updateResource(args)),

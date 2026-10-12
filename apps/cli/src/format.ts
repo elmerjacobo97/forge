@@ -1,3 +1,4 @@
+import { resourceForgeUrl } from "@forge/core";
 import type {
   Idea,
   NextTicketContext,
@@ -220,6 +221,7 @@ export function formatResourceText(resource: Resource): string {
     `id:          ${resource.id}\n` +
     `title:       ${resource.title}\n` +
     `url:         ${resource.url}\n` +
+    `forge:       ${resourceForgeUrl(resource)}\n` +
     `category:    ${resource.category}\n` +
     `description: ${resource.description}\n` +
     `tags:        ${tags}\n` +
@@ -234,12 +236,16 @@ export function formatResourceListText(resources: Resource[]): string {
   return resources.map(formatResourceText).join("\n\n");
 }
 
+function withResourceForgeUrl(resource: Resource) {
+  return { ...resource, forgeUrl: resourceForgeUrl(resource) };
+}
+
 export function formatResourceJson(resource: Resource): string {
-  return `${JSON.stringify(resource, null, 2)}\n`;
+  return `${JSON.stringify(withResourceForgeUrl(resource), null, 2)}\n`;
 }
 
 export function formatResourceListJson(resources: Resource[]): string {
-  return `${JSON.stringify(resources, null, 2)}\n`;
+  return `${JSON.stringify(resources.map(withResourceForgeUrl), null, 2)}\n`;
 }
 
 export function writeResourceOutput(resource: Resource, json: boolean): void {

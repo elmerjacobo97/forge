@@ -22,6 +22,8 @@ Resources sync to the InsForge `resources` table and RLS policies used by the we
 
 With the Forge MCP connector, use the `forge_*` tools (no `init`/`login`). Without it, use `forge-cli`.
 
+MCP `create`/`get`/`update` results include `forgeUrl` (Forge web link). CLI output includes a `forge:` line. Always show that link to the user.
+
 | Action | CLI | MCP |
 | --- | --- | --- |
 | List | `resource list` | `forge_list_resources` |
@@ -96,4 +98,5 @@ forge-cli resource delete <id>
 - Prefer `--json` when parsing results in automation.
 - Categories: `docs`, `git`, `tool`, `article`, `other`.
 - `bookmark` is an alias for `resource`.
+- Show the Forge link (`forgeUrl` from MCP, `forge:` line from CLI) after create/update.
 - Resources CRUD only — no tickets, ideas, projects, or AI generation here.
