@@ -1,4 +1,9 @@
-import { PROJECT_HAS_TICKETS_MESSAGE } from "@forge/core";
+import {
+  PROJECT_HAS_TICKETS_MESSAGE,
+  projectForgeUrl,
+  resourceForgeUrl,
+  ticketForgeUrl,
+} from "@forge/core";
 import { describe, expect, it } from "vitest";
 import { createToolHandlers } from "../src/tools.js";
 import {
@@ -203,7 +208,7 @@ describe("createToolHandlers", () => {
         startDate: "2026-09-28T21:29:00-06:00",
         dueDate: "2026-10-02T17:00:00-06:00",
       }),
-    ).resolves.toEqual(created);
+    ).resolves.toEqual({ ...created, forgeUrl: ticketForgeUrl(created) });
     expect(services.projects.get).toHaveBeenCalledWith("p1");
     expect(services.board.create).toHaveBeenCalledWith({
       projectId: "p1",
@@ -235,6 +240,17 @@ describe("createToolHandlers", () => {
     expect(services.board.create).not.toHaveBeenCalled();
   });
 
+  it("returns a Forge web url that opens the ticket on its board", async () => {
+    const services = createMockServices();
+    services.board.get.mockResolvedValue(ticket("t1", { projectId: "p1" }));
+    services.board.listComments.mockResolvedValue([]);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.getTicket({ ticketId: "t1" })).resolves.toMatchObject({
+      ticket: { forgeUrl: "https://forge.elmerjacobo.dev/dev-board/p1?ticket=t1" },
+    });
+  });
+
   it("moves a ticket and forwards handoff only when present", async () => {
     const moved = ticket("t1", { column: "in_progress", branch: "feat/mcp" });
     const services = createMockServices();
@@ -243,7 +259,7 @@ describe("createToolHandlers", () => {
 
     await expect(
       handlers.moveTicket({ ticketId: "t1", column: "in_progress", branch: "feat/mcp" }),
-    ).resolves.toEqual(moved);
+    ).resolves.toEqual({ ...moved, forgeUrl: ticketForgeUrl(moved) });
     expect(services.board.move).toHaveBeenCalledWith({
       id: "t1",
       column: "in_progress",
@@ -270,7 +286,7 @@ describe("createToolHandlers", () => {
         dueDate: "2026-10-02T17:00:00-06:00",
         complexity: "high",
       }),
-    ).resolves.toEqual(updated);
+    ).resolves.toEqual({ ...updated, forgeUrl: ticketForgeUrl(updated) });
     expect(services.board.update).toHaveBeenCalledWith("t1", {
       prUrl: "https://github.com/org/repo/pull/1",
       clearBranch: true,
@@ -360,7 +376,7 @@ describe("resource handlers", () => {
     services.resources.get.mockResolvedValue(resource("r1"));
     const handlers = createToolHandlers(asForgeServices(services));
 
-    await expect(handlers.getResource({ resourceId: "r1" })).resolves.toEqual(resource("r1"));
+    await expect(handlers.getResource({ resourceId: "r1" })).resolves.toEqual({ ...resource("r1"), forgeUrl: resourceForgeUrl(resource("r1")) });
     expect(services.resources.get).toHaveBeenCalledWith("r1");
 
     services.resources.get.mockRejectedValue(new Error("Resource not found."));
@@ -381,7 +397,10 @@ describe("resource handlers", () => {
     services.resources.create.mockResolvedValue(resource("r1", input));
     const handlers = createToolHandlers(asForgeServices(services));
 
-    await expect(handlers.createResource(input)).resolves.toEqual(resource("r1", input));
+    await expect(handlers.createResource(input)).resolves.toEqual({
+      ...resource("r1", input),
+      forgeUrl: resourceForgeUrl(resource("r1", input)),
+    });
     expect(services.resources.create).toHaveBeenCalledWith(input);
   });
 
@@ -449,9 +468,10 @@ describe("resource handlers", () => {
     services.projects.create.mockResolvedValue(project("p1", "Forge"));
     const handlers = createToolHandlers(asForgeServices(services));
 
-    await expect(handlers.createProject({ name: "Forge", description: "" })).resolves.toEqual(
-      project("p1", "Forge"),
-    );
+    await expect(handlers.createProject({ name: "Forge", description: "" })).resolves.toEqual({
+      ...project("p1", "Forge"),
+      forgeUrl: projectForgeUrl(project("p1", "Forge")),
+    });
     expect(services.projects.create).toHaveBeenCalledWith({ name: "Forge", description: "" });
   });
 

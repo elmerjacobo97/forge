@@ -27,6 +27,8 @@ Tickets sync to the same InsForge tables and transactional RPCs as the web app. 
 
 With the Forge MCP connector, use the `forge_*` tools (no `init`/`login`). Without it, use `forge-cli`. The workflow rules are the same.
 
+MCP `create`/`get`/`update`/`move` results include `forgeUrl` (opens the ticket on its board). Always show it to the user.
+
 | Action | CLI | MCP |
 | --- | --- | --- |
 | List | `ticket list --project-id <id>` | `forge_list_tickets` |
@@ -418,6 +420,7 @@ With `--json`, any error prints `{"error":{"message":"..."}}` to stderr and exit
 
 ## Agent checklist
 
+- Show `forgeUrl` (MCP results) to the user after create/update/move.
 - Use **`forge-cli`**, never bare `forge` (conflicts with Laravel Forge CLI).
 - Ensure `init` + `login` before ticket mutations. Re-run `init --from-web-env` if Dev Board table IDs are missing from config.
 - Start agent work from `ticket next`; it is read-only.

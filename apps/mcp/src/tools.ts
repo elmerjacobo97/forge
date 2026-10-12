@@ -1,7 +1,10 @@
 import {
   groupActivity,
   parseTicketTimeAdjustInput,
+  projectForgeUrl,
   resolveReportWindow,
+  resourceForgeUrl,
+  ticketForgeUrl,
   toTicketSummary,
 } from "@forge/core";
 import type {
@@ -20,6 +23,23 @@ import type {
   TicketUpdateInput,
 } from "@forge/core";
 import type { ForgeServices } from "./services.js";
+
+type WithForgeUrl<T> = T & { forgeUrl: string };
+
+const withProjectUrl = (project: Project): WithForgeUrl<Project> => ({
+  ...project,
+  forgeUrl: projectForgeUrl(project),
+});
+
+const withTicketUrl = (ticket: Ticket): WithForgeUrl<Ticket> => ({
+  ...ticket,
+  forgeUrl: ticketForgeUrl(ticket),
+});
+
+const withResourceUrl = (resource: Resource): WithForgeUrl<Resource> => ({
+  ...resource,
+  forgeUrl: resourceForgeUrl(resource),
+});
 
 export interface TicketReportArgs {
   days: number;
@@ -74,16 +94,18 @@ export function createToolHandlers(services: ForgeServices) {
     addTags,
     removeTags,
     ...fields
-  }: ResourceUpdateArgs): Promise<Resource> {
+  }: ResourceUpdateArgs): Promise<WithForgeUrl<Resource>> {
     const update: ResourceUpdateInput = fields;
     if (addTags === undefined && removeTags === undefined) {
-      return services.resources.update(resourceId, update);
+      return withResourceUrl(await services.resources.update(resourceId, update));
     }
 
     const current = await services.resources.get(resourceId);
     const tags = new Set([...current.tags, ...(addTags ?? [])]);
     for (const tag of removeTags ?? []) tags.delete(tag);
-    return services.resources.update(resourceId, { ...update, tags: [...tags] });
+    return withResourceUrl(
+      await services.resources.update(resourceId, { ...update, tags: [...tags] }),
+    );
   }
 
   async function activityReport(input: TicketReportArgs): Promise<ActivityReport> {
@@ -116,10 +138,11 @@ export function createToolHandlers(services: ForgeServices) {
   return {
     listProjects: (): Promise<Project[]> => services.projects.list(),
 
-    getProject: ({ projectId }: { projectId: string }): Promise<Project> =>
-      services.projects.get(projectId),
+    getProject: async ({ projectId }: { projectId: string }): Promise<WithForgeUrl<Project>> =>
+      withProjectUrl(await services.projects.get(projectId)),
 
-    createProject: (input: ProjectCreateInput): Promise<Project> => services.projects.create(input),
+    createProject: async (input: ProjectCreateInput): Promise<WithForgeUrl<Project>> =>
+      withProjectUrl(await services.projects.create(input)),
 
     deleteProject: async ({ projectId }: { projectId: string }): Promise<{ id: string }> => {
       await services.projects.delete(projectId);
@@ -136,8 +159,8 @@ export function createToolHandlers(services: ForgeServices) {
       ticketId,
     }: {
       ticketId: string;
-    }): Promise<{ ticket: Ticket; comments: TicketComment[] }> => ({
-      ticket: await services.board.get(ticketId),
+    }): Promise<{ ticket: WithForgeUrl<Ticket>; comments: TicketComment[] }> => ({
+      ticket: withTicketUrl(await services.board.get(ticketId)),
       comments: await services.board.listComments(ticketId),
     }),
 
@@ -145,11 +168,11 @@ export function createToolHandlers(services: ForgeServices) {
 
     listResources: (args: ResourceListArgs): Promise<Resource[]> => services.resources.list(args),
 
-    getResource: ({ resourceId }: { resourceId: string }): Promise<Resource> =>
-      services.resources.get(resourceId),
+    getResource: async ({ resourceId }: { resourceId: string }): Promise<WithForgeUrl<Resource>> =>
+      withResourceUrl(await services.resources.get(resourceId)),
 
-    createResource: (input: ResourceCreateInput): Promise<Resource> =>
-      services.resources.create(input),
+    createResource: async (input: ResourceCreateInput): Promise<WithForgeUrl<Resource>> =>
+      withResourceUrl(await services.resources.create(input)),
 
     updateResource,
 
@@ -158,25 +181,27 @@ export function createToolHandlers(services: ForgeServices) {
       return { id: resourceId };
     },
 
-    createTicket: async (input: TicketCreateInput): Promise<Ticket> => {
+    createTicket: async (input: TicketCreateInput): Promise<WithForgeUrl<Ticket>> => {
       await services.projects.get(input.projectId);
-      return services.board.create(input);
+      return withTicketUrl(await services.board.create(input));
     },
 
-    moveTicket: (
+    moveTicket: async (
       input: { ticketId: string; column: ColumnId } & TicketHandoffFields,
-    ): Promise<Ticket> =>
-      services.board.move({
-        id: input.ticketId,
-        column: input.column,
-        ...ticketUpdateFields(input),
-      }),
+    ): Promise<WithForgeUrl<Ticket>> =>
+      withTicketUrl(
+        await services.board.move({
+          id: input.ticketId,
+          column: input.column,
+          ...ticketUpdateFields(input),
+        }),
+      ),
 
-    updateTicket: ({
+    updateTicket: async ({
       ticketId,
       ...fields
-    }: { ticketId: string } & TicketUpdateFields): Promise<Ticket> =>
-      services.board.update(ticketId, ticketUpdateFields(fields)),
+    }: { ticketId: string } & TicketUpdateFields): Promise<WithForgeUrl<Ticket>> =>
+      withTicketUrl(await services.board.update(ticketId, ticketUpdateFields(fields))),
 
     deleteTicket: async ({ ticketId }: { ticketId: string }): Promise<{ id: string }> => {
       await services.board.delete(ticketId);
