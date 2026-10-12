@@ -16,7 +16,7 @@ export default function ProjectAnalyticsLoading() {
             <Skeleton className="h-9 w-28" />
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Skeleton className="h-8 w-16" />
           <Skeleton className="h-8 w-16" />
           <Skeleton className="h-8 w-16" />

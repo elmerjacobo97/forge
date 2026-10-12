@@ -9,11 +9,11 @@ export default function ProjectBoardLoading() {
     <RouteLoading label="the project board">
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto">
             <Skeleton className="h-7 w-56 max-w-full" />
             <Skeleton className="h-4 w-24" />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Skeleton className="h-9 w-28" />
             <Skeleton className="h-9 w-24" />
           </div>

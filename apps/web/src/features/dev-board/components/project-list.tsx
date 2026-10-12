@@ -193,14 +193,14 @@ export function ProjectList({
 
   return (
     <div className="flex h-full flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0 w-full sm:flex-1">
           <h1 className="font-heading text-lg font-medium tracking-tight">Projects</h1>
           <p className="text-xs text-muted-foreground">
             Each project has its own kanban board and analytics.
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
