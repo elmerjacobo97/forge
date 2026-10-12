@@ -4,7 +4,7 @@ description: "Use when managing Forge ideas with forge-cli: capture or save an i
 license: MIT
 metadata:
   author: elmerjacobo97
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Forge ideas (`forge-cli`)
@@ -17,6 +17,10 @@ forge-cli --version   # requires >= 0.7.0 (idea command)
 ```
 
 Ideas sync to the InsForge `ideas` table and RLS policies used by the web `/ideas` tool. Auth is per-user; there is no offline mode.
+
+## Transport: CLI only
+
+The Forge MCP does not expose idea tools. Always use `forge-cli idea`.
 
 ## Prerequisites
 

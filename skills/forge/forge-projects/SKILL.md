@@ -4,7 +4,7 @@ description: "Use when managing Forge Dev Board projects with forge-cli: create 
 license: MIT
 metadata:
   author: elmerjacobo97
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Forge Dev Board projects (`forge-cli`)
@@ -17,6 +17,18 @@ forge-cli --version
 ```
 
 Projects sync to the same InsForge table and RLS policies as the web app. Auth is per-user; there is no offline mode.
+
+## Transport: CLI or MCP
+
+With the Forge MCP connector, use the `forge_*` tools (no `init`/`login`). Without it, use `forge-cli`.
+
+| Action | CLI | MCP |
+| --- | --- | --- |
+| List | `project list` | `forge_list_projects` |
+| Read | `project get <id>` | `forge_get_project` |
+| Create | `project create` | `forge_create_project` |
+| Rename / description | `project update` | No MCP tool: use CLI |
+| Delete | `project delete <id>` | `forge_delete_project` |
 
 ## Prerequisites
 

@@ -4,7 +4,7 @@ description: "Use when managing Forge resources with forge-cli: save a link reso
 license: MIT
 metadata:
   author: elmerjacobo97
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Forge resources (`forge-cli`)
@@ -17,6 +17,20 @@ forge-cli --version
 ```
 
 Resources sync to the InsForge `resources` table and RLS policies used by the web `/resources` tool. Auth is per-user; there is no offline mode.
+
+## Transport: CLI or MCP
+
+With the Forge MCP connector, use the `forge_*` tools (no `init`/`login`). Without it, use `forge-cli`.
+
+| Action | CLI | MCP |
+| --- | --- | --- |
+| List | `resource list` | `forge_list_resources` |
+| Read | `resource get <id>` | `forge_get_resource` |
+| Create | `resource create` | `forge_create_resource` |
+| Edit | `resource update <id>` | `forge_update_resource` (`tags` replaces; `addTags` / `removeTags` adjust) |
+| Delete | `resource delete <id>` | `forge_delete_resource` |
+
+`--limit` / `--offset` exist only in CLI.
 
 ## Prerequisites
 

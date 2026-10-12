@@ -4,7 +4,7 @@ description: "Use when managing Forge Dev Board tickets with forge-cli: create, 
 license: MIT
 metadata:
   author: elmerjacobo97
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Forge Dev Board tickets (`forge-cli`)
@@ -22,6 +22,26 @@ forge-cli --version   # requires >= 0.5.0 (comments, next, validation column, --
 If the installed version is older than 0.5.0, update it before any ticket mutation — older binaries lack commands the agent loop depends on and fail with `Unknown ticket command`.
 
 Tickets sync to the same InsForge tables and transactional RPCs as the web app. Auth is per-user; there is no offline mode. Every ticket belongs to a **project** (`--project-id`).
+
+## Transport: CLI or MCP
+
+With the Forge MCP connector, use the `forge_*` tools (no `init`/`login`). Without it, use `forge-cli`. The workflow rules are the same.
+
+| Action | CLI | MCP |
+| --- | --- | --- |
+| List | `ticket list --project-id <id>` | `forge_list_tickets` |
+| Next pending | `ticket next` | `forge_next_ticket` |
+| Read | `ticket get <id>` | `forge_get_ticket` |
+| Create | `ticket create` | `forge_create_ticket` |
+| Move / handoff | `ticket move <id> --column ...` | `forge_move_ticket` |
+| Edit fields | `ticket update` (includes title, description, priority) | `forge_update_ticket` (only branch, prUrl, responsible, planning fields; not title, description, or priority) |
+| Comment | `ticket comment --author agent` | `forge_add_ticket_comment` (no `author`; use CLI when the handoff must be signed as agent) |
+| Adjust time | `ticket adjust-time` | `forge_adjust_ticket_time` |
+| Pause / resume | `adjust-time --stop-at now` (pause) | `forge_pause_ticket` / `forge_resume_ticket` |
+| Delete | `ticket delete <id>` | `forge_delete_ticket` |
+| Report | `ticket report` | `forge_activity_report` |
+
+`--author` exists only in CLI.
 
 ## Prerequisites
 

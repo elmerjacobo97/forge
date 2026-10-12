@@ -4,7 +4,7 @@ description: "Use when managing Forge bookmarks with forge-cli: save a URL, add 
 license: MIT
 metadata:
   author: elmerjacobo97
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Forge bookmarks (`forge-cli`)
@@ -17,6 +17,10 @@ forge-cli --version
 ```
 
 Bookmarks sync to the same InsForge table and RLS policies as the web app. Auth is per-user; there is no offline mode.
+
+## Transport: CLI or MCP
+
+Bookmarks are resources. With the Forge MCP connector, use the `forge_*_resource` tools (list, read, create, edit, delete; see skill `forge-resources`). Without it, use `forge-cli bookmark`.
 
 ## Prerequisites
 
@@ -95,4 +99,4 @@ forge-cli logout
 - Ensure `init` + `login` before bookmark mutations.
 - Prefer `--json` when parsing results in automation.
 - Categories only: `docs`, `git`, `tool`, `article`, `other`.
-- Do not add tickets, resources, MCP, or AI generation here — bookmarks CRUD only.
+- Do not add tickets, ideas, or AI generation here — bookmarks CRUD only.
