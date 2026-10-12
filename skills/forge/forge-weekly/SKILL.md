@@ -4,7 +4,7 @@ description: "Use when building a weekly Forge Dev Board activity report for the
 license: MIT
 metadata:
   author: elmerjacobo97
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Weekly activity report (`forge-cli ticket report`)
@@ -15,6 +15,7 @@ Summarize what the owner worked on, for the Friday afternoon meeting. Data comes
 
 - `forge-cli --version` must be `>= 0.5.0` (adds `ticket report`). If older: `npm install -g @codigoconelmer/forge-cli@latest`.
 - Auth works (`forge-cli whoami`); if not, run the `forge-tickets` skill login steps first.
+- With the Forge MCP connector, use `forge_activity_report` instead of `ticket report`: same filters, passed as `days`, `since`, `until`, `projectId`, and `columns` (array) instead of `--column`.
 
 ## Workflow
 
