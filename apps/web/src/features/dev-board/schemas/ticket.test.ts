@@ -170,8 +170,13 @@ describe("ticketInputSchema handoff and responsible fields", () => {
     expect(ticketInputSchema.safeParse({ ...inputRow, complexity: "urgent" }).success).toBe(false);
   });
 
+  it("normalizes empty handoff fields from the form to null", () => {
+    const parsed = ticketInputSchema.parse({ ...inputRow, branch: "", prUrl: "" });
+    expect(parsed.branch).toBeNull();
+    expect(parsed.prUrl).toBeNull();
+  });
+
   it("rejects invalid handoff and responsible values", () => {
-    expect(ticketInputSchema.safeParse({ ...inputRow, branch: "" }).success).toBe(false);
     expect(ticketInputSchema.safeParse({ ...inputRow, prUrl: "not-a-url" }).success).toBe(false);
     expect(ticketInputSchema.safeParse({ ...inputRow, prUrl: "https://example.com" }).success).toBe(
       true,

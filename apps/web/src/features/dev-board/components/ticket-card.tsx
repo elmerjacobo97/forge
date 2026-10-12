@@ -6,10 +6,15 @@ import { GripVerticalIcon } from "@hugeicons/core-free-icons";
 
 import { cn } from "@/lib/utils";
 
-import { type ColumnId, type Ticket, PRIORITY_COLORS, PRIORITY_LABELS } from "../types/board";
+import { type ColumnId, type Ticket, PRIORITY_COLORS } from "../types/board";
 import { useTicketCardState } from "../hooks/use-ticket-card-state";
 import { TicketCardMenu } from "./ticket-card-menu";
-import { TicketCardFooter, TicketComplexityBadge, TicketDateRange } from "./ticket-card-parts";
+import {
+  TicketCardFooter,
+  TicketComplexityBadge,
+  TicketDates,
+  TicketPriorityBadge,
+} from "./ticket-card-parts";
 
 interface TicketCardProps {
   ticket: Ticket;
@@ -39,8 +44,16 @@ export function TicketCard({
     transition: sortable.transition,
   };
 
-  const { timerRunning, elapsed, dateRange, overdue, hasTimer, commentCount, hasFooter } =
-    useTicketCardState(ticket);
+  const {
+    timerRunning,
+    elapsed,
+    startLabel,
+    dueLabel,
+    overdue,
+    hasTimer,
+    commentCount,
+    hasFooter,
+  } = useTicketCardState(ticket);
 
   return (
     <div
@@ -56,7 +69,6 @@ export function TicketCard({
         aria-hidden
         className={cn("absolute inset-y-0 left-0 w-0.5", PRIORITY_COLORS[ticket.priority])}
       />
-      <span className="sr-only">{PRIORITY_LABELS[ticket.priority]} priority</span>
 
       <div>
         <button
@@ -80,18 +92,16 @@ export function TicketCard({
               {ticket.description}
             </p>
           )}
-          {(ticket.complexity || dateRange) && (
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-              {ticket.complexity && <TicketComplexityBadge complexity={ticket.complexity} />}
-              {dateRange && (
-                <TicketDateRange
-                  ticket={ticket}
-                  dateRange={dateRange}
-                  overdue={overdue}
-                />
-              )}
-            </div>
-          )}
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <TicketPriorityBadge priority={ticket.priority} />
+            {ticket.complexity && <TicketComplexityBadge complexity={ticket.complexity} />}
+          </div>
+          <TicketDates
+            ticket={ticket}
+            startLabel={startLabel}
+            dueLabel={dueLabel}
+            overdue={overdue}
+          />
         </div>
 
         <TicketCardMenu
