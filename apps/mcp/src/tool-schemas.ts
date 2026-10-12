@@ -1,6 +1,7 @@
 import {
   COLUMNS,
   PRIORITIES,
+  projectCreateSchema,
   resourceCreateSchema,
   ticketCreateSchema,
   ticketUpdateSchema,
@@ -42,6 +43,11 @@ const isoDateTimeSchema = z
 
 export const getProjectInput = {
   projectId: projectIdSchema,
+};
+
+export const createProjectInput = {
+  name: projectCreateSchema.shape.name,
+  description: projectCreateSchema.shape.description.default(""),
 };
 
 export const listTicketsInput = {
