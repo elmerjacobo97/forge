@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { tools, type ToolDef } from "@/lib/tools";
 
@@ -27,6 +28,7 @@ function groupTools(items: ToolDef[]) {
 
 export function NavMain({ activePath }: { activePath: string }) {
   const groups = groupTools(tools);
+  const { setOpenMobile } = useSidebar();
 
   return groups.map(([category, items]) => (
     <SidebarGroup key={category}>
@@ -40,7 +42,10 @@ export function NavMain({ activePath }: { activePath: string }) {
                 isActive={isToolActive(tool.path, activePath)}
                 tooltip={tool.name}
               >
-                <Link href={tool.path}>
+                <Link
+                  href={tool.path}
+                  onClick={() => setOpenMobile(false)}
+                >
                   <HugeiconsIcon
                     icon={tool.icon}
                     strokeWidth={2}

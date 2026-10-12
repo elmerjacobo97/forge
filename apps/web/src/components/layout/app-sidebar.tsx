@@ -18,6 +18,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 interface AppSidebarProps {
@@ -28,6 +29,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ activePath, user, version }: AppSidebarProps) {
   const [isSigningOut, startSignOut] = useTransition();
+  const { setOpenMobile } = useSidebar();
 
   return (
     <Sidebar collapsible="icon">
@@ -42,6 +44,7 @@ export function AppSidebar({ activePath, user, version }: AppSidebarProps) {
               <Link
                 href="/"
                 aria-label="Forge"
+                onClick={() => setOpenMobile(false)}
               >
                 <div className="flex aspect-square size-8 items-center justify-center bg-sidebar-primary text-sidebar-primary-foreground">
                   <HugeiconsIcon
