@@ -2,6 +2,7 @@ import {
   createActivityService,
   createDevBoardService,
   createForgeClient,
+  createNotesService,
   createProjectsService,
   createResourcesService,
 } from "@forge/core";
@@ -14,6 +15,7 @@ export function createForgeServices(config: ForgeConfig, accessToken: string) {
     board: createDevBoardService({ client }),
     activity: createActivityService({ client }),
     resources: createResourcesService({ client }),
+    notes: createNotesService({ client }),
   };
 }
 

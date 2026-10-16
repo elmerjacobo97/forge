@@ -10,16 +10,20 @@ import {
   adjustTicketTimeInput,
   addTicketCommentInput,
   createProjectInput,
+  createNoteInput,
   createResourceInput,
   createTicketInput,
   getProjectInput,
   getTicketInput,
+  listNotesInput,
   listResourcesInput,
   listTicketsInput,
   moveTicketInput,
   nextTicketInput,
+  noteIdInput,
   resourceIdInput,
   ticketIdInput,
+  updateNoteInput,
   updateResourceInput,
   updateTicketInput,
 } from "./tool-schemas.js";
@@ -252,6 +256,54 @@ export class ForgeMcp extends McpAgent<Env> {
         inputSchema: resourceIdInput,
       },
       (args) => run((handlers) => handlers.deleteResource(args)),
+    );
+
+    this.server.registerTool(
+      "forge_list_notes",
+      {
+        description:
+          "Search the Forge notes knowledge base, newest first. Filters: q (matches title, content, and exact tag), tag (exact, lowercase), projectId. Pass limit to page; offset requires limit. Without limit, returns every match. Search here before relying on memory for fixes, configs, and decisions the user saved.",
+        inputSchema: listNotesInput,
+      },
+      (args) => run((handlers) => handlers.listNotes(args)),
+    );
+
+    this.server.registerTool(
+      "forge_get_note",
+      {
+        description: "Get a Forge note by id.",
+        inputSchema: noteIdInput,
+      },
+      (args) => run((handlers) => handlers.getNote(args)),
+    );
+
+    this.server.registerTool(
+      "forge_create_note",
+      {
+        description:
+          "Save a Forge note. Requires title (2 to 200 characters) and content (markdown, up to 100000 characters). tags defaults to empty and is stored lowercase; put library versions in tags (for example rn-0.76). projectId is optional: omit it for global knowledge, set it only when the user names the project. Never store secrets, tokens, or credentials.",
+        inputSchema: createNoteInput,
+      },
+      (args) => run((handlers) => handlers.createNote(args)),
+    );
+
+    this.server.registerTool(
+      "forge_update_note",
+      {
+        description:
+          "Update a Forge note. Supported fields are title, content, tags (replaces all tags), addTags (added to current tags, no duplicates), removeTags (removed after addTags), and projectId (null unlinks the project). Do not combine tags with addTags or removeTags. At least one field is required.",
+        inputSchema: updateNoteInput,
+      },
+      (args) => run((handlers) => handlers.updateNote(args)),
+    );
+
+    this.server.registerTool(
+      "forge_delete_note",
+      {
+        description: "Delete a Forge note by id. Returns the deleted id. Cannot be undone.",
+        inputSchema: noteIdInput,
+      },
+      (args) => run((handlers) => handlers.deleteNote(args)),
     );
   }
 }

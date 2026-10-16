@@ -11,6 +11,10 @@ import type {
   ActivityReport,
   ColumnId,
   NextTicketContext,
+  Note,
+  NoteCreateInput,
+  NoteListOptions,
+  NoteUpdateInput,
   Project,
   ProjectCreateInput,
   Resource,
@@ -88,7 +92,29 @@ export type ResourceUpdateArgs = Partial<ResourceCreateInput> & {
   removeTags?: string[];
 };
 
+export type NoteUpdateArgs = NoteUpdateInput & {
+  noteId: string;
+  addTags?: string[];
+  removeTags?: string[];
+};
+
 export function createToolHandlers(services: ForgeServices) {
+  async function updateNote({
+    noteId,
+    addTags,
+    removeTags,
+    ...fields
+  }: NoteUpdateArgs): Promise<Note> {
+    if (addTags === undefined && removeTags === undefined) {
+      return services.notes.update(noteId, fields);
+    }
+
+    const current = await services.notes.get(noteId);
+    const tags = new Set([...current.tags, ...(addTags ?? [])]);
+    for (const tag of removeTags ?? []) tags.delete(tag);
+    return services.notes.update(noteId, { ...fields, tags: [...tags] });
+  }
+
   async function updateResource({
     resourceId,
     addTags,
@@ -179,6 +205,19 @@ export function createToolHandlers(services: ForgeServices) {
     deleteResource: async ({ resourceId }: { resourceId: string }): Promise<{ id: string }> => {
       await services.resources.delete(resourceId);
       return { id: resourceId };
+    },
+
+    listNotes: (args: NoteListOptions): Promise<Note[]> => services.notes.list(args),
+
+    getNote: ({ noteId }: { noteId: string }): Promise<Note> => services.notes.get(noteId),
+
+    createNote: (input: NoteCreateInput): Promise<Note> => services.notes.create(input),
+
+    updateNote,
+
+    deleteNote: async ({ noteId }: { noteId: string }): Promise<{ id: string }> => {
+      await services.notes.delete(noteId);
+      return { id: noteId };
     },
 
     createTicket: async (
