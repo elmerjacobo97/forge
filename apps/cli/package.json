@@ -1,6 +1,6 @@
 {
   "name": "@codigoconelmer/forge-cli",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "CLI for Forge resources, ideas, and Dev Board against InsForge",
   "license": "MIT",
   "type": "module",
