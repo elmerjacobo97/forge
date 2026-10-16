@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { formatZodError } from "./schema-utils.js";
+import { formatZodError, normalizeTags } from "./schema-utils.js";
 import { IDEA_CATEGORIES, IDEA_STATUSES } from "./types.js";
 import type { IdeaCreateInput, IdeaUpdateInput } from "./types.js";
 
@@ -10,11 +10,6 @@ const statusSchema = z.enum(IDEA_STATUSES, {
 const categorySchema = z.enum(IDEA_CATEGORIES, {
   error: `Category must be one of: ${IDEA_CATEGORIES.join(", ")}.`,
 });
-
-function normalizeTags(tags: string[]): string[] {
-  const normalized = tags.map((tag) => tag.trim().toLowerCase()).filter((tag) => tag.length > 0);
-  return Array.from(new Set(normalized));
-}
 
 function normalizeLinks(links: string[]): string[] {
   return Array.from(new Set(links));
