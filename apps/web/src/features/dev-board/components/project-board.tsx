@@ -80,9 +80,13 @@ export function ProjectBoard({
     useSensor(KeyboardSensor),
   );
 
-  const handleRealtimeTicket = useCallback((change: TicketChange) => {
-    setColumns((current) => applyRealtimeTicket(current, change));
-  }, []);
+  const handleRealtimeTicket = useCallback(
+    (change: TicketChange) => {
+      if (change.ticket.projectId !== project.id) return;
+      setColumns((current) => applyRealtimeTicket(current, change));
+    },
+    [project.id],
+  );
 
   const handleRealtimeComment = useCallback((change: CommentChange) => {
     setColumns((current) => incrementCommentCount(current, change.ticketId));

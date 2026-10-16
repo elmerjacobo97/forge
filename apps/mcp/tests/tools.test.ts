@@ -192,7 +192,7 @@ describe("createToolHandlers", () => {
       dueDate: "2026-10-02T17:00:00-06:00",
     });
     const services = createMockServices();
-    services.projects.get.mockResolvedValue(project("p1"));
+    services.projects.get.mockResolvedValue(project("p1", "Gastly"));
     services.board.create.mockResolvedValue(created);
     const handlers = createToolHandlers(asForgeServices(services));
 
@@ -208,7 +208,11 @@ describe("createToolHandlers", () => {
         startDate: "2026-09-28T21:29:00-06:00",
         dueDate: "2026-10-02T17:00:00-06:00",
       }),
-    ).resolves.toEqual({ ...created, forgeUrl: ticketForgeUrl(created) });
+    ).resolves.toEqual({
+      ...created,
+      forgeUrl: ticketForgeUrl(created),
+      projectName: "Gastly",
+    });
     expect(services.projects.get).toHaveBeenCalledWith("p1");
     expect(services.board.create).toHaveBeenCalledWith({
       projectId: "p1",

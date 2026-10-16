@@ -181,9 +181,12 @@ export function createToolHandlers(services: ForgeServices) {
       return { id: resourceId };
     },
 
-    createTicket: async (input: TicketCreateInput): Promise<WithForgeUrl<Ticket>> => {
-      await services.projects.get(input.projectId);
-      return withTicketUrl(await services.board.create(input));
+    createTicket: async (
+      input: TicketCreateInput,
+    ): Promise<WithForgeUrl<Ticket> & { projectName: string }> => {
+      const project = await services.projects.get(input.projectId);
+      const ticket = withTicketUrl(await services.board.create(input));
+      return { ...ticket, projectName: project.name };
     },
 
     moveTicket: async (

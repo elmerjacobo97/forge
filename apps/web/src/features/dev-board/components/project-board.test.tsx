@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 
 vi.mock("../actions", () => ({
@@ -10,7 +10,17 @@ vi.mock("../actions", () => ({
   updateTicketAction: vi.fn(),
 }));
 vi.mock("../hooks/use-board-realtime", () => ({ useBoardRealtime: vi.fn() }));
-vi.mock("./column-view", () => ({ ColumnView: () => null }));
+vi.mock("./column-view", () => ({
+  ColumnView: ({ columnId, tickets }: { columnId: string; tickets: Ticket[] }) => (
+    <ul>
+      {tickets
+        .filter((ticket) => ticket.column === columnId)
+        .map((ticket) => (
+          <li key={ticket.id}>{ticket.title}</li>
+        ))}
+    </ul>
+  ),
+}));
 vi.mock("./stale-move-prompt", () => ({ StaleMovePrompt: () => null }));
 vi.mock("./ticket-comments-dialog", () => ({ TicketCommentsDialog: () => null }));
 vi.mock("./ticket-drag-overlay", () => ({ TicketDragOverlay: () => null }));
@@ -24,6 +34,7 @@ import { COLUMNS, type Ticket } from "../types/board";
 import { PROJECT_STATUSES, PROJECT_STATUS_LABELS } from "../types/project";
 import type { Project, ProjectStatus } from "../types/project";
 import type { ColumnPage } from "../types/board";
+import { useBoardRealtime } from "../hooks/use-board-realtime";
 import { ProjectBoard } from "./project-board";
 
 const initialColumns: ColumnPage[] = COLUMNS.map((column) => ({
@@ -106,6 +117,62 @@ describe("ProjectBoard status badge", () => {
 });
 
 afterEach(() => vi.restoreAllMocks());
+
+describe("ProjectBoard realtime ticket changes", () => {
+  const project: Project = {
+    id: "project-1",
+    name: "Forge",
+    description: "Dev tools",
+    status: "in_progress",
+    createdAt: "2026-09-23T00:00:00.000Z",
+  };
+
+  function mountBoard() {
+    return render(
+      <ProjectBoard project={project} userId="user-1" initialColumns={initialColumns} initialTicket={null} />,
+    );
+  }
+
+  function realtimeTicketHandler() {
+    const handlers = vi.mocked(useBoardRealtime).mock.lastCall?.[1];
+    if (!handlers) throw new Error("ProjectBoard did not subscribe to realtime.");
+    return handlers.onTicketChange;
+  }
+
+  it("applies a ticket change that belongs to this project", () => {
+    const { container } = mountBoard();
+
+    act(() =>
+      realtimeTicketHandler()({
+        action: "insert",
+        fromColumn: null,
+        ticket: { ...openedTicket, id: "own", title: "Own ticket", column: "in_progress" },
+      }),
+    );
+
+    expect(container.textContent).toContain("Own ticket");
+  });
+
+  it("ignores a ticket change that belongs to another project", () => {
+    const { container } = mountBoard();
+
+    act(() =>
+      realtimeTicketHandler()({
+        action: "update",
+        fromColumn: "todo",
+        ticket: {
+          ...openedTicket,
+          id: "other",
+          projectId: "project-2",
+          title: "Other project ticket",
+          column: "in_progress",
+        },
+      }),
+    );
+
+    expect(container.textContent).not.toContain("Other project ticket");
+  });
+});
 
 describe("ProjectBoard stale-ticket interval", () => {
   it("does not restart the interval when unrelated project props rerender the board", () => {

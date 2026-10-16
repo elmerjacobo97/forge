@@ -95,6 +95,8 @@ forge-cli ticket comments <id> --json
 
 Every mutation takes the id: `move`, `update`, `comment`, `delete`. Use `ticket list --project-id <id>` only to browse, and `ticket next` only when the user asks for the next pending ticket without naming one.
 
+The ticket's `projectId` (in `ticket get`) is the only project for that work. Never create a replacement ticket in another project.
+
 ## Plan mode (read-only harness)
 
 When the harness has plan mode active, ticket mutations are forbidden: you cannot move the ticket to `in_progress` until the owner switches to build mode. Do not fake the move or skip loading context.
@@ -186,7 +188,7 @@ When a ticket's title, description, or comments carry a `Spec:` or `Change:` ref
 
 When the user says something like “add a ticket” / “create a card on the board”:
 
-1. Infer or ask for: `project-id` (required) and `title` (required). Optional: `description`, `priority`, `column`.
+1. Ask for `project-id` unless the user names the project; never guess it. Also require `title`. Confirm the project name in the reply after create (the MCP result includes `projectName`). Optional: `description`, `priority`, `column`.
 2. Run `forge-cli ticket create` with the flags below.
 3. Confirm success by printing the returned `id` (or use `--json` and read the object).
 
@@ -271,11 +273,11 @@ forge-cli ticket adjust-time <id> --stop-with 3h # stop now, logging 3h even if 
 
 Use this loop when working a ticket end to end as an agent. If the user already gave you a ticket id, skip ranking: move it to `in_progress` first (step 2) — before planning, investigating, or reading code — then load context with `forge-cli ticket get <id> --json` and `forge-cli ticket comments <id> --json`.
 
-1. **Pick work**: `forge-cli ticket next --json` returns the best pending `todo` ticket, ranked by priority (`high → med → low`) with ties broken by board position. It also returns the ticket's project, its comments, and any tickets already active in `in_progress` or `validation` (a warning, not a blocker). Add `--project-id <id>` to scope both the candidates and the active list to one project.
+1. **Pick work**: `forge-cli ticket next --json` returns the best pending `todo` ticket, ranked by priority (`high → med → low`) with ties broken by board position. It also returns the ticket's project, its comments, and any tickets already active in `in_progress` or `validation` (a warning, not a blocker). Always pass `--project-id <id>` to scope both the candidates and the active list to one project. Omit it only when the user asks for work across any project; without it, candidates span all projects.
 
    ```bash
-   forge-cli ticket next
    forge-cli ticket next --project-id <projectId> --json
+   forge-cli ticket next   # all projects; only when the user asks for it
    ```
 
    `next` is read-only: it never moves tickets or writes comments. When there is no `todo` work, the text says `No pending tickets.` and `--json` returns `{ "ticket": null, ... }` (exit code 0).
