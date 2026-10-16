@@ -23,6 +23,7 @@ Hoy el objetivo no es ser un producto SaaS, sino la herramienta diaria del autor
 - **Dev Board:** kanban por proyecto con columnas fijas, drag & drop, time tracking automático en "In Progress", analítica (cycle time, tiempo registrado, throughput), responsable de texto libre opcional y actualización en vivo vía InsForge realtime (los cambios del CLI se reflejan sin recargar).
 - **Meetings:** diario privado de reuniones manuales con proyecto opcional, fecha/hora, asistentes, contexto y decisiones; la herramienta no está expuesta por CLI ni MCP.
 - **Resources:** enlaces con categoría, tags y descripción. Web y CLI usan misma tabla `resources`.
+- **Notes:** base de conocimiento personal en markdown con tags y proyecto opcional; web, CLI y MCP comparten la tabla `notes`.
 - **Ideas:** captura de ideas con título, contenido, estado, categoría, tags y enlaces.
 - **Webhook Inspector:** URLs temporales que capturan requests entrantes para inspección.
 - **Uptime Monitor:** chequeos programados por HTTP con alertas a Telegram y Slack, latencia e historial.

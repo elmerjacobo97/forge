@@ -40,7 +40,7 @@ Para un solo test web: `pnpm --filter @forge/web exec vitest run --config tests.
 
 ## Herramientas web
 
-Dev Board, Meetings, Ideas, Resources, Webhook Inspector y Uptime Monitor.
+Dev Board, Meetings, Ideas, Notes, Resources, Webhook Inspector y Uptime Monitor.
 
 ## CLI
 
@@ -52,6 +52,7 @@ forge-cli bookmark list --json  # alias compatible de resource
 forge-cli project list
 forge-cli ticket list --project <id>
 forge-cli idea list
+forge-cli note list --q router
 ```
 
 La sesión y configuración viven en `~/.forge/` con permisos `0600`.
