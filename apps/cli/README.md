@@ -1,6 +1,6 @@
 # `@codigoconelmer/forge-cli` (`forge-cli`)
 
-Node CLI for Forge resources, ideas, and Dev Board against the linked Forge InsForge backend.
+Node CLI for Forge resources, ideas, notes, and Dev Board against the linked Forge InsForge backend.
 
 npm package: **`@codigoconelmer/forge-cli`**. Binary name is **`forge-cli`** (not `forge`) to avoid clashing with Laravel Forge CLI / Herd.
 
@@ -158,6 +158,27 @@ Statuses: `seed` | `exploring` | `building` | `parked` | `shipped` (default
 `other`). `--links` takes up to 10 comma-separated URLs. Ideas sync to the
 InsForge `ideas` table (same as the web `/ideas` tool). `--json` applies to
 `create|list|get|update|delete`.
+
+## Notes
+
+```bash
+forge-cli note add \
+  --title "Expo SDK 52 router" \
+  --content "Use expo-router v4 layout" \
+  --tags expo,rn-0.76 \
+  --project-id <id>            # optional; omit for a global note
+
+forge-cli note list --q router --tag expo
+forge-cli note list --project-id <id> --json
+forge-cli note get <id> --json
+forge-cli note update <id> --tags ""      # clears the tags
+forge-cli note update <id> --clear-project
+forge-cli note delete <id>
+```
+
+`--content` is markdown. Tags are stored lowercase. `list --q` searches title,
+content and exact tag. Notes sync to the InsForge `notes` table (same as the web
+`/notes` tool). `--json` applies to `add|list|get|update|delete`.
 
 ## Dev Board projects
 
