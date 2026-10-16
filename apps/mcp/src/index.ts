@@ -78,7 +78,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_create_project",
       {
         description:
-          "Create a Forge Dev Board project. Requires name (1 to 80 characters). description is optional (max 2000 characters) and defaults to empty. Result includes forgeUrl: give it to the user as the Forge link.",
+          "Create a Forge Dev Board project. Requires name (1 to 80 characters). description is optional (max 2000 characters) and defaults to empty; leave it empty if the user gave none. Use only what the user asked for: polish the wording, do not invent extra details. Result includes forgeUrl: give it to the user as the Forge link.",
         inputSchema: createProjectInput,
       },
       (args) => run((handlers) => handlers.createProject(args)),
@@ -137,7 +137,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_create_ticket",
       {
         description:
-          "Create a Dev Board ticket. Requires projectId and title. description defaults to empty, column to backlog, and priority to med. responsibleName is optional free text (max 120 characters). Optional planning fields are complexity (low, medium, high), startDate, and dueDate; dates require ISO 8601 timestamps with an explicit offset, and startDate must not follow dueDate. Result includes forgeUrl: give it to the user as the Forge link.",
+          "Create a Dev Board ticket. Requires projectId and title. Write title and description only from what the user asked for: polish the wording, but do not invent acceptance criteria, platforms, test steps, or extra requirements. description defaults to empty, column to backlog, and priority to med. responsibleName is optional free text (max 120 characters). Optional planning fields are complexity (low, medium, high), startDate, and dueDate; dates require ISO 8601 timestamps with an explicit offset, and startDate must not follow dueDate. Result includes forgeUrl: give it to the user as the Forge link.",
         inputSchema: createTicketInput,
       },
       (args) => run((handlers) => handlers.createTicket(args)),
@@ -176,7 +176,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_add_ticket_comment",
       {
         description:
-          "Add a comment to a ticket. The author is always agent. body is 1 to 5000 characters.",
+          "Add a comment to a ticket. The author is always agent. body is 1 to 5000 characters. Use only what the user asked for: polish the wording, do not invent extra details.",
         inputSchema: addTicketCommentInput,
       },
       (args) => run((handlers) => handlers.addTicketComment(args)),
@@ -233,7 +233,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_create_resource",
       {
         description:
-          "Save a Forge resource. Requires title (min 2 characters), url, category (docs, git, tool, article, other), and description (5 to 200 characters). tags defaults to empty. Result includes forgeUrl: give it to the user as the Forge link.",
+          "Save a Forge resource. Requires title (min 2 characters), url, category (docs, git, tool, article, other), and description (5 to 200 characters). tags defaults to empty. Use only what the user asked for: polish the wording, do not invent extra details. Result includes forgeUrl: give it to the user as the Forge link.",
         inputSchema: createResourceInput,
       },
       (args) => run((handlers) => handlers.createResource(args)),
@@ -243,7 +243,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_update_resource",
       {
         description:
-          "Update a Forge resource. Supported fields are title, url, category, description, tags (replaces all tags), addTags (added to current tags, no duplicates), and removeTags (removed after addTags). Do not combine tags with addTags or removeTags. At least one field is required. Result includes forgeUrl: give it to the user as the Forge link.",
+          "Update a Forge resource. Supported fields are title, url, category, description, tags (replaces all tags), addTags (added to current tags, no duplicates), and removeTags (removed after addTags). Do not combine tags with addTags or removeTags. At least one field is required. Use only what the user asked for: polish the wording, do not invent extra details. Result includes forgeUrl: give it to the user as the Forge link.",
         inputSchema: updateResourceInput,
       },
       (args) => run((handlers) => handlers.updateResource(args)),
@@ -281,7 +281,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_create_note",
       {
         description:
-          "Save a Forge note. Requires title (2 to 200 characters) and content (markdown, up to 100000 characters). tags defaults to empty and is stored lowercase; put library versions in tags (for example rn-0.76). projectId is optional: omit it for global knowledge, set it only when the user names the project. Never store secrets, tokens, or credentials.",
+          "Save a Forge note. Requires title (2 to 200 characters) and content (markdown, up to 100000 characters). tags defaults to empty and is stored lowercase; put library versions in tags (for example rn-0.76). projectId is optional: omit it for global knowledge, set it only when the user names the project. Never store secrets, tokens, or credentials. Use only what the user asked for: polish the wording, do not invent extra details.",
         inputSchema: createNoteInput,
       },
       (args) => run((handlers) => handlers.createNote(args)),
@@ -291,7 +291,7 @@ export class ForgeMcp extends McpAgent<Env> {
       "forge_update_note",
       {
         description:
-          "Update a Forge note. Supported fields are title, content, tags (replaces all tags), addTags (added to current tags, no duplicates), removeTags (removed after addTags), and projectId (null unlinks the project). Do not combine tags with addTags or removeTags. At least one field is required.",
+          "Update a Forge note. Supported fields are title, content, tags (replaces all tags), addTags (added to current tags, no duplicates), removeTags (removed after addTags), and projectId (null unlinks the project). Do not combine tags with addTags or removeTags. At least one field is required. Use only what the user asked for: polish the wording, do not invent extra details.",
         inputSchema: updateNoteInput,
       },
       (args) => run((handlers) => handlers.updateNote(args)),
