@@ -11,6 +11,7 @@ Forge es browser-only (ver `AGENTS.md`): nada de Tauri/Rust/native-IPC. Stack ac
 - **Auth + sesión** — `features/auth`, login/logout sobre InsForge (registro deshabilitado: herramienta personal); refresh en `src/proxy.ts`.
 - **Resources** — enlaces viven en InsForge con RLS por usuario; web y CLI comparten filas.
 - **Dev Board** — kanban con time tracking, analítica y CLI (`forge-cli ticket ...`).
+- **Notes** — base de conocimiento personal (markdown, tags, proyecto opcional); web, CLI y MCP, con skill `forge-notes`.
 - **Ideas** — captura de ideas con estado, categoría, tags y enlaces (web + CLI).
 - **Uptime Monitor** — chequeos programados, latencia, historial y alertas Telegram/Slack.
 - **Webhook Inspector** — URLs temporales con captura e inspección de requests.

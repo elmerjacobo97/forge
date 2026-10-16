@@ -6,7 +6,7 @@
 
 - **Stack:** Next.js 16 (App Router, Server Components, Server Actions) + React 19 + InsForge (Postgres con RLS). Tailwind 4 + shadcn/ui.
 - **Sin TanStack Query:** el server-state se maneja con lecturas en servidor, Server Actions para mutaciones y Route Handlers para polling/paginación de cliente.
-- **Tools activas (6):** Dev Board, Meetings, Ideas, Resources, Webhook Inspector y Uptime Monitor.
+- **Tools activas (7):** Dev Board, Meetings, Ideas, Notes, Resources, Webhook Inspector y Uptime Monitor.
 - **Limpieza actual:** se quitaron utilidades de navegador, AI generation y Settings. Bookmarks pasa a Resources; su migración conserva links y elimina filas del Resources anterior. Webhook Inspector y Uptime Monitor permanecen intactos.
 - **Tests:** 689 tests con Vitest en core, web, CLI y MCP.
 

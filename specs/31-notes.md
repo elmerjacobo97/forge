@@ -124,9 +124,9 @@ Reglas:
 
 ### Grupo 5 — Skill y docs
 
-- [ ] 5.1 Crear `skills/forge/forge-notes/SKILL.md`: cuándo guardar (la doc oficial no sirvió, config que funcionó, decisión tomada), cuándo buscar antes de empezar, cómo escribir título, contenido y tags, y la regla de no pedir `project-id` si la nota es global.
-- [ ] 5.2 Actualizar `docs/ROADMAP.md` (Tools activas: 7), `docs/IDEAS.md` (Notes como hecho) y el `README` del CLI si lista comandos.
-- [ ] 5.3 Correr `pnpm lint`, `pnpm test` y `pnpm build`.
+- [x] 5.1 Crear `skills/forge/forge-notes/SKILL.md`: cuándo guardar (la doc oficial no sirvió, config que funcionó, decisión tomada), cuándo buscar antes de empezar, cómo escribir título, contenido y tags, y la regla de no pedir `project-id` si la nota es global.
+- [x] 5.2 Actualizar `docs/ROADMAP.md` (Tools activas: 7), `docs/IDEAS.md` (Notes como hecho) y el `README` del CLI si lista comandos.
+- [x] 5.3 Correr `pnpm lint`, `pnpm test` y `pnpm build`.
 
 ## Criterios de aceptación
 
