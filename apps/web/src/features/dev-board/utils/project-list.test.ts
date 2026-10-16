@@ -50,16 +50,16 @@ const projects: Project[] = [
 ];
 
 describe("filterAndSortProjects", () => {
-  it("searches names and descriptions without showing archived projects by default", () => {
+  it("searches names and descriptions", () => {
     const result = filterAndSortProjects(projects, parseProjectFilters({ q: "  DEVELOPMENT " }));
 
     expect(result.map((project) => project.id)).toEqual(["progress-new", "progress-old"]);
   });
 
-  it("shows archived projects only when archived is selected", () => {
+  it("keeps archived projects in the all view and filters them when archived is selected", () => {
     expect(
       filterAndSortProjects(projects, parseProjectFilters({})).map(({ id }) => id),
-    ).not.toContain("archived");
+    ).toContain("archived");
     expect(
       filterAndSortProjects(projects, parseProjectFilters({ status: "archived" })).map(
         ({ id }) => id,
@@ -76,6 +76,7 @@ describe("filterAndSortProjects", () => {
       "planned-old",
       "paused-new",
       "completed",
+      "archived",
     ]);
   });
 
@@ -87,6 +88,7 @@ describe("filterAndSortProjects", () => {
       "completed",
       "progress-old",
       "progress-new",
+      "archived",
       "paused-new",
     ]);
   });
@@ -95,6 +97,7 @@ describe("filterAndSortProjects", () => {
     const result = filterAndSortProjects(projects, parseProjectFilters({ sort: "created" }));
 
     expect(result.map((project) => project.id)).toEqual([
+      "archived",
       "completed",
       "progress-new",
       "paused-new",

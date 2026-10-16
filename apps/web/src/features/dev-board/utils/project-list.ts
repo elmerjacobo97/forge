@@ -20,9 +20,7 @@ function compareCreatedAtNewestFirst(left: Project, right: Project): number {
 export function filterAndSortProjects(projects: Project[], filters: ProjectFilters): Project[] {
   const query = filters.q.toLocaleLowerCase();
   const filtered = projects.filter((project) => {
-    if (
-      filters.status === "all" ? project.status === "archived" : project.status !== filters.status
-    ) {
+    if (filters.status !== "all" && project.status !== filters.status) {
       return false;
     }
 

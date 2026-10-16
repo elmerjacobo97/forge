@@ -249,9 +249,7 @@ export function ProjectList({
             </EmptyTitle>
             <EmptyDescription>
               {hasAnyProjects
-                ? filters.status === "all" && !filters.q
-                  ? "Archived projects are hidden by default. Choose Archived in the status filter to find them."
-                  : "Try another search or status filter."
+                ? "Try another search or status filter."
                 : "Create a project to start tracking tickets on a dedicated board."}
             </EmptyDescription>
           </EmptyHeader>

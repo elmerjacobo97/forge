@@ -50,12 +50,12 @@ describe("DevBoardPage project filters", () => {
     expect(projectsFrom(page).map(({ id }) => id)).toEqual(["ongoing"]);
   });
 
-  it("hides archived projects when no status filter is selected", async () => {
+  it("includes archived projects when no status filter is selected", async () => {
     listProjects.mockResolvedValue(projects);
 
     const page = await DevBoardPage({ searchParams: Promise.resolve({}) });
 
-    expect(projectsFrom(page).map(({ id }) => id)).toEqual(["ongoing", "planned"]);
+    expect(projectsFrom(page).map(({ id }) => id)).toEqual(["ongoing", "planned", "archived"]);
   });
 
   it("returns archived projects when the archive filter is selected", async () => {

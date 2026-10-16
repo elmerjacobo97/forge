@@ -84,7 +84,7 @@ export function ProjectListToolbar({ filters }: { filters: ProjectFilters }) {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All active</SelectItem>
+          <SelectItem value="all">All</SelectItem>
           {PROJECT_STATUSES.map((status) => (
             <SelectItem
               key={status}
