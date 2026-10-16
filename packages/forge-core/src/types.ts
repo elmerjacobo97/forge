@@ -252,6 +252,31 @@ export type IdeaCreateInput = {
 
 export type IdeaUpdateInput = Partial<IdeaCreateInput>;
 
+export type Note = {
+  id: string;
+  title: string;
+  content: string;
+  tags: string[];
+  projectId: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type NoteCreateInput = {
+  title: string;
+  content: string;
+  tags: string[];
+  projectId?: string | null;
+};
+
+export type NoteUpdateInput = Partial<NoteCreateInput>;
+
+export type NoteListOptions = ListOptions & {
+  q?: string;
+  tag?: string;
+  projectId?: string;
+};
+
 export type ListOptions = {
   limit?: number;
   offset?: number;
