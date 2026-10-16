@@ -1,6 +1,6 @@
 # SPEC 31 — Notes: base de conocimiento personal
 
-> **Estado:** Approved
+> **Estado:** Implemented
 > **Depende de:** SPEC 04 — Proyectos del Dev Board · SPEC 18 — Servidor MCP remoto · SPEC 21 — Ideas · SPEC 30 — CRUD de resources en el MCP
 > **Fecha:** 2026-10-16
 > **Objetivo:** Añadir la tool Notes: notas en markdown con tags y proyecto opcional, que el agente escribe y busca por MCP y CLI, y que tú lees y editas en la web.
