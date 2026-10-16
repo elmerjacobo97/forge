@@ -5,6 +5,7 @@ import {
   Calendar03Icon,
   Idea01Icon,
   LayoutThreeColumnIcon,
+  Note01Icon,
   WebhookIcon,
 } from "@hugeicons/core-free-icons";
 
@@ -41,6 +42,14 @@ export const tools: ToolDef[] = [
     name: "Ideas",
     description: "Capture and track product, app, and business ideas",
     icon: Idea01Icon,
+    category: "Productivity",
+  },
+  {
+    id: "notes",
+    path: "/notes",
+    name: "Notes",
+    description: "Personal knowledge base for fixes, configs, and decisions",
+    icon: Note01Icon,
     category: "Productivity",
   },
   {

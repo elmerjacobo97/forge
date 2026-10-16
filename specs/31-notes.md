@@ -101,12 +101,12 @@ Reglas:
 
 ### Grupo 2 — Web
 
-- [ ] 2.1 Crear `apps/web/src/features/notes/` (`components/`, `schemas/`, `services/`, `utils/`, `actions.ts`, `notes.tsx`) siguiendo `features/ideas/`.
-- [ ] 2.2 Server Actions de crear, editar y borrar en `actions.ts`, con revalidación como en ideas.
-- [ ] 2.3 Rutas `apps/web/src/app/(authenticated)/notes/` (`page.tsx`, `loading.tsx`, `error.tsx`). Filtros `q`, `tag` y `project` en `searchParams`, parseados como `idea-filters.ts`.
-- [ ] 2.4 Componentes: toolbar con búsqueda y filtros, fila o tarjeta con markdown renderizado, diálogos `add`, `edit` y `delete`, selector de proyecto opcional.
-- [ ] 2.5 Registrar la tool en `apps/web/src/lib/tools.ts`.
-- [ ] 2.6 Tests colocados: filtros, toolbar y formulario.
+- [x] 2.1 Crear `apps/web/src/features/notes/` (`components/`, `schemas/`, `services/`, `utils/`, `actions.ts`, `notes.tsx`) siguiendo `features/ideas/`.
+- [x] 2.2 Server Actions de crear, editar y borrar en `actions.ts`, con revalidación como en ideas.
+- [x] 2.3 Rutas `apps/web/src/app/(authenticated)/notes/` (`page.tsx`, `loading.tsx`, `error.tsx`). Filtros `q`, `tag` y `project` en `searchParams`, parseados como `idea-filters.ts`.
+- [x] 2.4 Componentes: toolbar con búsqueda y filtros, fila o tarjeta con markdown renderizado, diálogos `add`, `edit` y `delete`, selector de proyecto opcional.
+- [x] 2.5 Registrar la tool en `apps/web/src/lib/tools.ts`.
+- [x] 2.6 Tests colocados: filtros, toolbar y formulario.
 
 ### Grupo 3 — MCP
 
