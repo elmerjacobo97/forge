@@ -9,6 +9,10 @@ import {
   formatIdeaListJson,
   formatIdeaListText,
   formatIdeaText,
+  formatNoteJson,
+  formatNoteListJson,
+  formatNoteListText,
+  formatNoteText,
   formatNextContextJson,
   formatNextContextText,
   formatProjectJson,
@@ -28,6 +32,7 @@ import {
 } from "../../src/format.js";
 import type {
   Idea,
+  Note,
   NextTicketContext,
   Project,
   Resource,
@@ -102,6 +107,16 @@ const sampleIdea: Idea = {
   tags: ["social", "local"],
   links: ["https://example.com/inspiration"],
   createdAt: "2026-09-01T00:00:00.000Z",
+};
+
+const sampleNote: Note = {
+  id: "n1",
+  title: "Expo SDK 52 router",
+  content: "Use expo-router v4 layout.",
+  tags: ["expo", "rn-0.76"],
+  projectId: "p1",
+  createdAt: "2026-09-01T00:00:00.000Z",
+  updatedAt: "2026-09-02T00:00:00.000Z",
 };
 
 describe("formatTicketText", () => {
@@ -401,5 +416,38 @@ describe("idea JSON formatters", () => {
   it("emits a parseable idea array", () => {
     const parsed = JSON.parse(formatIdeaListJson([sampleIdea])) as Idea[];
     expect(parsed).toEqual([sampleIdea]);
+  });
+});
+
+describe("formatNoteText", () => {
+  it("renders a readable note block with content last", () => {
+    const text = formatNoteText(sampleNote);
+    expect(text).toContain("id:          n1");
+    expect(text).toContain("title:       Expo SDK 52 router");
+    expect(text).toContain("projectId:   p1");
+    expect(text).toContain("tags:        expo, rn-0.76");
+    expect(text.endsWith("content:\nUse expo-router v4 layout.")).toBe(true);
+  });
+
+  it("shows (none) for a global note without tags", () => {
+    const text = formatNoteText({ ...sampleNote, tags: [], projectId: null });
+    expect(text).toContain("projectId:   (none)");
+    expect(text).toContain("tags:        (none)");
+  });
+});
+
+describe("formatNoteListText", () => {
+  it("handles an empty list", () => {
+    expect(formatNoteListText([])).toBe("No notes.");
+  });
+});
+
+describe("note JSON formatters", () => {
+  it("emits parseable note JSON", () => {
+    expect(JSON.parse(formatNoteJson(sampleNote)) as Note).toEqual(sampleNote);
+  });
+
+  it("emits a parseable note array", () => {
+    expect(JSON.parse(formatNoteListJson([sampleNote])) as Note[]).toEqual([sampleNote]);
   });
 });

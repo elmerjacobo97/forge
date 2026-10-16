@@ -2,6 +2,7 @@ import { resourceForgeUrl } from "@forge/core";
 import type {
   Idea,
   NextTicketContext,
+  Note,
   Project,
   Resource,
   Ticket,
@@ -294,4 +295,40 @@ export function writeIdeaOutput(idea: Idea, json: boolean): void {
 
 export function writeIdeaListOutput(ideas: Idea[], json: boolean): void {
   process.stdout.write(json ? formatIdeaListJson(ideas) : `${formatIdeaListText(ideas)}\n`);
+}
+
+export function formatNoteText(note: Note): string {
+  const tags = note.tags.length > 0 ? note.tags.join(", ") : "(none)";
+  return (
+    `id:          ${note.id}\n` +
+    `title:       ${note.title}\n` +
+    `projectId:   ${note.projectId ?? "(none)"}\n` +
+    `tags:        ${tags}\n` +
+    `createdAt:   ${note.createdAt}\n` +
+    `updatedAt:   ${note.updatedAt}\n` +
+    `content:\n${note.content}`
+  );
+}
+
+export function formatNoteListText(notes: Note[]): string {
+  if (notes.length === 0) {
+    return "No notes.";
+  }
+  return notes.map(formatNoteText).join("\n\n");
+}
+
+export function formatNoteJson(note: Note): string {
+  return `${JSON.stringify(note, null, 2)}\n`;
+}
+
+export function formatNoteListJson(notes: Note[]): string {
+  return `${JSON.stringify(notes, null, 2)}\n`;
+}
+
+export function writeNoteOutput(note: Note, json: boolean): void {
+  process.stdout.write(json ? formatNoteJson(note) : `${formatNoteText(note)}\n`);
+}
+
+export function writeNoteListOutput(notes: Note[], json: boolean): void {
+  process.stdout.write(json ? formatNoteListJson(notes) : `${formatNoteListText(notes)}\n`);
 }

@@ -2,6 +2,7 @@ import { runIdea } from "./commands/idea.js";
 import { runInit } from "./commands/init.js";
 import { runLogin } from "./commands/login.js";
 import { runLogout } from "./commands/logout.js";
+import { runNote } from "./commands/note.js";
 import { runProject } from "./commands/project.js";
 import { runResource } from "./commands/resource.js";
 import { runTicket } from "./commands/ticket.js";
@@ -24,6 +25,7 @@ Commands:
   resource  Manage developer resources (create|list|get|update|delete)
   bookmark  Alias for resource
   idea      Manage ideas (create|list|get|update|delete)
+  note      Manage notes (add|list|get|update|delete)
   project   Manage Dev Board projects (create|list|get|update|delete)
   ticket    Manage Dev Board tickets (create|list|get|update|delete|move|next|comment|comments|report)
 
@@ -68,6 +70,9 @@ async function main(argv: string[]): Promise<void> {
       return;
     case "idea":
       await runIdea(rest);
+      return;
+    case "note":
+      await runNote(rest);
       return;
     case "project":
       await runProject(rest);

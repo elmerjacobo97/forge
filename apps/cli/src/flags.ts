@@ -36,6 +36,7 @@ export const BOOLEAN_FLAGS = new Set([
   "--clear-due-date",
   "--clear-complexity",
   "--remove-last",
+  "--clear-project",
 ]);
 
 export function getPositionals(args: string[]): string[] {

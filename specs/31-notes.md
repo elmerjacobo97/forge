@@ -117,10 +117,10 @@ Reglas:
 
 ### Grupo 4 — CLI
 
-- [ ] 4.1 Crear `apps/cli/src/commands/note.ts` (`list`, `get`, `add`, `update`, `delete`) calcado de `idea.ts`. Flags `--title`, `--content`, `--tag`, `--project-id`, `--q`.
-- [ ] 4.2 Añadir `formatNoteText`, `formatNoteListText` y sus variantes JSON en `apps/cli/src/format.ts`.
-- [ ] 4.3 Registrar `note` en `apps/cli/src/main.ts` y en su ayuda.
-- [ ] 4.4 Tests en `apps/cli/tests/lib/format.test.ts`.
+- [x] 4.1 Crear `apps/cli/src/commands/note.ts` (`list`, `get`, `add`, `update`, `delete`) calcado de `idea.ts`. Flags `--title`, `--content`, `--tag`, `--project-id`, `--q`.
+- [x] 4.2 Añadir `formatNoteText`, `formatNoteListText` y sus variantes JSON en `apps/cli/src/format.ts`.
+- [x] 4.3 Registrar `note` en `apps/cli/src/main.ts` y en su ayuda.
+- [x] 4.4 Tests en `apps/cli/tests/lib/format.test.ts`.
 
 ### Grupo 5 — Skill y docs
 
