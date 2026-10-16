@@ -110,10 +110,10 @@ Reglas:
 
 ### Grupo 3 — MCP
 
-- [ ] 3.1 Añadir `notes: createNotesService({ client })` en `apps/mcp/src/services.ts` y extender `apps/mcp/tests/helpers/mock-services.ts`.
-- [ ] 3.2 Schemas en `apps/mcp/src/tool-schemas.ts`: list (`limit`, `offset`, `q`, `tag`, `projectId`), `noteId`, create y update (con `addTags` y `removeTags`).
-- [ ] 3.3 Handlers en `apps/mcp/src/tools.ts` y registro en `apps/mcp/src/index.ts`: `forge_list_notes`, `forge_get_note`, `forge_create_note`, `forge_update_note`, `forge_delete_note`. Errores por `toToolError`.
-- [ ] 3.4 Tests en `apps/mcp/tests/` y las cinco filas en `apps/mcp/README.md`.
+- [x] 3.1 Añadir `notes: createNotesService({ client })` en `apps/mcp/src/services.ts` y extender `apps/mcp/tests/helpers/mock-services.ts`.
+- [x] 3.2 Schemas en `apps/mcp/src/tool-schemas.ts`: list (`limit`, `offset`, `q`, `tag`, `projectId`), `noteId`, create y update (con `addTags` y `removeTags`).
+- [x] 3.3 Handlers en `apps/mcp/src/tools.ts` y registro en `apps/mcp/src/index.ts`: `forge_list_notes`, `forge_get_note`, `forge_create_note`, `forge_update_note`, `forge_delete_note`. Errores por `toToolError`.
+- [x] 3.4 Tests en `apps/mcp/tests/` y las cinco filas en `apps/mcp/README.md`.
 
 ### Grupo 4 — CLI
 

@@ -12,6 +12,7 @@ import {
   createMockServices,
   event,
   project,
+  note,
   resource,
   ticket,
 } from "./helpers/mock-services.js";
@@ -359,6 +360,87 @@ describe("createToolHandlers", () => {
   });
 });
 
+describe("note handlers", () => {
+  it("lists notes through the service with the given filters", async () => {
+    const services = createMockServices();
+    services.notes.list.mockResolvedValue([note("n1")]);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(
+      handlers.listNotes({ limit: 10, offset: 5, q: "expo", tag: "rn" }),
+    ).resolves.toEqual([note("n1")]);
+    expect(services.notes.list).toHaveBeenCalledWith({
+      limit: 10,
+      offset: 5,
+      q: "expo",
+      tag: "rn",
+    });
+  });
+
+  it("gets a note and propagates not found", async () => {
+    const services = createMockServices();
+    services.notes.get.mockResolvedValue(note("n1"));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.getNote({ noteId: "n1" })).resolves.toEqual(note("n1"));
+
+    services.notes.get.mockRejectedValue(new Error("Note not found."));
+    await expect(handlers.getNote({ noteId: "missing" })).rejects.toThrow("Note not found.");
+  });
+
+  it("creates a note with the given input", async () => {
+    const services = createMockServices();
+    const input = { title: "Expo SDK 52", content: "Body", tags: ["expo"], projectId: null };
+    services.notes.create.mockResolvedValue(note("n1", input));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.createNote(input)).resolves.toEqual(note("n1", input));
+    expect(services.notes.create).toHaveBeenCalledWith(input);
+  });
+
+  it("updates fields directly when no incremental tags are given", async () => {
+    const services = createMockServices();
+    services.notes.update.mockResolvedValue(note("n1"));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await handlers.updateNote({ noteId: "n1", title: "New", projectId: null });
+
+    expect(services.notes.get).not.toHaveBeenCalled();
+    expect(services.notes.update).toHaveBeenCalledWith("n1", { title: "New", projectId: null });
+  });
+
+  it("merges addTags and removes removeTags without duplicates", async () => {
+    const services = createMockServices();
+    services.notes.get.mockResolvedValue(note("n1", { tags: ["expo", "rn"] }));
+    services.notes.update.mockResolvedValue(note("n1"));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await handlers.updateNote({ noteId: "n1", addTags: ["rn", "config"], removeTags: ["expo"] });
+
+    expect(services.notes.update).toHaveBeenCalledWith("n1", { tags: ["rn", "config"] });
+  });
+
+  it("propagates service errors from update", async () => {
+    const services = createMockServices();
+    services.notes.get.mockRejectedValue(new Error("Note not found."));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.updateNote({ noteId: "missing", addTags: ["a"] })).rejects.toThrow(
+      "Note not found.",
+    );
+    expect(services.notes.update).not.toHaveBeenCalled();
+  });
+
+  it("deletes a note and returns its id", async () => {
+    const services = createMockServices();
+    services.notes.delete.mockResolvedValue(undefined);
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.deleteNote({ noteId: "n1" })).resolves.toEqual({ id: "n1" });
+    expect(services.notes.delete).toHaveBeenCalledWith("n1");
+  });
+});
+
 describe("resource handlers", () => {
   it("lists resources through the service with the given filters", async () => {
     const services = createMockServices();
@@ -380,7 +462,10 @@ describe("resource handlers", () => {
     services.resources.get.mockResolvedValue(resource("r1"));
     const handlers = createToolHandlers(asForgeServices(services));
 
-    await expect(handlers.getResource({ resourceId: "r1" })).resolves.toEqual({ ...resource("r1"), forgeUrl: resourceForgeUrl(resource("r1")) });
+    await expect(handlers.getResource({ resourceId: "r1" })).resolves.toEqual({
+      ...resource("r1"),
+      forgeUrl: resourceForgeUrl(resource("r1")),
+    });
     expect(services.resources.get).toHaveBeenCalledWith("r1");
 
     services.resources.get.mockRejectedValue(new Error("Resource not found."));

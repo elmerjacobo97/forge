@@ -3,17 +3,21 @@ import { z } from "zod";
 import {
   activityReportInput,
   addTicketCommentInput,
+  createNoteInput,
   createProjectInput,
   createResourceInput,
   createTicketInput,
   getProjectInput,
   getTicketInput,
+  listNotesInput,
   listResourcesInput,
   listTicketsInput,
   moveTicketInput,
   nextTicketInput,
+  noteIdInput,
   resourceIdInput,
   ticketIdInput,
+  updateNoteInput,
   updateResourceInput,
   updateTicketInput,
 } from "../src/tool-schemas.js";
@@ -260,9 +264,9 @@ describe("resource inputs", () => {
 
   it("validates list filters and rejects offset without limit", () => {
     expect(listResourcesInput.safeParse({}).success).toBe(true);
-    expect(
-      listResourcesInput.safeParse({ limit: 10, offset: 10, category: "tool" }).success,
-    ).toBe(true);
+    expect(listResourcesInput.safeParse({ limit: 10, offset: 10, category: "tool" }).success).toBe(
+      true,
+    );
     expect(listResourcesInput.safeParse({ offset: 10 }).success).toBe(false);
     expect(listResourcesInput.safeParse({ category: "video" }).success).toBe(false);
   });
@@ -284,6 +288,60 @@ describe("resource inputs", () => {
     expect(
       updateResourceInput.safeParse({ resourceId: "r1", addTags: ["b"], removeTags: ["a"] })
         .success,
+    ).toBe(true);
+  });
+});
+
+describe("note inputs", () => {
+  const validCreate = { title: "Expo SDK 52", content: "Use expo-router v4." };
+  const projectId = "92acfbba-6bc4-456a-96eb-965ce5b090fd";
+
+  it("accepts a valid create, defaults tags to [] and normalizes tags", () => {
+    const schema = z.object(createNoteInput);
+    const parsed = schema.safeParse(validCreate);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.tags).toEqual([]);
+
+    const tagged = schema.safeParse({ ...validCreate, tags: [" RN-0.76 ", "rn-0.76"], projectId });
+    expect(tagged.success).toBe(true);
+    if (tagged.success) expect(tagged.data.tags).toEqual(["rn-0.76"]);
+  });
+
+  it("rejects invalid create fields", () => {
+    const schema = z.object(createNoteInput);
+    expect(schema.safeParse({ ...validCreate, title: "A" }).success).toBe(false);
+    expect(schema.safeParse({ ...validCreate, content: "" }).success).toBe(false);
+    expect(schema.safeParse({ ...validCreate, projectId: "nope" }).success).toBe(false);
+  });
+
+  it("requires noteId for get and delete", () => {
+    expect(z.object(noteIdInput).safeParse({}).success).toBe(false);
+    expect(z.object(noteIdInput).safeParse({ noteId: "n1" }).success).toBe(true);
+  });
+
+  it("validates list filters and rejects offset without limit", () => {
+    expect(listNotesInput.safeParse({}).success).toBe(true);
+    expect(
+      listNotesInput.safeParse({ limit: 10, offset: 10, q: "expo", tag: "rn", projectId }).success,
+    ).toBe(true);
+    expect(listNotesInput.safeParse({ offset: 10 }).success).toBe(false);
+    expect(listNotesInput.safeParse({ projectId: "nope" }).success).toBe(false);
+  });
+
+  it("requires at least one update field and accepts null projectId", () => {
+    expect(updateNoteInput.safeParse({ noteId: "n1" }).success).toBe(false);
+    expect(updateNoteInput.safeParse({ noteId: "n1", projectId: null }).success).toBe(true);
+  });
+
+  it("rejects tags combined with addTags or removeTags", () => {
+    expect(updateNoteInput.safeParse({ noteId: "n1", tags: ["a"], addTags: ["b"] }).success).toBe(
+      false,
+    );
+    expect(
+      updateNoteInput.safeParse({ noteId: "n1", tags: ["a"], removeTags: ["b"] }).success,
+    ).toBe(false);
+    expect(
+      updateNoteInput.safeParse({ noteId: "n1", addTags: ["b"], removeTags: ["a"] }).success,
     ).toBe(true);
   });
 });

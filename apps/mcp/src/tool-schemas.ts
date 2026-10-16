@@ -1,6 +1,9 @@
 import {
   COLUMNS,
   PRIORITIES,
+  noteCreateSchema,
+  noteUpdateSchema,
+  normalizeTags,
   projectCreateSchema,
   resourceCreateSchema,
   ticketCreateSchema,
@@ -228,6 +231,58 @@ export const updateResourceInput = z
   .refine(
     (value) =>
       Object.entries(value).some(([key, field]) => key !== "resourceId" && field !== undefined),
+    { message: "Provide at least one field to update." },
+  )
+  .refine(
+    (value) =>
+      value.tags === undefined || (value.addTags === undefined && value.removeTags === undefined),
+    { message: "Use tags alone, or addTags and removeTags, not both.", path: ["tags"] },
+  );
+
+const noteCreateShape = noteCreateSchema.shape;
+const noteUpdateShape = noteUpdateSchema.shape;
+const noteIdSchema = z.string().trim().min(1, "Note id is required.");
+const noteTagsSchema = z
+  .array(z.string().trim().min(1, "Tag must not be empty."))
+  .transform(normalizeTags);
+
+export const listNotesInput = z
+  .object({
+    limit: z.number().int().min(1).optional(),
+    offset: z.number().int().min(0).optional(),
+    q: z.string().trim().min(1, "Search text must not be empty.").optional(),
+    tag: z.string().trim().min(1, "Tag must not be empty.").optional(),
+    projectId: z.uuid("Project id must be a valid UUID.").optional(),
+  })
+  .refine((value) => value.offset === undefined || value.limit !== undefined, {
+    message: "Offset requires limit.",
+    path: ["offset"],
+  });
+
+export const noteIdInput = {
+  noteId: noteIdSchema,
+};
+
+export const createNoteInput = {
+  title: noteCreateShape.title,
+  content: noteCreateShape.content,
+  tags: noteCreateShape.tags,
+  projectId: noteCreateShape.projectId,
+};
+
+export const updateNoteInput = z
+  .strictObject({
+    noteId: noteIdSchema,
+    title: noteUpdateShape.title,
+    content: noteUpdateShape.content,
+    tags: noteUpdateShape.tags,
+    projectId: noteUpdateShape.projectId,
+    addTags: noteTagsSchema.optional(),
+    removeTags: noteTagsSchema.optional(),
+  })
+  .refine(
+    (value) =>
+      Object.entries(value).some(([key, field]) => key !== "noteId" && field !== undefined),
     { message: "Provide at least one field to update." },
   )
   .refine(
