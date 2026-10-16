@@ -29,19 +29,19 @@ With the Forge MCP connector, use the `forge_*` tools (no `init`/`login`). Witho
 
 MCP `create`/`get`/`update`/`move` results include `forgeUrl` (opens the ticket on its board). Always show it to the user.
 
-| Action | CLI | MCP |
-| --- | --- | --- |
-| List | `ticket list --project-id <id>` | `forge_list_tickets` |
-| Next pending | `ticket next` | `forge_next_ticket` |
-| Read | `ticket get <id>` | `forge_get_ticket` |
-| Create | `ticket create` | `forge_create_ticket` |
-| Move / handoff | `ticket move <id> --column ...` | `forge_move_ticket` |
-| Edit fields | `ticket update` (includes title, description, priority) | `forge_update_ticket` (only branch, prUrl, responsible, planning fields; not title, description, or priority) |
-| Comment | `ticket comment --author agent` | `forge_add_ticket_comment` (no `author`; use CLI when the handoff must be signed as agent) |
-| Adjust time | `ticket adjust-time` | `forge_adjust_ticket_time` |
-| Pause / resume | `adjust-time --stop-at now` (pause) | `forge_pause_ticket` / `forge_resume_ticket` |
-| Delete | `ticket delete <id>` | `forge_delete_ticket` |
-| Report | `ticket report` | `forge_activity_report` |
+| Action         | CLI                                                     | MCP                                                                                                           |
+| -------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| List           | `ticket list --project-id <id>`                         | `forge_list_tickets`                                                                                          |
+| Next pending   | `ticket next`                                           | `forge_next_ticket`                                                                                           |
+| Read           | `ticket get <id>`                                       | `forge_get_ticket`                                                                                            |
+| Create         | `ticket create`                                         | `forge_create_ticket`                                                                                         |
+| Move / handoff | `ticket move <id> --column ...`                         | `forge_move_ticket`                                                                                           |
+| Edit fields    | `ticket update` (includes title, description, priority) | `forge_update_ticket` (only branch, prUrl, responsible, planning fields; not title, description, or priority) |
+| Comment        | `ticket comment --author agent`                         | `forge_add_ticket_comment` (no `author`; use CLI when the handoff must be signed as agent)                    |
+| Adjust time    | `ticket adjust-time`                                    | `forge_adjust_ticket_time`                                                                                    |
+| Pause / resume | `adjust-time --stop-at now` (pause)                     | `forge_pause_ticket` / `forge_resume_ticket`                                                                  |
+| Delete         | `ticket delete <id>`                                    | `forge_delete_ticket`                                                                                         |
+| Report         | `ticket report`                                         | `forge_activity_report`                                                                                       |
 
 `--author` exists only in CLI.
 
@@ -104,18 +104,23 @@ When the harness has plan mode active, ticket mutations are forbidden: you canno
 While in plan mode:
 
 - Load context and investigate normally (`ticket get`, `ticket comments`, code).
-- Track when the ticket work started and estimate the planning duration; you will backfill it on the build switch.
+- Do not track or backfill planning time. The logged time is the human estimate set at handoff (see "Logged time = human estimate").
 
-On the build switch, the first action is still the `in_progress` move. Then backfill the planning time (approximate, round to 5m) when the ticket has no time entries yet:
+On the build switch, the first action is still the `in_progress` move.
+
+## Logged time = human estimate
+
+The ticket time is **not** the AI wall-clock. It is the average time a mid-level developer would take to build the ticket by hand, including tests. Round to 5m. If the owner gives a number, use it instead.
+
+At handoff, after the move to `validation`, stop the timer logging that estimate:
 
 ```bash
-forge-cli ticket move <id> --column in_progress
-forge-cli ticket adjust-time <id> --set-total 20m   # the planning time that already elapsed
+forge-cli ticket move <id> --column validation --branch dev/handoff
+forge-cli ticket adjust-time <id> --stop-with 2h   # human estimate; leaves the ticket paused
 ```
 
-- `--set-total` sets the logged total directly (RPC `set_total`, the same fallback the web uses) and requires the ticket to have **no time entries**. If it fails with `Ticket has time entries; edit the last session instead`, skip the backfill and mention it in the handoff comment.
-- The backfill lives in the ticket total, not in a time entry: a later `--set`, `--remove-last`, `--stop-at` or `--stop-with` recomputes the total from entries and drops it. After backfilling, move columns normally.
-- Needs `forge-cli >= 0.8.0`; older binaries do not know `--set-total` and fail with `Provide exactly one of --set, --remove-last or --stop-at.`
+- `validation` starts the timer, so `--stop-with` goes after the move. Needs `forge-cli >= 0.12.0`.
+- Spec group tickets: one estimate per group.
 
 ## Spec / OpenSpec-driven tickets
 
@@ -282,15 +287,16 @@ Use this loop when working a ticket end to end as an agent. If the user already 
 
    `next` is read-only: it never moves tickets or writes comments. When there is no `todo` work, the text says `No pending tickets.` and `--json` returns `{ "ticket": null, ... }` (exit code 0).
 
-2. **Start**: `forge-cli ticket move <id> --column in_progress` (starts the timer). If the harness was in plan mode first, backfill the planning time right after the move (see "Plan mode").
+2. **Start**: `forge-cli ticket move <id> --column in_progress` (starts the timer).
 3. **Work** the ticket.
 4. **Hand off**: comment first, then move to `validation` with the branch in the same call. This is where the agent's column moves end.
-   - `validation` is the owner/agent verification loop: implementation is done but not approved yet; the timer keeps running while bugs are found and fixed. All adjustments happen here, not after review.
+   - `validation` is the owner/agent verification loop: implementation is done but not approved yet. The handoff stops the timer with the human estimate; the owner resumes it if fixes are needed. All adjustments happen here, not after review.
    - `review` and `done` are **owner-only**: never move a ticket there on your own, not even when the owner says "cierra el ticket". The only exception is an explicit order in the current message ("move the ticket to review" / "move it to done"). Otherwise remind the owner to move it manually once verified.
 
    ```bash
    forge-cli ticket comment <id> --body "Implemented X; tests green" --author agent
    forge-cli ticket move <id> --column validation --branch dev/handoff
+   forge-cli ticket adjust-time <id> --stop-with 2h   # human estimate, see "Logged time = human estimate"
    # only when the current message explicitly orders it:
    forge-cli ticket move <id> --column review \
      --pr-url "https://github.com/acme/forge/pull/17"
@@ -436,7 +442,8 @@ With `--json`, any error prints `{"error":{"message":"..."}}` to stderr and exit
 - Change column only via `ticket move`, never `ticket update`.
 - Comment handoff as `--author agent`; comments are append-only (no edit/delete). Keep them short (1–3 lines): outcome, verification, blockers. The web Comments dialog renders GFM markdown; the CLI prints the raw body.
 - Never commit during open work: no commit for the implementation, the tests, the spec group's checkbox update, or the OpenSpec `tasks.md` checkbox update. Leave the changes in the working tree; commit only when the owner explicitly orders close ("cierra el ticket", Close work).
-- Column moves by the agent end at `validation` (owner/agent verification, timer keeps running; adjustments happen there). `review` and `done` are owner-only: never move there on your own, not even when the owner says "cierra el ticket". Only an explicit order in the same message ("move it to review/done") authorizes it — otherwise remind the owner to move it manually.
+- Logged time is the mid-level human-dev estimate, never the AI wall-clock: at handoff run `adjust-time --stop-with <estimate>` after the move to `validation`.
+- Column moves by the agent end at `validation` (owner/agent verification; adjustments happen there). `review` and `done` are owner-only: never move there on your own, not even when the owner says "cierra el ticket". Only an explicit order in the same message ("move it to review/done") authorizes it — otherwise remind the owner to move it manually.
 - Responsible, complexity, Start Date and Due Date are optional and owner-provided. Dates are ISO 8601 with offset, Start Date <= Due Date. Omit a flag to keep a value; use `--clear-*` to clear it. Requires `forge-cli >= 0.11.0` for the planning fields.
 - Columns only: `backlog`, `todo`, `in_progress`, `validation`, `review`, `done`.
 - Priorities only: `low`, `med`, `high`.
