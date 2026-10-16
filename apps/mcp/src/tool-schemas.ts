@@ -50,7 +50,9 @@ export const getProjectInput = {
 
 export const createProjectInput = {
   name: projectCreateSchema.shape.name,
-  description: projectCreateSchema.shape.description.default(""),
+  description: projectCreateSchema.shape.description
+    .default("")
+    .describe("Only what the user asked for, polished. Leave empty if the user gave no detail."),
 };
 
 export const listTicketsInput = {
@@ -78,7 +80,11 @@ export const createTicketInput = z
   .object({
     projectId: projectIdSchema,
     title: titleSchema,
-    description: descriptionSchema.default(""),
+    description: descriptionSchema
+      .default("")
+      .describe(
+        "Only what the user asked for, polished. Do not invent acceptance criteria, platforms, or test steps. Leave empty if the user gave no detail.",
+      ),
     column: columnSchema.default("backlog"),
     priority: prioritySchema.default("med"),
     responsibleName: z.string().trim().min(1).max(120).optional(),
