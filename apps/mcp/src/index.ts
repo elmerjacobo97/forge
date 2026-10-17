@@ -21,11 +21,15 @@ import {
   moveTicketInput,
   nextTicketInput,
   noteIdInput,
+  projectFlowInput,
+  projectMapInput,
   resourceIdInput,
   ticketIdInput,
   updateNoteInput,
   updateResourceInput,
   updateTicketInput,
+  upsertProjectFlowInput,
+  upsertProjectModuleInput,
 } from "./tool-schemas.js";
 import { toToolError, toToolResult } from "./tool-result.js";
 import { createToolHandlers, type ToolHandlers } from "./tools.js";
@@ -304,6 +308,64 @@ export class ForgeMcp extends McpAgent<Env> {
         inputSchema: noteIdInput,
       },
       (args) => run((handlers) => handlers.deleteNote(args)),
+    );
+
+    this.server.registerTool(
+      "forge_get_project_map",
+      {
+        description:
+          "Get a project's map: its modules (slug, name, description, dependsOn) and a summary of its flows (slug, title, moduleSlug, stepCount). Call it before writing, so you reuse existing slugs.",
+        inputSchema: projectMapInput,
+      },
+      (args) => run((handlers) => handlers.getProjectMap(args)),
+    );
+
+    this.server.registerTool(
+      "forge_get_project_flow",
+      {
+        description: "Get one project flow by slug, with all its steps.",
+        inputSchema: projectFlowInput,
+      },
+      (args) => run((handlers) => handlers.getProjectFlow(args)),
+    );
+
+    this.server.registerTool(
+      "forge_upsert_project_module",
+      {
+        description:
+          "Create or replace a project module by slug. Requires projectId, slug (lowercase letters, numbers, hyphens; max 60) and name. description defaults to empty. dependsOn lists slugs of other existing modules in the project, never its own slug. Write only what the code shows: every step must come from code you read or a graph edge, never invented; set inferred to true when a step does not come from a graph edge.",
+        inputSchema: upsertProjectModuleInput,
+      },
+      (args) => run((handlers) => handlers.upsertProjectModule(args)),
+    );
+
+    this.server.registerTool(
+      "forge_upsert_project_flow",
+      {
+        description:
+          "Create or replace a step-by-step project flow by slug. Requires projectId, moduleSlug (an existing module), slug, title and steps (1 to 20; aim for 4 to 8). Each step has kind (page, ui, action, service, db, command, tool), label, and optionally symbol, file (relative to the repo), line, input, output, inferred (defaults to false). commit is the optional SHA the flow was read from. Write only what the code shows: every step must come from code you read or a graph edge, never invented; set inferred to true when a step does not come from a graph edge.",
+        inputSchema: upsertProjectFlowInput,
+      },
+      (args) => run((handlers) => handlers.upsertProjectFlow(args)),
+    );
+
+    this.server.registerTool(
+      "forge_delete_project_module",
+      {
+        description:
+          "Delete a project module by slug and all its flows. Returns the deleted slug. Cannot be undone.",
+        inputSchema: projectFlowInput,
+      },
+      (args) => run((handlers) => handlers.deleteProjectModule(args)),
+    );
+
+    this.server.registerTool(
+      "forge_delete_project_flow",
+      {
+        description: "Delete a project flow by slug. Returns the deleted slug. Cannot be undone.",
+        inputSchema: projectFlowInput,
+      },
+      (args) => run((handlers) => handlers.deleteProjectFlow(args)),
     );
   }
 }

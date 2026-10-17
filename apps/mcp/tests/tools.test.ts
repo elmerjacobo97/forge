@@ -592,3 +592,65 @@ describe("resource handlers", () => {
     expect(services.board.delete).toHaveBeenCalledWith("t1");
   });
 });
+
+describe("project map handlers", () => {
+  const moduleInput = { slug: "dev-board", name: "Dev Board", description: "", dependsOn: [] };
+  const flowInput = {
+    moduleSlug: "dev-board",
+    slug: "create",
+    title: "Create",
+    summary: "",
+    steps: [{ kind: "action" as const, label: "Submit", inferred: false }],
+    commit: null,
+  };
+
+  it("reads the map and a flow through the service", async () => {
+    const services = createMockServices();
+    services.projectMap.getMap.mockResolvedValue({ modules: [], flows: [] });
+    services.projectMap.getFlow.mockResolvedValue({ slug: "create" });
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.getProjectMap({ projectId: "p1" })).resolves.toEqual({
+      modules: [],
+      flows: [],
+    });
+    await handlers.getProjectFlow({ projectId: "p1", slug: "create" });
+    expect(services.projectMap.getFlow).toHaveBeenCalledWith("p1", "create");
+  });
+
+  it("splits projectId from the upsert input", async () => {
+    const services = createMockServices();
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await handlers.upsertProjectModule({ projectId: "p1", ...moduleInput });
+    await handlers.upsertProjectFlow({ projectId: "p1", ...flowInput });
+
+    expect(services.projectMap.upsertModule).toHaveBeenCalledWith("p1", moduleInput);
+    expect(services.projectMap.upsertFlow).toHaveBeenCalledWith("p1", flowInput);
+  });
+
+  it("propagates business errors", async () => {
+    const services = createMockServices();
+    services.projectMap.upsertFlow.mockRejectedValue(new Error("Module not found."));
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(handlers.upsertProjectFlow({ projectId: "p1", ...flowInput })).rejects.toThrow(
+      "Module not found.",
+    );
+  });
+
+  it("returns the deleted slug", async () => {
+    const services = createMockServices();
+    const handlers = createToolHandlers(asForgeServices(services));
+
+    await expect(
+      handlers.deleteProjectModule({ projectId: "p1", slug: "dev-board" }),
+    ).resolves.toEqual({
+      slug: "dev-board",
+    });
+    await expect(handlers.deleteProjectFlow({ projectId: "p1", slug: "create" })).resolves.toEqual({
+      slug: "create",
+    });
+    expect(services.projectMap.deleteFlow).toHaveBeenCalledWith("p1", "create");
+  });
+});

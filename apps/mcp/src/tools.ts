@@ -17,6 +17,11 @@ import type {
   NoteUpdateInput,
   Project,
   ProjectCreateInput,
+  ProjectFlow,
+  ProjectFlowUpsertInput,
+  ProjectMap,
+  ProjectModule,
+  ProjectModuleUpsertInput,
   Resource,
   ResourceCategory,
   ResourceCreateInput,
@@ -218,6 +223,51 @@ export function createToolHandlers(services: ForgeServices) {
     deleteNote: async ({ noteId }: { noteId: string }): Promise<{ id: string }> => {
       await services.notes.delete(noteId);
       return { id: noteId };
+    },
+
+    getProjectMap: ({ projectId }: { projectId: string }): Promise<ProjectMap> =>
+      services.projectMap.getMap(projectId),
+
+    getProjectFlow: ({
+      projectId,
+      slug,
+    }: {
+      projectId: string;
+      slug: string;
+    }): Promise<ProjectFlow> => services.projectMap.getFlow(projectId, slug),
+
+    upsertProjectModule: ({
+      projectId,
+      ...input
+    }: ProjectModuleUpsertInput & { projectId: string }): Promise<ProjectModule> =>
+      services.projectMap.upsertModule(projectId, input),
+
+    upsertProjectFlow: ({
+      projectId,
+      ...input
+    }: ProjectFlowUpsertInput & { projectId: string }): Promise<ProjectFlow> =>
+      services.projectMap.upsertFlow(projectId, input),
+
+    deleteProjectModule: async ({
+      projectId,
+      slug,
+    }: {
+      projectId: string;
+      slug: string;
+    }): Promise<{ slug: string }> => {
+      await services.projectMap.deleteModule(projectId, slug);
+      return { slug };
+    },
+
+    deleteProjectFlow: async ({
+      projectId,
+      slug,
+    }: {
+      projectId: string;
+      slug: string;
+    }): Promise<{ slug: string }> => {
+      await services.projectMap.deleteFlow(projectId, slug);
+      return { slug };
     },
 
     createTicket: async (

@@ -5,6 +5,9 @@ import {
   noteUpdateSchema,
   normalizeTags,
   projectCreateSchema,
+  projectFlowUpsertSchema,
+  projectModuleUpsertSchema,
+  slugSchema,
   resourceCreateSchema,
   ticketCreateSchema,
   ticketUpdateSchema,
@@ -296,3 +299,28 @@ export const updateNoteInput = z
       value.tags === undefined || (value.addTags === undefined && value.removeTags === undefined),
     { message: "Use tags alone, or addTags and removeTags, not both.", path: ["tags"] },
   );
+
+const moduleShape = projectModuleUpsertSchema.shape;
+const flowShape = projectFlowUpsertSchema.shape;
+
+export const projectMapInput = { projectId: projectIdSchema };
+
+export const projectFlowInput = { projectId: projectIdSchema, slug: slugSchema };
+
+export const upsertProjectModuleInput = {
+  projectId: projectIdSchema,
+  slug: moduleShape.slug,
+  name: moduleShape.name,
+  description: moduleShape.description,
+  dependsOn: moduleShape.dependsOn,
+};
+
+export const upsertProjectFlowInput = {
+  projectId: projectIdSchema,
+  moduleSlug: flowShape.moduleSlug,
+  slug: flowShape.slug,
+  title: flowShape.title,
+  summary: flowShape.summary,
+  steps: flowShape.steps,
+  commit: flowShape.commit,
+};
