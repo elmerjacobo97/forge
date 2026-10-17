@@ -6,6 +6,7 @@ import {
   Calendar03Icon,
   PlusSignIcon,
   RefreshIcon,
+  WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons";
 
 import { Badge } from "@/components/ui/badge";
@@ -105,6 +106,24 @@ export function ProjectBoardHeader({
               className="size-3.5"
             />
             <span className="hidden md:inline">Analytics</span>
+          </Link>
+        </Button>
+        <Button
+          asChild
+          size="sm"
+          variant="outline"
+          className="px-2 md:px-3"
+        >
+          <Link
+            href={`/dev-board/${project.id}/flows`}
+            aria-label="Flows"
+          >
+            <HugeiconsIcon
+              icon={WorkflowSquare01Icon}
+              strokeWidth={2}
+              className="size-3.5"
+            />
+            <span className="hidden md:inline">Flows</span>
           </Link>
         </Button>
         <Button
