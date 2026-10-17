@@ -145,10 +145,10 @@ Reglas:
 
 ### Grupo 3 — MCP
 
-- [ ] 3.1 Añadir `projectMap: createProjectMapService({ client })` en `apps/mcp/src/services.ts` y extender `apps/mcp/tests/helpers/mock-services.ts`.
-- [ ] 3.2 Schemas en `apps/mcp/src/tool-schemas.ts`: mapa, flujo, upsert de módulo, upsert de flujo y borrados. Cada campo de texto lleva la regla de alcance de la spec 23: usar solo lo que el código muestra, sin inventar pasos.
-- [ ] 3.3 Handlers en `apps/mcp/src/tools.ts` y registro en `apps/mcp/src/index.ts`: `forge_get_project_map`, `forge_get_project_flow`, `forge_upsert_project_module`, `forge_upsert_project_flow`, `forge_delete_project_module`, `forge_delete_project_flow`. Errores por `toToolError`.
-- [ ] 3.4 Tests en `apps/mcp/tests/` y las seis filas en `apps/mcp/README.md`.
+- [x] 3.1 Añadir `projectMap: createProjectMapService({ client })` en `apps/mcp/src/services.ts` y extender `apps/mcp/tests/helpers/mock-services.ts`.
+- [x] 3.2 Schemas en `apps/mcp/src/tool-schemas.ts`: mapa, flujo, upsert de módulo, upsert de flujo y borrados. Cada campo de texto lleva la regla de alcance de la spec 23: usar solo lo que el código muestra, sin inventar pasos.
+- [x] 3.3 Handlers en `apps/mcp/src/tools.ts` y registro en `apps/mcp/src/index.ts`: `forge_get_project_map`, `forge_get_project_flow`, `forge_upsert_project_module`, `forge_upsert_project_flow`, `forge_delete_project_module`, `forge_delete_project_flow`. Errores por `toToolError`.
+- [x] 3.4 Tests en `apps/mcp/tests/` y las seis filas en `apps/mcp/README.md`.
 
 ### Grupo 4 — CLI
 

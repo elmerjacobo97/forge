@@ -20,6 +20,8 @@ import {
   updateNoteInput,
   updateResourceInput,
   updateTicketInput,
+  upsertProjectFlowInput,
+  upsertProjectModuleInput,
 } from "../src/tool-schemas.js";
 
 describe("activityReportInput", () => {
@@ -358,5 +360,37 @@ describe("createProjectInput", () => {
   it("rejects an empty or overlong name", () => {
     expect(schema.safeParse({ name: "   " }).success).toBe(false);
     expect(schema.safeParse({ name: "x".repeat(81) }).success).toBe(false);
+  });
+});
+
+describe("project map inputs", () => {
+  const step = { kind: "action", label: "Submit" };
+  const flow = {
+    projectId: "p1",
+    moduleSlug: "dev-board",
+    slug: "create",
+    title: "Create",
+    steps: [step],
+  };
+
+  it("defaults dependsOn, summary, commit and step inferred", () => {
+    const parsedModule = z.object(upsertProjectModuleInput).parse({
+      projectId: "p1",
+      slug: "dev-board",
+      name: "Dev Board",
+    });
+    expect(parsedModule).toMatchObject({ description: "", dependsOn: [] });
+
+    const parsedFlow = z.object(upsertProjectFlowInput).parse(flow);
+    expect(parsedFlow).toMatchObject({ summary: "", commit: null });
+    expect(parsedFlow.steps[0]?.inferred).toBe(false);
+  });
+
+  it("rejects a bad slug, 0 or 21 steps and an unknown kind", () => {
+    const schema = z.object(upsertProjectFlowInput);
+    expect(schema.safeParse({ ...flow, slug: "Create Flow" }).success).toBe(false);
+    expect(schema.safeParse({ ...flow, steps: [] }).success).toBe(false);
+    expect(schema.safeParse({ ...flow, steps: Array(21).fill(step) }).success).toBe(false);
+    expect(schema.safeParse({ ...flow, steps: [{ ...step, kind: "cron" }] }).success).toBe(false);
   });
 });

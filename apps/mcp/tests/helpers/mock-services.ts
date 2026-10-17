@@ -21,6 +21,14 @@ export interface MockServices {
   activity: { listEvents: Mock; listCommentsInRange: Mock };
   resources: { list: Mock; get: Mock; create: Mock; update: Mock; delete: Mock };
   notes: { list: Mock; get: Mock; create: Mock; update: Mock; delete: Mock };
+  projectMap: {
+    getMap: Mock;
+    getFlow: Mock;
+    upsertModule: Mock;
+    upsertFlow: Mock;
+    deleteModule: Mock;
+    deleteFlow: Mock;
+  };
 }
 
 export function createMockServices(): MockServices {
@@ -54,6 +62,14 @@ export function createMockServices(): MockServices {
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+    },
+    projectMap: {
+      getMap: vi.fn(),
+      getFlow: vi.fn(),
+      upsertModule: vi.fn(),
+      upsertFlow: vi.fn(),
+      deleteModule: vi.fn(),
+      deleteFlow: vi.fn(),
     },
   };
 }
