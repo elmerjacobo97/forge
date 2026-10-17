@@ -26,7 +26,7 @@ Commands:
   bookmark  Alias for resource
   idea      Manage ideas (create|list|get|update|delete)
   note      Manage notes (add|list|get|update|delete)
-  project   Manage Dev Board projects (create|list|get|update|delete)
+  project   Manage Dev Board projects (create|list|get|update|delete|map)
   ticket    Manage Dev Board tickets (create|list|get|update|delete|move|next|comment|comments|report)
 
 Options:

@@ -1,5 +1,6 @@
 import { createAuthedProjectsService } from "../insforge.js";
 import { parseProjectCreateInput, parseProjectUpdateInput } from "@forge/core";
+import { runProjectMap } from "./project-map.js";
 import { getFlagValue, getPositionals, hasFlag } from "../flags.js";
 import {
   writeDeletedOutput,
@@ -16,6 +17,7 @@ Commands:
   get       Get a project by id
   update    Update name/description
   delete    Delete a project by id (fails if it has tickets)
+  map       Modules and flows of a project (see: forge-cli project map --help)
 
 Shared options:
   --json                       Emit JSON instead of text (create|list|get|update)
@@ -142,6 +144,9 @@ export async function runProject(args: string[]): Promise<void> {
       return;
     case "delete":
       await runDelete(rest);
+      return;
+    case "map":
+      await runProjectMap(rest);
       return;
     default:
       fail(`Unknown project command: ${subcommand}\n\n${PROJECT_HELP}`, hasFlag(args, "--json"));

@@ -152,10 +152,10 @@ Reglas:
 
 ### Grupo 4 — CLI
 
-- [ ] 4.1 Extender `apps/cli/src/commands/project.ts` con `map get`, `map module set|delete` y `map flow get|set|delete`. `flow set` recibe los pasos con `--file <ruta.json>`, no con flags.
-- [ ] 4.2 Añadir `formatProjectMapText`, `formatProjectFlowText` y sus variantes JSON en `apps/cli/src/format.ts`.
-- [ ] 4.3 Actualizar la ayuda en `apps/cli/src/main.ts`.
-- [ ] 4.4 Tests en `apps/cli/tests/lib/format.test.ts` y del parseo de `--file`.
+- [x] 4.1 Extender `apps/cli/src/commands/project.ts` con `map get`, `map module set|delete` y `map flow get|set|delete`. `flow set` recibe los pasos con `--file <ruta.json>`, no con flags.
+- [x] 4.2 Añadir `formatProjectMapText`, `formatProjectFlowText` y sus variantes JSON en `apps/cli/src/format.ts`.
+- [x] 4.3 Actualizar la ayuda en `apps/cli/src/main.ts`.
+- [x] 4.4 Tests en `apps/cli/tests/lib/format.test.ts` y del parseo de `--file`.
 
 ### Grupo 5 — Skill y docs
 
