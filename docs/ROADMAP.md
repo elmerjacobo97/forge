@@ -12,6 +12,7 @@
 
 ## Hecho en la última pasada
 
+- Mapas de flujo por proyecto (SPEC 32): módulos y flujos paso a paso que el agente escribe por MCP y CLI (skill `forge-flows`) y que se leen en `/dev-board/[projectId]/flows`.
 - Poda de herramientas y dependencias huérfanas.
 - Resources ahora comparte una tabla y un contrato entre web y CLI; `bookmark` sigue como alias.
 - Meetings añade notas privadas; el responsable opcional de texto libre está disponible en Dev Board web, CLI y MCP.

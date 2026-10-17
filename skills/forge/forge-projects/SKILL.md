@@ -123,3 +123,4 @@ forge-cli ticket create --project-id <projectId> --title "Ship feature" --json
 - After creating a project, pass its `id` as `--project-id` to `ticket create` / `ticket list`.
 - Do not cascade-delete tickets, move tickets between projects, set color/archive, or invent a default/Inbox project — out of scope.
 - Tickets stay under `forge-cli ticket` / skill `forge-tickets`.
+- Modules and flows of a project (`forge-cli project map`, `forge_*_project_map|flow|module`) belong to skill `forge-flows`.
