@@ -4,6 +4,9 @@ import type {
   NextTicketContext,
   Note,
   Project,
+  ProjectFlow,
+  ProjectMap,
+  ProjectModule,
   Resource,
   Ticket,
   TicketComment,
@@ -331,4 +334,74 @@ export function writeNoteOutput(note: Note, json: boolean): void {
 
 export function writeNoteListOutput(notes: Note[], json: boolean): void {
   process.stdout.write(json ? formatNoteListJson(notes) : `${formatNoteListText(notes)}\n`);
+}
+
+export function formatProjectMapText(map: ProjectMap): string {
+  if (map.modules.length === 0) return "No modules.";
+  return map.modules
+    .map((module) => {
+      const flows = map.flows.filter((flow) => flow.moduleSlug === module.slug);
+      const header =
+        `${module.slug}  ${module.name}` +
+        (module.dependsOn.length > 0 ? `  -> ${module.dependsOn.join(", ")}` : "");
+      const lines = flows.map((flow) => `  ${flow.slug}  ${flow.title} (${flow.stepCount} steps)`);
+      return [header, ...lines].join("\n");
+    })
+    .join("\n\n");
+}
+
+export function formatProjectMapJson(map: ProjectMap): string {
+  return `${JSON.stringify(map, null, 2)}\n`;
+}
+
+export function formatProjectModuleText(module: ProjectModule): string {
+  return (
+    `slug:        ${module.slug}\n` +
+    `name:        ${module.name}\n` +
+    `description: ${shortenDescription(module.description)}\n` +
+    `dependsOn:   ${module.dependsOn.join(", ") || "(none)"}\n` +
+    `updatedAt:   ${module.updatedAt}`
+  );
+}
+
+export function formatProjectModuleJson(module: ProjectModule): string {
+  return `${JSON.stringify(module, null, 2)}\n`;
+}
+
+export function formatProjectFlowText(flow: ProjectFlow): string {
+  const steps = flow.steps.map((step, index) => {
+    const where = step.file ? ` ${step.file}${step.line ? `:${step.line}` : ""}` : "";
+    const mark = step.inferred ? " [inferred]" : "";
+    const io = [step.input && `in: ${step.input}`, step.output && `out: ${step.output}`]
+      .filter(Boolean)
+      .join("; ");
+    return `${index + 1}. [${step.kind}] ${step.label}${where}${mark}${io ? ` (${io})` : ""}`;
+  });
+  return (
+    `slug:      ${flow.slug}\n` +
+    `module:    ${flow.moduleSlug}\n` +
+    `title:     ${flow.title}\n` +
+    `summary:   ${shortenDescription(flow.summary)}\n` +
+    `commit:    ${formatNullable(flow.commit)}\n` +
+    `updatedAt: ${flow.updatedAt}\n` +
+    `steps:\n${steps.join("\n")}`
+  );
+}
+
+export function formatProjectFlowJson(flow: ProjectFlow): string {
+  return `${JSON.stringify(flow, null, 2)}\n`;
+}
+
+export function writeProjectMapOutput(map: ProjectMap, json: boolean): void {
+  process.stdout.write(json ? formatProjectMapJson(map) : `${formatProjectMapText(map)}\n`);
+}
+
+export function writeProjectModuleOutput(module: ProjectModule, json: boolean): void {
+  process.stdout.write(
+    json ? formatProjectModuleJson(module) : `${formatProjectModuleText(module)}\n`,
+  );
+}
+
+export function writeProjectFlowOutput(flow: ProjectFlow, json: boolean): void {
+  process.stdout.write(json ? formatProjectFlowJson(flow) : `${formatProjectFlowText(flow)}\n`);
 }

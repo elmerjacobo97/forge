@@ -196,6 +196,24 @@ forge-cli project delete <id>
 2000). Delete uses `delete_empty_dev_board_project` and fails if tickets remain.
 `--json` applies to `create|list|get|update|delete`.
 
+### Project map
+
+Modules and step-by-step flows of a project, written by an agent and read in the
+web at `/dev-board/<projectId>/flows`.
+
+```bash
+forge-cli project map get <projectId>
+forge-cli project map module set <projectId> dev-board --name "Dev Board" --depends-on auth
+forge-cli project map module delete <projectId> dev-board
+forge-cli project map flow get <projectId> create-project
+forge-cli project map flow set <projectId> --file flow.json
+forge-cli project map flow delete <projectId> create-project
+```
+
+`flow set` reads the flow from a JSON file (`moduleSlug`, `slug`, `title`,
+`summary?`, `commit?`, `steps` with 1-20 items). An invalid file fails before
+calling the service. `--json` applies to every `map` command.
+
 ## Dev Board tickets
 
 ```bash

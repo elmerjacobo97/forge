@@ -4,6 +4,7 @@ import {
   createForgeClient,
   createIdeasService,
   createNotesService,
+  createProjectMapService,
   createProjectsService,
   createResourcesService,
 } from "@forge/core";
@@ -102,6 +103,11 @@ export async function createAuthedDevBoardService() {
 export async function createAuthedProjectsService() {
   const { client } = await createAuthedClient();
   return createProjectsService({ client });
+}
+
+export async function createAuthedProjectMapService() {
+  const { client } = await createAuthedClient();
+  return createProjectMapService({ client });
 }
 
 export async function createEmailPasswordSession(params: {
