@@ -137,11 +137,11 @@ Reglas:
 
 ### Grupo 2 — Web
 
-- [ ] 2.1 Crear `apps/web/src/features/project-map/` (`components/`, `services/`, `actions.ts`) siguiendo `features/dev-board/`. `actions.ts` solo tiene borrar módulo y borrar flujo, con revalidación.
-- [ ] 2.2 Rutas `apps/web/src/app/(authenticated)/dev-board/[projectId]/flows/` (`page.tsx`, `loading.tsx`, `error.tsx`). `module` y `flow` viven en `searchParams` para que cada nivel de zoom sobreviva a recargar.
-- [ ] 2.3 Componentes: mapa de módulos con chips de `depends_on` (slugs desconocidos se ignoran), vista de módulo con su lista de flujos, y lista de pasos con badge por `kind`, `file:line`, entrada, retorno y marca de `inferred`.
-- [ ] 2.4 Diálogos de borrado de módulo y de flujo, y enlace a Flows en `project-board-header.tsx`.
-- [ ] 2.5 Tests colocados: parseo de `searchParams`, componente de pasos y estados vacíos.
+- [x] 2.1 Crear `apps/web/src/features/project-map/` (`components/`, `services/`, `actions.ts`) siguiendo `features/dev-board/`. `actions.ts` solo tiene borrar módulo y borrar flujo, con revalidación.
+- [x] 2.2 Rutas `apps/web/src/app/(authenticated)/dev-board/[projectId]/flows/` (`page.tsx`, `loading.tsx`, `error.tsx`). `module` y `flow` viven en `searchParams` para que cada nivel de zoom sobreviva a recargar.
+- [x] 2.3 Componentes: mapa de módulos con chips de `depends_on` (slugs desconocidos se ignoran), vista de módulo con su lista de flujos, y lista de pasos con badge por `kind`, `file:line`, entrada, retorno y marca de `inferred`.
+- [x] 2.4 Diálogos de borrado de módulo y de flujo, y enlace a Flows en `project-board-header.tsx`.
+- [x] 2.5 Tests colocados: parseo de `searchParams`, componente de pasos y estados vacíos.
 
 ### Grupo 3 — MCP
 

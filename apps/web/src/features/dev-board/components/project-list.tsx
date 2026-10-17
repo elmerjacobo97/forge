@@ -13,6 +13,7 @@ import {
   PencilEdit01Icon,
   PlusSignIcon,
   Tick02Icon,
+  WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 
@@ -93,6 +94,16 @@ function ProjectRowMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem asChild>
+          <Link href={`/dev-board/${project.id}/flows`}>
+            <HugeiconsIcon
+              icon={WorkflowSquare01Icon}
+              strokeWidth={2}
+              className="size-3.5"
+            />
+            Flows
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={onEdit}>
           <HugeiconsIcon
             icon={PencilEdit01Icon}
