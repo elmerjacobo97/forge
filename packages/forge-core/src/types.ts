@@ -281,3 +281,49 @@ export type ListOptions = {
   limit?: number;
   offset?: number;
 };
+
+export type FlowStepKind = "page" | "ui" | "action" | "service" | "db" | "command" | "tool";
+
+export type ProjectFlowStep = {
+  kind: FlowStepKind;
+  label: string;
+  symbol?: string;
+  file?: string;
+  line?: number;
+  input?: string;
+  output?: string;
+  inferred: boolean;
+};
+
+export type ProjectModule = {
+  id: string;
+  projectId: string;
+  slug: string;
+  name: string;
+  description: string;
+  dependsOn: string[];
+  updatedAt: string;
+};
+
+export type ProjectModuleUpsertInput = Omit<ProjectModule, "id" | "projectId" | "updatedAt">;
+
+export type ProjectFlow = {
+  id: string;
+  projectId: string;
+  moduleSlug: string;
+  slug: string;
+  title: string;
+  summary: string;
+  steps: ProjectFlowStep[];
+  commit: string | null;
+  updatedAt: string;
+};
+
+export type ProjectFlowUpsertInput = Omit<ProjectFlow, "id" | "projectId" | "updatedAt">;
+
+export type ProjectFlowSummary = Omit<ProjectFlow, "steps"> & { stepCount: number };
+
+export type ProjectMap = {
+  modules: ProjectModule[];
+  flows: ProjectFlowSummary[];
+};
