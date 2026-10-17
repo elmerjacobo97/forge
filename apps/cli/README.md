@@ -212,7 +212,8 @@ forge-cli project map flow delete <projectId> create-project
 
 `flow set` reads the flow from a JSON file (`moduleSlug`, `slug`, `title`,
 `summary?`, `commit?`, `steps` with 1-20 items). An invalid file fails before
-calling the service. `--json` applies to every `map` command.
+calling the service. `--json` applies to every `map` command. The skill
+`skills/forge/forge-flows/SKILL.md` explains how an agent generates flows.
 
 ## Dev Board tickets
 

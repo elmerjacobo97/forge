@@ -159,9 +159,9 @@ Reglas:
 
 ### Grupo 5 — Skill y docs
 
-- [ ] 5.1 Crear `skills/forge/forge-flows/SKILL.md`: módulos desde las carpetas del repo, pasos desde aristas `calls` de `graphify query`, `inferred: true` cuando el paso sale de leer el componente, 4–8 pasos por flujo, flujos solo bajo demanda y sin inventar.
-- [ ] 5.2 Actualizar `docs/ROADMAP.md`, el `README` del CLI y la skill `forge-projects` con un puntero al mapa.
-- [ ] 5.3 Correr `pnpm lint`, `pnpm test` y `pnpm build`.
+- [x] 5.1 Crear `skills/forge/forge-flows/SKILL.md`: módulos desde las carpetas del repo, pasos desde aristas `calls` de `graphify query`, `inferred: true` cuando el paso sale de leer el componente, 4–8 pasos por flujo, flujos solo bajo demanda y sin inventar.
+- [x] 5.2 Actualizar `docs/ROADMAP.md`, el `README` del CLI y la skill `forge-projects` con un puntero al mapa.
+- [x] 5.3 Correr `pnpm lint`, `pnpm test` y `pnpm build`.
 
 ## Criterios de aceptación
 
